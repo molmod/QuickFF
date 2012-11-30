@@ -7,7 +7,7 @@ from evaluators import *
 
 __all__ = ['estimate', 'geometry_perturbation', 'analyze_trajectory']
 
-def estimate(system, coupling=None, free_depth=None, spring=10.0*kjmol/angstrom**2):
+def estimate(system, coupling=None, free_depth=0, spring=10.0*kjmol/angstrom**2):
     print '   ESTIMATOR: estimating ff pars'
     fctab = FCTable(system.icnames, system.units)
     for icname, ics in system.ics.iteritems():
@@ -39,7 +39,7 @@ def estimate(system, coupling=None, free_depth=None, spring=10.0*kjmol/angstrom*
     return fctab
 
 
-def geometry_perturbation(system, ics, coupling=None, free_depth=None, spring=10.0*kjmol/angstrom**2):
+def geometry_perturbation(system, ics, coupling=None, free_depth=0, spring=10.0*kjmol/angstrom**2):
     """
         Get the perturbation on the geometry resulting from perturbing along
         the ics. Coupling is a numpy array with the 
@@ -72,7 +72,7 @@ def geometry_perturbation(system, ics, coupling=None, free_depth=None, spring=10
             qgrads[i] = qgrad_coupled
     vs = []
     for qgrad in qgrads:
-        if free_depth is None:
+        if free_depth==0:
             ihess = system.totmodel.ihess
         else:
             indices = [i for i in xrange(system.Nat) if np.linalg.norm(qgrad.reshape([system.Nat, 3])[i])>1e-3]

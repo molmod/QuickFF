@@ -1,19 +1,14 @@
 #! /usr/bin/env python
 
 from molmod.io.chk import load_chk
-from molmod.io.psf import PSFFile
 from molmod.io.xyz import XYZWriter
-from molmod.units import *
 from molmod.ic import *
-from molmod.periodic import periodic as pt
 from copy import deepcopy
 import numpy as np, sys
 
 from model import *
 from ic import *
-from evaluators import *
 from tools import *
-from fftable import FFTable
 
 __all__=['System']
 
@@ -38,6 +33,14 @@ class System(object):
         self.eimodel = ZeroModel()
         if eikind is not None:
             self.define_ei_model()
+    
+    def topology_from_psf(self, fn_psf):
+        from molmod.io.psf import PSFFile
+        psf = PSFFile(fn_psf)
+        self.sample['bonds'] = psf.bonds
+        self.sample['bends'] = psf.bends
+        self.sample['dihedrals'] = psf.dihedrals
+        self.sample['ffatypes'] = psf.atom_types
     
     def define_ei_model(self):    
         print 'SYSTEM    EI: Constructing electrostatic model'

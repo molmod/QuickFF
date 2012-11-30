@@ -6,9 +6,7 @@ import numpy as np
 from tools import statistics
 
 
-
 __all__ = ['FFArray', 'FFTable']
-
 
 
 class FFArray(object):
