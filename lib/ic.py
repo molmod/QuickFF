@@ -3,7 +3,7 @@
 from molmod.periodic import periodic as pt
 import numpy as np
 
-__all__=['IC']
+__all__ = ['IC']
 
 class IC(object):
     def __init__(self, indexes, icf, name=None):
@@ -49,4 +49,4 @@ class IC(object):
             ana = oom*np.dot(hess, v.reshape(3*N))
             error = np.linalg.norm(num-ana)/np.linalg.norm(num)
             if error>threshold:
-                print 'WARNING: test nr. %i for %s FAILED: epsilon = %.6f   norm(num) = %.6e   error = %.6e' %(i, self.name, epsilon, np.linalg.norm(num), error)
+                print '    IC  TEST: test nr. %i for %s FAILED: epsilon=%.6f  norm(num)=%.6e  error=%.6e' %(i,self.name,epsilon,np.linalg.norm(num),error)

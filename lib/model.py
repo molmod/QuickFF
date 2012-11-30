@@ -3,17 +3,29 @@
 from molmod.units import *
 from molmod.ic import bond_length
 from molmod.periodic import periodic as pt
-from pytool.physics import global_translation, global_rotation, calc_angles
 import numpy as np, sys
 
-sys.path.append('/home/louis/Documents/Doctoraat/Code/mil53/model/metals/covalent/est/lib')
 from ic import *
 
-__all__=['HarmonicModel', 'CoulombModel', 'electrostatics']
+__all__=['ZeroModel', 'HarmonicModel', 'CoulombModel', 'electrostatics']
+
+
+class ZeroModel(object):
+    def __init__(self, name='ZeroModel'):
+        self.name = name
+    
+    def get_energy(self, coords):
+        return 0.0
+    
+    def get_forces(self, coords):
+        return np.zeros(coords.shape, float)
+    
+    def get_hessian(self, coords):
+        return np.zeros([3*len(coords),3*len(coords)], float)
 
 
 class HarmonicModel(object):
-    def __init__(self, coords0, forces, hess, reference=0.0, name='', ridge=1e-10):
+    def __init__(self, coords0, forces, hess, reference=0.0, name='Harmonic Model', ridge=1e-10):
         self.coords0 = coords0
         self.forces = forces
         self.hess = hess
@@ -59,6 +71,7 @@ class HarmonicModel(object):
         return np.dot(evecs, np.dot(np.diag(ievals), evecs.T))
     
     def print_hess(self):
+        from tools import global_translation, global_rotation, calc_angles
         red = "\033[31m%s\033[0m"
         green = "\033[32m%s\033[0m"
         print '====================================================================='
@@ -79,18 +92,20 @@ class HarmonicModel(object):
 
 
 class CoulombModel(object):
-    def __init__(self, coords, charges, name=None):
+    def __init__(self, coords, charges, name='Coulomb Model', exclude_pairs=[]):
         self.coords = coords
         self.charges = charges
         self.name = name
-        self.reference = self.get_energy(self.coords, shift=False)
+        self.exclude_pairs = exclude_pairs
+        self.shift = self.get_energy(self.coords, shift=False)
     
     def get_energy(self, coords, shift=True):
         energy = 0.0
-        if shift: energy -= self.reference
+        if shift: energy -= self.shift
         for i, qi in enumerate(self.charges):
             for j, qj in enumerate(self.charges):
                 if j<=i: continue
+                if [i,j] in self.exclude_pairs or [j,i] in self.exclude_pairs: continue
                 bond = IC([i, j], bond_length)
                 energy += qi*qj/bond.value(coords)
         return energy
