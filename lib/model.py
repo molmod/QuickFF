@@ -25,9 +25,9 @@ class ZeroModel(object):
 
 
 class HarmonicModel(object):
-    def __init__(self, coords0, forces, hess, reference=0.0, name='Harmonic Model', ridge=1e-10):
+    def __init__(self, coords0, gradient, hess, reference=0.0, name='Harmonic Model', ridge=1e-10):
         self.coords0 = coords0
-        self.forces = forces
+        self.gradient = gradient
         self.hess = hess
         self.reference = reference
         self.ridge = ridge
@@ -36,14 +36,14 @@ class HarmonicModel(object):
     def get_energy(self, coords):
         energy = self.reference
         dx = (coords - self.coords0).reshape((-1,1))
-        energy += np.dot(self.forces.T, dx)[0]
+        energy += np.dot(self.gradient.T, dx)[0]
         energy += 0.5*np.dot(dx.T, np.dot(self.hess, dx))[0,0]
         return energy
     
-    def get_forces(self, coords):
-        forces = self.forces
+    def get_gradient(self, coords):
+        forces = self.gradient
         dx = (coords - self.coords0).reshape((-1,1))
-        return forces + np.dot(self.hess, dx)[0]
+        return gradient + np.dot(self.hess, dx)[0]
     
     def get_hessian(self, coords):
         return self.hess

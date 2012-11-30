@@ -35,7 +35,7 @@ setup(
     url='http://molmod.ugent.be/code/',
     package_dir = {'quickff': 'lib'},
     packages=['quickff'],
-    scripts=['scripts/*.py'],
+    scripts=['scripts/qff-est.py'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',

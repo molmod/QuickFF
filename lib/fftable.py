@@ -22,7 +22,6 @@ class FFArray(object):
     
     def _html(self, fmt, unit='au'):
         if self.num==0: return ''
-        if self.std==None: self.std = 0.0
         return fmt %(self.mean/parse_unit(unit), self.std/parse_unit(unit), self.num)
 
 
@@ -41,13 +40,19 @@ class FFTable(object):
         self.k[icname] = FFArray(kdata)
         self.q[icname] = FFArray(qdata)
     
-    def __getitem__(self, key):
+    def __getitem__(self, key, return_std=False):
         if not key in self.icnames: raise KeyError('%s is not a valid icname' %key)
         k = self.k[key].mean
+        k_std = self.k[key].std
         q = None
+        q_err = None
         if key in self.q.keys():
             q = self.q[key].mean
-        return k, q
+            q_std = self.q[key].std
+        if not return_std:
+            return k, q
+        else:
+            return k, k_std, q, q_std
     
     def print_html(self, icname, attrs, suffix=None):
         """
@@ -69,9 +74,11 @@ class FFTable(object):
         return result
     
     def print_screen(self):
+        print ' FFTAB PRINT: printing force field parameters to screen'
+        print
         for icname in self.icnames:
-            k, q = self[icname]
-            k = '%.6f' %(k/parse_unit(self.units[key]['k']))
+            k, k_std, q, q_std = self.__getitem__(icname, return_std=True)
+            k = u'%7.2f \u00B1 %7.2f %15s' %(k/parse_unit(self.units[icname]['k']), k_std/parse_unit(self.units[icname]['k']), self.units[icname]['k'])
             if q is None: q = 'None'
-            else: q = '%.3f' %(q/parse_unit(self.units[key]['q']))
-            print '%s:    K = %.6f  q = %.6f' %(icname, k, q)
+            else: q = u'%7.3f \u00B1 %7.3f %3s' %(q/parse_unit(self.units[icname]['q']), q_std/parse_unit(self.units[icname]['q']), self.units[icname]['q'])
+            print '                %20s   K=%s     q=%s' %(icname, k, q)

@@ -1,7 +1,10 @@
 #! /usr/bin/env python
 
+from molmod.units import *
+from molmod.periodic import periodic as pt
+from molmod.io.xyz import XYZWriter
 import numpy as np
-from fctable import *
+from fftable import FFTable
 from tools import fitpar
 from evaluators import *
 
@@ -9,14 +12,14 @@ __all__ = ['estimate', 'geometry_perturbation', 'analyze_trajectory']
 
 def estimate(system, coupling=None, free_depth=0, spring=10.0*kjmol/angstrom**2):
     print '   ESTIMATOR: estimating ff pars'
-    fctab = FCTable(system.icnames, system.units)
+    fctab = FFTable(system.icnames, system.units)
     for icname, ics in system.ics.iteritems():
         kdata = []
         qdata = []
         vs = geometry_perturbation(system, ics, coupling=coupling, free_depth=free_depth, spring=spring)
-        if   icname.split('/')[0]=='bond' : amplitude_factor = 0.1
-        elif icname.split('/')[0]=='angle': amplitude_factor = 0.01
-        elif icname.split('/')[0]=='dihed': amplitude_factor = 0.01
+        if   icname.split('/')[0] in ['dist', 'bond'] : amplitude_factor = 0.1
+        elif icname.split('/')[0] in ['angle', 'bend']: amplitude_factor = 0.01
+        elif icname.split('/')[0] in ['dihedral', 'dihed', 'torsion']: amplitude_factor = 0.01
         else: raise ValueError('Invalid ictype: %s' %icname.split('/')[0])
         for iv, v in enumerate(vs):
             amplitude = amplitude_factor*ics[iv].value(system.sample['coordinates'])
@@ -91,7 +94,7 @@ def analyze_trajectory(system, v, evaluators=[], fn_xyz=None, amplitude=0.25*ang
         pre = amplitude*np.sin(-np.pi/2+np.pi*n/(steps-1))
         coords = system.sample['coordinates'] + pre*v
         for i, evaluator in enumerate(evaluators):
-            values[i].append(evaluator(self, coords))
+            values[i].append(evaluator(system, coords))
         if fn_xyz is not None: traj.dump('frame %i' %n, coords)
     if fn_xyz is not None: del(traj)
     return values

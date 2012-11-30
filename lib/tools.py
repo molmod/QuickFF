@@ -60,6 +60,7 @@ def statistics(data):
     std = None
     if N==1:
         mean=data[0]
+        std = 0.0
     elif N>1:
         mean = data.sum()/N
         std = np.sqrt( ((data-mean)**2).sum()/(N-1) )
