@@ -21,7 +21,8 @@ class System(object):
     def __init__(self, name, fn_chk, eikind=None, eirule=0):
         print 'SYSTEM INIT : initializing system %s' %name
         self.name = name
-        self.load(fn_chk)
+        self.fn_chk = fn_chk
+        self.sample = System.load_sample(fn_chk)
         self.eikind = eikind
         self.eirule = eirule
         
@@ -38,10 +39,11 @@ class System(object):
         if eikind is not None:
             self.define_ei_model()
     
-    def load(self, fn_chk, unit_cell=None):
-        self.fn_chk = fn_chk
+    @classmethod
+    def load_sample(cls, fn_chk, unit_cell=None):
+        print 'SYSTEM LOAD : loading sample file %s' %fn_chk
         if fn_chk.endswith('.chk'):
-            self.sample = load_chk(fn_chk)
+            return load_chk(fn_chk)
         elif fn_chk.endswith('.fchk'):
             fchk = FCHKFile(fn_chk)
             sample = {}
@@ -58,18 +60,20 @@ class System(object):
             sample['bonds'] = psf.bonds
             sample['bends'] = psf.bends
             sample['dihedrals'] = psf.dihedrals
-            self.sample = sample
+            return sample
         else:
-            raise ValueError('Invalid fn_chk file, recieved %s' %fn_chk)
+            raise ValueError('Invalid file extension, recieved %s' %fn_chk)
     
-    def topology_from_psf(self, fn_psf):
+    @classmethod
+    def topology_from_psf(cls, sample, fn_psf):
+        print 'SYSTEM TOPO : loading topology from %s' %fn_psf
         from molmod.io.psf import PSFFile
         psf = PSFFile(fn_psf)
-        self.sample['bonds'] = psf.bonds
-        self.sample['bends'] = psf.bends
-        self.sample['dihedrals'] = psf.dihedrals
-        self.sample['neighbors'] = psf.get_molecular_graph().neighbors
-        self.sample['ffatypes'] = psf.atom_types
+        sample['bonds'] = psf.bonds
+        sample['bends'] = psf.bends
+        sample['dihedrals'] = psf.dihedrals
+        sample['neighbors'] = psf.get_molecular_graph().neighbors
+        sample['ffatypes'] = psf.atom_types
     
     def define_ei_model(self):    
         print 'SYSTEM EI   : Constructing electrostatic model'
@@ -90,8 +94,30 @@ class System(object):
             self.eimodel = CoulombModel(self.sample['coordinates'], self.sample['charges'], name='Coulomb Electrostatic Energy', exclude_pairs=exclude)
         else:
             raise ValueError('Invalid model kind in System.define_ei_model, received %s' %self.mkind)
-
+    
+    def icnames_from_topology(self):
+        print 'SYSTEM ICNAM: determining ic names from topolgy'
+        icnames = []
+        atypes = self.sample['ffatypes']
+        for bond in self.sample['bonds']:
+            name01 = 'bond/%s.%s' %(atypes[bond[0]], atypes[bond[1]])
+            name10 = 'bond/%s.%s' %(atypes[bond[1]], atypes[bond[0]])
+            if not (name01 in icnames or name10 in icnames):
+                icnames.append(name01)
+        for bend in self.sample['bends']:
+            name01 = 'bend/%s.%s.%s' %(atypes[bend[0]], atypes[bend[1]], atypes[bend[2]])
+            name10 = 'bend/%s.%s.%s' %(atypes[bend[2]], atypes[bend[1]], atypes[bend[0]])
+            if not (name01 in icnames or name10 in icnames):
+                icnames.append(name01)
+        for dihedral in self.sample['dihedrals']:
+            name01 = 'dihedral/%s.%s.%s.%s' %(atypes[dihedral[0]], atypes[dihedral[1]], atypes[dihedral[2]], atypes[dihedral[3]])
+            name10 = 'dihedral/%s.%s.%s.%s' %(atypes[dihedral[3]], atypes[dihedral[2]], atypes[dihedral[1]], atypes[dihedral[0]])
+            if not (name01 in icnames or name10 in icnames):
+                icnames.append(name01)
+        return icnames
+    
     def find_ic_patterns(self, icnames, units=None):
+        if icnames==['all']: icnames = self.icnames_from_topology()
         print 'SYSTEM ICPAT: determining ic patterns'
         atypes = self.sample['ffatypes']
         self.icnames = icnames
@@ -105,14 +131,14 @@ class System(object):
             print 'SYSTEM ICPAT: processing %s' %icname
             match = []
             values = []
-            if '%s' in icname: icname = icname %( (self.name.split('/')[0].upper(),)*icname.count('%') )
             ictypes = icname.split('/')[1].split('.')
             ickind = icname.split('/')[0]
             if ickind in ['dist', 'bond']:
                 assert len(ictypes)==2
                 if units is None: self.units[icname] = {'q': 'A', 'k': 'kjmol/A**2'}
                 for bond in self.sample['bonds']:
-                    if (atypes[bond[0]]==ictypes[0] and atypes[bond[1]]==ictypes[1]) or (atypes[bond[0]]==ictypes[1] and atypes[bond[1]]==ictypes[0]):
+                    if (atypes[bond[0]]==ictypes[0] and atypes[bond[1]]==ictypes[1]) \
+                    or (atypes[bond[0]]==ictypes[1] and atypes[bond[1]]==ictypes[0]):
                         match.append(IC(bond, bond_length, name=icname+str(len(match))))
             elif ickind in ['angle', 'bend']:
                 assert len(ictypes)==3
@@ -133,7 +159,7 @@ class System(object):
             if len(match)==0:
                 print 'SYSTEM ICPAT: No match found for %s' %icname
             self.ics[icname] = match
-
+    
     def test_ics(self, epsilon=1e-4, ntests=50, threshold=1e-5):
         print 'SYSTEM TEST : testing ic gradient and hessian'
         for icname, ics in self.ics.iteritems():
@@ -147,7 +173,7 @@ class System(object):
                 ic = IC([i,j], bond_length, name=name)
                 ic.test(self.sample['coordinates'], epsilon=epsilon, ntests=ntests, threshold=threshold)
 
-    def _get_neighbors(self, indices, depth=1):
+    def get_neighbors(self, indices, depth=1):
         neighbors = deepcopy(indices)
         edge = deepcopy(indices)
         current = 0

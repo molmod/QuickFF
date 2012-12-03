@@ -4,4 +4,5 @@ from ic import *
 from evaluators import *
 from tools import *
 from fftable import *
-from estimater import *
+from perturbation import *
+from ffit import *

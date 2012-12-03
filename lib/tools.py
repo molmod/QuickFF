@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 
 import numpy as np
+from molmod.units import parse_unit
 
-__all__ = ['global_translation', 'global_rotation', 'calc_angles', 'statistics', 'fitpar']
+__all__ = ['global_translation', 'global_rotation', 'calc_angles', 'statistics', 'fitpar', 'add_plot']
 
 def global_translation(coords):
     N = len(coords)
@@ -16,7 +17,7 @@ def global_translation(coords):
 
 def global_rotation(coords):
     #rotations (Rx = matrix of Rotation around x-axis minus the identity matrix,
-    #           VRx = Vector of Rotation in x direction, ARx = Angle between v and VRx)
+    #           VRx = Vector of Rotation in x direction)
     N = len(coords)
     com = coords.sum(axis=0)/coords.shape[0]
     Rz = np.array([
@@ -87,3 +88,15 @@ def fitpar(xs, ys, rcond=1e-3, verbose=False):
         print 'Rank     = ', rank
         print 'Singular = ', sing
     return sol
+
+
+def add_plot(ax, curves, title='', xunit='au', yunit='au', xlabel='IC [%s]', ylabel='Energy [%s]'):
+    for x, y, style, label in curves:
+        ax.plot(x/parse_unit(xunit), y/parse_unit(yunit), style, label=label)
+    if '%s' in xlabel: xlabel = xlabel %xunit
+    if '%s' in ylabel: ylabel = ylabel %yunit
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.grid()
+    ax.set_title(title)
+    ax.legend(loc='lower left') 

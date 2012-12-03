@@ -54,7 +54,7 @@ class FFTable(object):
         else:
             return k, k_std, q, q_std
     
-    def print_html(self, icname, attrs, suffix=None):
+    def _html(self, icname, attrs, suffix=None):
         """
             Returns strings containing the statistical information of all attributes 
             in <attrs> for the given icname. Allowed attributes: q, k
