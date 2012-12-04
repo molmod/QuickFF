@@ -76,9 +76,48 @@ class FFTable(object):
     def print_screen(self):
         print ' FFTAB PRINT: printing force field parameters to screen'
         print
-        for icname in self.icnames:
+        for icname in sorted(self.icnames):
             k, k_std, q, q_std = self.__getitem__(icname, return_std=True)
             k = u'%7.2f \u00B1 %7.2f %15s' %(k/parse_unit(self.units[icname]['k']), k_std/parse_unit(self.units[icname]['k']), self.units[icname]['k'])
             if q is None: q = 'None'
             else: q = u'%7.3f \u00B1 %7.3f %3s' %(q/parse_unit(self.units[icname]['q']), q_std/parse_unit(self.units[icname]['q']), self.units[icname]['q'])
             print '                %20s   K=%s     q=%s' %(icname, k, q)
+        print
+
+    def dump_pars_ffit2(self, fn):
+        f = open(fn, 'w')
+        print >> f, '# Parameters'
+        print >> f, '# ------------------------------------------------------------------#------'
+        print >> f, '# longname                                 unit               value # fx/fr'
+        print >> f, '# ------------------------------------------------------------------#------'
+        for icname in self.icnames:
+            kind = icname.split('/')[0]
+            atypes = icname.split('/')[1].split('.')
+            k = self.k[icname].mean
+            q0 = self.q[icname].mean
+            if kind in ['bond', 'dist']:
+                print >>f, '  %40s %12s % 12.6f #  free' %(
+                    'bond/%s.%s/harm/dist/K' %(atypes[0], atypes[1]),
+                    'kjmol/A^2', k/(kjmol/angstrom**2)
+                )
+                print >> f, '  %40s %12s % 12.6f #  free' %(
+                    'bond/%s.%s/harm/dist/q0' %(atypes[0], atypes[1]),
+                    'A', q0/angstrom
+                )
+            elif kind in ['bend', 'angle']:
+                print >> f, '  %40s %12s % 12.6f #  free' %(
+                    'angle/%s.%s.%s/harm/angle/K' %(atypes[0], atypes[1], atypes[2]),
+                    'kjmol/rad^2', k/(kjmol/rad**2)
+                )
+                print >> f, '  %40s %12s % 12.6f #  free' %(
+                    'angle/%s.%s.%s/harm/angle/q0' %(atypes[0], atypes[1], atypes[2]),
+                    'deg', q0/deg
+                )
+            elif kind in ['dihedral', 'dihed', 'torsion']:
+                print >> f, '  %40s %12s % 12.6f #  free' %(
+                    'dihed/%s.%s.%s.%s/cos-m2-0/dihed/K' %(atypes[0], atypes[1], atypes[2], atypes[3]),
+                    'kjmol', k/kjmol
+                )
+        print >> f, '# ------------------------------------------------------------------#------'
+        f.close()
+        print ' FFTAB DUMP : dumped parameters in FFit2 format to %s' %fn

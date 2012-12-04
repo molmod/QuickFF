@@ -5,8 +5,9 @@ from optparse import OptionParser
 from molmod.units import *
 
 from quickff.system import System
-from quickff.estimater import estimate
+from quickff.perturbation import estimate
 from quickff.fftable import FFTable
+from quickff.ffit import FFitProgram
 
 def parser():
     usage = "%prog [options] icnames system"
@@ -32,18 +33,22 @@ def parser():
     options, args = parser.parse_args()
     options.spring = options.spring*kjmol/angstrom**2
     icnames = args[:-1]
-    fn_sys = args[-1]
-    return icnames, fn_sys, options
+    fn_chk = args[-1]
+    return icnames, fn_chk, options
 
 def main():
-    icnames, fn_sys, options = parser()
-    system = System('sys', fn_sys)
+    icnames, fn_chk, options = parser()
+    system = System('system', fn_chk)
     if options.psf is not None:
-        System.topology_from_psf(system.sample, options.psf)
+        system.topology_from_psf(options.psf)
     system.find_ic_patterns(icnames)
-    FFTable = estimate(system, coupling=options.coupling, free_depth=options.free_depth, spring=options.spring)
-    FFTable.print_screen()
-    FFTable.dump_pars('pars_init.txt')
+    system.dump_sample('system.chk')
+    fftab_init = estimate(system, coupling=options.coupling, free_depth=options.free_depth, spring=options.spring)
+    fftab_init.print_screen()
+    fftab_init.dump_pars_ffit2('pars_init.txt')
+    program = FFitProgram(system)
+    fftab_fine = program.run()
+    fftab_fine.print_screen()
 
 if __name__=='__main__':
     main()

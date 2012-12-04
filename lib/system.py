@@ -22,58 +22,63 @@ class System(object):
         print 'SYSTEM INIT : initializing system %s' %name
         self.name = name
         self.fn_chk = fn_chk
-        self.sample = System.load_sample(fn_chk)
+        self.load_sample(fn_chk)
         self.eikind = eikind
         self.eirule = eirule
         
         print 'SYSTEM INIT : Projecting translational and rotional dofs out of the hessian'
-        self.Nat = len(self.sample['coordinates'])
-        hess = self.sample['hessian'].reshape([3*self.Nat, 3*self.Nat])
+        self.Natoms = len(self.sample['numbers'])
+        hess = self.sample['hessian'].reshape([3*self.Natoms, 3*self.Natoms])
         VTx, VTy, VTz = global_translation(self.sample['coordinates'])
         VRx, VRy, VRz = global_rotation(self.sample['coordinates'])
         U, S, Vt = np.linalg.svd( np.array([VTx, VTy, VTz, VRx, VRy, VRz]).transpose() )
         P = np.dot(U[:,6:], U[:,6:].T)
-        hess_proj = np.dot(P, np.dot(hess, P))
-        self.totmodel = HarmonicModel(self.sample['coordinates'], self.sample['gradient'].reshape(3*self.Nat), hess_proj, name='Harmonic Total Energy')
+        hess_proj = np.dot(P, np.dot(hess, P)).reshape([self.Natoms, 3, self.Natoms, 3])
+        self.totmodel = HarmonicModel(self.sample['coordinates'], self.sample['gradient'], hess_proj, name='Harmonic Total Energy')
         self.eimodel = ZeroModel()
         if eikind is not None:
             self.define_ei_model()
     
-    @classmethod
-    def load_sample(cls, fn_chk, unit_cell=None):
-        print 'SYSTEM LOAD : loading sample file %s' %fn_chk
+    def load_sample(self, fn_chk, unit_cell=None):
         if fn_chk.endswith('.chk'):
-            return load_chk(fn_chk)
+            print 'SYSTEM LOAD : loading system sample from MolMod checkpoint file %s' %fn_chk
+            self.sample = load_chk(fn_chk)
         elif fn_chk.endswith('.fchk'):
+            print 'SYSTEM LOAD : loading system sample from Gaussian fchk file %s' %fn_chk
             fchk = FCHKFile(fn_chk)
-            sample = {}
-            sample['numbers'] = fchk.fields.get('Atomic numbers')
-            sample['coordinates'] = fchk.fields.get('Current cartesian coordinates').reshape([len(sample['numbers']), 3])
-            sample['gradient'] = fchk.fields.get('Cartesian Gradient')
-            sample['hessian'] = fchk.get_hessian()
-            sample['ffatypes'] = [pt[i].symbol for i in sample['numbers']]
+            self.sample = {}
+            self.sample['title'] = 'Sample title'
+            self.sample['numbers'] = fchk.fields.get('Atomic numbers')
+            Natoms = len(self.sample['numbers'])
+            self.sample['coordinates'] = fchk.fields.get('Current cartesian coordinates').reshape([Natoms, 3])
+            self.sample['gradient'] = fchk.fields.get('Cartesian Gradient').reshape([Natoms, 3])
+            self.sample['hessian']  = fchk.get_hessian().reshape([Natoms, 3, Natoms, 3])
+            self.sample['ffatypes'] = [pt[i].symbol for i in self.sample['numbers']]
             unit_cell = UnitCell(np.diag([50.0, 50.0, 50.0]), active=np.array([True, True, True]))
-            molecule = Molecule(sample['numbers'], sample['coordinates'], unit_cell=unit_cell)
+            molecule = Molecule(self.sample['numbers'], self.sample['coordinates'], unit_cell=unit_cell)
             graph = MolecularGraph.from_geometry(molecule)
             psf = PSFFile()
             psf.add_molecular_graph(graph)
-            sample['bonds'] = psf.bonds
-            sample['bends'] = psf.bends
-            sample['dihedrals'] = psf.dihedrals
-            return sample
+            self.sample['bonds'] = psf.bonds
+            if len(psf.bends)>0: self.sample['bends'] = psf.bends
+            if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
         else:
             raise ValueError('Invalid file extension, recieved %s' %fn_chk)
     
-    @classmethod
-    def topology_from_psf(cls, sample, fn_psf):
+    def dump_sample(self, fn):
+        if not self.fn_chk==fn:
+            from molmod.io.chk import dump_chk
+            print 'SYSTEM DUMP : dumping system sample to MolMod checkpoint file %s' %fn
+            dump_chk(fn, self.sample)
+    
+    def topology_from_psf(self, fn_psf):
         print 'SYSTEM TOPO : loading topology from %s' %fn_psf
         from molmod.io.psf import PSFFile
         psf = PSFFile(fn_psf)
-        sample['bonds'] = psf.bonds
-        sample['bends'] = psf.bends
-        sample['dihedrals'] = psf.dihedrals
-        sample['neighbors'] = psf.get_molecular_graph().neighbors
-        sample['ffatypes'] = psf.atom_types
+        self.sample['bonds'] = psf.bonds
+        if len(psf.bends)>0: self.sample['bends'] = psf.bends
+        if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
+        self.sample['ffatypes'] = psf.atom_types
     
     def define_ei_model(self):    
         print 'SYSTEM EI   : Constructing electrostatic model'
@@ -81,10 +86,10 @@ class System(object):
         if self.eirule>0:
             for bond in self.sample['bonds']:
                 exclude.append([bond[0], bond[1]])
-        if self.eirule>1:
+        if self.eirule>1 and 'bends' in self.sample.keys():
             for bend in self.sample['bends']:
                 exclude.append([bend[0], bend[2]])
-        if self.eirule>2:
+        if self.eirule>2 and 'dihedrals' in self.sample.keys():
             for dihed in self.sample['dihedrals']:
                 exclude.append([dihed[0], dihed[3]])
         if self.eikind=='Harmonic':
@@ -104,16 +109,18 @@ class System(object):
             name10 = 'bond/%s.%s' %(atypes[bond[1]], atypes[bond[0]])
             if not (name01 in icnames or name10 in icnames):
                 icnames.append(name01)
-        for bend in self.sample['bends']:
-            name01 = 'bend/%s.%s.%s' %(atypes[bend[0]], atypes[bend[1]], atypes[bend[2]])
-            name10 = 'bend/%s.%s.%s' %(atypes[bend[2]], atypes[bend[1]], atypes[bend[0]])
-            if not (name01 in icnames or name10 in icnames):
-                icnames.append(name01)
-        for dihedral in self.sample['dihedrals']:
-            name01 = 'dihedral/%s.%s.%s.%s' %(atypes[dihedral[0]], atypes[dihedral[1]], atypes[dihedral[2]], atypes[dihedral[3]])
-            name10 = 'dihedral/%s.%s.%s.%s' %(atypes[dihedral[3]], atypes[dihedral[2]], atypes[dihedral[1]], atypes[dihedral[0]])
-            if not (name01 in icnames or name10 in icnames):
-                icnames.append(name01)
+        if 'bends' in self.sample.keys():
+            for bend in self.sample['bends']:
+                name01 = 'angle/%s.%s.%s' %(atypes[bend[0]], atypes[bend[1]], atypes[bend[2]])
+                name10 = 'angle/%s.%s.%s' %(atypes[bend[2]], atypes[bend[1]], atypes[bend[0]])
+                if not (name01 in icnames or name10 in icnames):
+                    icnames.append(name01)
+        if 'dihedrals' in self.sample.keys():
+            for dihedral in self.sample['dihedrals']:
+                name01 = 'dihedral/%s.%s.%s.%s' %(atypes[dihedral[0]], atypes[dihedral[1]], atypes[dihedral[2]], atypes[dihedral[3]])
+                name10 = 'dihedral/%s.%s.%s.%s' %(atypes[dihedral[3]], atypes[dihedral[2]], atypes[dihedral[1]], atypes[dihedral[0]])
+                if not (name01 in icnames or name10 in icnames):
+                    icnames.append(name01)
         return icnames
     
     def find_ic_patterns(self, icnames, units=None):
@@ -149,7 +156,7 @@ class System(object):
                         match.append(IC(bend, bend_angle, name=icname+str(len(match))))
             elif ickind in ['dihed', 'dihedral', 'torsion']:
                 assert len(ictypes)==4
-                if units is None: self.units[icname] = {'q': 'deg', 'k': 'kjmol/rad**2'}
+                if units is None: self.units[icname] = {'q': 'deg', 'k': 'kjmol'}
                 for dihed in self.sample['dihedrals']:
                     if (atypes[dihed[0]]==ictypes[0] and atypes[dihed[1]]==ictypes[1] and atypes[dihed[2]]==ictypes[2] and atypes[dihed[3]]==ictypes[3]) \
                     or (atypes[dihed[0]]==ictypes[3] and atypes[dihed[1]]==ictypes[2] and atypes[dihed[2]]==ictypes[1] and atypes[dihed[3]]==ictypes[0]):

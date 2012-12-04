@@ -35,43 +35,48 @@ class HarmonicModel(object):
     
     def get_energy(self, coords):
         energy = self.reference
-        dx = (coords - self.coords0).reshape((-1,1))
-        energy += np.dot(self.gradient.T, dx)[0]
-        energy += 0.5*np.dot(dx.T, np.dot(self.hess, dx))[0,0]
+        Natoms = len(self.coords0)
+        dx = (coords - self.coords0).reshape([3*Natoms])
+        energy += np.dot(self.gradient.reshape([3*Natoms]), dx)
+        energy += 0.5*np.dot(dx, np.dot(self.hess.reshape([3*Natoms,3*Natoms]), dx))
         return energy
     
     def get_gradient(self, coords):
-        forces = self.gradient
-        dx = (coords - self.coords0).reshape((-1,1))
-        return gradient + np.dot(self.hess, dx)[0]
+        Natoms = len(self.coords0)
+        dx = (coords - self.coords0).reshape([3*Natoms])
+        return self.gradient + np.dot(self.hess.reshape([3*Natoms, 3*Natomoms]), dx).reshape([Natoms, 3])
     
     def get_hessian(self, coords):
         return self.hess
     
     def diagonalize_hess(self):
-        self.evals, self.evecs = np.linalg.eigh(self.hess)
+        Natoms = len(self.coords0)
+        self.evals, self.evecs = np.linalg.eigh(self.hess.reshape([3*Natoms, 3*Natoms]))
         self.ievals = np.zeros(len(self.evals), float)
         for i, eigval in enumerate(self.evals):
             if abs(eigval)>self.ridge:
                 self.ievals[i] = 1.0/eigval
-        self.ihess = np.dot(self.evecs, np.dot(np.diag(self.ievals), self.evecs.T))        
+        self.ihess = np.dot(self.evecs, np.dot(np.diag(self.ievals), self.evecs.T)).reshape([Natoms, 3, Natoms, 3])
     
     def get_constrained_hess(self, free_indices, spring=10.0*kjmol/angstrom**2):
-        D = spring*np.identity(len(self.hess))
+        Natoms = len(self.coords0)
+        D = spring*np.identity(3*Natoms)
         for i in free_indices:
             D[i,i] = 0.0
-        return self.hess + D
+        return self.hess + D.reshape([Natoms, 3, Natoms, 3])
     
     def get_constrained_ihess(self, free_indices, spring=10.0*kjmol/angstrom**2):
-        evals, evecs = np.linalg.eigh(self.get_constrained_hess(free_indices, spring=spring))
+        Natoms = len(self.coords0)
+        evals, evecs = np.linalg.eigh(self.get_constrained_hess(free_indices, spring=spring).reshape([3*Natoms, 3*Natoms]))
         ievals = np.zeros(len(evals), float)
         for i, eigval in enumerate(evals):
             if abs(eigval)>self.ridge:
                 ievals[i] = 1.0/eigval
-        return np.dot(evecs, np.dot(np.diag(ievals), evecs.T))
+        return np.dot(evecs, np.dot(np.diag(ievals), evecs.T)).reshape([Natoms, 3, Natoms, 3])
     
     def print_hess(self):
         from tools import global_translation, global_rotation, calc_angles
+        Natoms = len(self.coords0)
         red = "\033[31m%s\033[0m"
         green = "\033[32m%s\033[0m"
         print '====================================================================='

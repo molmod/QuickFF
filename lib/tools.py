@@ -6,19 +6,19 @@ from molmod.units import parse_unit
 __all__ = ['global_translation', 'global_rotation', 'calc_angles', 'statistics', 'fitpar', 'add_plot']
 
 def global_translation(coords):
-    N = len(coords)
-    ones = np.ones(N, float)
-    zeros = np.zeros(N, float)
-    VTx = np.concatenate(np.array([ones, zeros, zeros]).transpose())/np.sqrt(N)
-    VTy = np.concatenate(np.array([zeros, ones, zeros]).transpose())/np.sqrt(N)
-    VTz = np.concatenate(np.array([zeros, zeros, ones]).transpose())/np.sqrt(N)
+    Natoms = len(coords)
+    ones = np.ones(Natoms, float)
+    zeros = np.zeros(Natoms, float)
+    VTx = np.concatenate(np.array([ones, zeros, zeros]).transpose())/np.sqrt(Natoms)
+    VTy = np.concatenate(np.array([zeros, ones, zeros]).transpose())/np.sqrt(Natoms)
+    VTz = np.concatenate(np.array([zeros, zeros, ones]).transpose())/np.sqrt(Natoms)
     return VTx, VTy, VTz
 
 
 def global_rotation(coords):
     #rotations (Rx = matrix of Rotation around x-axis minus the identity matrix,
     #           VRx = Vector of Rotation in x direction)
-    N = len(coords)
+    Natoms = len(coords)
     com = coords.sum(axis=0)/coords.shape[0]
     Rz = np.array([
         [ 0.0,-1.0, 0.0],
@@ -35,9 +35,9 @@ def global_rotation(coords):
         [ 0.0, 0.0, 1.0],
         [ 0.0,-1.0, 0.0]
     ])
-    VRx = np.dot(coords-com, Rx.transpose()).reshape([3*N])
-    VRy = np.dot(coords-com, Ry.transpose()).reshape([3*N])
-    VRz = np.dot(coords-com, Rz.transpose()).reshape([3*N])
+    VRx = np.dot(coords-com, Rx.transpose()).reshape([3*Natoms])
+    VRy = np.dot(coords-com, Ry.transpose()).reshape([3*Natoms])
+    VRz = np.dot(coords-com, Rz.transpose()).reshape([3*Natoms])
     U, S, Vt = np.linalg.svd( np.array([VRx, VRy, VRz]).transpose() )
     VRx = U.transpose()[0]
     VRy = U.transpose()[1]

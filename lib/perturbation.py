@@ -14,7 +14,7 @@ __all__ = ['estimate', 'calculate_perturbation', 'analyze_perturbation', 'plot_p
 
 
 def estimate(system, coupling=None, free_depth=0, spring=10.0*kjmol/angstrom**2):
-    print '   ESTIMATOR: estimating ff pars'
+    print '   ESTIMATOR: calculating harmonic ff pars directly from hessian'
     fctab = FFTable(system.icnames, system.units)
     for icname, ics in system.ics.iteritems():
         kdata = []
@@ -76,7 +76,7 @@ def calculate_perturbation(system, ics, coupling=None, free_depth=0, spring=10.0
     for i, ic in enumerate(ics):
         qgrads.append(ic.grad(system.sample['coordinates']))
     if coupling is not None:
-        qgrad_coupled = np.zeros(3*system.Nat, float)
+        qgrad_coupled = np.zeros(3*system.Natoms, float)
         for i, qgrad in enumerate(qgrads):
             qgrad_coupled += qgrad*coupling[i]
         for i in xrange(len(ics)):
@@ -84,9 +84,9 @@ def calculate_perturbation(system, ics, coupling=None, free_depth=0, spring=10.0
     vs = []
     for qgrad in qgrads:
         if free_depth==0:
-            ihess = system.totmodel.ihess
+            ihess = system.totmodel.ihess.reshape([3*system.Natoms, 3*system.Natoms])
         else:
-            indices = [i for i in xrange(system.Nat) if np.linalg.norm(qgrad.reshape([system.Nat, 3])[i])>1e-3]
+            indices = [i for i in xrange(system.Natoms) if np.linalg.norm(qgrad.reshape([system.Natoms, 3])[i])>1e-3]
             free_indices = system.get_neighbors(indices, depth=free_depth)
             ihess = system.totmodel.get_constrained_ihess(free_indices, spring=spring)
         v = np.dot(ihess, qgrad)
