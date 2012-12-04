@@ -8,6 +8,7 @@ from molmod.periodic import periodic as pt
 from molmod.molecular_graphs import MolecularGraph
 from molmod.unit_cells import UnitCell
 from molmod.molecules import Molecule
+from molmod.units import *
 from copy import deepcopy
 import numpy as np, sys
 
@@ -18,16 +19,14 @@ from tools import *
 __all__=['System']
 
 class System(object):
-    def __init__(self, name, fn_chk, eikind=None, eirule=0):
+    def __init__(self, name, fn_chk, fn_psf=None, eikind='Zero', eirule=-1, charges=None):
         print 'SYSTEM INIT : initializing system %s' %name
         self.name = name
-        self.fn_chk = fn_chk
         self.load_sample(fn_chk)
-        self.eikind = eikind
-        self.eirule = eirule
+        self.get_topology(fn_psf)
+        self.define_ei_model(eikind, eirule, charges)
         
-        print 'SYSTEM INIT : Projecting translational and rotional dofs out of the hessian'
-        self.Natoms = len(self.sample['numbers'])
+        print 'SYSTEM PROJ : Projecting translational and rotional dofs out of the hessian'
         hess = self.sample['hessian'].reshape([3*self.Natoms, 3*self.Natoms])
         VTx, VTy, VTz = global_translation(self.sample['coordinates'])
         VRx, VRy, VRz = global_rotation(self.sample['coordinates'])
@@ -35,26 +34,43 @@ class System(object):
         P = np.dot(U[:,6:], U[:,6:].T)
         hess_proj = np.dot(P, np.dot(hess, P)).reshape([self.Natoms, 3, self.Natoms, 3])
         self.totmodel = HarmonicModel(self.sample['coordinates'], self.sample['gradient'], hess_proj, name='Harmonic Total Energy')
-        self.eimodel = ZeroModel()
-        if eikind is not None:
-            self.define_ei_model()
     
-    def load_sample(self, fn_chk, unit_cell=None):
+    def load_sample(self, fn_chk):
+        self.fn_chk = fn_chk
         if fn_chk.endswith('.chk'):
             print 'SYSTEM LOAD : loading system sample from MolMod checkpoint file %s' %fn_chk
             self.sample = load_chk(fn_chk)
+            self.Natoms = len(self.sample['numbers'])
         elif fn_chk.endswith('.fchk'):
             print 'SYSTEM LOAD : loading system sample from Gaussian fchk file %s' %fn_chk
             fchk = FCHKFile(fn_chk)
             self.sample = {}
             self.sample['title'] = 'Sample title'
             self.sample['numbers'] = fchk.fields.get('Atomic numbers')
-            Natoms = len(self.sample['numbers'])
-            self.sample['coordinates'] = fchk.fields.get('Current cartesian coordinates').reshape([Natoms, 3])
-            self.sample['gradient'] = fchk.fields.get('Cartesian Gradient').reshape([Natoms, 3])
-            self.sample['hessian']  = fchk.get_hessian().reshape([Natoms, 3, Natoms, 3])
+            self.Natoms = len(self.sample['numbers'])
+            self.sample['coordinates'] = fchk.fields.get('Current cartesian coordinates').reshape([self.Natoms, 3])
+            self.sample['gradient'] = fchk.fields.get('Cartesian Gradient').reshape([self.Natoms, 3])
+            self.sample['hessian']  = fchk.get_hessian().reshape([self.Natoms, 3, self.Natoms, 3])
             self.sample['ffatypes'] = [pt[i].symbol for i in self.sample['numbers']]
-            unit_cell = UnitCell(np.diag([50.0, 50.0, 50.0]), active=np.array([True, True, True]))
+        else:
+            raise ValueError('Invalid file extension, recieved %s' %fn_chk)
+    
+    def get_topology(self, fn_psf=None, unit_cell=UnitCell(np.diag([50.0, 50.0, 50.0]),active=np.array([False, False, False])) ):
+        self.fn_psf = fn_psf
+        if fn_psf is not None:
+            print 'SYSTEM TOPO : loading topology from %s' %fn_psf
+            psf = PSFFile(fn_psf)
+            self.sample['bonds'] = psf.bonds
+            if len(psf.bends)>0: self.sample['bends'] = psf.bends
+            if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
+            self.sample['ffatypes'] = psf.atom_types
+            self.neighbor_list = psf.get_molecular_graph().neighbors
+            if 'charges' not in self.sample:
+                print 'SYSTEM EI   : the charges are taken from %s and the radii are set to 0.01 A' %fn_psf
+                self.sample['charges'] = psf.charges
+                self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
+        elif 'bonds' not in self.sample.keys():
+            print "SYSTEM TOPO : creating topology from the geometry because 'bonds' was missing in %s" %self.fn_chk 
             molecule = Molecule(self.sample['numbers'], self.sample['coordinates'], unit_cell=unit_cell)
             graph = MolecularGraph.from_geometry(molecule)
             psf = PSFFile()
@@ -62,44 +78,58 @@ class System(object):
             self.sample['bonds'] = psf.bonds
             if len(psf.bends)>0: self.sample['bends'] = psf.bends
             if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
+            self.neighbor_list = graph.neighbors
+        elif 'neighbor_list' not in self.sample.keys():
+            print "SYSTEM TOPO : creating topology from the geometry because 'neighbors' was missing in %s" %self.fn_chk 
+            molecule = Molecule(self.sample['numbers'], self.sample['coordinates'], unit_cell=unit_cell)
+            graph = MolecularGraph.from_geometry(molecule)
+            psf = PSFFile()
+            psf.add_molecular_graph(graph)
+            self.sample['bonds'] = psf.bonds
+            if len(psf.bends)>0: self.sample['bends'] = psf.bends
+            if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
+            self.neighbor_list = graph.neighbors
         else:
-            raise ValueError('Invalid file extension, recieved %s' %fn_chk)
+            self.neighbor_list = self.sample['neighbor_list']
+            print "SYSTEM TOPO : topology was loaded from %s" %self.fn_chk
     
+    def define_ei_model(self, eikind, eirule, charges):
+        self.eikind = eikind
+        self.eirule = eirule
+        print 'SYSTEM EI   : Constructing electrostatic model of kind %s and with exlusion rule = %i' %(eikind, eirule)
+        if charges is not None:
+            print 'SYSTEM EI   : the charges are set according to the command line input and the radii are set to 0.01 A'
+            self.sample['charges'] = np.array([float(x) for x in charges.split(',')])
+            self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
+        elif charges not in self.sample.keys():
+            raise ValueError("No charges present in sample, please specify them on the command line using the options '--charges'")
+        if eikind!='Zero':
+            exclude = []
+            if eirule>0:
+                for bond in self.sample['bonds']:
+                    exclude.append([bond[0], bond[1]])
+            if eirule>1 and 'bends' in self.sample.keys():
+                for bend in self.sample['bends']:
+                    exclude.append([bend[0], bend[2]])
+            if eirule>2 and 'dihedrals' in self.sample.keys():
+                for dihed in self.sample['dihedrals']:
+                    exclude.append([dihed[0], dihed[3]])
+        if eikind=='Zero':
+            self.eimodel = ZeroModel()
+        elif eikind=='Harmonic':
+            forces_ei, hess_ei = electrostatics(self.sample, exclude_pairs=exclude)
+            self.eimodel = HarmonicModel(self.sample['coordinates'], forces_ei, hess_ei, name='Harmonic Electrostatic Energy')
+        elif eikind=='Coulomb':
+            self.eimodel = CoulombModel(self.sample['coordinates'], self.sample['charges'], name='Coulomb Electrostatic Energy', exclude_pairs=exclude)
+        else:
+            raise ValueError('Invalid model kind in System.define_ei_model, received %s' %eikind)
+
     def dump_sample(self, fn):
         if not self.fn_chk==fn:
             from molmod.io.chk import dump_chk
             print 'SYSTEM DUMP : dumping system sample to MolMod checkpoint file %s' %fn
             dump_chk(fn, self.sample)
-    
-    def topology_from_psf(self, fn_psf):
-        print 'SYSTEM TOPO : loading topology from %s' %fn_psf
-        from molmod.io.psf import PSFFile
-        psf = PSFFile(fn_psf)
-        self.sample['bonds'] = psf.bonds
-        if len(psf.bends)>0: self.sample['bends'] = psf.bends
-        if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
-        self.sample['ffatypes'] = psf.atom_types
-    
-    def define_ei_model(self):    
-        print 'SYSTEM EI   : Constructing electrostatic model'
-        exclude = []
-        if self.eirule>0:
-            for bond in self.sample['bonds']:
-                exclude.append([bond[0], bond[1]])
-        if self.eirule>1 and 'bends' in self.sample.keys():
-            for bend in self.sample['bends']:
-                exclude.append([bend[0], bend[2]])
-        if self.eirule>2 and 'dihedrals' in self.sample.keys():
-            for dihed in self.sample['dihedrals']:
-                exclude.append([dihed[0], dihed[3]])
-        if self.eikind=='Harmonic':
-            forces_ei, hess_ei = electrostatics(self.sample, exclude_pairs=exclude)
-            self.eimodel = HarmonicModel(self.sample['coordinates'], forces_ei, hess_ei, name='Harmonic Electrostatic Energy')
-        elif self.eikind=='Coulomb':
-            self.eimodel = CoulombModel(self.sample['coordinates'], self.sample['charges'], name='Coulomb Electrostatic Energy', exclude_pairs=exclude)
-        else:
-            raise ValueError('Invalid model kind in System.define_ei_model, received %s' %self.mkind)
-    
+
     def icnames_from_topology(self):
         print 'SYSTEM ICNAM: determining ic names from topolgy'
         icnames = []
@@ -187,7 +217,7 @@ class System(object):
         while current<depth:
             new_edge = []
             for index in edge:
-                for neighbor in self.sample['neighbors'][index]:
+                for neighbor in self.neighbor_list[index]:
                     if neighbor not in neighbors:
                         neighbors.append(neighbor)
                         new_edge.append(neighbor)

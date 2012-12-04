@@ -22,7 +22,8 @@ def generate_terms(system):
             terms.append(CosineTerm(DihedralFilter(types[0], types[1], types[2], types[3]), dihed, 2, 0.0))
         else:
             return ValueError('Invalied IC type, recieved %s' %kind)
-    #terms.append( GaussianChargeTerm(PairFilter('*', '*', exclude_bonded=0), dist)  )
+    if system.eirule>-1:
+        terms.append( GaussianChargeTerm(PairFilter('*', '*', exclude_bonded=system.eirule), dist)  )
     return terms
 
 
