@@ -45,10 +45,6 @@ def estimate(system, coupling=None, free_depth=0, spring=10.0*kjmol/angstrom**2)
     return fctab
 
 
-def refine(system, fctab):
-    program = FFitProgram(system)
-    program.run()
-
 
 def calculate_perturbation(system, ics, coupling=None, free_depth=0, spring=10.0*kjmol/angstrom**2):
     """

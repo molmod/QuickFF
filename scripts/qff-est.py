@@ -58,9 +58,7 @@ def main():
         eikind = 'Zero'
     else:
         eikind = 'Harmonic'
-    system = System('system', fn_chk, eikind=eikind, eirule=options.ei_rule, charges=options.charges)
-    if options.psf is not None:
-        system.topology_from_psf(options.psf)
+    system = System('system', fn_chk, fn_psf=options.psf, eikind=eikind, eirule=options.ei_rule, charges=options.charges)
     system.find_ic_patterns(icnames)
     
     if options.system:
