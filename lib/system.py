@@ -101,8 +101,14 @@ class System(object):
             print 'SYSTEM EI   : the charges are set according to the command line input and the radii are set to 0.01 A'
             self.sample['charges'] = np.array([float(x) for x in charges.split(',')])
             self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
-        elif charges not in self.sample.keys():
+        elif 'charges' not in self.sample.keys() and eikind!='Zero':
             raise ValueError("No charges present in sample, please specify them on the command line using the options '--charges'")
+        if 'charges' in self.sample.keys() and eikind!='Zero':
+            print 'SYSTEM INFO : The atom types, charges and charge radii are respectively'
+            print
+            for i, (t, q, r) in enumerate(zip(self.sample['ffatypes'], self.sample['charges'], self.sample['radii'])):
+                print '                %3i  %4s % 6.3f %.4f' %(i, t, q, r)
+            print
         if eikind!='Zero':
             exclude = []
             if eirule>0:

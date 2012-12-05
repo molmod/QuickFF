@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import numpy as np
+import numpy as np, os
 from optparse import OptionParser
 from molmod.units import *
 
@@ -20,7 +20,7 @@ def parser():
     )
     parser.add_option(
         '--coupling', default=None,
-        help='Specify whether ics of the same type should be coupled or not. Possible couplings are: symmetric. [default=%default]'
+        help='Specify whether ics of the same type should be coupled or not. Possible couplings are symmetric and None. [default=%default]'
     )
     parser.add_option(
         '--free-depth', default=0, type=int,
@@ -38,6 +38,14 @@ def parser():
         '--charges', default=None, 
         help='Specify the charges of the system, this is necessary if a ei-rule is specified different then -1. The charges are comma seperated and the order should be identical to the order in the sample file. If the charges are not specified but ei-rule is larger then -1, the charges are taken from the psf if present, or from the sample file if present.'
     )
+    parser.add_option(
+        '--no-remove', default=True, dest='remove', action='store_false', 
+        help='Do not remove intermediate files and directories.'
+    )
+    parser.add_option(
+        '--only-system', default=False, dest='system', action='store_true', 
+        help='Only construct MolMod chk file containing the system sample from system file and possible psf file.'
+    )
     options, args = parser.parse_args()
     options.spring = options.spring*kjmol/angstrom**2
     icnames = args[:-1]
@@ -54,13 +62,19 @@ def main():
     if options.psf is not None:
         system.topology_from_psf(options.psf)
     system.find_ic_patterns(icnames)
-    system.dump_sample('system.chk')
-    fftab_init = estimate(system, coupling=options.coupling, free_depth=options.free_depth, spring=options.spring)
-    fftab_init.print_screen()
-    fftab_init.dump_pars_ffit2('pars_init.txt')
-    program = FFitProgram(system)
-    fftab_fine = program.run()
-    fftab_fine.print_screen()
+    
+    if options.system:
+        system.dump_sample('system.chk')
+    else:
+        system.dump_sample('int-system.chk')
+        fftab_init = estimate(system, coupling=options.coupling, free_depth=options.free_depth, spring=options.spring)
+        fftab_init.print_screen()
+        fftab_init.dump_pars_ffit2('int-pars.txt')
+        program = FFitProgram(system)
+        fftab_fine = program.run()
+        fftab_fine.print_screen()
+        if options.remove:
+            os.system('rm -r int-system.chk int-pars.txt out-ffit2.log out')
 
 if __name__=='__main__':
     main()

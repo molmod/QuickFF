@@ -14,7 +14,7 @@ __all__ = ['estimate', 'calculate_perturbation', 'analyze_perturbation', 'plot_p
 
 
 def estimate(system, coupling=None, free_depth=0, spring=10.0*kjmol/angstrom**2):
-    print '   ESTIMATOR: calculating harmonic ff pars directly from hessian'
+    print '       ESTIM: calculating harmonic ff pars directly from hessian'
     fctab = FFTable(system.icnames, system.units)
     for icname, ics in system.ics.iteritems():
         kdata = []

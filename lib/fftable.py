@@ -33,6 +33,35 @@ class FFTable(object):
         self.k = {}
         self.q = {}
     
+    @classmethod
+    def from_ffit2(cls, model):
+        print ' FFTAB FFIT2: constructing FFTable from FFit2 model'
+        icnames = []
+        units = {}
+        kdata = {}
+        qdata = {}
+        for rule in model.rules:
+            for par in rule.pars:
+                icname = '/'.join(par.prefix.split('/')[:2])
+                kind = par.name[0].lower()
+                if not icname in icnames: icnames.append(icname)
+                unit = units.get(icname, {'k': None, 'q': None})
+                unit[kind] = par.unit.replace('^', '**')
+                units[icname] = unit
+                if kind=='k':
+                    kdata[icname] = np.array([par.value])
+                elif kind=='q':
+                    qdata[icname] = np.array([par.value])
+                else:
+                    raise ValueError('Invalid value for kind, recieved %s' %kind)
+        fftab = FFTable(icnames, units)
+        for icname in icnames:
+            if icname.startswith('dihed/'):
+                qdata[icname] = np.array([0.0])
+                units[icname]['q'] = 'deg'
+            fftab.add(icname, kdata[icname], qdata[icname])
+        return fftab
+    
     def add(self, icname, kdata, qdata):
         assert icname in self.icnames
         assert icname not in self.k.keys()
