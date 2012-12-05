@@ -84,7 +84,7 @@ def calculate_perturbation(system, ics, coupling=None, free_depth=0, spring=10.0
         else:
             indices = [i for i in xrange(system.Natoms) if np.linalg.norm(qgrad.reshape([system.Natoms, 3])[i])>1e-3]
             free_indices = system.get_neighbors(indices, depth=free_depth)
-            ihess = system.totmodel.get_constrained_ihess(free_indices, spring=spring)
+            ihess = system.totmodel.get_constrained_ihess(free_indices, spring=spring).reshape([3*system.Natoms, 3*system.Natoms])
         v = np.dot(ihess, qgrad)
         kl = np.dot(qgrad.T, np.dot(ihess, qgrad))
         vs.append(v.reshape((-1,3))/kl)

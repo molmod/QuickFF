@@ -85,6 +85,8 @@ class FFTable(object):
     
     def _html(self, icname, attrs, suffix=None):
         """
+            !!!! DOESN'T WORK YET !!!!
+            
             Returns strings containing the statistical information of all attributes 
             in <attrs> for the given icname. Allowed attributes: q, k
         """

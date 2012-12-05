@@ -44,7 +44,7 @@ class HarmonicModel(object):
     def get_gradient(self, coords):
         Natoms = len(self.coords0)
         dx = (coords - self.coords0).reshape([3*Natoms])
-        return self.gradient + np.dot(self.hess.reshape([3*Natoms, 3*Natomoms]), dx).reshape([Natoms, 3])
+        return self.gradient + np.dot(self.hess.reshape([3*Natoms, 3*Natoms]), dx).reshape([Natoms, 3])
     
     def get_hessian(self, coords):
         return self.hess
