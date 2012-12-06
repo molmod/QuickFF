@@ -27,7 +27,7 @@ def parser():
         help='Defines the depth of the layer of atoms that are free. All other atoms are constrained to their original position with a spring. [default=%default]'
     )
     parser.add_option(
-        '--spring', default=10.0*kjmol/angstrom**2, type=float,
+        '--spring', default=10.0, type=float,
         help='Defines the strength of the constraining spring [in kjmol/A^2]. [default=%default]'
     )
     parser.add_option(

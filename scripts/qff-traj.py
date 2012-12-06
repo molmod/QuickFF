@@ -27,12 +27,21 @@ def parser():
         help='Defines the depth of the layer of atoms that are free. All other atoms are constrained to their original position with a spring. [default=%default]'
     )
     parser.add_option(
-        '--spring', default=10.0*kjmol/angstrom**2, type=float,
+        '--spring', default=10.0, type=float,
         help='Defines the strength of the constraining spring [in kjmol/A^2]. [default=%default]'
     )
     parser.add_option(
         '--relative-amplitude', default=0.05, type=float,
         help='Defines the relative amplitude of the change in the ic value relative to the ic equilibrium value. [default=%default]'
+    )
+    
+    parser.add_option(
+        '--ei-rule', default=-1, type=int,
+        help='Defines the exclusion rule for the electrostatic interactions. If set to -1, no electrostatic interactions are taken into account during force field fitting. If the rule is set to 0,1,2,3: pairs seperated by less then or equal to 1,2,3 bonds respectively are excluded from ei interactions. [default=10]'
+    )
+    parser.add_option(
+        '--charges', default=None, 
+        help='Specify the charges of the system, this is necessary if a ei-rule is specified different then -1. The charges are comma seperated and the order should be identical to the order in the sample file. If the charges are not specified but ei-rule is larger then -1, the charges are taken from the psf if present, or from the sample file if present. Alternatively, a hipart charge txt file can also be used to specify the charges. [default=%default]'
     )
     parser.add_option(
         '--eunit', default='kjmol', type=str,
@@ -48,21 +57,27 @@ def parser():
     )
     options, args = parser.parse_args()
     if not len(args)==2:
-        raise IOError('Too many input argumets: expected 2, recieved %i' %(len(args)))
+        raise IOError('Too many input argumets: expected 2, recieved %i: ' %(len(args))), args
     icname = args[0]
-    fn_sys = args[1]
+    fn_chk = args[1]
     options.spring = options.spring*kjmol/angstrom**2
     if options.kunit=='None':
         options.kunit = '%s/%s**2' %(options.eunit, options.qunit)
-    return icname, fn_sys, options
+    return icname, fn_chk, options
 
 def main():
-    icname, fn_sys, options = parser()
-    system = System('sys', fn_sys)
-    if options.psf is not None:
-        system.topology_from_psf(options.psf)
+    icname, fn_chk, options = parser()
+    if options.ei_rule==-1:
+        eikind = 'Zero'
+    else:
+        eikind = 'Harmonic'
+    system = System('system', fn_chk, fn_psf=options.psf, eikind=eikind, eirule=options.ei_rule, charges=options.charges)
     system.find_ic_patterns([icname])    
-    plot_perturbation(system, icname, coupling=options.coupling, free_depth=options.free_depth, spring=options.spring)
+    plot_perturbation(
+        system, icname,
+        coupling=options.coupling, free_depth=options.free_depth, spring=options.spring,
+        qunit=options.qunit, kunit=options.kunit, eunit=options.eunit
+    )
 
 if __name__=='__main__':
     main()  

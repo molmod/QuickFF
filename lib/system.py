@@ -80,7 +80,8 @@ class System(object):
             if len(psf.bends)>0: self.sample['bends'] = psf.bends
             if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
             self.neighbor_list = graph.neighbors
-        elif len(self.sample['bonds'])>1 and 'bends' not in self.sample.keys():
+        elif (len(self.sample['bonds'])>1 and 'bends' not in self.sample.keys()) \
+          or (len(self.sample['bends'])>1 and 'dihedrals' not in self.sample.keys()):
             print "SYSTEM TOPO : estimating bends, dihedrals and neighbor_list from bonds in %s" %self.fn_chk 
             graph = MolecularGraph(self.sample['bonds'], self.sample['numbers'])
             psf = PSFFile()
@@ -88,9 +89,13 @@ class System(object):
             if len(psf.bends)>0: self.sample['bends'] = psf.bends
             if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
             self.neighbor_list = graph.neighbors
+        elif not hasattr(self, neighbor_list):
+            print "SYSTEM TOPO : bonds, bends and dihedrals loaded from %s, neighbors estimated from bonds" %self.fn_chk 
+            graph = MolecularGraph(self.sample['bonds'], self.sample['numbers'])
+            self.neighbor_list = graph.neighbors
         else:
-            self.neighbor_list = self.sample['neighbor_list']
-            print "SYSTEM TOPO : topology was loaded from %s" %self.fn_chk
+            assert 'bonds' in self.sample.keys()
+            assert hasattr(self, neighbor_list)
     
     def define_ei_model(self, eikind, eirule, charges):
         self.eikind = eikind
