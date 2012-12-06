@@ -37,7 +37,7 @@ class System(object):
     
     def load_sample(self, fn_chk):
         self.fn_chk = fn_chk
-        if fn_chk.endswith('.chk'):
+        if fn_chk.endswith('.chk') or fn_chk.endswith('.mfs'):
             print 'SYSTEM LOAD : loading system sample from MolMod checkpoint file %s' %fn_chk
             self.sample = load_chk(fn_chk)
             self.Natoms = len(self.sample['numbers'])
@@ -55,8 +55,9 @@ class System(object):
         else:
             raise ValueError('Invalid file extension, recieved %s' %fn_chk)
     
-    def get_topology(self, fn_psf=None, unit_cell=UnitCell(np.diag([50.0, 50.0, 50.0]),active=np.array([False, False, False])) ):
+    def get_topology(self, fn_psf=None):
         self.fn_psf = fn_psf
+        unit_cell = UnitCell(np.diag([50.0, 50.0, 50.0]),active=np.array([False, False, False]))
         if fn_psf is not None:
             print 'SYSTEM TOPO : loading topology from %s' %fn_psf
             psf = PSFFile(fn_psf)
@@ -79,13 +80,11 @@ class System(object):
             if len(psf.bends)>0: self.sample['bends'] = psf.bends
             if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
             self.neighbor_list = graph.neighbors
-        elif 'neighbor_list' not in self.sample.keys():
-            print "SYSTEM TOPO : creating topology from the geometry because 'neighbors' was missing in %s" %self.fn_chk 
-            molecule = Molecule(self.sample['numbers'], self.sample['coordinates'], unit_cell=unit_cell)
-            graph = MolecularGraph.from_geometry(molecule)
+        elif len(self.sample['bonds'])>1 and 'bends' not in self.sample.keys():
+            print "SYSTEM TOPO : estimating bends, dihedrals and neighbor_list from bonds in %s" %self.fn_chk 
+            graph = MolecularGraph(self.sample['bonds'], self.sample['numbers'])
             psf = PSFFile()
             psf.add_molecular_graph(graph)
-            self.sample['bonds'] = psf.bonds
             if len(psf.bends)>0: self.sample['bends'] = psf.bends
             if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
             self.neighbor_list = graph.neighbors
@@ -98,9 +97,15 @@ class System(object):
         self.eirule = eirule
         print 'SYSTEM EI   : Constructing electrostatic model of kind %s and with exlusion rule = %i' %(eikind, eirule)
         if charges is not None:
-            print 'SYSTEM EI   : the charges are set according to the command line input and the radii are set to 0.01 A'
-            self.sample['charges'] = np.array([float(x) for x in charges.split(',')])
-            self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
+            if charges.endswith('.txt'):
+                print 'SYSTEM EI   : the charges are set to the hipart charge file %s and the radii are set to 0.01 A' %charges
+                from hipart.io import load_atom_scalars
+                self.sample['charges'] = load_atom_scalars(charges)
+                self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
+            else:
+                print 'SYSTEM EI   : the charges are set according to the command line input and the radii are set to 0.01 A'
+                self.sample['charges'] = np.array([float(x) for x in charges.split(',')])
+                self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
         elif 'charges' not in self.sample.keys() and eikind!='Zero':
             raise ValueError("No charges present in sample, please specify them on the command line using the options '--charges'")
         if 'charges' in self.sample.keys() and eikind!='Zero':

@@ -109,10 +109,10 @@ class FFTable(object):
         print
         for icname in sorted(self.icnames):
             k, k_std, q, q_std = self.__getitem__(icname, return_std=True)
-            k = u'%7.2f \u00B1 %7.2f %15s' %(k/parse_unit(self.units[icname]['k']), k_std/parse_unit(self.units[icname]['k']), self.units[icname]['k'])
+            k = u'% 8.2f \u00B1 % 8.2f %15s' %(k/parse_unit(self.units[icname]['k']), k_std/parse_unit(self.units[icname]['k']), self.units[icname]['k'])
             if q is None: q = 'None'
-            else: q = u'%7.3f \u00B1 %7.3f %3s' %(q/parse_unit(self.units[icname]['q']), q_std/parse_unit(self.units[icname]['q']), self.units[icname]['q'])
-            print '                %20s   K=%s     q=%s' %(icname, k, q)
+            else: q = u'% 8.3f \u00B1 % 8.3f %3s' %(q/parse_unit(self.units[icname]['q']), q_std/parse_unit(self.units[icname]['q']), self.units[icname]['q'])
+            print '                %30s   K=%s     q=%s' %(icname, k, q)
         print
 
     def dump_pars_ffit2(self, fn):

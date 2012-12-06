@@ -32,11 +32,11 @@ def parser():
     )
     parser.add_option(
         '--ei-rule', default=-1, type=int,
-        help='Defines the exclusion rule for the electrostatic interactions. If set to -1, no electrostatic interactions are taken into account during force field fitting. If the rule is set to 0,1,2,3: pairs seperated by less then or equal to 1,2,3 bonds respectively are excluded from ei interactions. [default=%default]'
+        help='Defines the exclusion rule for the electrostatic interactions. If set to -1, no electrostatic interactions are taken into account during force field fitting. If the rule is set to 0,1,2,3: pairs seperated by less then or equal to 1,2,3 bonds respectively are excluded from ei interactions. [default=10]'
     )
     parser.add_option(
         '--charges', default=None, 
-        help='Specify the charges of the system, this is necessary if a ei-rule is specified different then -1. The charges are comma seperated and the order should be identical to the order in the sample file. If the charges are not specified but ei-rule is larger then -1, the charges are taken from the psf if present, or from the sample file if present.'
+        help='Specify the charges of the system, this is necessary if a ei-rule is specified different then -1. The charges are comma seperated and the order should be identical to the order in the sample file. If the charges are not specified but ei-rule is larger then -1, the charges are taken from the psf if present, or from the sample file if present. Alternatively, a hipart charge txt file can also be used to specify the charges. [default=%default]'
     )
     parser.add_option(
         '--no-remove', default=True, dest='remove', action='store_false', 
