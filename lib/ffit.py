@@ -22,7 +22,9 @@ def generate_terms(system):
             for ic in ics:
                 n1 = len(system.neighbor_list[ic.indexes[1]])
                 n2 = len(system.neighbor_list[ic.indexes[2]])
-                if   4 in [n1, n2]: m = 3
+                if   6 in [n1, n2]: m = 4
+                elif 5 in [n1, n2]: m = 1
+                elif 4 in [n1, n2]: m = 3
                 elif 3 in [n1, n2]: m = 2
                 elif 2 in [n1, n2]: m = 1
                 else: raise ValueError('Dihedral %i,%i,%i,%i has no atoms bonded to central pair' %(ic.indexes[0], ic.indexes[1], ic.indexes[2], ic.indexes[3]))
