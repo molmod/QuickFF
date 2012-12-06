@@ -66,6 +66,7 @@ class FFitProgram(DefaultProgram):
     def run(self):
         print ' FFIT  RUN  : refine force field parameters using FFit2'
         model = DefaultProgram.run(self)
-        dump_yaff_parameters(model.terms, model.training_set, 'pars.txt')
+        dump_yaff_parameters(model.terms, model.training_set, 'pars_yaff.txt')
+        model.dump_pars('pars_ffit2.txt')
         fftab = FFTable.from_ffit2(model)
         return fftab

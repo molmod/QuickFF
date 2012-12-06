@@ -112,7 +112,7 @@ class FFTable(object):
             k = u'% 8.2f \u00B1 % 8.2f %15s' %(k/parse_unit(self.units[icname]['k']), k_std/parse_unit(self.units[icname]['k']), self.units[icname]['k'])
             if q is None: q = 'None'
             else: q = u'% 8.3f \u00B1 % 8.3f %3s' %(q/parse_unit(self.units[icname]['q']), q_std/parse_unit(self.units[icname]['q']), self.units[icname]['q'])
-            print '                %30s   K=%s     q=%s' %(icname, k, q)
+            print '                %40s   K=%s     q=%s' %(icname, k, q)
         print
 
     def dump_pars_ffit2(self, fn):
