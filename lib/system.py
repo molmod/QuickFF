@@ -41,6 +41,8 @@ class System(object):
             print 'SYSTEM LOAD : loading system sample from MolMod checkpoint file %s' %fn_chk
             self.sample = load_chk(fn_chk)
             self.Natoms = len(self.sample['numbers'])
+            if 'colors' not in self.sample.keys():
+                self.sample['colors'] = ['#7777CC' for i in xrange(self.Natoms)]
         elif fn_chk.endswith('.fchk'):
             print 'SYSTEM LOAD : loading system sample from Gaussian fchk file %s' %fn_chk
             fchk = FCHKFile(fn_chk)
@@ -52,6 +54,7 @@ class System(object):
             self.sample['gradient'] = fchk.fields.get('Cartesian Gradient').reshape([self.Natoms, 3])
             self.sample['hessian']  = fchk.get_hessian().reshape([self.Natoms, 3, self.Natoms, 3])
             self.sample['ffatypes'] = [pt[i].symbol for i in self.sample['numbers']]
+            self.sample['colors'] = ['#7777CC' for i in xrange(self.Natoms)]
         else:
             raise ValueError('Invalid file extension, recieved %s' %fn_chk)
     
@@ -105,18 +108,20 @@ class System(object):
             if charges.endswith('.txt'):
                 print 'SYSTEM EI   : the charges are set to the hipart charge file %s and the radii are set to 0.01 A' %charges
                 from hipart.io import load_atom_scalars
-                self.sample['charges'] = load_atom_scalars(charges)
+                self.sample['ac'] = load_atom_scalars(charges)
+                self.sample['mc'] = sum(self.sample['ac'])
                 self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
             else:
                 print 'SYSTEM EI   : the charges are set according to the command line input and the radii are set to 0.01 A'
-                self.sample['charges'] = np.array([float(x) for x in charges.split(',')])
+                self.sample['ac'] = np.array([float(x) for x in charges.split(',')])
+                self.sample['mc'] = sum(self.sample['ac'])
                 self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
-        elif 'charges' not in self.sample.keys() and eikind!='Zero':
+        elif 'ac' not in self.sample.keys() and eikind!='Zero':
             raise ValueError("No charges present in sample, please specify them on the command line using the options '--charges'")
-        if 'charges' in self.sample.keys() and eikind!='Zero':
+        if 'ac' in self.sample.keys() and eikind!='Zero':
             print 'SYSTEM INFO : The atom types, charges and charge radii are respectively'
             print
-            for i, (t, q, r) in enumerate(zip(self.sample['ffatypes'], self.sample['charges'], self.sample['radii'])):
+            for i, (t, q, r) in enumerate(zip(self.sample['ffatypes'], self.sample['ac'], self.sample['radii'])):
                 print '                %3i  %4s % 6.3f %.4f' %(i, t, q, r)
             print
         if eikind!='Zero':
@@ -136,7 +141,7 @@ class System(object):
             forces_ei, hess_ei = electrostatics(self.sample, exclude_pairs=exclude)
             self.eimodel = HarmonicModel(self.sample['coordinates'], forces_ei, hess_ei, name='Harmonic Electrostatic Energy')
         elif eikind=='Coulomb':
-            self.eimodel = CoulombModel(self.sample['coordinates'], self.sample['charges'], name='Coulomb Electrostatic Energy', exclude_pairs=exclude)
+            self.eimodel = CoulombModel(self.sample['coordinates'], self.sample['ac'], name='Coulomb Electrostatic Energy', exclude_pairs=exclude)
         else:
             raise ValueError('Invalid model kind in System.define_ei_model, received %s' %eikind)
 

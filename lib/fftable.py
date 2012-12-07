@@ -105,7 +105,7 @@ class FFTable(object):
         return result
     
     def print_screen(self):
-        print ' FFTAB PRINT: printing force field parameters to screen'
+        print 'FFTAB  PRINT: printing force field parameters to screen'
         print
         for icname in sorted(self.icnames):
             k, k_std, q, q_std = self.__getitem__(icname, return_std=True)
@@ -151,4 +151,4 @@ class FFTable(object):
                 )
         print >> f, '# ------------------------------------------------------------------#------'
         f.close()
-        print ' FFTAB DUMP : dumped parameters in FFit2 format to %s' %fn
+        print 'FFTAB  DUMP : dumped parameters in FFit2 format to %s' %fn

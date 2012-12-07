@@ -2,14 +2,24 @@
 
 import os, numpy as np
 from cfit2 import *
-from mfit2 import *
+
+from mfit2.program import DefaultProgram as MFitDefaultProgram
+from mfit2.terms import HarmonicTerm, CosineTerm, GaussianChargeTerm
+from mfit2.yaff import dump_yaff_parameters as dump_myaff
+from mfit2.lsq import HessianLSQ
+from mfit2.ics import dist, angle, dihed
+
+from zfit2.program import DefaultProgram as ZFitDefaultProgram
+from zfit2.terms import SplitChargeTerm, FixedBackgroundChargeTerm
+from zfit2.yaff import dump_yaff_parameters as dump_zyaff
+from zfit2.lsq import ChargeLSQ
 
 from fftable import FFTable
 
-__all__ = ['FFitProgram', 'generate_terms']
+__all__ = ['ZFitProgram', 'MFitProgram']
 
-def generate_terms(system):
-    print ' FFIT  TERMS: auto generate harmonic force field terms'
+def generate_mterms(system):
+    print 'MFIT2  TERMS: auto generate harmonic force field terms'
     terms = []    
     for icname, ics in system.ics.iteritems():
         kind = icname.split('/')[0]
@@ -36,18 +46,44 @@ def generate_terms(system):
     return terms
 
 
-class FFitProgram(DefaultProgram):
+class ZFitProgram(ZFitDefaultProgram):
     def __init__(self, system):
+        dn_out = '%s/out/zfit' %(os.getcwd())
+        os.system('mkdir -p %s' %dn_out)
+        log._file = open('%s/log.txt' %dn_out, 'w')
+        terms = [TermGenerator(SplitChargeTerm, BondFilter('*', '*', allow_homonuclear=False))]
+        terms.append(FixedBackgroundChargeTerm())
         rules = []
-        dn_out = '%s/out' %(os.getcwd())
-        log._file = open('out-ffit2.log', 'w')
-        fn_pars_init = 'int-pars.txt'
-        lsqs = [HessianLSQ('Hess', 'int-system.chk', 1.0)]
-        fix_patterns = ['q0']
-        terms = generate_terms(system)
-        DefaultProgram.__init__(self, dn_out, terms, rules, lsqs, fn_pars_init, fix_patterns=fix_patterns, free_patterns=[],
+        lsqs  = [ChargeLSQ('AQ', 'int-system.chk', 1.0)]
+        fn_pars_init = None
+        self.scales = [1.0, 1.0, 1.0]
+        if system.eirule > 0: self.scales[0] = 0.0
+        if system.eirule > 1: self.scales[1] = 0.0
+        if system.eirule > 2: self.scales[2] = 0.0
+        ZFitDefaultProgram.__init__(self, dn_out, terms, rules, lsqs, fn_pars_init, fix_patterns=[], free_patterns=[],
                                 step_dl_min=1e-5, step_dl_max=1e2, max_iter=50, weight_mode=None, weight_ridge=0.1)
+    
+    def run(self):
+        print 'ZFIT2  RUN  : calculate split charges using FFit2'
+        model = ZFitDefaultProgram.run(self)
+        dump_zyaff(model.terms, model.training_set, 'pars_zyaff.txt', scales=self.scales)
+        model.dump_pars('pars_zfit2.txt')
+        return model.training_set[0].ac
 
+
+class MFitProgram(MFitDefaultProgram):
+    def __init__(self, system):
+        dn_out = '%s/out/mfit' %(os.getcwd())
+        os.system('mkdir -p %s' %dn_out)
+        log._file = open('%s/log.txt' %dn_out, 'w')
+        terms = generate_mterms(system)
+        rules = []
+        lsqs = [HessianLSQ('Hess', 'int-system.chk', 1.0)]
+        fn_pars_init = 'int-pars.txt'
+        fix_patterns = ['q0']
+        MFitDefaultProgram.__init__(self, dn_out, terms, rules, lsqs, fn_pars_init, fix_patterns=fix_patterns, free_patterns=[],
+                                step_dl_min=1e-5, step_dl_max=1e2, max_iter=50, weight_mode=None, weight_ridge=0.1)
+    
     def get_constraints(self, model):
         constraints = []
         def add_pos(par):
@@ -58,15 +94,16 @@ class FFitProgram(DefaultProgram):
                     add_pos(term.pars[0])
                 if term.pars[1].free:
                     add_pos(term.pars[1]) 
-            #if isinstance(term, CosineTerm):
-            #    if term.pars[0].free:
-            #        add_pos(term.pars[0])
         return constraints
     
     def run(self):
-        print ' FFIT  RUN  : refine force field parameters using FFit2'
-        model = DefaultProgram.run(self)
-        dump_yaff_parameters(model.terms, model.training_set, 'pars_yaff.txt')
-        model.dump_pars('pars_ffit2.txt')
+        print 'MFIT2  RUN  : refine force field parameters using FFit2'
+        model = MFitDefaultProgram.run(self)
+        dump_myaff(model.terms, model.training_set, 'pars_myaff.txt')
+        if os.path.isfile('pars_zyaff.txt'):
+            os.system('cat pars_zyaff.txt pars_myaff.txt > pars_yaff.txt')
+        else:
+            os.system('mv pars_myaff.txt pars_yaff.txt; rm pars_zyaff.txt pars_myaff.txt')
+        model.dump_pars('pars_mfit2.txt')
         fftab = FFTable.from_ffit2(model)
         return fftab

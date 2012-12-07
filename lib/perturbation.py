@@ -8,7 +8,6 @@ import numpy as np, matplotlib.pyplot as pp
 from fftable import FFTable
 from tools import fitpar, add_plot
 from evaluators import *
-from ffit import FFitProgram
 
 __all__ = ['estimate', 'calculate_perturbation', 'analyze_perturbation', 'plot_perturbation']
 

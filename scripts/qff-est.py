@@ -7,7 +7,7 @@ from molmod.units import *
 from quickff.system import System
 from quickff.perturbation import estimate
 from quickff.fftable import FFTable
-from quickff.ffit import FFitProgram
+from quickff.ffit import ZFitProgram, MFitProgram
 
 def parser():
     usage = "%prog [options] icnames system"
@@ -32,7 +32,7 @@ def parser():
     )
     parser.add_option(
         '--ei-rule', default=-1, type=int,
-        help='Defines the exclusion rule for the electrostatic interactions. If set to -1, no electrostatic interactions are taken into account during force field fitting. If the rule is set to 0,1,2,3: pairs seperated by less then or equal to 1,2,3 bonds respectively are excluded from ei interactions. [default=10]'
+        help='Defines the exclusion rule for the electrostatic interactions. If set to -1, no electrostatic interactions are taken into account during force field fitting. If the rule is set to 0,1,2,3: pairs seperated by less then or equal to 1,2,3 bonds respectively are excluded from ei interactions. [default=-1]'
     )
     parser.add_option(
         '--charges', default=None, 
@@ -43,7 +43,7 @@ def parser():
         help='Do not remove intermediate files and directories.'
     )
     parser.add_option(
-        '--only-system', default=False, dest='system', action='store_true', 
+        '--only-system', default=False, dest='only_system', action='store_true', 
         help='Only construct MolMod chk file containing the system sample from system file and possible psf file.'
     )
     options, args = parser.parse_args()
@@ -61,18 +61,25 @@ def main():
     system = System('system', fn_chk, fn_psf=options.psf, eikind=eikind, eirule=options.ei_rule, charges=options.charges)
     system.find_ic_patterns(icnames)
     
-    if options.system:
+    if options.only_system:
         system.dump_sample('system.chk')
     else:
-        system.dump_sample('int-system.chk')
         fftab_init = estimate(system, coupling=options.coupling, free_depth=options.free_depth, spring=options.spring)
         fftab_init.print_screen()
         fftab_init.dump_pars_ffit2('int-pars.txt')
-        program = FFitProgram(system)
-        fftab_fine = program.run()
+        system.dump_sample('int-system.chk')
+        if options.ei_rule>-1:
+            zfit = ZFitProgram(system)
+            charges = zfit.run()
+            system.sample['ac'] = charges
+            system.sample['charges'] = charges
+            system.dump_sample('int-system.chk')
+        mfit = MFitProgram(system)
+        fftab_fine = mfit.run()
         fftab_fine.print_screen()
+        system.dump_sample('system.chk')
         if options.remove:
-            os.system('rm -r int-system.chk int-pars.txt out-ffit2.log out')
+            os.system('rm -r int-system.chk int-pars.txt out')
 
 if __name__=='__main__':
     main()

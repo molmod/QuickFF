@@ -21,7 +21,7 @@ class ZeroModel(object):
         return np.zeros(coords.shape, float)
     
     def get_hessian(self, coords):
-        return np.zeros([3*len(coords),3*len(coords)], float)
+        return np.zeros([len(coords), 3, len(coords), 3], float)
 
 
 class HarmonicModel(object):
@@ -118,7 +118,7 @@ class CoulombModel(object):
 
 
 def electrostatics(sample, exclude_pairs=[], exclude_types=[]):
-    qs = sample['charges']
+    qs = sample['ac']
     atypes = sample['ffatypes']
     forces = np.zeros(3*len(qs), float)
     hess = np.zeros([3*len(qs), 3*len(qs)], float)
