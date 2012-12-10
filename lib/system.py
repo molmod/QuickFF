@@ -15,16 +15,24 @@ import numpy as np, sys
 from model import *
 from ic import *
 from tools import *
+from atypes import define_atypes
 
 __all__=['System']
 
 class System(object):
-    def __init__(self, name, fn_chk, fn_psf=None, eikind='Zero', eirule=-1, charges=None):
+    def __init__(self, name, fn_chk, fn_psf=None, eikind='Zero', eirule=-1, charges=None, atypes_kind='medium'):
         print 'SYSTEM INIT : initializing system %s' %name
         self.name = name
         self.load_sample(fn_chk)
         self.get_topology(fn_psf)
+        if not 'ffatypes' in self.sample.keys():
+            if atypes_kind=='low': print 'SYSTEM ATYPE: defining atom types based on atom number'
+            if atypes_kind=='medium': print 'SYSTEM ATYPE: defining atom types based on local topology'
+            elif atypes_kind=='high': print 'SYSTEM ATYPE: defining atom types based on atom index'
+            else: raise ValueError('Invalid atypes value, recieved %s' %atypes_kind)
+            self.sample['ffatypes'] = define_atypes(self.sample['bonds'], self.sample['numbers'], kind=atypes_kind)
         self.define_ei_model(eikind, eirule, charges)
+        self.print_info()
         
         print 'SYSTEM PROJ : Projecting translational and rotional dofs out of the hessian'
         hess = self.sample['hessian'].reshape([3*self.Natoms, 3*self.Natoms])
@@ -53,7 +61,6 @@ class System(object):
             self.sample['coordinates'] = fchk.fields.get('Current cartesian coordinates').reshape([self.Natoms, 3])
             self.sample['gradient'] = fchk.fields.get('Cartesian Gradient').reshape([self.Natoms, 3])
             self.sample['hessian']  = fchk.get_hessian().reshape([self.Natoms, 3, self.Natoms, 3])
-            self.sample['ffatypes'] = [pt[i].symbol for i in self.sample['numbers']]
             self.sample['colors'] = ['#7777CC' for i in xrange(self.Natoms)]
         else:
             raise ValueError('Invalid file extension, recieved %s' %fn_chk)
@@ -69,9 +76,9 @@ class System(object):
             if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
             self.sample['ffatypes'] = psf.atom_types
             self.neighbor_list = psf.get_molecular_graph().neighbors
-            if 'charges' not in self.sample:
+            if 'ac' not in self.sample:
                 print 'SYSTEM EI   : the charges are taken from %s and the radii are set to 0.01 A' %fn_psf
-                self.sample['charges'] = psf.charges
+                self.sample['ac'] = psf.charges
                 self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
         elif 'bonds' not in self.sample.keys():
             print "SYSTEM TOPO : creating topology from the geometry because 'bonds' was missing in %s" %self.fn_chk 
@@ -92,7 +99,7 @@ class System(object):
             if len(psf.bends)>0: self.sample['bends'] = psf.bends
             if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
             self.neighbor_list = graph.neighbors
-        elif not hasattr(self, neighbor_list):
+        elif not hasattr(self, 'neighbor_list'):
             print "SYSTEM TOPO : bonds, bends and dihedrals loaded from %s, neighbors estimated from bonds" %self.fn_chk 
             graph = MolecularGraph(self.sample['bonds'], self.sample['numbers'])
             self.neighbor_list = graph.neighbors
@@ -110,20 +117,20 @@ class System(object):
                 from hipart.io import load_atom_scalars
                 self.sample['ac'] = load_atom_scalars(charges)
                 self.sample['mc'] = sum(self.sample['ac'])
-                self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
+                self.sample['radii'] = 0.001*angstrom*np.ones([self.Natoms], float)
             else:
                 print 'SYSTEM EI   : the charges are set according to the command line input and the radii are set to 0.01 A'
                 self.sample['ac'] = np.array([float(x) for x in charges.split(',')])
                 self.sample['mc'] = sum(self.sample['ac'])
-                self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
-        elif 'ac' not in self.sample.keys() and eikind!='Zero':
-            raise ValueError("No charges present in sample, please specify them on the command line using the options '--charges'")
-        if 'ac' in self.sample.keys() and eikind!='Zero':
-            print 'SYSTEM INFO : The atom types, charges and charge radii are respectively'
-            print
-            for i, (t, q, r) in enumerate(zip(self.sample['ffatypes'], self.sample['ac'], self.sample['radii'])):
-                print '                %3i  %4s % 6.3f %.4f' %(i, t, q, r)
-            print
+                self.sample['radii'] = 0.001*angstrom*np.ones([self.Natoms], float)
+        elif 'ac' not in self.sample.keys():
+            if eikind!='Zero':
+                raise ValueError("No charges present in sample, please specify them on the command line using the options '--charges'")
+            else:
+                print 'SYSTEM EI   : the charges are set to zero and the radii are set to 0.01 A'
+                self.sample['ac'] = np.zeros(self.Natoms, float)
+                self.sample['mc'] = 0.0
+                self.sample['radii'] = 0.001*angstrom*np.ones([self.Natoms], float)
         if eikind!='Zero':
             exclude = []
             if eirule>0:
@@ -145,11 +152,37 @@ class System(object):
         else:
             raise ValueError('Invalid model kind in System.define_ei_model, received %s' %eikind)
 
+    def print_info(self):
+        if 'ac' in self.sample.keys():
+            print 'SYSTEM INFO : The atom types, charges and charge radii are respectively'
+            print
+            for i, (t, q, r) in enumerate(zip(self.sample['ffatypes'], self.sample['ac'], self.sample['radii'])):
+                print '                %3i  %8s % 6.3f %.4f' %(i, t, q, r)
+            print
+        else:
+            print 'SYSTEM INFO : The atom types are'
+            print
+            for i, t in enumerate(self.sample['ffatypes']):
+                print '                %3i  %8s' %(i, t)
+            print
+    
     def dump_sample(self, fn):
         if not self.fn_chk==fn:
             from molmod.io.chk import dump_chk
             print 'SYSTEM DUMP : dumping system sample to MolMod checkpoint file %s' %fn
             dump_chk(fn, self.sample)
+    
+    def dump_sample_yaff(self, fn):
+        print 'SYSTEM DUMP : dumping system sample to Yaff checkpoint file %s' %fn
+        yaff = {}
+        yaff['bonds'] = self.sample['bonds']
+        yaff['charges'] = self.sample['ac']
+        yaff['ffatypes'] = self.sample['ffatypes']
+        yaff['masses'] = np.array([pt[number].mass for number in self.sample['numbers']])
+        yaff['numbers'] = self.sample['numbers']
+        yaff['pos'] = self.sample['coordinates']
+        from molmod.io.chk import dump_chk
+        dump_chk(fn, yaff)
 
     def icnames_from_topology(self):
         print 'SYSTEM ICNAM: determining ic names from topolgy'

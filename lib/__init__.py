@@ -6,3 +6,4 @@ from tools import *
 from fftable import *
 from perturbation import *
 from ffit import *
+from atypes import *

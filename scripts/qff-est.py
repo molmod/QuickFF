@@ -39,6 +39,10 @@ def parser():
         help='Specify the charges of the system, this is necessary if a ei-rule is specified different then -1. The charges are comma seperated and the order should be identical to the order in the sample file. If the charges are not specified but ei-rule is larger then -1, the charges are taken from the psf if present, or from the sample file if present. Alternatively, a hipart charge txt file can also be used to specify the charges. [default=%default]'
     )
     parser.add_option(
+        '--atypes', default='medium', 
+        help='Specify how the atypes are determined if they are not present in the system file. Low will choose atom types based only on atm number, medium will choose atom types based on local topology and high will choose atom types based on atom index. [default=%default]'
+    )
+    parser.add_option(
         '--no-remove', default=True, dest='remove', action='store_false', 
         help='Do not remove intermediate files and directories.'
     )
@@ -58,7 +62,7 @@ def main():
         eikind = 'Zero'
     else:
         eikind = 'Harmonic'
-    system = System('system', fn_chk, fn_psf=options.psf, eikind=eikind, eirule=options.ei_rule, charges=options.charges)
+    system = System('system', fn_chk, fn_psf=options.psf, eikind=eikind, eirule=options.ei_rule, charges=options.charges, atypes_kind=options.atypes)
     system.find_ic_patterns(icnames)
     
     if options.only_system:
@@ -74,10 +78,15 @@ def main():
             system.sample['ac'] = charges
             system.sample['charges'] = charges
             system.dump_sample('int-system.chk')
+        else:
+            system.sample['ac'] = np.zeros(system.Natoms, float)
+            system.sample['charges'] = np.zeros(system.Natoms, float)
+            system.dump_sample('int-system.chk')
         mfit = MFitProgram(system)
         fftab_fine = mfit.run()
         fftab_fine.print_screen()
         system.dump_sample('system.chk')
+        system.dump_sample_yaff('system_yaff.chk')
         if options.remove:
             os.system('rm -r int-system.chk int-pars.txt out')
 

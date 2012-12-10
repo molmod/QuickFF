@@ -102,8 +102,9 @@ class MFitProgram(MFitDefaultProgram):
         dump_myaff(model.terms, model.training_set, 'pars_myaff.txt')
         if os.path.isfile('pars_zyaff.txt'):
             os.system('cat pars_zyaff.txt pars_myaff.txt > pars_yaff.txt')
+            os.system('rm pars_zyaff.txt pars_myaff.txt')
         else:
-            os.system('mv pars_myaff.txt pars_yaff.txt; rm pars_zyaff.txt pars_myaff.txt')
+            os.system('mv pars_myaff.txt pars_yaff.txt')
         model.dump_pars('pars_mfit2.txt')
         fftab = FFTable.from_ffit2(model)
         return fftab
