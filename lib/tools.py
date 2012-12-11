@@ -3,7 +3,7 @@
 import numpy as np
 from molmod.units import parse_unit
 
-__all__ = ['global_translation', 'global_rotation', 'calc_angles', 'statistics', 'fitpar', 'add_plot']
+__all__ = ['global_translation', 'global_rotation', 'calc_angles', 'statistics', 'fitpar', 'add_plot', 'has_15_bonded']
 
 def global_translation(coords):
     Natoms = len(coords)
@@ -99,4 +99,15 @@ def add_plot(ax, curves, title='', xunit='au', yunit='au', xlabel='IC [%s]', yla
     ax.set_ylabel(ylabel)
     ax.grid()
     ax.set_title(title)
-    ax.legend(loc='lower left') 
+    ax.legend(loc='lower left')
+
+def has_15_bonded(system):
+    assert hasattr(system, 'neighbor_list')
+    if 'dihedrals' not in system.sample.keys():
+        return False
+    for dihed in system.sample['dihedrals']:
+        neigh0 = system.neighbor_list[dihed[0]]
+        neigh3 = system.neighbor_list[dihed[3]]
+        if len(neigh0)>1 or len(neigh3)>1:
+            return True
+    return False

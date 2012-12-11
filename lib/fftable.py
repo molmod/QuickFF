@@ -35,7 +35,7 @@ class FFTable(object):
     
     @classmethod
     def from_ffit2(cls, model):
-        print ' FFTAB FFIT2: constructing FFTable from FFit2 model'
+        print 'FFTAB  FFIT2: constructing FFTable from FFit2 model'
         icnames = []
         units = {}
         kdata = {}

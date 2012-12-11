@@ -119,25 +119,32 @@ def plot_perturbation(system, icname, relative_amplitude=0.1, coupling=None, fre
     for i, v in enumerate(vs):
         fn_xyz = 'traj-%s-%i.xyz' %(icname.split('/')[1], i)
         amplitude = system.ics[icname][i].value(system.sample['coordinates'])*relative_amplitude
-        values = analyze_perturbation(
-            system, v, 
-            evaluators=[ic_evaluator(icname, i), energy_evaluator('totmodel'), energy_evaluator('eimodel')],
-            fn_xyz=fn_xyz, amplitude=amplitude, steps=101
-        )
-        qs = np.array(values[0])
+        evaluators = [ic_evaluator(icname, i), energy_evaluator('totmodel'), energy_evaluator('eimodel')]
+        values = analyze_perturbation(system, v, evaluators=evaluators, fn_xyz=fn_xyz, amplitude=amplitude, steps=101)
+        qs    = np.array(values[0])
         total = np.array(values[1])
-        ei = np.array(values[2])
-        if coupling is not None: total /= len(vs)
+        ei    = np.array(values[2])
+        if coupling is not None:
+            total /= len(vs)
+            ei    /= len(vs)
+        pars_ref = fitpar(qs, total, rcond=1e-6)
+        k_ref    = 2*pars_ref[0]
+        q0_ref   = -pars_ref[1]/k_ref
+        pars_ei = fitpar(qs, ei, rcond=1e-6)
+        k_ei    = 2*pars_ei[0]
+        q0_ei   = -pars_ei[1]/k_ei
         pars = fitpar(qs, total-ei, rcond=1e-6)
-        k = 2*pars[0]
-        q0 = -pars[1]/k
-        fit = pars[0]*qs**2 + pars[1]*qs + pars[2]
+        k    = 2*pars[0]
+        q0   = -pars[1]/k
+        fit  = pars[0]*qs**2 + pars[1]*qs + pars[2]
         rmsd = np.sqrt( ((total - ei - fit)**2).sum()/len(total) )
         title = "perturbation %s:\n" %('-'.join(['%s[%i]' %(system.sample['ffatypes'][atindex],atindex) for atindex in system.ics[icname][i].indexes])) \
               + "---------------------------------------------\n" \
-              + "Fit:   k  = % 4.0f %s   q0 = % 6.2f %s\n" %(k/parse_unit(kunit), kunit, q0/parse_unit(qunit), qunit) \
+              + "Fit Tot: k  = % 4.0f %s   q0 = % 6.2f %s\n" %(k_ref/parse_unit(kunit), kunit, q0_ref/parse_unit(qunit), qunit) \
+              + "Fit EI : k  = % 4.0f %s   q0 = % 6.2f %s\n" %(k_ei/parse_unit(kunit), kunit, q0_ei/parse_unit(qunit), qunit) \
+              + "Fit Cov: k  = % 4.0f %s   q0 = % 6.2f %s\n" %(k/parse_unit(kunit), kunit, q0/parse_unit(qunit), qunit) \
               + "---------------------------------------------\n" \
-              + "RMS(Total - EI - Fit) = %.3e" %(rmsd/parse_unit(eunit))
+              + "RMS(Total - EI - Fit) = %.3e %s" %(rmsd/parse_unit(eunit), eunit)
         curves = [
             [qs, total, 'b-', 'AI Total Energy'       ],
             [qs, ei   , 'r-', 'Electrostatic Energy'  ],
@@ -147,4 +154,4 @@ def plot_perturbation(system, icname, relative_amplitude=0.1, coupling=None, fre
 
     fig.set_size_inches([8, 8*len(vs)])
     fig.tight_layout()
-    pp.savefig('energy-%s.pdf' %(icname.split('/')[1]))
+    pp.savefig('energy-%s.png' %(icname.split('/')[1]))

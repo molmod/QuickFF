@@ -77,9 +77,9 @@ class System(object):
             self.sample['ffatypes'] = psf.atom_types
             self.neighbor_list = psf.get_molecular_graph().neighbors
             if 'ac' not in self.sample:
-                print 'SYSTEM EI   : the charges are taken from %s and the radii are set to 0.01 A' %fn_psf
+                print 'SYSTEM EI   : the charges are taken from %s and the radii are set to 1e-4 A' %fn_psf
                 self.sample['ac'] = psf.charges
-                self.sample['radii'] = 0.01*angstrom*np.ones([self.Natoms], float)
+                self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
         elif 'bonds' not in self.sample.keys():
             print "SYSTEM TOPO : creating topology from the geometry because 'bonds' was missing in %s" %self.fn_chk 
             molecule = Molecule(self.sample['numbers'], self.sample['coordinates'], unit_cell=unit_cell)
@@ -110,47 +110,59 @@ class System(object):
     def define_ei_model(self, eikind, eirule, charges):
         self.eikind = eikind
         self.eirule = eirule
-        print 'SYSTEM EI   : Constructing electrostatic model of kind %s and with exlusion rule = %i' %(eikind, eirule)
+        if eirule==3 and not has_15_bonded(self):
+            print 'SYSTEM EI   : electrostatics switched off, because no 15 bonded pairs and exclude rule was %i' %eirule
+            self.eirule=-1
+            self.eikind = 'Zero'
+        elif eirule==2 and 'dihedrals' not in self.sample.keys():
+            print 'SYSTEM EI   : electrostatics switched off, because no 14 bonded pairs and exclude rule was %i' %eirule
+            self.eirule=-1
+            self.eikind = 'Zero'
+        elif eirule==1 and 'bends' not in self.sample.keys():
+            print 'SYSTEM EI   : electrostatics switched off, because no 13 bonded pairs and exclude rule was %i' %eirule
+            self.eirule=-1
+            self.eikind = 'Zero'
+        print 'SYSTEM EI   : Constructing electrostatic model of kind %s and with exlusion rule = %i' %(self.eikind, self.eirule)
         if charges is not None:
             if charges.endswith('.txt'):
-                print 'SYSTEM EI   : the charges are set to the hipart charge file %s and the radii are set to 0.01 A' %charges
+                print 'SYSTEM EI   : the charges are set to the hipart charge file %s and the radii are set to 1e-4 A' %charges
                 from hipart.io import load_atom_scalars
                 self.sample['ac'] = load_atom_scalars(charges)
                 self.sample['mc'] = sum(self.sample['ac'])
-                self.sample['radii'] = 0.001*angstrom*np.ones([self.Natoms], float)
+                self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
             else:
-                print 'SYSTEM EI   : the charges are set according to the command line input and the radii are set to 0.01 A'
+                print 'SYSTEM EI   : the charges are set according to the command line input and the radii are set to 1e-4 A'
                 self.sample['ac'] = np.array([float(x) for x in charges.split(',')])
                 self.sample['mc'] = sum(self.sample['ac'])
-                self.sample['radii'] = 0.001*angstrom*np.ones([self.Natoms], float)
+                self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
         elif 'ac' not in self.sample.keys():
-            if eikind!='Zero':
+            if self.eikind!='Zero':
                 raise ValueError("No charges present in sample, please specify them on the command line using the options '--charges'")
             else:
-                print 'SYSTEM EI   : the charges are set to zero and the radii are set to 0.01 A'
+                print 'SYSTEM EI   : the charges are set to zero and the radii are set to 1e-4 A'
                 self.sample['ac'] = np.zeros(self.Natoms, float)
                 self.sample['mc'] = 0.0
-                self.sample['radii'] = 0.001*angstrom*np.ones([self.Natoms], float)
-        if eikind!='Zero':
+                self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
+        if self.eikind!='Zero':
             exclude = []
-            if eirule>0:
+            if self.eirule>0:
                 for bond in self.sample['bonds']:
                     exclude.append([bond[0], bond[1]])
-            if eirule>1 and 'bends' in self.sample.keys():
+            if self.eirule>1 and 'bends' in self.sample.keys():
                 for bend in self.sample['bends']:
                     exclude.append([bend[0], bend[2]])
-            if eirule>2 and 'dihedrals' in self.sample.keys():
+            if self.eirule>2 and 'dihedrals' in self.sample.keys():
                 for dihed in self.sample['dihedrals']:
                     exclude.append([dihed[0], dihed[3]])
-        if eikind=='Zero':
+        if self.eikind=='Zero':
             self.eimodel = ZeroModel()
-        elif eikind=='Harmonic':
+        elif self.eikind=='Harmonic':
             forces_ei, hess_ei = electrostatics(self.sample, exclude_pairs=exclude)
             self.eimodel = HarmonicModel(self.sample['coordinates'], forces_ei, hess_ei, name='Harmonic Electrostatic Energy')
-        elif eikind=='Coulomb':
+        elif self.eikind=='Coulomb':
             self.eimodel = CoulombModel(self.sample['coordinates'], self.sample['ac'], name='Coulomb Electrostatic Energy', exclude_pairs=exclude)
         else:
-            raise ValueError('Invalid model kind in System.define_ei_model, received %s' %eikind)
+            raise ValueError('Invalid model kind in System.define_ei_model, received %s' %self.eikind)
 
     def print_info(self):
         if 'ac' in self.sample.keys():

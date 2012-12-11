@@ -61,7 +61,7 @@ def main():
     if options.ei_rule==-1:
         eikind = 'Zero'
     else:
-        eikind = 'Harmonic'
+        eikind = 'Coulomb'
     system = System('system', fn_chk, fn_psf=options.psf, eikind=eikind, eirule=options.ei_rule, charges=options.charges, atypes_kind=options.atypes)
     system.find_ic_patterns(icnames)
     

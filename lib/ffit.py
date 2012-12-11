@@ -57,9 +57,9 @@ class ZFitProgram(ZFitDefaultProgram):
         lsqs  = [ChargeLSQ('AQ', 'int-system.chk', 1.0)]
         fn_pars_init = None
         self.scales = [1.0, 1.0, 1.0]
-        if system.eirule > 0: self.scales[0] = 0.0
-        if system.eirule > 1: self.scales[1] = 0.0
-        if system.eirule > 2: self.scales[2] = 0.0
+        if system.eirule > 0 or system.eirule==-1: self.scales[0] = 0.0
+        if system.eirule > 1 or system.eirule==-1: self.scales[1] = 0.0
+        if system.eirule > 2 or system.eirule==-1: self.scales[2] = 0.0
         ZFitDefaultProgram.__init__(self, dn_out, terms, rules, lsqs, fn_pars_init, fix_patterns=[], free_patterns=[],
                                 step_dl_min=1e-5, step_dl_max=1e2, max_iter=50, weight_mode=None, weight_ridge=0.1)
     
