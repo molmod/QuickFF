@@ -132,7 +132,10 @@ def plot_perturbation(system, icname, relative_amplitude=0.1, coupling=None, fre
         q0_ref   = -pars_ref[1]/k_ref
         pars_ei = fitpar(qs, ei, rcond=1e-6)
         k_ei    = 2*pars_ei[0]
-        q0_ei   = -pars_ei[1]/k_ei
+        if pars_ei[1]==0:
+            q0_ei = 0.0
+        else:
+            q0_ei = -pars_ei[1]/k_ei
         pars = fitpar(qs, total-ei, rcond=1e-6)
         k    = 2*pars[0]
         q0   = -pars[1]/k
@@ -154,4 +157,4 @@ def plot_perturbation(system, icname, relative_amplitude=0.1, coupling=None, fre
 
     fig.set_size_inches([8, 8*len(vs)])
     fig.tight_layout()
-    pp.savefig('energy-%s.png' %(icname.split('/')[1]))
+    pp.savefig('energy-%s.pdf' %(icname.split('/')[1]))
