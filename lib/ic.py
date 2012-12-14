@@ -3,7 +3,7 @@
 from molmod.periodic import periodic as pt
 import numpy as np
 
-__all__ = ['IC']
+__all__ = ['IC', 'test_ics']
 
 class IC(object):
     def __init__(self, indexes, icf, name=None):
@@ -52,3 +52,16 @@ class IC(object):
             error = np.linalg.norm(num-ana)/np.linalg.norm(num)
             if error>threshold:
                 print '    IC TEST : test nr. %i for %s FAILED: epsilon=%.6f  norm(num)=%.6e  error=%.6e' %(i,self.name,epsilon,np.linalg.norm(num),error)
+
+def test_ics(system, epsilon=1e-4, ntests=50, threshold=1e-5):
+    print 'SYSTEM TEST : testing ic gradient and hessian'
+    for icname, ics in system.ics.iteritems():
+        for ic in ics:
+            ic.test(system.sample['coordinates'], epsilon=epsilon, ntests=ntests, threshold=threshold)
+    print 'SYSTEM TEST : testing non-bond pairs gradient and hessian'
+    for i, itype in enumerate(system.sample['ffatypes']):
+        for j, jtype in enumerate(system.sample['ffatypes'][:i]):
+            if (i,j) in system.sample['bonds']: continue
+            name = 'pair/%i(%s)-%i(%s)' %(i,itype,j,jtype)
+            ic = IC([i,j], bond_length, name=name)
+            ic.test(system.sample['coordinates'], epsilon=epsilon, ntests=ntests, threshold=threshold)

@@ -14,6 +14,7 @@ __all__ = ['estimate', 'calculate_perturbation', 'analyze_perturbation', 'plot_p
 
 def estimate(system, coupling=None, free_depth=0, spring=10.0*kjmol/angstrom**2):
     print 'PERTUR ESTIM: calculating harmonic ff pars directly from hessian'
+    print
     fctab = FFTable(system.icnames, system.units)
     for icname, ics in system.ics.iteritems():
         kdata = []
@@ -41,6 +42,7 @@ def estimate(system, coupling=None, free_depth=0, spring=10.0*kjmol/angstrom**2)
             kdata.append(k)
             qdata.append(q)
         fctab.add(icname, kdata, qdata)
+    print
     return fctab
 
 
@@ -61,7 +63,7 @@ def calculate_perturbation(system, icname, coupling=None, free_depth=0, spring=1
                             i.e. coupling = np.ones(N)/np.sqrt(N)
                             with N the number of ics for the given icname
     """
-    print 'PERTUR CALC : calculation perturbation vector for %s with coupling=%s, free_depth=%i and spring=%.3f kjmol/A^2' %(
+    print '                %40s        coupling=%10s    free_depth=%1i    spring=%.3f kjmol/A^2' %(
         icname, coupling, free_depth, spring/(kjmol/angstrom**2)
     )
     ics = system.ics[icname]

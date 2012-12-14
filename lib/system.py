@@ -15,33 +15,21 @@ import numpy as np, sys
 from model import *
 from ic import *
 from tools import *
-from atypes import define_atypes
+from atypes import guess_atypes
 
 __all__=['System']
 
 class System(object):
-    def __init__(self, name, fn_chk, fn_psf=None, eikind='Zero', eirule=-1, charges=None, atypes_kind='medium'):
-        print 'SYSTEM INIT : initializing system %s' %name
-        self.name = name
+    def __init__(self, fn_chk, fn_psf=None, guess_atypes_level=None, charges=None):
         self.load_sample(fn_chk)
-        self.get_topology(fn_psf)
-        if not 'ffatypes' in self.sample.keys():
-            if atypes_kind=='low': print 'SYSTEM ATYPE: defining atom types based on atom number'
-            if atypes_kind=='medium': print 'SYSTEM ATYPE: defining atom types based on local topology'
-            elif atypes_kind=='high': print 'SYSTEM ATYPE: defining atom types based on atom index'
-            else: raise ValueError('Invalid atypes value, recieved %s' %atypes_kind)
-            self.sample['ffatypes'] = define_atypes(self.sample['bonds'], self.sample['numbers'], kind=atypes_kind)
-        self.define_ei_model(eikind, eirule, charges)
+        if fn_psf is not None:
+            self.load_topology(fn_psf)
+        self.check_topology()
+        if guess_atypes_level is not None:
+            self.guess_atypes(guess_atypes_level)
+        if charges is not None:
+            self.load_charges(charges)
         self.print_info()
-        
-        print 'SYSTEM PROJ : Projecting translational and rotional dofs out of the hessian'
-        hess = self.sample['hessian'].reshape([3*self.Natoms, 3*self.Natoms])
-        VTx, VTy, VTz = global_translation(self.sample['coordinates'])
-        VRx, VRy, VRz = global_rotation(self.sample['coordinates'])
-        U, S, Vt = np.linalg.svd( np.array([VTx, VTy, VTz, VRx, VRy, VRz]).transpose() )
-        P = np.dot(U[:,6:], U[:,6:].T)
-        hess_proj = np.dot(P, np.dot(hess, P)).reshape([self.Natoms, 3, self.Natoms, 3])
-        self.totmodel = HarmonicModel(self.sample['coordinates'], self.sample['gradient'], hess_proj, name='Harmonic Total Energy')
     
     def load_sample(self, fn_chk):
         self.fn_chk = fn_chk
@@ -49,8 +37,6 @@ class System(object):
             print 'SYSTEM LOAD : loading system sample from MolMod checkpoint file %s' %fn_chk
             self.sample = load_chk(fn_chk)
             self.Natoms = len(self.sample['numbers'])
-            if 'colors' not in self.sample.keys():
-                self.sample['colors'] = ['#7777CC' for i in xrange(self.Natoms)]
         elif fn_chk.endswith('.fchk'):
             print 'SYSTEM LOAD : loading system sample from Gaussian fchk file %s' %fn_chk
             fchk = FCHKFile(fn_chk)
@@ -61,27 +47,32 @@ class System(object):
             self.sample['coordinates'] = fchk.fields.get('Current cartesian coordinates').reshape([self.Natoms, 3])
             self.sample['gradient'] = fchk.fields.get('Cartesian Gradient').reshape([self.Natoms, 3])
             self.sample['hessian']  = fchk.get_hessian().reshape([self.Natoms, 3, self.Natoms, 3])
-            self.sample['colors'] = ['#7777CC' for i in xrange(self.Natoms)]
         else:
             raise ValueError('Invalid file extension, recieved %s' %fn_chk)
+        if 'colors' not in self.sample.keys():
+            self.sample['colors'] = ['#7777CC' for i in xrange(self.Natoms)]
     
-    def get_topology(self, fn_psf=None):
+    def load_topology(self, fn_psf):
+        print 'SYSTEM TOPOL: loading topology from %s' %fn_psf
         self.fn_psf = fn_psf
-        unit_cell = UnitCell(np.diag([50.0, 50.0, 50.0]),active=np.array([False, False, False]))
-        if fn_psf is not None:
-            print 'SYSTEM TOPO : loading topology from %s' %fn_psf
-            psf = PSFFile(fn_psf)
-            self.sample['bonds'] = psf.bonds
-            if len(psf.bends)>0: self.sample['bends'] = psf.bends
-            if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
-            self.sample['ffatypes'] = psf.atom_types
-            self.neighbor_list = psf.get_molecular_graph().neighbors
-            if 'ac' not in self.sample:
-                print 'SYSTEM EI   : the charges are taken from %s and the radii are set to 1e-4 A' %fn_psf
-                self.sample['ac'] = psf.charges
-                self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
-        elif 'bonds' not in self.sample.keys():
-            print "SYSTEM TOPO : creating topology from the geometry because 'bonds' was missing in %s" %self.fn_chk 
+        psf = PSFFile(fn_psf)
+        self.sample['bonds'] = psf.bonds
+        if len(psf.bends)>0: self.sample['bends'] = psf.bends
+        if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
+        self.sample['ffatypes'] = psf.atom_types
+        self.neighbor_list = psf.get_molecular_graph().neighbors
+        if 'ac' not in self.sample:
+            print 'SYSTEM EI   : the charges are taken from %s and the radii are set to 1e-4 A' %fn_psf
+            self.sample['ac']   = psf.charges
+            self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
+
+    def check_topology(self):
+        """Check wether all topology information is present and complete topology
+           if necessary
+        """    
+        if 'bonds' not in self.sample.keys():
+            print "SYSTEM TOPOL: creating topology from the geometry because 'bonds' was missing"
+            unit_cell = UnitCell(np.diag([50.0, 50.0, 50.0]),active=np.array([False, False, False]))
             molecule = Molecule(self.sample['numbers'], self.sample['coordinates'], unit_cell=unit_cell)
             graph = MolecularGraph.from_geometry(molecule)
             psf = PSFFile()
@@ -92,7 +83,7 @@ class System(object):
             self.neighbor_list = graph.neighbors
         elif (len(self.sample['bonds'])>1 and 'bends' not in self.sample.keys()) \
           or (len(self.sample['bends'])>1 and 'dihedrals' not in self.sample.keys()):
-            print "SYSTEM TOPO : estimating bends, dihedrals and neighbor_list from bonds in %s" %self.fn_chk 
+            print "SYSTEM TOPOL: estimating bends, dihedrals and neighbor_list from bonds"
             graph = MolecularGraph(self.sample['bonds'], self.sample['numbers'])
             psf = PSFFile()
             psf.add_molecular_graph(graph)
@@ -100,50 +91,65 @@ class System(object):
             if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
             self.neighbor_list = graph.neighbors
         elif not hasattr(self, 'neighbor_list'):
-            print "SYSTEM TOPO : bonds, bends and dihedrals loaded from %s, neighbors estimated from bonds" %self.fn_chk 
+            print "SYSTEM TOPOL: neighbors estimated from bonds"
             graph = MolecularGraph(self.sample['bonds'], self.sample['numbers'])
             self.neighbor_list = graph.neighbors
-        else:
-            assert 'bonds' in self.sample.keys()
-            assert hasattr(self, neighbor_list)
     
-    def define_ei_model(self, eikind, eirule, charges):
-        self.eikind = eikind
-        self.eirule = eirule
+    def guess_atypes(guess_atypes_level):
+        print 'SYSTEM ATYPE: guessing atom types at %s level' %guess_atypes_level
+        self.sample['ffatypes'] = guess_atypes(self.sample['bonds'], self.sample['numbers'], guess_atypes_level)
+        
+    def load_charges(self, charges):
+        if charges.endswith('.txt'):
+            print 'SYSTEM CHARG: the charges are set to the hipart charge file %s and the radii are set to 1e-4 A' %charges
+            from hipart.io import load_atom_scalars
+            self.sample['ac'] = load_atom_scalars(charges)
+            self.sample['mc'] = sum(self.sample['ac'])
+            self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
+        else:
+            print 'SYSTEM CHARG: the charges are set according to the command line input and the radii are set to 1e-4 A'
+            self.sample['ac'] = np.array([float(x) for x in charges.split(',')])
+            self.sample['mc'] = sum(self.sample['ac'])
+            self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
+    
+    def define_models(self, eirule=-1, eikind=None):
+        #Setting up total energy model
+        print 'SYSTEM MODEL: Projecting translational and rotional dofs out of the hessian'
+        hess = self.sample['hessian'].reshape([3*self.Natoms, 3*self.Natoms])
+        VTx, VTy, VTz = global_translation(self.sample['coordinates'])
+        VRx, VRy, VRz = global_rotation(self.sample['coordinates'])
+        U, S, Vt = np.linalg.svd( np.array([VTx, VTy, VTz, VRx, VRy, VRz]).transpose() )
+        P = np.dot(U[:,6:], U[:,6:].T)
+        hess_proj = np.dot(P, np.dot(hess, P)).reshape([self.Natoms, 3, self.Natoms, 3])
+        print 'SYSTEM MODEL: Setting up Harmonic model for total energy'
+        self.totmodel = HarmonicModel(self.sample['coordinates'], self.sample['gradient'], hess_proj, name='Harmonic Total Energy')
+        #Setting up electrostatic model
         if eirule==3 and not has_15_bonded(self):
-            print 'SYSTEM EI   : electrostatics switched off, because no 15 bonded pairs and exclude rule was %i' %eirule
-            self.eirule=-1
+            print 'SYSTEM MODEL: electrostatics switched off, because no 15 bonded pairs and exclude rule was %i' %eirule
+            self.eirule = -1
             self.eikind = 'Zero'
         elif eirule==2 and 'dihedrals' not in self.sample.keys():
-            print 'SYSTEM EI   : electrostatics switched off, because no 14 bonded pairs and exclude rule was %i' %eirule
-            self.eirule=-1
+            print 'SYSTEM MODEL: electrostatics switched off, because no 14 bonded pairs and exclude rule was %i' %eirule
+            self.eirule = -1
             self.eikind = 'Zero'
         elif eirule==1 and 'bends' not in self.sample.keys():
-            print 'SYSTEM EI   : electrostatics switched off, because no 13 bonded pairs and exclude rule was %i' %eirule
-            self.eirule=-1
+            print 'SYSTEM MODEL: electrostatics switched off, because no 13 bonded pairs and exclude rule was %i' %eirule
+            self.eirule = -1
             self.eikind = 'Zero'
-        print 'SYSTEM EI   : Constructing electrostatic model of kind %s and with exlusion rule = %i' %(self.eikind, self.eirule)
-        if charges is not None:
-            if charges.endswith('.txt'):
-                print 'SYSTEM EI   : the charges are set to the hipart charge file %s and the radii are set to 1e-4 A' %charges
-                from hipart.io import load_atom_scalars
-                self.sample['ac'] = load_atom_scalars(charges)
-                self.sample['mc'] = sum(self.sample['ac'])
-                self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
-            else:
-                print 'SYSTEM EI   : the charges are set according to the command line input and the radii are set to 1e-4 A'
-                self.sample['ac'] = np.array([float(x) for x in charges.split(',')])
-                self.sample['mc'] = sum(self.sample['ac'])
-                self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
-        elif 'ac' not in self.sample.keys():
-            if self.eikind!='Zero':
-                raise ValueError("No charges present in sample, please specify them on the command line using the options '--charges'")
-            else:
-                print 'SYSTEM EI   : the charges are set to zero and the radii are set to 1e-4 A'
-                self.sample['ac'] = np.zeros(self.Natoms, float)
-                self.sample['mc'] = 0.0
-                self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
-        if self.eikind!='Zero':
+        else:
+            if eikind is None:
+                if eirule==-1:
+                    eikind='Zero'
+                else:
+                    eikind='Harmonic'
+            print 'SYSTEM MODEL: electrostatics switched on with kind %s and exlusion rule %i' %(eikind, eirule)
+            self.eikind = eikind
+            self.eirule = eirule
+        if 'ac' not in self.sample.keys() and self.eikind!='Zero':
+            raise ValueError("Charges need to be specified when electrostatics are switched on")
+        if self.eikind=='Zero':
+            self.eimodel = ZeroModel()
+        else:
             exclude = []
             if self.eirule>0:
                 for bond in self.sample['bonds']:
@@ -154,45 +160,46 @@ class System(object):
             if self.eirule>2 and 'dihedrals' in self.sample.keys():
                 for dihed in self.sample['dihedrals']:
                     exclude.append([dihed[0], dihed[3]])
-        if self.eikind=='Zero':
-            self.eimodel = ZeroModel()
-        elif self.eikind=='Harmonic':
-            forces_ei, hess_ei = electrostatics(self.sample, exclude_pairs=exclude)
-            self.eimodel = HarmonicModel(self.sample['coordinates'], forces_ei, hess_ei, name='Harmonic Electrostatic Energy')
-        elif self.eikind=='Coulomb':
-            self.eimodel = CoulombModel(self.sample['coordinates'], self.sample['ac'], name='Coulomb Electrostatic Energy', exclude_pairs=exclude)
-        else:
-            raise ValueError('Invalid model kind in System.define_ei_model, received %s' %self.eikind)
+            if self.eikind=='Harmonic':
+                forces_ei, hess_ei = electrostatics(self.sample, exclude_pairs=exclude)
+                self.eimodel = HarmonicModel(self.sample['coordinates'], forces_ei, hess_ei, name='Harmonic Electrostatic Energy')
+            elif self.eikind=='Coulomb':
+                self.eimodel = CoulombModel(self.sample['coordinates'], self.sample['ac'], name='Coulomb Electrostatic Energy', exclude_pairs=exclude)
+            else:
+                raise ValueError('Invalid electrostatic model kind, received %s' %self.eikind)
 
     def print_info(self):
         if 'ac' in self.sample.keys():
-            print 'SYSTEM INFO : The atom types, charges and charge radii are respectively'
+            print 'SYSTEM INFOR: The atom types, charges and charge radii are respectively'
             print
             for i, (t, q, r) in enumerate(zip(self.sample['ffatypes'], self.sample['ac'], self.sample['radii'])):
                 print '                %3i  %8s % 6.3f %.4f' %(i, t, q, r)
             print
         else:
-            print 'SYSTEM INFO : The atom types are'
+            print 'SYSTEM INFOR: The atom types are'
             print
             for i, t in enumerate(self.sample['ffatypes']):
                 print '                %3i  %8s' %(i, t)
             print
     
-    def dump_sample(self, fn):
-        if not self.fn_chk==fn:
-            from molmod.io.chk import dump_chk
-            print 'SYSTEM DUMP : dumping system sample to MolMod checkpoint file %s' %fn
-            dump_chk(fn, self.sample)
+    def dump_sample_qff(self, fn):
+        if self.fn_chk==fn:
+            raise ValueError('I refuse to overwrite input system file %s' %self.fn_chk)
+        from molmod.io.chk import dump_chk
+        print 'SYSTEM DUMPS: dumping system sample to QuickFF checkpoint file %s' %fn
+        dump_chk(fn, self.sample)
     
     def dump_sample_yaff(self, fn):
-        print 'SYSTEM DUMP : dumping system sample to Yaff checkpoint file %s' %fn
+        if self.fn_chk==fn:
+            raise ValueError('I refuse to overwrite input system file %s' %self.fn_chk)
+        print 'SYSTEM DUMPS: dumping system sample to Yaff checkpoint file %s' %fn
         yaff = {}
-        yaff['bonds'] = self.sample['bonds']
-        yaff['charges'] = self.sample['ac']
+        yaff['bonds']    = self.sample['bonds']
+        yaff['charges']  = self.sample['ac']
         yaff['ffatypes'] = self.sample['ffatypes']
-        yaff['masses'] = np.array([pt[number].mass for number in self.sample['numbers']])
-        yaff['numbers'] = self.sample['numbers']
-        yaff['pos'] = self.sample['coordinates']
+        yaff['masses']   = np.array([pt[number].mass for number in self.sample['numbers']])
+        yaff['numbers']  = self.sample['numbers']
+        yaff['pos']      = self.sample['coordinates']
         from molmod.io.chk import dump_chk
         dump_chk(fn, yaff)
 
@@ -231,7 +238,6 @@ class System(object):
         else:
             self.units = {}
         for icname in icnames:
-            print 'SYSTEM ICPAT: processing %s' %icname
             match = []
             values = []
             ictypes = icname.split('/')[1].split('.')
@@ -262,19 +268,6 @@ class System(object):
             if len(match)==0:
                 print 'SYSTEM ICPAT: No match found for %s' %icname
             self.ics[icname] = match
-    
-    def test_ics(self, epsilon=1e-4, ntests=50, threshold=1e-5):
-        print 'SYSTEM TEST : testing ic gradient and hessian'
-        for icname, ics in self.ics.iteritems():
-            for ic in ics:
-                ic.test(self.sample['coordinates'], epsilon=epsilon, ntests=ntests, threshold=threshold)
-        print 'SYSTEM TEST : testing non-bond pairs gradient and hessian'
-        for i, itype in enumerate(self.sample['ffatypes']):
-            for j, jtype in enumerate(self.sample['ffatypes'][:i]):
-                if (i,j) in self.sample['bonds']: continue
-                name = 'pair/%i(%s)-%i(%s)' %(i,itype,j,jtype)
-                ic = IC([i,j], bond_length, name=name)
-                ic.test(self.sample['coordinates'], epsilon=epsilon, ntests=ntests, threshold=threshold)
 
     def get_neighbors(self, indices, depth=1):
         neighbors = deepcopy(indices)
