@@ -15,7 +15,7 @@ import numpy as np, sys
 from model import *
 from ic import *
 from tools import *
-from atypes import guess_atypes
+from atypes import assign_atypes
 
 __all__=['System']
 
@@ -97,7 +97,7 @@ class System(object):
     
     def guess_atypes(guess_atypes_level):
         print 'SYSTEM ATYPE: guessing atom types at %s level' %guess_atypes_level
-        self.sample['ffatypes'] = guess_atypes(self.sample['bonds'], self.sample['numbers'], guess_atypes_level)
+        self.sample['ffatypes'] = assign_atypes(self.sample['bonds'], self.sample['numbers'], guess_atypes_level)
         
     def load_charges(self, charges):
         if charges.endswith('.txt'):
