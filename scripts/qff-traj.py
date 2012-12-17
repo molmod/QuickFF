@@ -44,6 +44,10 @@ def parser():
         help='Specify the charges of the system, this is necessary if a ei-rule is specified different then -1. The charges are comma seperated and the order should be identical to the order in the sample file. If the charges are not specified but ei-rule is larger then -1, the charges are taken from the psf if present, or from the sample file if present. Alternatively, a hipart charge txt file can also be used to specify the charges. [default=%default]'
     )
     parser.add_option(
+        '--atypes-level', default=None, 
+        help='Overwrite the atom types according to level ATYPES_LEVEL. Low will choose atom types based only on atom number, medium will choose atom types based on local topology and high will choose atom types based on atom index. [default=%default]'
+    )
+    parser.add_option(
         '--eunit', default='kjmol', type=str,
         help='The energy unit used. [default=%default]'
     )
@@ -67,12 +71,9 @@ def parser():
 
 def main():
     icname, fn_chk, options = parser()
-    if options.ei_rule==-1:
-        eikind = 'Zero'
-    else:
-        eikind = 'Harmonic'
-    system = System('system', fn_chk, fn_psf=options.psf, eikind=eikind, eirule=options.ei_rule, charges=options.charges)
-    system.find_ic_patterns([icname])    
+    system = System(fn_chk, fn_psf=options.psf, guess_atypes_level=options.atypes_level, charges=options.charges)
+    system.define_models(eirule=options.ei_rule)
+    system.find_ic_patterns([icname])   
     plot_perturbation(
         system, icname,
         coupling=options.coupling, free_depth=options.free_depth, spring=options.spring,
