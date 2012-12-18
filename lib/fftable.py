@@ -69,7 +69,12 @@ class FFTable(object):
         self.k[icname] = FFArray(kdata)
         self.q[icname] = FFArray(qdata)
     
-    def __getitem__(self, key, return_std=False):
+    def __getitem__(self, akey, return_std=False):
+        if   akey not in self.icnames and akey.split('/')[0]=='dist':    key = akey.replace('dist'   , 'bond'    )
+        elif akey not in self.icnames and akey.split('/')[0]=='angle':   key = akey.replace('angle'  , 'bend'    )
+        elif akey not in self.icnames and akey.split('/')[0]=='dihed':   key = akey.replace('dihed'  , 'dihedral')
+        elif akey not in self.icnames and akey.split('/')[0]=='torsion': key = akey.replace('torsion', 'dihed'   )
+        else: key = akey
         if not key in self.icnames: raise KeyError('%s is not a valid icname' %key)
         k = self.k[key].mean
         k_std = self.k[key].std

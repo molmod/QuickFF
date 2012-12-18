@@ -95,7 +95,7 @@ class System(object):
             graph = MolecularGraph(self.sample['bonds'], self.sample['numbers'])
             self.neighbor_list = graph.neighbors
     
-    def guess_atypes(guess_atypes_level):
+    def guess_atypes(self, guess_atypes_level):
         print 'SYSTEM ATYPE: guessing atom types at %s level' %guess_atypes_level
         self.sample['ffatypes'] = assign_atypes(self.sample['bonds'], self.sample['numbers'], guess_atypes_level)
         

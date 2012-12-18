@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os, numpy as np
+from molmod.units import *
 from cfit2 import *
 
 from mfit2.program import DefaultProgram as MFitDefaultProgram
