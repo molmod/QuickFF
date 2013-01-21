@@ -5,7 +5,7 @@ from optparse import OptionParser
 from molmod.units import *
 
 from quickff.system import System
-from quickff.perturbation import estimate
+from quickff.perturbation import *
 from quickff.fftable import FFTable
 from quickff.ffit import ZFitProgram, MFitProgram
 
@@ -17,6 +17,11 @@ def parser():
         '--psf', default=None,
         help='A MolMod PSF file from which the topology and atom types are taken. ' \
             +'If this argument is not present, the topology is taken from the geometry and the atom symbols are used as atom types.'
+    )
+    parser.add_option(
+        '-p', '--perturbation-theory', default='relaxed',
+        help='Choose the perturbation theory for calculating the perturbed geometry.'
+             'Possibilities are: relax and mindev'
     )
     parser.add_option(
         '--coupling', default=None,
@@ -51,6 +56,8 @@ def parser():
         help='Only construct a QuickFF chk and Yaff chk file containing the system.'
     )
     options, args = parser.parse_args()
+    if options.perturbation_theory not in ['relax', 'mindev']:
+        raise IOError('Invalid perturbation theory, recieved %s' %options.perturbation_theory)
     options.spring = options.spring*kjmol/angstrom**2
     icnames = args[:-1]
     fn_chk = args[-1]
@@ -66,7 +73,13 @@ def main():
         system.dump_sample_yaff('system_yaff.chk')
         return
     
-    fftab_init = estimate(system, coupling=options.coupling, free_depth=options.free_depth, spring=options.spring)
+    if options.perturbation_theory=='relax':
+        pt = RelaxedGeometryPT(coupling=options.coupling, free_depth=options.free_depth, spring=options.spring)
+    elif options.perturbation_theory=='mindev':
+        pt = MinimalDeviationPT()
+    else:
+        raise NotImplementedError
+    fftab_init = pt.estimate(system)
     fftab_init.print_screen()
     fftab_init.dump_pars_ffit2('int-pars.txt')
     system.dump_sample_qff('int-system.chk')

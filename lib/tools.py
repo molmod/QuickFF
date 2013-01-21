@@ -3,7 +3,7 @@
 import numpy as np
 from molmod.units import parse_unit
 
-__all__ = ['global_translation', 'global_rotation', 'calc_angles', 'statistics', 'fitpar', 'add_plot', 'has_15_bonded']
+__all__ = ['global_translation', 'global_rotation', 'calc_angles', 'statistics', 'fitpar', 'has_15_bonded']
 
 def global_translation(coords):
     Natoms = len(coords)
@@ -88,18 +88,6 @@ def fitpar(xs, ys, rcond=1e-3, verbose=False):
         print 'Rank     = ', rank
         print 'Singular = ', sing
     return sol
-
-
-def add_plot(ax, curves, title='', xunit='au', yunit='au', xlabel='IC [%s]', ylabel='Energy [%s]'):
-    for x, y, style, label in curves:
-        ax.plot(x/parse_unit(xunit), y/parse_unit(yunit), style, label=label)
-    if '%s' in xlabel: xlabel = xlabel %xunit
-    if '%s' in ylabel: ylabel = ylabel %yunit
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.grid()
-    ax.set_title(title)
-    ax.legend(loc='lower left')
 
 def has_15_bonded(system):
     assert hasattr(system, 'neighbor_list')

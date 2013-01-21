@@ -270,6 +270,7 @@ class System(object):
             self.ics[icname] = match
 
     def get_neighbors(self, indices, depth=1):
+        if depth==-1: return range(self.Natoms)
         neighbors = deepcopy(indices)
         edge = deepcopy(indices)
         current = 0

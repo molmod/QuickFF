@@ -5,7 +5,7 @@ from optparse import OptionParser
 from molmod.units import *
 
 from quickff.system import System
-from quickff.perturbation import calculate_perturbation, analyze_perturbation, plot_perturbation
+from quickff.perturbation import *
 from quickff.tools import fitpar
 from quickff.evaluators import *
 
@@ -17,6 +17,11 @@ def parser():
         '--psf', default=None,
         help='A MolMod PSF file from which the topology and atom types are taken. ' \
             +'If this argument is not present, it is assumed that all necessary info is already in the system file.'
+    )
+    parser.add_option(
+        '-p', '--perturbation-theory', default='relaxed',
+        help='Choose the perturbation theory for calculating the perturbed geometry.'
+             'Possibilities are: relax and mindev'
     )
     parser.add_option(
         '--coupling', default=None,
@@ -64,6 +69,8 @@ def parser():
         raise IOError('Too many input argumets: expected 2, recieved %i: ' %(len(args))), args
     icname = args[0]
     fn_chk = args[1]
+    if options.perturbation_theory not in ['relax', 'mindev']:
+        raise IOError('Invalid perturbation theory, recieved %s' %options.perturbation_theory)
     options.spring = options.spring*kjmol/angstrom**2
     if options.kunit=='None':
         options.kunit = '%s/%s**2' %(options.eunit, options.qunit)
@@ -73,12 +80,14 @@ def main():
     icname, fn_chk, options = parser()
     system = System(fn_chk, fn_psf=options.psf, guess_atypes_level=options.atypes_level, charges=options.charges)
     system.define_models(eirule=options.ei_rule)
-    system.find_ic_patterns([icname])   
-    plot_perturbation(
-        system, icname,
-        coupling=options.coupling, free_depth=options.free_depth, spring=options.spring,
-        qunit=options.qunit, kunit=options.kunit, eunit=options.eunit
-    )
+    system.find_ic_patterns(['all']) 
+    if options.perturbation_theory=='relax':
+        pt = RelaxedGeometryPT(coupling=options.coupling, free_depth=options.free_depth, spring=options.spring)
+    elif options.perturbation_theory=='mindev':
+        pt = MinimalDeviationPT()
+    else:
+        raise NotImplementedError
+    pt.plot_single(system, icname, qunit=options.qunit, kunit=options.kunit, eunit=options.eunit)
 
 if __name__=='__main__':
     main()  

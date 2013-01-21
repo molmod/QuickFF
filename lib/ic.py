@@ -12,7 +12,6 @@ class IC(object):
         self.name = name
     
     def value(self, coords):
-        Natoms = len(coords)
         rs = coords[self.indexes]
         q = self.icf(rs, deriv=0)[0]
         return q
