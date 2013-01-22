@@ -19,21 +19,16 @@ def parser():
             +'If this argument is not present, the topology is taken from the geometry and the atom symbols are used as atom types.'
     )
     parser.add_option(
-        '-p', '--perturbation-theory', default='relaxed',
-        help='Choose the perturbation theory for calculating the perturbed geometry.'
-             'Possibilities are: relax and mindev'
+        '--cost-ic', default=1.0,
+        help='The weight of the ic cost in the total cost function for calculating the perturbation on the geometry. The ic cost expresses for a given geometry the deviation of the internal coordinates from their equilibrium value. [default = %default]'
     )
     parser.add_option(
-        '--coupling', default=None,
-        help='Specify whether ics of the same type should be coupled or not. Possible couplings are symmetric and None. [default=%default]'
+        '--cost-energy', default=1.0,
+        help='The weight of the energy cost in the total cost function for calculating the perturbation on the geometry. The energy is calculated as the second order Taylor expression using the forces and hessian in equilibrium [default = %default]'
     )
     parser.add_option(
-        '--free-depth', default=0, type=int,
-        help='Defines the depth of the layer of atoms that are free. All other atoms are constrained to their original position with a spring. [default=%default]'
-    )
-    parser.add_option(
-        '--spring', default=10.0, type=float,
-        help='Defines the strength of the constraining spring [in kjmol/A^2]. [default=%default]'
+        '--relative-amplitude', default=0.10, type=float,
+        help='Defines the relative amplitude of the change in the ic value relative to the ic equilibrium value. [default=%default]'
     )
     parser.add_option(
         '--ei-rule', default=-1, type=int,
@@ -44,7 +39,7 @@ def parser():
         help='Overwrite the charges of the system. The charges are comma seperated and the order should be identical to the order of atoms in the system file. Alternatively, a hipart charge txt file can also be used to specify the charges. If no charges are defined but electrostatics are switched on (ei-rule>-1), the charges are taken from the system file if possible, if not, an error is raised. [default=%default]'
     )
     parser.add_option(
-        '--atypes-level', default=None, 
+        '--atypes-level', default='medium', 
         help='Overwrite the atom types according to level ATYPES_LEVEL. Low will choose atom types based only on atom number, medium will choose atom types based on local topology and high will choose atom types based on atom index. [default=%default]'
     )
     parser.add_option(
@@ -56,9 +51,6 @@ def parser():
         help='Only construct a QuickFF chk and Yaff chk file containing the system.'
     )
     options, args = parser.parse_args()
-    if options.perturbation_theory not in ['relax', 'mindev']:
-        raise IOError('Invalid perturbation theory, recieved %s' %options.perturbation_theory)
-    options.spring = options.spring*kjmol/angstrom**2
     icnames = args[:-1]
     fn_chk = args[-1]
     return icnames, fn_chk, options
@@ -68,17 +60,13 @@ def main():
     system = System(fn_chk, fn_psf=options.psf, guess_atypes_level=options.atypes_level, charges=options.charges)
     system.define_models(eirule=options.ei_rule)
     system.find_ic_patterns(icnames)
+    pt = RelaxedGeometryPT(energy_penalty=options.cost_energy, ic_penalty=options.cost_ic, dq_rel=options.relative_amplitude)
+    
     if options.only_system:
         system.dump_sample_qff('system_qff.chk')
         system.dump_sample_yaff('system_yaff.chk')
         return
-    
-    if options.perturbation_theory=='relax':
-        pt = RelaxedGeometryPT(coupling=options.coupling, free_depth=options.free_depth, spring=options.spring)
-    elif options.perturbation_theory=='mindev':
-        pt = MinimalDeviationPT()
-    else:
-        raise NotImplementedError
+
     fftab_init = pt.estimate(system)
     fftab_init.print_screen()
     fftab_init.dump_pars_ffit2('int-pars.txt')
@@ -93,6 +81,7 @@ def main():
         system.sample['ac'] = np.zeros(system.Natoms, float)
         system.sample['charges'] = np.zeros(system.Natoms, float)
         system.dump_sample('int-system.chk')
+    
     mfit = MFitProgram(system)
     fftab_fine = mfit.run()
     fftab_fine.print_screen()
