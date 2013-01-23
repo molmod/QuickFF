@@ -19,11 +19,11 @@ def parser():
             +'If this argument is not present, the topology is taken from the geometry and the atom symbols are used as atom types.'
     )
     parser.add_option(
-        '--cost-ic', default=1.0,
+        '--cost-ic', default=1.0, type=float,
         help='The weight of the ic cost in the total cost function for calculating the perturbation on the geometry. The ic cost expresses for a given geometry the deviation of the internal coordinates from their equilibrium value. [default = %default]'
     )
     parser.add_option(
-        '--cost-energy', default=1.0,
+        '--cost-energy', default=1.0, type=float,
         help='The weight of the energy cost in the total cost function for calculating the perturbation on the geometry. The energy is calculated as the second order Taylor expression using the forces and hessian in equilibrium [default = %default]'
     )
     parser.add_option(

@@ -7,14 +7,15 @@ import numpy as np, matplotlib.pyplot as pp
 from scipy.optimize import minimize
 
 from fftable import FFTable
-from tools import fitpar
+from tools import *
 from evaluators import *
 
 __all__ = ['PerturbationTheory', 'RelaxedGeometryPT']
 
 
 class PerturbationTheory(object):
-    def __init__(self):
+    def __init__(self, skip_diheds):
+        self.skip_diheds = skip_diheds
         self.description = 'BasePerturbationTheory (NOT FOR DIRECT USE)'
     
     def estimate(self, system):
@@ -25,6 +26,9 @@ class PerturbationTheory(object):
         print 'PERTUR ESTIM: estimate all pars using %s' %self.description
         fctab = FFTable(system.icnames, system.units)
         for icname, ics in system.ics.iteritems():
+            if self.skip_diheds and icname.split('/')[0] in ['dihedral', 'dihed', 'torsion']:
+                fctab.add(icname, [0.0]*len(ics), [0.0]*len(ics))
+                continue
             kdata = []
             qdata = []
             trajectories = self.perturbation_trajectory(system, icname)
@@ -66,7 +70,7 @@ class PerturbationTheory(object):
         return values
 
 
-    def plot_single(self, system, icname,start=0.9, end=1.1, steps=101, qunit='au', eunit='kjmol', kunit=None):
+    def plot_single(self, system, icname, qunit='au', eunit='kjmol', kunit=None):
         print 'PERTUR SINGL: Estimate single par using %s' %self.description
         if kunit is None: kunit = '%s/%s**2' %(eunit, qunit)
         trajectories = self.perturbation_trajectory(system, icname)
@@ -114,8 +118,9 @@ class PerturbationTheory(object):
 
 
 class RelaxedGeometryPT(PerturbationTheory):
-    def __init__(self, energy_penalty=1.0, ic_penalty=1.0, dq_rel=0.1, qsteps = 101,
-                 bond_thresshold=1e-6*angstrom, bend_thresshold=1e-4*deg, dihed_thresshold=1e-2*deg):
+    def __init__(self, skip_diheds=True, energy_penalty=1.0, ic_penalty=1.0, dq_rel=0.1, qsteps = 101,
+                 bond_thresshold=1.0*angstrom, bend_thresshold=1.0*deg, dihed_thresshold=1.0*deg):
+        PerturbationTheory.__init__(self, skip_diheds)
         self.energy_penalty = energy_penalty
         self.ic_penalty = ic_penalty
         self.dq_rel = dq_rel
@@ -123,35 +128,49 @@ class RelaxedGeometryPT(PerturbationTheory):
         self.Dr = bond_thresshold
         self.Dt = bend_thresshold
         self.Dp = dihed_thresshold
-        self.description = 'Relaxed Geometry Perturbation Theory with: \n'    + \
-                           '               - an energy cost with weight of %.3e \n' %(self.energy_penalty)          + \
-                           '               - an ic deviation cost with weight of %.3e \n' %(self.ic_penalty)        + \
-                           '                    Err(r)     = %.3e A   \n' %(self.Dr/angstrom)                       + \
-                           '                    Err(theta) = %.3e deg \n' %(self.Dt/deg)                            + \
-                           '                    Err(psi)   = %.3e deg   ' %(self.Dp/deg)
+        self.description = """Relaxed Geometry Perturbation Theory with:
+               - an energy cost with weight of %.3e
+               - an ic deviation cost with weight of %.3e
+                    Err(r)     = %.3e A
+                    Err(theta) = %.3e deg
+                    Err(psi)   = %.3e deg   
+        """ %(self.energy_penalty, self.ic_penalty, self.Dr/angstrom, self.Dt/deg, self.Dp/deg)
     
-    def calc_qdm(self, system, ic, coords=None):
+    def get_qdm(self, system, ic):
         """
             Calculate the Internal Coordinate Deveation Matrix (QDM).
             If sandwiched between a geometry perturbation vector, this
-            matrix represents the weighted sum of the deviations of the
+            represents the weighted sum of the deviations of the
             internal coordinates, except for the ic given in args, 
             from their non-perturbed values.
             
         """
-        if coords is None: coords = system.sample['coordinates']
         QDM = np.zeros([3*system.Natoms, 3*system.Natoms], float)
+        indexes = system.get_neighbors(list(ic.indexes), depth=-1)
         for icname2 in system.icnames:
             for ic2 in system.ics[icname2]:
-                if ic2.name==ic.name:
-                    continue
+                if ic2.name==ic.name: continue
+                include=True
+                for i in ic2.indexes:
+                    if not i in indexes:
+                        include=False
+                        break
+                if not include: continue
                 if icname2.split('/')[0] in ['bond', 'dist']: sigma = self.Dr
                 elif icname2.split('/')[0] in ['bend', 'angle']: sigma = self.Dt
                 elif icname2.split('/')[0] in ['dihedral', 'dihed', 'torsion']: sigma = self.Dp
                 else: raise ValueError('Invalid icname, recieved %s' %icname2)
-                QDM += np.outer(ic2.grad(coords), ic2.grad(coords))/(sigma**2)
+                print 'DEBUG: included %s in QDM with sigma = %.3e au' %(ic2.name, sigma)
+                QDM += np.outer(ic2.grad(system.sample['coordinates']), ic2.grad(system.sample['coordinates']))/(sigma**2)
+        VTx, VTy, VTz = global_translation(system.sample['coordinates'])
+        VRx, VRy, VRz = global_rotation(system.sample['coordinates'])
+        U, S, Vt = np.linalg.svd( np.array([VTx, VTy, VTz, VRx, VRy, VRz]).transpose() )
+        P = np.dot(U[:,6:], U[:,6:].T)
+        QDM = np.dot(P, np.dot(QDM, P))
+        evals, evecs = np.linalg.eigh(QDM)
+        print 'DEBUG: eigenvalues of QDM:', evals
         return QDM
-    
+                    
     
     def perturbation_trajectory(self, system, icname):
         """
@@ -169,28 +188,31 @@ class RelaxedGeometryPT(PerturbationTheory):
         """
         qunit = parse_unit(system.units[icname]['q'])
         trajectories = []
+        coords0 = system.sample['coordinates']
         for iic, ic in enumerate(system.ics[icname]):
             print 'PERTUR TRAJC: %s' %ic.name
             qarray = ( 1.0-self.dq_rel + 2.0*self.dq_rel/(self.qsteps-1)*np.array(range(self.qsteps),float) )*ic.value(system.sample['coordinates'])
             trajectory = []
             #Define cost function (and its derivative) that needs to be minimized
-            QDM = self.calc_qdm(system, ic)
+            QDM = self.get_qdm(system, ic)
+            hess = system.totmodel.hess.reshape([3*system.Natoms, 3*system.Natoms])
             def chi(dx):
-                X = self.ic_penalty*0.5*np.dot(dx.T, np.dot(QDM, dx)) \
-                  + self.energy_penalty*system.totmodel.get_energy(dx.reshape((-1, 3)))
-                return X
+                ic = 0.5*np.dot(dx.T, np.dot(QDM, dx))
+                ener = 0.5*np.dot(dx.T, np.dot(hess, dx))
+                return self.ic_penalty*ic + self.energy_penalty*ener
             def dchi_dx(dx):
-                X = self.ic_penalty*0.5*np.dot(QDM, dx) \
-                  + self.energy_penalty*system.totmodel.get_gradient(dx.reshape((-1, 3))).reshape(3*system.Natoms)
-                return X 
+                ic = np.dot(QDM, dx)
+                ener = np.dot(hess, dx)
+                return self.ic_penalty*ic + self.energy_penalty*ener
             for iq, q in enumerate(qarray):
                 #Define the constraint under which the cost function needs to be minimized
-                constraints = ({
-                    'type': 'eq',
-                    'fun' : lambda dx: ic.value(system.sample['coordinates'] + dx.reshape((-1, 3))) - q,
-                    'jac' : lambda dx: ic.grad(system.sample['coordinates'] + dx.reshape((-1, 3))),
-                })
-                result = minimize(chi, np.zeros(3*system.Natoms, float), method='SLSQP', jac=dchi_dx, constraints=constraints, tol=1e-9)
+                constraints = (
+                    {'type': 'eq',
+                     'fun' : lambda dx: ic.value(coords0 + dx.reshape((-1, 3))) - q,
+                     'jac' : lambda dx: ic.grad(coords0 + dx.reshape((-1, 3)))},
+                )
+                dx0 = np.zeros(3*system.Natoms, float)
+                result = minimize(chi, dx0, method='SLSQP', jac=dchi_dx, constraints=constraints, tol=1e-9)
                 trajectory.append(result.x.reshape((-1, 3)))
             assert len(trajectory)==self.qsteps
             trajectories.append(trajectory)
