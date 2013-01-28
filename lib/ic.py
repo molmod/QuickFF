@@ -3,13 +3,15 @@
 from molmod.periodic import periodic as pt
 import numpy as np
 
-__all__ = ['IC', 'test_ics']
+__all__ = ['IC']
 
 class IC(object):
-    def __init__(self, indexes, icf, name=None):
+    def __init__(self, indexes, icf, name=None, qunit='au', kunit='kjmol/au**2'):
         self.indexes = indexes
         self.icf = icf
         self.name = name
+        self.qunit = qunit
+        self.kunit = kunit
     
     def value(self, coords):
         rs = coords[self.indexes]

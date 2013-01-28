@@ -9,10 +9,14 @@ from system import *
 
 __all__=['ic_evaluator', 'energy_evaluator']
 
-def ic_evaluator(name, i):
+def ic_evaluator(name=None, i=-1, ic=None):
     def eval_ic(system, coords):
-        ic = system.ics[name][i]
-        return ic.value(coords)
+        if isinstance(ic, IC):
+            match = ic
+        else:
+            assert name is not None and i>-1
+            match = system.ics[name][i]
+        return match.value(coords)
     return eval_ic
 
 

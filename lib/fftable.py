@@ -27,11 +27,11 @@ class FFArray(object):
 
 
 class FFTable(object):    
-    def __init__(self, icnames, units):
-        self.units = units
+    def __init__(self, icnames):
         self.icnames = icnames
         self.k = {}
         self.q = {}
+        self.units = {}
     
     @classmethod
     def from_ffit2(cls, model):
@@ -54,20 +54,21 @@ class FFTable(object):
                     qdata[icname] = np.array([par.value])
                 else:
                     raise ValueError('Invalid value for kind, recieved %s' %kind)
-        fftab = FFTable(icnames, units)
+        fftab = FFTable(icnames)
         for icname in icnames:
             if icname.startswith('dihed/'):
                 qdata[icname] = np.array([0.0])
                 units[icname]['q'] = 'deg'
-            fftab.add(icname, kdata[icname], qdata[icname])
+            fftab.add(icname, kdata[icname], qdata[icname], unit=units[icname])
         return fftab
     
-    def add(self, icname, kdata, qdata):
+    def add(self, icname, kdata, qdata, unit={'q': 'au', 'k': 'kjmol/au**2'}):
         assert icname in self.icnames
         assert icname not in self.k.keys()
         assert icname not in self.q.keys()
         self.k[icname] = FFArray(kdata)
         self.q[icname] = FFArray(qdata)
+        self.units[icname] = unit
     
     def __getitem__(self, akey, return_std=False):
         if   akey not in self.icnames and akey.split('/')[0]=='dist':    key = akey.replace('dist'   , 'bond'    )

@@ -60,14 +60,14 @@ def main():
     system = System(fn_chk, fn_psf=options.psf, guess_atypes_level=options.atypes_level, charges=options.charges)
     system.define_models(eirule=options.ei_rule)
     system.find_ic_patterns(icnames)
-    pt = RelaxedGeometryPT(energy_penalty=options.cost_energy, ic_penalty=options.cost_ic, dq_rel=options.relative_amplitude)
+    pt = RelaxedGeometryPT(system, energy_penalty=options.cost_energy, ic_penalty=options.cost_ic, dq_rel=options.relative_amplitude)
     
     if options.only_system:
         system.dump_sample_qff('system_qff.chk')
         system.dump_sample_yaff('system_yaff.chk')
         return
 
-    fftab_init = pt.estimate(system)
+    fftab_init = pt.estimate()
     fftab_init.print_screen()
     fftab_init.dump_pars_ffit2('int-pars.txt')
     system.dump_sample_qff('int-system.chk')

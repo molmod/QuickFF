@@ -226,17 +226,12 @@ class System(object):
                     icnames.append(name01)
         return icnames
     
-    def find_ic_patterns(self, icnames, units=None):
+    def find_ic_patterns(self, icnames):
         if icnames==['all']: icnames = self.icnames_from_topology()
         print 'SYSTEM ICPAT: determining ic patterns'
         atypes = self.sample['ffatypes']
         self.icnames = icnames
         self.ics = {}
-        if units is not None:
-            assert isinstance(units, dict)
-            self.units = units
-        else:
-            self.units = {}
         for icname in icnames:
             match = []
             values = []
@@ -244,25 +239,22 @@ class System(object):
             ickind = icname.split('/')[0]
             if ickind in ['dist', 'bond']:
                 assert len(ictypes)==2
-                if units is None: self.units[icname] = {'q': 'A', 'k': 'kjmol/A**2'}
                 for bond in self.sample['bonds']:
                     if (atypes[bond[0]]==ictypes[0] and atypes[bond[1]]==ictypes[1]) \
                     or (atypes[bond[0]]==ictypes[1] and atypes[bond[1]]==ictypes[0]):
-                        match.append(IC(bond, bond_length, name=icname+str(len(match))))
+                        match.append(IC(bond, bond_length, name=icname+str(len(match)), qunit='A', kunit='kjmol/A**2'))
             elif ickind in ['angle', 'bend']:
                 assert len(ictypes)==3
-                if units is None: self.units[icname] = {'q': 'deg', 'k': 'kjmol/rad**2'}
                 for bend in self.sample['bends']:
                     if (atypes[bend[0]]==ictypes[0] and atypes[bend[1]]==ictypes[1] and atypes[bend[2]]==ictypes[2]) \
                     or (atypes[bend[0]]==ictypes[2] and atypes[bend[1]]==ictypes[1] and atypes[bend[2]]==ictypes[0]):
-                        match.append(IC(bend, bend_angle, name=icname+str(len(match))))
+                        match.append(IC(bend, bend_angle, name=icname+str(len(match)), qunit='deg', kunit='kjmol/rad**2'))
             elif ickind in ['dihed', 'dihedral', 'torsion']:
                 assert len(ictypes)==4
-                if units is None: self.units[icname] = {'q': 'deg', 'k': 'kjmol'}
                 for dihed in self.sample['dihedrals']:
                     if (atypes[dihed[0]]==ictypes[0] and atypes[dihed[1]]==ictypes[1] and atypes[dihed[2]]==ictypes[2] and atypes[dihed[3]]==ictypes[3]) \
                     or (atypes[dihed[0]]==ictypes[3] and atypes[dihed[1]]==ictypes[2] and atypes[dihed[2]]==ictypes[1] and atypes[dihed[3]]==ictypes[0]):
-                        match.append(IC(dihed, dihed_angle, name=icname+str(len(match))))
+                        match.append(IC(dihed, dihed_angle, name=icname+str(len(match)), qunit='deg', kunit='kjmol'))
             else:
                 raise ValueError('Recieved invalid ic kind: %s' %ickind)
             if len(match)==0:

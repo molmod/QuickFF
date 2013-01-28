@@ -42,25 +42,11 @@ def parser():
         '--atypes-level', default='medium', 
         help='Overwrite the atom types according to level ATYPES_LEVEL. Low will choose atom types based only on atom number, medium will choose atom types based on local topology and high will choose atom types based on atom index. [default=%default]'
     )
-    parser.add_option(
-        '--eunit', default='kjmol', type=str,
-        help='The energy unit used. [default=%default]'
-    )
-    parser.add_option(
-        '--qunit', default='au', type=str,
-        help='The ic unit used. [default=%default]'
-    )
-    parser.add_option(
-        '--kunit', default='None', type=str,
-        help='The unit used for the force constant. [default=eunit/qunit^2]'
-    )
     options, args = parser.parse_args()
     if not len(args)==2:
         raise IOError('Too many input argumets: expected 2, recieved %i: ' %(len(args))), args
     icname = args[0]
     fn_chk = args[1]
-    if options.kunit=='None':
-        options.kunit = '%s/%s**2' %(options.eunit, options.qunit)
     return icname, fn_chk, options
 
 def main():
@@ -68,8 +54,8 @@ def main():
     system = System(fn_chk, fn_psf=options.psf, guess_atypes_level=options.atypes_level, charges=options.charges)
     system.define_models(eirule=options.ei_rule)
     system.find_ic_patterns(['all']) 
-    pt = RelaxedGeometryPT(energy_penalty=options.cost_energy, ic_penalty=options.cost_ic, dq_rel=options.relative_amplitude)
-    pt.plot_single(system, icname, qunit=options.qunit, kunit=options.kunit, eunit=options.eunit)
+    pt = RelaxedGeometryPT(system, energy_penalty=options.cost_energy, ic_penalty=options.cost_ic, dq_rel=options.relative_amplitude)
+    pt.plot_icname(icname)
 
 if __name__=='__main__':
     main()  
