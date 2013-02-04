@@ -7,3 +7,6 @@ from fftable import *
 from perturbation import *
 from ffit import *
 from atypes import *
+
+import numpy
+numpy.set_printoptions(linewidth=170)

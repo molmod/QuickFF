@@ -10,7 +10,7 @@ from molmod.unit_cells import UnitCell
 from molmod.molecules import Molecule
 from molmod.units import *
 from copy import deepcopy
-import numpy as np, sys
+import numpy as np, sys, time
 
 from model import *
 from ic import *
@@ -21,6 +21,7 @@ __all__=['System']
 
 class System(object):
     def __init__(self, fn_chk, fn_psf=None, guess_atypes_level=None, charges=None):
+        print 'SYSTEM TIMER: ', time.ctime()
         self.load_sample(fn_chk)
         if fn_psf is not None:
             self.load_topology(fn_psf)
@@ -260,6 +261,24 @@ class System(object):
             if len(match)==0:
                 print 'SYSTEM ICPAT: No match found for %s' %icname
             self.ics[icname] = match
+    
+    def get_ics(self, exclude_ic=[], exclude_icname=[], patterns_icname=[]):
+        result = []
+        for icname, ics in self.ics.iteritems():
+            if icname in exclude_icname:
+                continue
+            if len(patterns_icname)>0:
+                found = False
+                for pattern_icname in patterns_icname:
+                    if pattern_icname in icname:
+                        found = True
+                        break
+                if not found:
+                    continue
+            for ic in ics:
+                if ic.name not in exclude_ic:
+                    result.append(ic)
+        return result
 
     def get_neighbors(self, indices, depth=1):
         if depth==-1: return range(self.Natoms)

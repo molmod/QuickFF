@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import numpy as np, os
+import numpy as np, os, time
 from optparse import OptionParser
 from molmod.units import *
 
@@ -19,15 +19,15 @@ def parser():
             +'If this argument is not present, the topology is taken from the geometry and the atom symbols are used as atom types.'
     )
     parser.add_option(
-        '--cost-ic', default=1.0, type=float,
-        help='The weight of the ic cost in the total cost function for calculating the perturbation on the geometry. The ic cost expresses for a given geometry the deviation of the internal coordinates from their equilibrium value. [default = %default]'
+        '--cost-strain', default=1.0, type=float,
+        help='The weight of the strain cost in the total cost function for calculating the perturbation on the geometry. The strain cost expresses for a given geometry the deviation of the internal coordinates from their equilibrium value. [default = %default]'
     )
     parser.add_option(
-        '--cost-energy', default=1.0, type=float,
+        '--cost-energy', default=0.0, type=float,
         help='The weight of the energy cost in the total cost function for calculating the perturbation on the geometry. The energy is calculated as the second order Taylor expression using the forces and hessian in equilibrium [default = %default]'
     )
     parser.add_option(
-        '--relative-amplitude', default=0.10, type=float,
+        '--relative-amplitude', default=0.05, type=float,
         help='Defines the relative amplitude of the change in the ic value relative to the ic equilibrium value. [default=%default]'
     )
     parser.add_option(
@@ -39,8 +39,8 @@ def parser():
         help='Overwrite the charges of the system. The charges are comma seperated and the order should be identical to the order of atoms in the system file. Alternatively, a hipart charge txt file can also be used to specify the charges. If no charges are defined but electrostatics are switched on (ei-rule>-1), the charges are taken from the system file if possible, if not, an error is raised. [default=%default]'
     )
     parser.add_option(
-        '--atypes-level', default='medium', 
-        help='Overwrite the atom types according to level ATYPES_LEVEL. Low will choose atom types based only on atom number, medium will choose atom types based on local topology and high will choose atom types based on atom index. [default=%default]'
+        '--atypes-level', default='None', 
+        help='Overwrite the atom types according to level ATYPES_LEVEL. Low will choose atom types based only on atom number, medium will choose atom types based on local topology, high will choose atom types based on atom index and None will not guess atom types. [default=%default]'
     )
     parser.add_option(
         '--no-remove', default=True, dest='remove', action='store_false', 
@@ -51,6 +51,7 @@ def parser():
         help='Only construct a QuickFF chk and Yaff chk file containing the system.'
     )
     options, args = parser.parse_args()
+    if options.atypes_level=='None': options.atypes_level=None
     icnames = args[:-1]
     fn_chk = args[-1]
     return icnames, fn_chk, options
@@ -60,7 +61,7 @@ def main():
     system = System(fn_chk, fn_psf=options.psf, guess_atypes_level=options.atypes_level, charges=options.charges)
     system.define_models(eirule=options.ei_rule)
     system.find_ic_patterns(icnames)
-    pt = RelaxedGeometryPT(system, energy_penalty=options.cost_energy, ic_penalty=options.cost_ic, dq_rel=options.relative_amplitude)
+    pt = RelaxedGeometryPT(system, energy_penalty=options.cost_energy, strain_penalty=options.cost_strain, dq_rel=options.relative_amplitude)
     
     if options.only_system:
         system.dump_sample_qff('system_qff.chk')
@@ -90,6 +91,7 @@ def main():
     system.dump_sample_yaff('system_yaff.chk')
     if options.remove:
         os.system('rm -r int-system.chk int-pars.txt out')
+    print 'SYSTEM TIMER: ', time.ctime()
 
 if __name__=='__main__':
     main()
