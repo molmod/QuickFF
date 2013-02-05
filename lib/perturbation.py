@@ -161,7 +161,7 @@ class RelaxedGeometryPT(PerturbationTheory):
                 rank = len(svals)
                 V  = Vt.T[:,:rank]
                 Vo = Vt.T[:,rank:]
-                strain += np.dot(V, V.T) + 0.01*np.dot(Vo, Vo.T)
+                strain += np.dot(V, V.T) + 0.01*np.dot(Vo, Vo.T)/(3*self.system.Natoms)
         return strain
     
     
