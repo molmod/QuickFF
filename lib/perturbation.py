@@ -20,14 +20,16 @@ class PerturbationTheory(object):
         self.description = "PERTUR THEOR: BasePerturbationTheory (NOT FOR DIRECT USE)"
         if print_descr: print self.description
     
-    def estimate(self):
+    def estimate(self, icnames):
         """
             Estimate force constant and rest value of all ics in the system
             directly from the hessian using perturbation theory.
         """
         print 'PERTUR ESTIM: estimate all pars'
-        fctab = FFTable(self.system.icnames)
-        for icname, ics in self.system.ics.iteritems():
+        print
+        fctab = FFTable(icnames)
+        for icname in icnames:
+            ics = self.system.ics[icname]
             unit = {'q': ics[0].qunit, 'k': ics[0].kunit}
             if self.skip_diheds and icname.split('/')[0] in ['dihedral', 'dihed', 'torsion']:
                 fctab.add(icname, [0.0]*len(ics), [0.0]*len(ics))
@@ -44,16 +46,10 @@ class PerturbationTheory(object):
                 kdata.append(k)
                 qdata.append(q)
             fctab.add(icname, kdata, qdata, unit=unit)
-        print
         return fctab
 
     def perturbation_trajectory(self, icname):
-        """
-            Calculate the perturbation on the geometry when perturbing
-            along <icname>. This is calculated in a derived class.
-        """
         raise NotImplementedError
-
 
     def analyze(self, trajectory, evaluators=[], fn_xyz=None):
         if fn_xyz is not None:
@@ -68,12 +64,10 @@ class PerturbationTheory(object):
         if fn_xyz is not None: del(xyzwriter)
         return np.array(values)
 
-    
     def plot_icname(self, icname, eunit='kjmol'):
         print 'PERTUR SINGL: Calculating perturbation trajectory for %s' %self.description
         trajectories = self.perturbation_trajectory(icname)
         N = len(trajectories)
-        
         for iic, ic in enumerate(self.system.ics[icname]):
             self.plot_ic_constrained([N,5,5*iic+1], ic, trajectories[iic])
             QDM, other_ics = self.get_qdm(ic, return_other_ics=True)
@@ -84,11 +78,9 @@ class PerturbationTheory(object):
             diheds = [other_ic for other_ic in other_ics if other_ic.name.split('/')[0] in ['dihed', 'dihedral', 'torsion']]
             if len(diheds)>0: self.plot_ic_other_ics([N,5,5*iic+4], ic, diheds, trajectories[iic])
             self.plot_ic_energies([N,5,5*iic+5], ic, trajectories[iic], eunit=eunit)
-        
         fig.set_size_inches([8*5, 8*N])
         fig.tight_layout()
         pp.savefig( '%s.pdf' %(icname.replace('/', '-')) )
-
 
     def plot_ic_energies(self, plc, ic, trajectory, eunit='kjmol'):
         fn_xyz = '%s.xyz' %(ic.name.replace('/','-'))
@@ -118,7 +110,7 @@ class PerturbationTheory(object):
 
 
 class RelaxedGeometryPT(PerturbationTheory):
-    def __init__(self, system, skip_diheds=True, energy_penalty=1.0, strain_penalty=1.0, dq_rel=0.05, qsteps = 51,
+    def __init__(self, system, skip_diheds=True, energy_penalty=1.0, strain_penalty=1.0, dq_rel=0.05, qsteps = 11,
                  bond_thresshold=1.0, bend_thresshold=1.0, dihed_thresshold=1.0):
         PerturbationTheory.__init__(self, system, skip_diheds, print_descr=False)
         self.energy_penalty = energy_penalty
@@ -130,12 +122,12 @@ class RelaxedGeometryPT(PerturbationTheory):
         self.Dp = dihed_thresshold
         self.description = """PERTUR THEOR: Relaxed Geometry Perturbation Theory with:
         
-               - an energy cost with weight of %.3e
-               - an strain cost with weight of %.3e
-                    Err(r)     = %.3e
-                    Err(theta) = %.3e
-                    Err(psi)   = %.3e  
-        """ %(self.energy_penalty, self.strain_penalty, self.Dr, self.Dt, self.Dp)
+               energy cost weight           = %.3e
+               strain cost weight           = %.3e
+               relative amplitude of q scan = %.3e
+               number of steps of q scan    = %2i
+               skipping dihedrals           = %5s
+        """ %(self.energy_penalty, self.strain_penalty, self.dq_rel, self.qsteps, str(skip_diheds))
         print self.description
     
     def strain_matrix(self, ic=None):
@@ -144,7 +136,7 @@ class RelaxedGeometryPT(PerturbationTheory):
             If sandwiched between a geometry perturbation vector, this
             represents the weighted sum of the deviations of the
             internal coordinates, except for the ic given in args, 
-            from their non-perturbed values.
+            from their equilibrium values.
             
         """
         strain = np.zeros([3*self.system.Natoms, 3*self.system.Natoms], float)
@@ -199,7 +191,7 @@ class RelaxedGeometryPT(PerturbationTheory):
                      'fun' : lambda dx: ic.value(coords0 + dx.reshape((-1, 3))) - q,
                      'jac' : lambda dx: ic.grad(coords0 + dx.reshape((-1, 3)))},
                 )
-                result = minimize(chi, np.zeros([3*self.system.Natoms], float), method='SLSQP', constraints=constraints, tol=1e-15)
+                result = minimize(chi, np.zeros([3*self.system.Natoms], float), method='SLSQP', constraints=constraints, tol=1e-9)
                 trajectory.append(result.x.reshape([-1, 3]))
             assert len(trajectory)==self.qsteps
             trajectories.append(trajectory)
@@ -226,7 +218,6 @@ class RelaxedGeometryPT(PerturbationTheory):
         fig = pp.gcf()
         fig.set_size_inches([10*6, 10*N])
         pp.tight_layout()
-        
         pp.savefig( '%s.pdf' %(icname.replace('/', '-')))
     
     

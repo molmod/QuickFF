@@ -70,13 +70,7 @@ class FFTable(object):
         self.q[icname] = FFArray(qdata)
         self.units[icname] = unit
     
-    def __getitem__(self, akey, return_std=False):
-        if   akey not in self.icnames and akey.split('/')[0]=='dist':    key = akey.replace('dist'   , 'bond'    )
-        elif akey not in self.icnames and akey.split('/')[0]=='angle':   key = akey.replace('angle'  , 'bend'    )
-        elif akey not in self.icnames and akey.split('/')[0]=='dihed':   key = akey.replace('dihed'  , 'dihedral')
-        elif akey not in self.icnames and akey.split('/')[0]=='torsion': key = akey.replace('torsion', 'dihed'   )
-        else: key = akey
-        if not key in self.icnames: raise KeyError('%s is not a valid icname' %key)
+    def __getitem__(self, key, return_std=False):
         k = self.k[key].mean
         k_std = self.k[key].std
         q = None
@@ -88,27 +82,6 @@ class FFTable(object):
             return k, q
         else:
             return k, k_std, q, q_std
-    
-    def _html(self, icname, attrs, suffix=None):
-        """
-            !!!! DOESN'T WORK YET !!!!
-            
-            Returns strings containing the statistical information of all attributes 
-            in <attrs> for the given icname. Allowed attributes: q, k
-        """
-        fmts  = {
-            'q'     :   ('q<sub> </sub> = ' ,'% 8.3f &#177 %7.3f (%i)'),
-            'k'     :   ('k<sub> </sub> = ' ,'% 8.1f &#177 %5.1f (%i)'),
-        }
-        if '%s' in icname: icname = icname %( (self.name.split('/')[0].upper(),)*icname.count('%') )
-        result = ''
-        for attr in attrs:
-            if len(attrs)>1: result += fmts[attr][0]
-            result += getattr(self, attr)[icname]._html(fmts[attr][1], unit=self.units[icname][attr])
-            if len(result)>0:
-                if suffix is not None: result += suffix
-                result += '<br>'
-        return result
     
     def print_screen(self):
         print 'FFTAB  PRINT: printing force field parameters to screen'

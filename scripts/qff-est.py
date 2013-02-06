@@ -59,8 +59,13 @@ def parser():
 def main():
     icnames, fn_chk, options = parser()
     system = System(fn_chk, fn_psf=options.psf, guess_atypes_level=options.atypes_level, charges=options.charges)
+    if icnames=='all':
+        icnames = system.icnames
+    else:
+        for icname in icnames:
+            if not icname in system.icnames:
+                raise ValueError('Illegal icname in command arguments, recieved %s' %icname)
     system.define_models(eirule=options.ei_rule)
-    system.find_ic_patterns(icnames)
     pt = RelaxedGeometryPT(system, energy_penalty=options.cost_energy, strain_penalty=options.cost_strain, dq_rel=options.relative_amplitude)
     
     if options.only_system:
@@ -68,7 +73,7 @@ def main():
         system.dump_sample_yaff('system_yaff.chk')
         return
 
-    fftab_init = pt.estimate()
+    fftab_init = pt.estimate(icnames)
     fftab_init.print_screen()
     fftab_init.dump_pars_ffit2('int-pars.txt')
     system.dump_sample_qff('int-system.chk')
@@ -83,7 +88,7 @@ def main():
         system.sample['charges'] = np.zeros(system.Natoms, float)
         system.dump_sample('int-system.chk')
     
-    mfit = MFitProgram(system)
+    mfit = MFitProgram(system, icnames)
     fftab_fine = mfit.run()
     fftab_fine.print_screen()
     
@@ -91,7 +96,7 @@ def main():
     system.dump_sample_yaff('system_yaff.chk')
     if options.remove:
         os.system('rm -r int-system.chk int-pars.txt out')
-    print 'SYSTEM TIMER: ', time.ctime()
+    print 'SYSTEM TIMER:', time.ctime()
 
 if __name__=='__main__':
     main()

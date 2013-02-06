@@ -7,7 +7,8 @@ from molmod.periodic import periodic as pt
 __all__ = ['assign_atypes']
 
 filters = {
-    1: [('Hc', CritAnd(HasAtomNumber(1), HasNeighborNumbers(6  ))), ('Ho', CritAnd(HasAtomNumber(1), HasNeighborNumbers(8)))],
+    1: [('Hc', CritAnd(HasAtomNumber(1), HasNeighborNumbers(6  ))),
+        ('Ho', CritAnd(HasAtomNumber(1), HasNeighborNumbers(8  )))],
     8: [('Oa', CritAnd(HasAtomNumber(8), HasNeighborNumbers(6,1))),
         ('Ok', CritAnd(HasAtomNumber(8), HasNeighborNumbers(6  ))),
         ('Oe', CritAnd(HasAtomNumber(8), HasNeighborNumbers(6,6))),

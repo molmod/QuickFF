@@ -21,7 +21,7 @@ __all__=['System']
 
 class System(object):
     def __init__(self, fn_chk, fn_psf=None, guess_atypes_level=None, charges=None):
-        print 'SYSTEM TIMER: ', time.ctime()
+        print 'SYSTEM TIMER:', time.ctime()
         self.load_sample(fn_chk)
         if fn_psf is not None:
             self.load_topology(fn_psf)
@@ -31,6 +31,7 @@ class System(object):
         if charges is not None:
             self.load_charges(charges)
         self.print_info()
+        self.find_ic_patterns()
     
     def load_sample(self, fn_chk):
         self.fn_chk = fn_chk
@@ -227,8 +228,8 @@ class System(object):
                     icnames.append(name01)
         return icnames
     
-    def find_ic_patterns(self, icnames):
-        if icnames==['all']: icnames = self.icnames_from_topology()
+    def find_ic_patterns(self):
+        icnames = self.icnames_from_topology()
         print 'SYSTEM ICPAT: determining ic patterns'
         atypes = self.sample['ffatypes']
         self.icnames = icnames

@@ -19,10 +19,11 @@ from fftable import FFTable
 
 __all__ = ['ZFitProgram', 'MFitProgram']
 
-def generate_mterms(system):
+def generate_mterms(system, icnames):
     print 'MFIT2  TERMS: auto generate harmonic force field terms'
     terms = []    
-    for icname, ics in system.ics.iteritems():
+    for icname in icnames:
+        ics = system.ics[icname]
         kind = icname.split('/')[0]
         types = icname.split('/')[1].split('.')
         if kind in ['bond', 'dist']:
@@ -73,11 +74,11 @@ class ZFitProgram(ZFitDefaultProgram):
 
 
 class MFitProgram(MFitDefaultProgram):
-    def __init__(self, system):
+    def __init__(self, system, icnames):
         dn_out = '%s/out/mfit' %(os.getcwd())
         os.system('mkdir -p %s' %dn_out)
         log._file = open('%s/log.txt' %dn_out, 'w')
-        terms = generate_mterms(system)
+        terms = generate_mterms(system, icnames)
         rules = []
         lsqs = [HessianLSQ('Hess', 'int-system.chk', 1.0)]
         fn_pars_init = 'int-pars.txt'

@@ -37,8 +37,8 @@ def parser():
         help='Specify the charges of the system, this is necessary if a ei-rule is specified different then -1. The charges are comma seperated and the order should be identical to the order in the sample file. If the charges are not specified but ei-rule is larger then -1, the charges are taken from the psf or sample file if present. Alternatively, a hipart charge txt file can also be used to specify the charges. [default=%default]'
     )
     parser.add_option(
-        '--atypes-level', default='medium', 
-        help='Overwrite the atom types according to level ATYPES_LEVEL. Low will choose atom types based only on atom number, medium will choose atom types based on local topology and high will choose atom types based on atom index. [default=%default]'
+        '--atypes-level', default='None', 
+        help='Overwrite the atom types according to level ATYPES_LEVEL. Low will choose atom types based only on atom number, medium will choose atom types based on local topology, high will choose atom types based on atom index and None will not guess atom types. [default=%default]'
     )
     options, args = parser.parse_args()
     if not len(args)==2:
@@ -52,10 +52,9 @@ def main():
     icname, fn_chk, options = parser()
     system = System(fn_chk, fn_psf=options.psf, guess_atypes_level=options.atypes_level, charges=options.charges)
     system.define_models(eirule=options.ei_rule)
-    system.find_ic_patterns(['all']) 
     pt = RelaxedGeometryPT(system, energy_penalty=options.cost_energy, strain_penalty=options.cost_strain, dq_rel=options.relative_amplitude)
     pt.plot_icname(icname)
-    print 'SYSTEM TIMER: ', time.ctime()
+    print 'SYSTEM TIMER:', time.ctime()
 
 if __name__=='__main__':
     main()  
