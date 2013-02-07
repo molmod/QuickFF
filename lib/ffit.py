@@ -95,7 +95,10 @@ class MFitProgram(MFitDefaultProgram):
                 if term.pars[0].free:
                     add_pos(term.pars[0])
                 if term.pars[1].free:
-                    add_pos(term.pars[1]) 
+                    add_pos(term.pars[1])
+            if isinstance(term, CosineTerm):
+                if term.pars[0].free:
+                    add_pos(term.pars[0])
         return constraints
     
     def run(self):

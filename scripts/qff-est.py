@@ -59,7 +59,7 @@ def parser():
 def main():
     icnames, fn_chk, options = parser()
     system = System(fn_chk, fn_psf=options.psf, guess_atypes_level=options.atypes_level, charges=options.charges)
-    if icnames=='all':
+    if icnames==['all']:
         icnames = system.icnames
     else:
         for icname in icnames:
@@ -86,7 +86,7 @@ def main():
     else:
         system.sample['ac'] = np.zeros(system.Natoms, float)
         system.sample['charges'] = np.zeros(system.Natoms, float)
-        system.dump_sample('int-system.chk')
+        system.dump_sample_qff('int-system.chk')
     
     mfit = MFitProgram(system, icnames)
     fftab_fine = mfit.run()

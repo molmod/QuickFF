@@ -149,11 +149,12 @@ class RelaxedGeometryPT(PerturbationTheory):
             Gq = np.array([ic0.grad(coords0) for ic0 in ics if ic is None or ic0.name!=ic.name])
             if len(Gq)>0:
                 U, S, Vt = np.linalg.svd(Gq)
-                svals = np.array([s for s in S if s > 1e-6])
+                svals = np.array([1.0 for s in S if s > 1e-6])
                 rank = len(svals)
+                S2 = np.diag(svals**2)
                 V  = Vt.T[:,:rank]
                 Vo = Vt.T[:,rank:]
-                strain += np.dot(V, V.T) + 0.01*np.dot(Vo, Vo.T)/(3*self.system.Natoms)
+                strain += np.dot(V, np.dot(S2, V.T)) + 0.01*np.dot(Vo, Vo.T)/(3*self.system.Natoms)
         return strain
     
     
