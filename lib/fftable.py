@@ -102,30 +102,30 @@ class FFTable(object):
         print >> f, '# ------------------------------------------------------------------#------'
         for icname in self.icnames:
             kind = icname.split('/')[0]
-            atypes = icname.split('/')[1].split('.')
+            atypes = icname.split('/')[1]
             k = self.k[icname].mean
             q0 = self.q[icname].mean
             if kind in ['bond', 'dist']:
                 print >>f, '  %40s %12s % 12.6f #  free' %(
-                    'bond/%s.%s/harm/dist/K' %(atypes[0], atypes[1]),
+                    'bond/%s/harm/dist/K' %atypes,
                     'kjmol/A^2', k/(kjmol/angstrom**2)
                 )
                 print >> f, '  %40s %12s % 12.6f #  free' %(
-                    'bond/%s.%s/harm/dist/q0' %(atypes[0], atypes[1]),
+                    'bond/%s/harm/dist/q0' %atypes,
                     'A', q0/angstrom
                 )
             elif kind in ['bend', 'angle']:
                 print >> f, '  %40s %12s % 12.6f #  free' %(
-                    'angle/%s.%s.%s/harm/angle/K' %(atypes[0], atypes[1], atypes[2]),
+                    'angle/%s/harm/angle/K' %atypes,
                     'kjmol/rad^2', k/(kjmol/rad**2)
                 )
                 print >> f, '  %40s %12s % 12.6f #  free' %(
-                    'angle/%s.%s.%s/harm/angle/q0' %(atypes[0], atypes[1], atypes[2]),
+                    'angle/%s/harm/angle/q0' %atypes,
                     'deg', q0/deg
                 )
             elif kind in ['dihedral', 'dihed', 'torsion']:
                 print >> f, '  %40s %12s % 12.6f #  free' %(
-                    'dihed/%s.%s.%s.%s/cos-m2-0/dihed/K' %(atypes[0], atypes[1], atypes[2], atypes[3]),
+                    'dihed/%s/cos-m2-0/dihed/K' %atypes,
                     'kjmol', k/kjmol
                 )
         print >> f, '# ------------------------------------------------------------------#------'
