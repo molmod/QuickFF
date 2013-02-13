@@ -86,15 +86,7 @@ class PerturbationTheory(object):
         fn_xyz = '%s.xyz' %(ic.name.replace('/','-'))
         evaluators = [ic_evaluator(ic=ic), energy_evaluator('totmodel'), energy_evaluator('eimodel')]
         qs, tot, ei = self.analyze(trajectory, evaluators=evaluators, fn_xyz=fn_xyz)
-        pars_tot = fitpar(qs, tot, rcond=1e-6)
-        k_tot    = 2*pars_tot[0]
-        q0_tot   = -pars_tot[1]/k_tot
-        pars_ei = fitpar(qs, ei, rcond=1e-6)
-        k_ei    = 2*pars_ei[0]
-        q0_ei   = -pars_ei[1]/k_ei
         pars = fitpar(qs, tot-ei, rcond=1e-6)
-        k    = 2*pars[0]
-        q0   = -pars[1]/k
         fit  = pars[0]*qs**2 + pars[1]*qs + pars[2]
         rmsd = np.sqrt( ((tot - ei - fit)**2).sum()/len(tot) )
         title = "Energy Contributions"
