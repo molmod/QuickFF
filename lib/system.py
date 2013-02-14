@@ -206,26 +206,31 @@ class System(object):
         dump_chk(fn, yaff)
 
     def icnames_from_topology(self):
-        print 'SYSTEM ICNAM: determining ic names from topolgy'
+        print 'SYSTEM ICNAM: determining ic names from topology'
         icnames = []
         atypes = self.sample['ffatypes']
         for bond in self.sample['bonds']:
             name01 = 'bond/%s.%s' %(atypes[bond[0]], atypes[bond[1]])
             name10 = 'bond/%s.%s' %(atypes[bond[1]], atypes[bond[0]])
-            if not (name01 in icnames or name10 in icnames):
-                icnames.append(name01)
+            if not (name01 in icnames or name10 in icnames) and atypes[bond[0]]<=atypes[bond[1]]: icnames.append(name01)
+            if not (name01 in icnames or name10 in icnames) and atypes[bond[1]]<atypes[bond[0]]:  icnames.append(name10)
         if 'bends' in self.sample.keys():
             for bend in self.sample['bends']:
-                name01 = 'angle/%s.%s.%s' %(atypes[bend[0]], atypes[bend[1]], atypes[bend[2]])
-                name10 = 'angle/%s.%s.%s' %(atypes[bend[2]], atypes[bend[1]], atypes[bend[0]])
-                if not (name01 in icnames or name10 in icnames):
-                    icnames.append(name01)
+                name01 = 'bend/%s.%s.%s' %(atypes[bend[0]], atypes[bend[1]], atypes[bend[2]])
+                name10 = 'bend/%s.%s.%s' %(atypes[bend[2]], atypes[bend[1]], atypes[bend[0]])
+                if not (name01 in icnames or name10 in icnames) and atypes[bend[0]]<=atypes[bend[2]]: icnames.append(name01)
+                if not (name01 in icnames or name10 in icnames) and atypes[bend[2]]<atypes[bend[0]]:  icnames.append(name10)
         if 'dihedrals' in self.sample.keys():
             for dihedral in self.sample['dihedrals']:
                 name01 = 'dihedral/%s.%s.%s.%s' %(atypes[dihedral[0]], atypes[dihedral[1]], atypes[dihedral[2]], atypes[dihedral[3]])
                 name10 = 'dihedral/%s.%s.%s.%s' %(atypes[dihedral[3]], atypes[dihedral[2]], atypes[dihedral[1]], atypes[dihedral[0]])
-                if not (name01 in icnames or name10 in icnames):
-                    icnames.append(name01)
+                if not (name01 in icnames or name10 in icnames) and atypes[dihedral[0]]<=atypes[dihedral[3]]: icnames.append(name01)
+                if not (name01 in icnames or name10 in icnames) and atypes[dihedral[3]]<atypes[dihedral[0]]:  icnames.append(name10)
+        print 'SYSTEM ICNAM: found following icnames'
+        print
+        for icname in icnames:
+            print '                 %s' %icname
+        print
         return icnames
     
     def find_ic_patterns(self):
@@ -239,19 +244,19 @@ class System(object):
             values = []
             ictypes = icname.split('/')[1].split('.')
             ickind = icname.split('/')[0]
-            if ickind in ['dist', 'bond']:
+            if ickind=='bond':
                 assert len(ictypes)==2
                 for bond in self.sample['bonds']:
                     if (atypes[bond[0]]==ictypes[0] and atypes[bond[1]]==ictypes[1]) \
                     or (atypes[bond[0]]==ictypes[1] and atypes[bond[1]]==ictypes[0]):
                         match.append(IC(bond, bond_length, name=icname+str(len(match)), qunit='A', kunit='kjmol/A**2'))
-            elif ickind in ['angle', 'bend']:
+            elif ickind=='bend':
                 assert len(ictypes)==3
                 for bend in self.sample['bends']:
                     if (atypes[bend[0]]==ictypes[0] and atypes[bend[1]]==ictypes[1] and atypes[bend[2]]==ictypes[2]) \
                     or (atypes[bend[0]]==ictypes[2] and atypes[bend[1]]==ictypes[1] and atypes[bend[2]]==ictypes[0]):
                         match.append(IC(bend, bend_angle, name=icname+str(len(match)), qunit='deg', kunit='kjmol/rad**2'))
-            elif ickind in ['dihed', 'dihedral', 'torsion']:
+            elif ickind=='dihedral':
                 assert len(ictypes)==4
                 for dihed in self.sample['dihedrals']:
                     if (atypes[dihed[0]]==ictypes[0] and atypes[dihed[1]]==ictypes[1] and atypes[dihed[2]]==ictypes[2] and atypes[dihed[3]]==ictypes[3]) \

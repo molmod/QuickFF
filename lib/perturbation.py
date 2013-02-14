@@ -26,7 +26,6 @@ class PerturbationTheory(object):
             directly from the hessian using perturbation theory.
         """
         print 'PERTUR ESTIM: estimate all pars'
-        print
         fctab = FFTable(icnames)
         for icname in icnames:
             ics = self.system.ics[icname]
@@ -102,16 +101,12 @@ class PerturbationTheory(object):
 
 
 class RelaxedGeometryPT(PerturbationTheory):
-    def __init__(self, system, skip_diheds=True, energy_penalty=1.0, strain_penalty=1.0, dq_rel=0.05, qsteps = 11,
-                 bond_thresshold=1.0, bend_thresshold=1.0, dihed_thresshold=1.0):
+    def __init__(self, system, skip_diheds=True, energy_penalty=1.0, strain_penalty=1.0, dq_rel=0.05, qsteps = 11):
         PerturbationTheory.__init__(self, system, skip_diheds, print_descr=False)
         self.energy_penalty = energy_penalty
         self.strain_penalty = strain_penalty
         self.dq_rel = dq_rel
         self.qsteps = qsteps
-        self.Dr = bond_thresshold
-        self.Dt = bend_thresshold
-        self.Dp = dihed_thresshold
         self.description = """PERTUR THEOR: Relaxed Geometry Perturbation Theory with:
         
                energy cost weight           = %.3e
@@ -134,10 +129,6 @@ class RelaxedGeometryPT(PerturbationTheory):
         strain = np.zeros([3*self.system.Natoms, 3*self.system.Natoms], float)
         coords0 = self.system.sample['coordinates']
         for icname, ics in self.system.ics.iteritems():
-            if   icname.split('/')[0] in ['dist' , 'bond']:                 sigma = self.Dr
-            elif icname.split('/')[0] in ['angle', 'bend']:                 sigma = self.Dt
-            elif icname.split('/')[0] in ['dihed', 'dihedral', 'torsion']:  sigma = self.Dp
-            else: raise ValueError('Illegal ic kind, recieved %s' %other.name)
             Gq = np.array([ic0.grad(coords0) for ic0 in ics if ic is None or ic0.name!=ic.name])
             if len(Gq)>0:
                 U, S, Vt = np.linalg.svd(Gq)
