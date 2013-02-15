@@ -148,6 +148,8 @@ class RelaxedGeometryPT(PerturbationTheory):
                 Vo = Vt.T[:,rank:]
                 strain += np.dot(V, np.dot(S2, V.T)) + 0.01*np.dot(Vo, Vo.T)/(3*self.system.Natoms)
         return strain
+
+
     
     
     def perturbation_trajectory(self, icname):
@@ -167,8 +169,29 @@ class RelaxedGeometryPT(PerturbationTheory):
         trajectories = []
         coords0 = self.system.sample['coordinates']
         for ic in self.system.ics[icname]:
+            q0 = ic.value(coords0)
+            if icname.startswith('bond'):
+                delta = 0.05*angstrom
+                qstart = q0 - delta
+                qend   = q0 + delta
+            elif icname.startswith('angle'):
+                delta = 15*deg
+                qstart = q0 - delta
+                qend   = q0 + delta
+                if qend>180.0*deg: qend = 179.0*deg
+                if q0==180.0*deg: qend = 180.0*deg
+            elif icname.startswith('dihed'):
+                delta = 15*deg
+                qstart = q0 - delta
+                qend   = q0 + delta
+                if qstart<-180.0*deg: qstart = -180.0*deg
+                if qend>180.0*deg: qend = 180.0*deg
+            else: raise ValueError('Invalid ic kind, recieved %s' %icname)
+
             print 'PERTUR TRAJC: %s' %ic.name
-            qarray = ( 1.0-self.dq_rel + 2.0*self.dq_rel/(self.qsteps-1)*np.array(range(self.qsteps),float) )*ic.value(coords0)
+            qarray = qstart + (qend-qstart)/(self.qsteps-1)*np.array(range(self.qsteps),float)
+            #qarray = ( 1.0-self.dq_rel + 2.0*self.dq_rel/(self.qsteps-1)*np.array(range(self.qsteps),float) )*ic.value(coords0)
+
             trajectory = []
             #Define cost function (and its derivative) that needs to be minimized
             H = self.system.totmodel.hess.reshape([3*self.system.Natoms, 3*self.system.Natoms])
@@ -177,15 +200,28 @@ class RelaxedGeometryPT(PerturbationTheory):
                 strain = 0.5*np.dot(dx.T, np.dot(S, dx))
                 energy = 0.5*np.dot(dx.T, np.dot(H, dx))
                 return self.strain_penalty*strain + self.energy_penalty*energy
+
+            #Guess delta_x first time
+            guess = np.random.normal(loc=0.0,scale=0.1,size=3*self.system.Natoms)
             for iq, q in enumerate(qarray):
+                #Only use if the minimum is located in 180*deg
+                if q==180*deg:
+                    trajectory.append(np.zeros((self.system.Natoms,3)))
+                    continue
                 #Define the constraint under which the cost function needs to be minimized
                 constraints = (
                     {'type': 'eq',
                      'fun' : lambda dx: ic.value(coords0 + dx.reshape((-1, 3))) - q,
                      'jac' : lambda dx: ic.grad(coords0 + dx.reshape((-1, 3)))},
                 )
-                result = minimize(chi, np.zeros([3*self.system.Natoms], float), method='SLSQP', constraints=constraints, tol=1e-9)
+
+                #result = minimize(chi, np.zeros([3*self.system.Natoms], float), method='SLSQP', constraints=constraints, tol=1e-9)
+                result = minimize(chi, guess, method='SLSQP', constraints=constraints, tol=1e-9)
+
                 trajectory.append(result.x.reshape([-1, 3]))
+                #Use the result just found as the new guess to ensure continuity
+                guess = result.x
+
             assert len(trajectory)==self.qsteps
             trajectories.append(trajectory)
         return trajectories
