@@ -76,17 +76,11 @@ def main():
     fftab_init = pt.estimate(icnames)
     fftab_init.print_screen()
     fftab_init.dump_pars_ffit2('int-pars.txt')
-    system.dump_sample_qff('int-system.chk')
     if options.ei_rule>-1:
         zfit = ZFitProgram(system)
         charges = zfit.run()
         system.sample['ac'] = charges
-        system.sample['charges'] = charges
-        system.dump_sample_qff('int-system.chk')
-    else:
-        system.sample['ac'] = np.zeros(system.Natoms, float)
-        system.sample['charges'] = np.zeros(system.Natoms, float)
-        system.dump_sample_qff('int-system.chk')
+    system.dump_sample_qff('int-system.chk')
     
     mfit = MFitProgram(system, icnames)
     fftab_fine = mfit.run()
