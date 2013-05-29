@@ -29,7 +29,7 @@ from distutils.core import setup
 setup(
     name='QuickFF',
     version='0.0',
-    description='Python library for estimation of Quick-and-Dirty force fields',
+    description='Python library to quickly derive force fields',
     author='Louis Vanduyfhuys',
     author_email='Louis.Vanduyfhuys@UGent.be',
     url='http://molmod.ugent.be/code/',
