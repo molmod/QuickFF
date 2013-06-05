@@ -1,303 +1,337 @@
 #! /usr/bin/env python
 
-from molmod.io.chk import load_chk
+from molmod.periodic import periodic as pt
+from molmod.molecules import Molecule
+from molmod.molecular_graphs import MolecularGraph
+from molmod.io.psf import PSFFile
+from molmod.io.chk import load_chk, dump_chk
 from molmod.io.fchk import FCHKFile
 from molmod.io.psf import PSFFile
-from molmod.ic import *
-from molmod.periodic import periodic as pt
-from molmod.molecular_graphs import MolecularGraph
-from molmod.unit_cells import UnitCell
-from molmod.molecules import Molecule
 from molmod.units import *
-from copy import deepcopy
-import numpy as np, sys, time
+from molmod.ic import *
 
-from model import *
-from ic import *
-from tools import *
+import numpy as np
+
+from refdata import ReferenceData
+from ic import IC
 from atypes import assign_atypes
 
-__all__=['System']
+__all__ = ['System']
 
 class System(object):
-    def __init__(self, fn_chk, fn_psf=None, guess_atypes_level=None, charges=None):
-        print 'SYSTEM TIMER:', time.ctime()
-        self.load_sample(fn_chk)
-        if fn_psf is not None:
-            self.load_topology(fn_psf)
-        self.check_topology()
-        if guess_atypes_level is not None:
-            self.guess_atypes(guess_atypes_level)
-        if charges is not None:
-            self.load_charges(charges)
-        self.print_info()
-        self.find_ic_patterns()
-    
-    def load_sample(self, fn_chk):
-        self.fn_chk = fn_chk
-        if fn_chk.endswith('.chk') or fn_chk.endswith('.mfs'):
-            print 'SYSTEM LOAD : loading system sample from MolMod checkpoint file %s' %fn_chk
-            self.sample = load_chk(fn_chk)
-            self.Natoms = len(self.sample['numbers'])
-        elif fn_chk.endswith('.fchk'):
-            print 'SYSTEM LOAD : loading system sample from Gaussian fchk file %s' %fn_chk
-            fchk = FCHKFile(fn_chk)
-            self.sample = {}
-            self.sample['title'] = 'Sample title'
-            self.sample['numbers'] = fchk.fields.get('Atomic numbers')
-            self.Natoms = len(self.sample['numbers'])
-            self.sample['coordinates'] = fchk.fields.get('Current cartesian coordinates').reshape([self.Natoms, 3])
-            self.sample['gradient'] = fchk.fields.get('Cartesian Gradient').reshape([self.Natoms, 3])
-            self.sample['hessian']  = fchk.get_hessian().reshape([self.Natoms, 3, self.Natoms, 3])
-        else:
-            raise ValueError('Invalid file extension, recieved %s' %fn_chk)
-        if 'colors' not in self.sample.keys():
-            self.sample['colors'] = ['#7777CC' for i in xrange(self.Natoms)]
-    
-    def load_topology(self, fn_psf):
-        print 'SYSTEM TOPOL: loading topology from %s' %fn_psf
-        self.fn_psf = fn_psf
-        psf = PSFFile(fn_psf)
-        self.sample['bonds'] = psf.bonds
-        if len(psf.bends)>0: self.sample['bends'] = psf.bends
-        if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
-        self.sample['ffatypes'] = psf.atom_types
-        self.neighbor_list = psf.get_molecular_graph().neighbors
-        if 'ac' not in self.sample:
-            print 'SYSTEM EI   : the charges are taken from %s and the radii are set to 1e-4 A' %fn_psf
-            self.sample['ac']   = psf.charges
-            self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
+    def __init__(self, numbers, ffatypes, charges, ref, bonds, bends, diheds, nlist):
+        '''
+           **Arguments:**
 
+           numbers
+                A numpy array (N) with atomic numbers.
+
+           ffatypes
+                A numpy array (N) with force field atom types of a string
+                specifying how to guess the atom types [high, medium or low].
+ 
+           charges
+                A numpy array (N) with atomic charges. The default charges
+                are all zero.
+           
+           ref
+                An instance of ReferenceData containing the reference data
+                from which the force field will be estimated.
+                     
+           bonds
+                A numpy array (B,2) with atom indexes (counting starts from
+                zero) to define topological bond patterns. If no bonds are 
+                given, they are estimated from the geometry in ref.coords.
+
+           bends
+                A numpy array (A,3) with atom indexes (counting starts from
+                zero) to define topological bend patterns.
+
+           diheds
+                A numpy array (D,4) with atom indexes (counting starts from
+                zero) to define topological dihedrall patterns.
+           
+           nlist
+                A dictionnairy containing the neighbors for every every atom.
+        '''
+        self.numbers = numbers
+        self.ffatypes = ffatypes
+        self.charges = charges
+        self.bonds = bonds
+        self.bends = bends
+        self.diheds = diheds
+        self.ref = ref
+        self.nlist = nlist
+        self.ref.check()
+        self.check_topology()
+    
+    def _get_natoms(self):
+        return len(self.numbers)
+    
+    natoms = property(_get_natoms)
+    
+    @classmethod
+    def from_files(cls, fns):
+        '''
+           A method to construct a System instance from input files. If
+           the input files do not contain the topology, it is estimated
+           from the geometry.
+        
+           **Arguments:**
+
+           fns
+                A list of file names. Files further on in the list will
+                overwrite earlier files if there is overlap. txt files
+                can only be used in hipart format to define charges.
+        '''
+        #initialise
+        numbers = None
+        charges = None
+        ffatypes = None
+        bonds = None
+        bends = None
+        diheds = None
+        nlist = None
+        ref = ReferenceData()
+        #Read all input files
+        for fn in fns:
+            extension = fn.split('.')[-1]
+            if extension in ['chk', 'mfs']:
+                sample = load_chk(fn)
+                for key, value in sample.iteritems():
+                    if key in ['numbers']:
+                        numbers = value
+                    elif key in ['ffatypes', 'atypes']:
+                        ffatypes = value
+                    elif key in ['bonds']:
+                        bonds = value
+                    elif key in ['bends', 'angles']:
+                        bends = value
+                    elif key in ['diheds', 'dihedrals']:
+                        diheds = value
+                    elif key in ['coords', 'coordinates', 'pos']:
+                        ref.update(coords=value)
+                    elif key in ['gradient', 'grad', 'gpos', 'forces']:
+                        ref.update(grad=value)
+                    elif key in ['hessian', 'hess']:
+                        ref.update(hess=value)
+                    else:
+                        print 'WARNING: Skipped key %s in sample %s' %(key, fn)
+            elif extension in ['fchk']:
+                fchk = FCHKFile(fn)
+                numbers = fchk.fields.get('Atomic numbers')
+                ref.update(coords=fchk.fields.get('Current cartesian coordinates').reshape([len(numbers),3]))
+                ref.update(grad=fchk.fields.get('Cartesian Gradient').reshape([len(numbers),3]))
+                ref.update(hess=fchk.get_hessian().reshape([len(numbers),3, len(numbers),3]))
+            elif extension in ['psf']:
+                psf = PSFFile(fn)
+                numbers = np.array(psf.numbers)
+                ffatypes = np.array(psf.atom_types)
+                charges = np.array(psf.charges)
+                bonds = np.array(psf.bonds)
+                bends = np.array(psf.bends)
+                diheds = np.array(psf.dihedrals)
+                nlist = psf.get_molecular_graph().neighbors
+            elif extension in ['txt']:
+                from hipart.io import load_atom_scalars
+                charges = load_atom_scalars(fn)
+        #Finalise topology and estimate atom types if necessary
+        if charges is None:
+            charges = np.zeros(len(numbers), float)
+        return cls(numbers, ffatypes, charges, ref, bonds, bends, diheds, nlist)
+    
     def check_topology(self):
-        """Check wether all topology information is present and complete topology
-           if necessary
-        """    
-        if 'bonds' not in self.sample.keys():
-            print "SYSTEM TOPOL: creating topology from the geometry because 'bonds' was missing"
-            unit_cell = UnitCell(np.diag([50.0, 50.0, 50.0]),active=np.array([False, False, False]))
-            molecule = Molecule(self.sample['numbers'], self.sample['coordinates'], unit_cell=unit_cell)
+        '''
+           Check wether all topology information (bonds, bends, diheds
+           and nlist) is present and complete if necessary.
+        '''   
+        if self.bonds is None:
+            molecule = Molecule(self.numbers, coordinates=self.ref.coords)
             graph = MolecularGraph.from_geometry(molecule)
             psf = PSFFile()
-            psf.add_molecular_graph(graph)
-            self.sample['bonds'] = psf.bonds
-            if len(psf.bends)>0: self.sample['bends'] = psf.bends
-            if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
-            self.neighbor_list = graph.neighbors
-        elif (len(self.sample['bonds'])>1 and 'bends' not in self.sample.keys()) \
-          or (len(self.sample['bends'])>1 and 'dihedrals' not in self.sample.keys()):
-            print "SYSTEM TOPOL: estimating bends, dihedrals and neighbor_list from bonds"
-            graph = MolecularGraph(self.sample['bonds'], self.sample['numbers'])
+            psf.add_molecule(molecule)
+            self.bonds = np.array(psf.bonds)
+            self.bends = np.array(psf.bends)
+            self.diheds = np.array(psf.dihedrals)
+            self.nlist = graph.neighbors
+        if self.bends is None or self.diheds is None or self.nlist is None:
+            graph = MolecularGraph(self.bonds, self.numbers)
             psf = PSFFile()
             psf.add_molecular_graph(graph)
-            if len(psf.bends)>0: self.sample['bends'] = psf.bends
-            if len(psf.dihedrals)>0: self.sample['dihedrals'] = psf.dihedrals
-            self.neighbor_list = graph.neighbors
-        elif not hasattr(self, 'neighbor_list'):
-            print "SYSTEM TOPOL: neighbors estimated from bonds"
-            graph = MolecularGraph(self.sample['bonds'], self.sample['numbers'])
-            self.neighbor_list = graph.neighbors
+            self.bends = np.array(psf.bends)
+            self.dihedrals = np.array(psf.dihedrals)
+            self.nlist = graph.neighbors
     
-    def guess_atypes(self, guess_atypes_level):
-        print 'SYSTEM ATYPE: guessing atom types at %s level' %guess_atypes_level
-        self.sample['ffatypes'] = assign_atypes(self.sample['bonds'], self.sample['numbers'], guess_atypes_level)
+    def guess_atypes(self, atypes_level):
+        '''
+           A method to guess atom types. This will overwrite ffatypes
+           that are already defined in the system.
         
-    def load_charges(self, charges):
-        if charges.endswith('.txt'):
-            print 'SYSTEM CHARG: the charges are set to the hipart charge file %s and the radii are set to 1e-4 A' %charges
-            from hipart.io import load_atom_scalars
-            self.sample['ac'] = load_atom_scalars(charges)
-            self.sample['mc'] = sum(self.sample['ac'])
-            self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
-        else:
-            print 'SYSTEM CHARG: the charges are set according to the command line input and the radii are set to 1e-4 A'
-            self.sample['ac'] = np.array([float(x) for x in charges.split(',')])
-            self.sample['mc'] = sum(self.sample['ac'])
-            self.sample['radii'] = 1e-4*angstrom*np.ones([self.Natoms], float)
-    
-    def define_models(self, eirule=-1, eikind=None):
-        #Setting up total energy model
-        print 'SYSTEM MODEL: Projecting translational and rotional dofs out of the hessian'
-        hess = self.sample['hessian'].reshape([3*self.Natoms, 3*self.Natoms])
-        VTx, VTy, VTz = global_translation(self.sample['coordinates'])
-        VRx, VRy, VRz = global_rotation(self.sample['coordinates'])
-        U, S, Vt = np.linalg.svd( np.array([VTx, VTy, VTz, VRx, VRy, VRz]).transpose() )
-        P = np.dot(U[:,6:], U[:,6:].T)
-        hess_proj = np.dot(P, np.dot(hess, P)).reshape([self.Natoms, 3, self.Natoms, 3])
-        print 'SYSTEM MODEL: Setting up Harmonic model for total energy'
-        self.totmodel = HarmonicModel(self.sample['coordinates'], self.sample['gradient'], hess_proj, name='Harmonic Total Energy')
-        #Setting up electrostatic model
-        if eirule==3 and not has_15_bonded(self):
-            print 'SYSTEM MODEL: electrostatics switched off, because no 15 bonded pairs and exclude rule was %i' %eirule
-            self.eirule = -1
-            self.eikind = 'Zero'
-        elif eirule==2 and 'dihedrals' not in self.sample.keys():
-            print 'SYSTEM MODEL: electrostatics switched off, because no 14 bonded pairs and exclude rule was %i' %eirule
-            self.eirule = -1
-            self.eikind = 'Zero'
-        elif eirule==1 and 'bends' not in self.sample.keys():
-            print 'SYSTEM MODEL: electrostatics switched off, because no 13 bonded pairs and exclude rule was %i' %eirule
-            self.eirule = -1
-            self.eikind = 'Zero'
-        else:
-            if eikind is None:
-                if eirule==-1:
-                    eikind='Zero'
-                else:
-                    eikind='Harmonic'
-            print 'SYSTEM MODEL: electrostatics switched on with kind %s and exlusion rule %i' %(eikind, eirule)
-            self.eikind = eikind
-            self.eirule = eirule
-        if 'ac' not in self.sample.keys() and self.eikind!='Zero':
-            raise ValueError("Charges need to be specified when electrostatics are switched on")
-        if self.eikind=='Zero':
-            self.eimodel = ZeroModel()
-        else:
-            exclude = []
-            if self.eirule>0:
-                for bond in self.sample['bonds']:
-                    exclude.append([bond[0], bond[1]])
-            if self.eirule>1 and 'bends' in self.sample.keys():
-                for bend in self.sample['bends']:
-                    exclude.append([bend[0], bend[2]])
-            if self.eirule>2 and 'dihedrals' in self.sample.keys():
-                for dihed in self.sample['dihedrals']:
-                    exclude.append([dihed[0], dihed[3]])
-            if self.eikind=='Harmonic':
-                forces_ei, hess_ei = electrostatics(self.sample, exclude_pairs=exclude)
-                self.eimodel = HarmonicModel(self.sample['coordinates'], forces_ei, hess_ei, name='Harmonic Electrostatic Energy')
-            elif self.eikind=='Coulomb':
-                self.eimodel = CoulombModel(self.sample['coordinates'], self.sample['ac'], name='Coulomb Electrostatic Energy', exclude_pairs=exclude)
+           **Arguments:**
+           
+           atypes_level
+                A string used for guessing atom types based on atomic
+                number (low), local topology (medium) or atomic index
+                in the molecule (high).
+        '''
+        self.ffatypes = assign_atypes(self, atypes_level)
+
+    def determine_ics_from_topology(self):
+        '''
+            Method to generate IC instances corresponding to all ics
+            present in the bonds, bends and dihedrals attributes.
+        '''
+        self.ics = {}
+        number = {}
+        def sort_ffatypes(ffatypes):
+            if ffatypes[0]<=ffatypes[-1]: return ffatypes
+            else: return ffatypes[::-1]
+        #Find bonds
+        for bond in self.bonds:
+            name = 'bond/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in bond]))
+            if name not in number.keys(): number[name] = 0
+            else: number[name] += 1
+            ic = IC(name+str(number[name]), bond, bond_length, qunit='A', kunit='kjmol/A**2')
+            if name in self.ics.keys():
+                self.ics[name].append(ic)
             else:
-                raise ValueError('Invalid electrostatic model kind, received %s' %self.eikind)
+                self.ics[name] = [ic]
+        #Find bends
+        for bend in self.bends:
+            name = 'angle/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in bend]))
+            if name not in number.keys(): number[name] = 0
+            else: number[name] += 1
+            ic = IC(name+str(number[name]), bend, bend_angle, qunit='deg', kunit='kjmol/rad**2')
+            if name in self.ics.keys():
+                self.ics[name].append(ic)
+            else:
+                self.ics[name] = [ic]
+        #Find dihedrals
+        for dihed in self.diheds:
+            name = 'dihed/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in dihed]))
+            if name not in number.keys(): number[name] = 0
+            else: number[name] += 1
+            ic = IC(name+str(number[name]), dihed, dihed_angle, qunit='deg', kunit='kjmol')
+            if name in self.ics.keys():
+                self.ics[name].append(ic)
+            else:
+                self.ics[name] = [ic]
 
-    def print_info(self):
-        if 'ac' in self.sample.keys():
-            print 'SYSTEM INFOR: The atom types, charges and charge radii are respectively'
-            print
-            for i, (t, q, r) in enumerate(zip(self.sample['ffatypes'], self.sample['ac'], self.sample['radii'])):
-                print '                %3i  %8s % 6.3f %.4f' %(i, t, q, r)
-            print
-        else:
-            print 'SYSTEM INFOR: The atom types are'
-            print
-            for i, t in enumerate(self.sample['ffatypes']):
-                print '                %3i  %8s' %(i, t)
-            print
-    
-    def dump_sample_qff(self, fn):
-        if self.fn_chk==fn:
-            raise ValueError('I refuse to overwrite input system file %s' %self.fn_chk)
-        from molmod.io.chk import dump_chk
-        print 'SYSTEM DUMPS: dumping system sample to QuickFF checkpoint file %s' %fn
-        dump_chk(fn, self.sample)
-    
-    def dump_sample_yaff(self, fn):
-        if self.fn_chk==fn:
-            raise ValueError('I refuse to overwrite input system file %s' %self.fn_chk)
-        print 'SYSTEM DUMPS: dumping system sample to Yaff checkpoint file %s' %fn
-        yaff = {}
-        yaff['bonds']    = self.sample['bonds']
-        yaff['charges']  = self.sample['ac']
-        yaff['ffatypes'] = self.sample['ffatypes']
-        yaff['masses']   = np.array([pt[number].mass for number in self.sample['numbers']])
-        yaff['numbers']  = self.sample['numbers']
-        yaff['pos']      = self.sample['coordinates']
-        from molmod.io.chk import dump_chk
-        dump_chk(fn, yaff)
-
-    def icnames_from_topology(self):
-        print 'SYSTEM ICNAM: determining ic names from topology'
-        icnames = []
-        atypes = self.sample['ffatypes']
-        for bond in self.sample['bonds']:
-            name01 = 'bond/%s.%s' %(atypes[bond[0]], atypes[bond[1]])
-            name10 = 'bond/%s.%s' %(atypes[bond[1]], atypes[bond[0]])
-            if not (name01 in icnames or name10 in icnames) and atypes[bond[0]]<=atypes[bond[1]]: icnames.append(name01)
-            if not (name01 in icnames or name10 in icnames) and atypes[bond[1]]<atypes[bond[0]]:  icnames.append(name10)
-        if 'bends' in self.sample.keys():
-            for bend in self.sample['bends']:
-                name01 = 'bend/%s.%s.%s' %(atypes[bend[0]], atypes[bend[1]], atypes[bend[2]])
-                name10 = 'bend/%s.%s.%s' %(atypes[bend[2]], atypes[bend[1]], atypes[bend[0]])
-                if not (name01 in icnames or name10 in icnames) and atypes[bend[0]]<=atypes[bend[2]]: icnames.append(name01)
-                if not (name01 in icnames or name10 in icnames) and atypes[bend[2]]<atypes[bend[0]]:  icnames.append(name10)
-        if 'dihedrals' in self.sample.keys():
-            for dihedral in self.sample['dihedrals']:
-                name01 = 'dihedral/%s.%s.%s.%s' %(atypes[dihedral[0]], atypes[dihedral[1]], atypes[dihedral[2]], atypes[dihedral[3]])
-                name10 = 'dihedral/%s.%s.%s.%s' %(atypes[dihedral[3]], atypes[dihedral[2]], atypes[dihedral[1]], atypes[dihedral[0]])
-                if not (name01 in icnames or name10 in icnames) and atypes[dihedral[0]]<=atypes[dihedral[3]]: icnames.append(name01)
-                if not (name01 in icnames or name10 in icnames) and atypes[dihedral[3]]<atypes[dihedral[0]]:  icnames.append(name10)
-        print 'SYSTEM ICNAM: found following icnames'
-        print
-        for icname in icnames:
-            print '                 %s' %icname
-        print
-        return icnames
-    
-    def find_ic_patterns(self):
-        icnames = self.icnames_from_topology()
-        print 'SYSTEM ICPAT: determining ic patterns'
-        atypes = self.sample['ffatypes']
-        self.icnames = icnames
+    def determine_ics_from_names(self, icnames):
+        '''
+            Method to generate IC instances corresponding to the names
+            given as argument. For example, bond/Cph.Hph will search for
+            all ICs corresponding to a bond between atoms of type Cph and 
+            Hph.
+            
+            **Arguments**
+            
+            icnames
+                A list containing the names of ics. Format of icnames is:
+                kind/atype1.atype2...atypeN with kind=bond, bend or dihed
+        '''
         self.ics = {}
         for icname in icnames:
             match = []
-            values = []
-            ictypes = icname.split('/')[1].split('.')
+            atypes = icname.split('/')[1].split('.')
             ickind = icname.split('/')[0]
-            if ickind=='bond':
-                assert len(ictypes)==2
-                for bond in self.sample['bonds']:
-                    if (atypes[bond[0]]==ictypes[0] and atypes[bond[1]]==ictypes[1]) \
-                    or (atypes[bond[0]]==ictypes[1] and atypes[bond[1]]==ictypes[0]):
-                        match.append(IC(bond, bond_length, name=icname+str(len(match)), qunit='A', kunit='kjmol/A**2'))
-            elif ickind=='bend':
-                assert len(ictypes)==3
-                for bend in self.sample['bends']:
-                    if (atypes[bend[0]]==ictypes[0] and atypes[bend[1]]==ictypes[1] and atypes[bend[2]]==ictypes[2]) \
-                    or (atypes[bend[0]]==ictypes[2] and atypes[bend[1]]==ictypes[1] and atypes[bend[2]]==ictypes[0]):
-                        match.append(IC(bend, bend_angle, name=icname+str(len(match)), qunit='deg', kunit='kjmol/rad**2'))
-            elif ickind=='dihedral':
-                assert len(ictypes)==4
-                for dihed in self.sample['dihedrals']:
-                    if (atypes[dihed[0]]==ictypes[0] and atypes[dihed[1]]==ictypes[1] and atypes[dihed[2]]==ictypes[2] and atypes[dihed[3]]==ictypes[3]) \
-                    or (atypes[dihed[0]]==ictypes[3] and atypes[dihed[1]]==ictypes[2] and atypes[dihed[2]]==ictypes[1] and atypes[dihed[3]]==ictypes[0]):
-                        match.append(IC(dihed, dihed_angle, name=icname+str(len(match)), qunit='deg', kunit='kjmol'))
+            if ickind in ['bond']:
+                assert len(atypes)==2
+                for bond in self.bonds:
+                    if (self.ffatypes[bond]==atypes).all() or (self.ffatypes[bond]==atypes[::-1]).all():
+                        match.append(IC(icname+str(len(match)), bond, bond_length, qunit='A', kunit='kjmol/A**2'))
+            elif ickind in ['angle']:
+                assert len(atypes)==3
+                for bend in self.bends:
+                    if (self.ffatypes[bend]==atypes).all() or (self.ffatypes[bend]==atypes[::-1]).all():
+                        match.append(IC(icname+str(len(match)), bend, bend_angle, qunit='deg', kunit='kjmol/rad**2'))
+            elif ickind in ['dihed']:
+                assert len(atypes)==4
+                for dihed in self.dihedrals:
+                    if (self.ffatypes[dihed]==atypes).all() or (self.ffatypes[dihed]==atypes[::-1]).all():
+                        match.append(IC(icname+str(len(match)), dihed, dihed_angle, qunit='deg', kunit='kjmol'))
             else:
-                raise ValueError('Recieved invalid ic kind: %s' %ickind)
+                raise ValueError('Invalid icname, recieved %s' %icname)
             if len(match)==0:
-                print 'SYSTEM ICPAT: No match found for %s' %icname
+                raise ValueError('Found no match for icname %s' %icname)
             self.ics[icname] = match
-    
-    def get_ics(self, exclude_ic=[], exclude_icname=[], patterns_icname=[]):
-        result = []
-        for icname, ics in self.ics.iteritems():
-            if icname in exclude_icname:
-                continue
-            if len(patterns_icname)>0:
-                found = False
-                for pattern_icname in patterns_icname:
-                    if pattern_icname in icname:
-                        found = True
-                        break
-                if not found:
-                    continue
-            for ic in ics:
-                if ic.name not in exclude_ic:
-                    result.append(ic)
-        return result
 
-    def get_neighbors(self, indices, depth=1):
-        if depth==-1: return range(self.Natoms)
-        neighbors = deepcopy(indices)
-        edge = deepcopy(indices)
-        current = 0
-        while current<depth:
-            new_edge = []
-            for index in edge:
-                for neighbor in self.neighbor_list[index]:
-                    if neighbor not in neighbors:
-                        neighbors.append(neighbor)
-                        new_edge.append(neighbor)
-            edge = new_edge
-            current += 1
-        return neighbors
+    def print_atom_info(self):
+        print '    ---------------------------------'
+        print '      index   symbol  ffatype  charge'
+        print '    ---------------------------------'
+        for index, (number, ffatype, charge) in enumerate(zip(self.numbers, self.ffatypes, self.charges)):
+            print '        %3i      %3s %8s  % 6.3f' %(index, pt[number].symbol, ffatype, charge)
+        print '    ---------------------------------'
+        print
+    
+    def print_ic_info(self):
+        print '    -----------------------------------------------------'
+        print '                            icname     indices           '
+        print '    -----------------------------------------------------'
+        for icname, ics in self.ics.iteritems():
+            for ic in ics:
+                print '    %30s    ' %icname + ' '.join(['%3i' %index for index in ic.indexes])
+        print '    -----------------------------------------------------'
+        print
+
+    def dump(self, fn):
+        sample = {}
+        sample['numbers']  = self.numbers
+        sample['charges']  = self.charges
+        sample['ffatypes'] = self.ffatypes
+        sample['masses']   = np.array([pt[number].mass for number in self.numbers])
+        sample['bonds']    = self.bonds
+        sample['pos']      = self.ref.coords
+        sample['grad']     = self.ref.grad
+        sample['hess']     = self.ref.hess
+        dump_chk(fn, sample)
+
+    def dump_charges_yaff(self, fn, eirule, mode='w'):
+        if eirule==-1:
+            return
+        elif eirule==0:
+            scale1 = 1.0
+            scale2 = 1.0
+            scale3 = 1.0
+        elif eirule==1:
+            scale1 = 0.0
+            scale2 = 1.0
+            scale3 = 1.0
+        elif eirule==2:
+            scale1 = 0.0
+            scale2 = 0.0
+            scale3 = 1.0
+        elif eirule==3:
+            scale1 = 0.0
+            scale2 = 0.0
+            scale3 = 0.0
+        f = open(fn, mode)
+        print >> f, ''
+        print >> f, '# Fixed charges'
+        print >> f, '# ============='
+        print >> f, ''
+        print >> f, "# Mathematical form: q_A = q_0A + sum'_B p_BA"
+        print >> f, '# where q0_A is the reference charge of atom A. It is mostly zero, sometimes a'
+        print >> f, '# non-zero integer. The total charge of a fragment is the sum of all reference'
+        print >> f, '# charges. The parameter p_BA is the charge transfered from B to A. Such charge'
+        print >> f, '# transfers are only carried out over bonds in the FF topology.'
+        print >> f, '# The charge on an atom is modeled as a Gaussian distribution. The spread on the'
+        print >> f, '# Gaussian is called the radius R. When the radius is set to zero, point charges'
+        print >> f, '# will be used instead of smeared charges.'
+        print >> f, ''
+        print >> f, 'FIXQ:UNIT Q0 e'
+        print >> f, 'FIXQ:UNIT P e'
+        print >> f, 'FIXQ:UNIT R angstrom'
+        print >> f, 'FIXQ:SCALE 1 %3.1f' %scale1
+        print >> f, 'FIXQ:SCALE 2 %3.1f' %scale2
+        print >> f, 'FIXQ:SCALE 3 %3.1f' %scale3
+        print >> f, 'FIXQ:DIELECTRIC 1.0'
+        print >> f, ''
+        print >> f, '# Atomic parameters'
+        print >> f, '# ----------------------------------------------------'
+        print >> f, '# KEY        label  Q_0A              R_A'
+        print >> f, '# ----------------------------------------------------'
+        for atype, charge in zip(self.ffatypes, self.charges):
+            print >> f, 'FIXQ:ATOM %8s % .10f  0.0000000000e+00' %(atype, charge)
+        f.close()

@@ -6,128 +6,187 @@ import numpy as np
 from tools import statistics
 
 
-__all__ = ['FFArray', 'FFTable']
+__all__ = ['DataArray', 'FFTable']
 
 
-class FFArray(object):
-    def __init__(self, data):
-        if isinstance(data, np.ndarray):
-            self.data = data
+class DataArray(object):
+    '''
+        A class to store data representing measurements (or calculations) of
+        the same observable. Some basic statistics will be done automatically
+        and can be accessed at all time.
+    '''
+    def __init__(self, data=None, unit='au'):
+        if data is None:
+            self.data = None
         else:
             self.data = np.array(data)
+        self.unit = unit
+        self.mean, self.std, self.num = statistics(self.data)
+    
+    def append(self, value):
+        if self.data is None:
+            self.data = np.array([value])
+        else:
+            assert isinstance(self.data, np.ndarray)
+            self.data = np.append(self.data, value)
         self.mean, self.std, self.num = statistics(self.data)
     
     def __len__(self):
         return len(self.data)
     
-    def _html(self, fmt, unit='au'):
-        if self.num==0: return ''
-        return fmt %(self.mean/parse_unit(unit), self.std/parse_unit(unit), self.num)
-
-
-
-class FFTable(object):    
-    def __init__(self, icnames):
-        self.icnames = icnames
-        self.k = {}
-        self.q = {}
-        self.units = {}
-    
-    @classmethod
-    def from_ffit2(cls, model):
-        print 'FFTAB  FFIT2: constructing FFTable from FFit2 model'
-        icnames = []
-        units = {}
-        kdata = {}
-        qdata = {}
-        for rule in model.rules:
-            for par in rule.pars:
-                icname = '/'.join(par.prefix.split('/')[:2])
-                kind = par.name[0].lower()
-                if not icname in icnames: icnames.append(icname)
-                unit = units.get(icname, {'k': None, 'q': None})
-                unit[kind] = par.unit.replace('^', '**')
-                units[icname] = unit
-                if kind=='k':
-                    kdata[icname] = np.array([par.value])
-                elif kind=='q':
-                    qdata[icname] = np.array([par.value])
-                else:
-                    raise ValueError('Invalid value for kind, recieved %s' %kind)
-        fftab = FFTable(icnames)
-        for icname in icnames:
-            if icname.startswith('dihed/'):
-                qdata[icname] = np.array([0.0])
-                units[icname]['q'] = 'deg'
-            fftab.add(icname, kdata[icname], qdata[icname], unit=units[icname])
-        return fftab
-    
-    def add(self, icname, kdata, qdata, unit={'q': 'au', 'k': 'kjmol/au**2'}):
-        assert icname in self.icnames
-        assert icname not in self.k.keys()
-        assert icname not in self.q.keys()
-        self.k[icname] = FFArray(kdata)
-        self.q[icname] = FFArray(qdata)
-        self.units[icname] = unit
-    
-    def __getitem__(self, key, return_std=False):
-        k = self.k[key].mean
-        k_std = self.k[key].std
-        q = None
-        q_err = None
-        if key in self.q.keys():
-            q = self.q[key].mean
-            q_std = self.q[key].std
-        if not return_std:
-            return k, q
+    def string(self):
+        if self.num==0:
+            return ''
         else:
-            return k, k_std, q, q_std
+            return u'%9.3f \u00B1 %6.3f ' %(self.mean/parse_unit(self.unit), self.std/parse_unit(self.unit)) + self.unit + ' '*(15-len(self.unit))
+
+
+class FFTable(object): 
+    '''
+        A class to read, store and dump Force Field parameters. The parameters
+        of the force field term for an ic of kind icname can be accessed as
+        follows:
+        
+            k, q0 = fftable[icname]
+        
+        The statistics of a parameter (e.q. the force constant of the term
+        related to icname) can be accessed as follows:
+        
+            k_mean = fftable.pars[icname]['k'].mean
+            k_std = fftable.pars[icname]['k'].std
+            k_num = fftable.pars[icname]['k'].num
+    '''   
+    def __init__(self):
+        self.pars = {}
+    
+    def add(self, icname, ks, q0s, **kwargs):
+        assert isinstance(ks, DataArray)
+        assert isinstance(q0s, DataArray)
+        self.pars[icname] = {'k': ks, 'q0': q0s}
+        for kw, data in kwargs.iteritems():
+            assert isinstance(data, DataArray)
+            self.pars[icname][kw] = data
+    
+    def __getitem__(self, key):
+        k  = self.pars[key]['k'].mean
+        q0 = self.pars[key]['q0'].mean
+        return k, q0
     
     def print_screen(self):
-        print 'FFTAB  PRINT: printing force field parameters to screen'
-        print
-        for icname in sorted(self.icnames):
-            k, k_std, q, q_std = self.__getitem__(icname, return_std=True)
-            k = u'% 8.2f \u00B1 % 8.2f %15s' %(k/parse_unit(self.units[icname]['k']), k_std/parse_unit(self.units[icname]['k']), self.units[icname]['k'])
-            if q is None: q = 'None'
-            else: q = u'% 8.3f \u00B1 % 8.3f %3s' %(q/parse_unit(self.units[icname]['q']), q_std/parse_unit(self.units[icname]['q']), self.units[icname]['q'])
-            print '                %40s   K=%s     q=%s' %(icname, k, q)
-        print
+        for icname, pars in sorted(self.pars.iteritems()):
+            print '%30s:   K = %s    q0 = %s' %(icname, pars['k'].string(), pars['q0'].string())
 
-    def dump_pars_ffit2(self, fn):
+    def dump_ffit2(self, fn, mode='w'):
         f = open(fn, 'w')
         print >> f, '# Parameters'
-        print >> f, '# ------------------------------------------------------------------#------'
-        print >> f, '# longname                                 unit               value # fx/fr'
-        print >> f, '# ------------------------------------------------------------------#------'
-        for icname in self.icnames:
+        print >> f, '# -----------------------------------------------------------------------------#------'
+        print >> f, '# longname                                                   unit        value # fx/fr'
+        print >> f, '# -----------------------------------------------------------------------------#------'
+        for icname in sorted(self.pars.keys()):
             kind = icname.split('/')[0]
             atypes = icname.split('/')[1]
-            k = self.k[icname].mean
-            q0 = self.q[icname].mean
-            if kind in ['bond', 'dist']:
-                print >>f, '  %40s %12s % 12.6f #  free' %(
-                    'bond/%s/harm/dist/K' %atypes,
+            k, q0 = self[icname]
+            if kind=='bond':
+                name = 'bond/%s/harm/dist/K' %atypes
+                print >>f, '  %50s %12s % 12.6f #  free' %(
+                     name + ' '*(50-len(name)),
                     'kjmol/A^2', k/(kjmol/angstrom**2)
                 )
-                print >> f, '  %40s %12s % 12.6f #  free' %(
-                    'bond/%s/harm/dist/q0' %atypes,
+                name = 'bond/%s/harm/dist/q0' %atypes
+                print >> f, '  %50s %12s % 12.6f #  free' %(
+                     name + ' '*(50-len(name)),
                     'A', q0/angstrom
                 )
-            elif kind in ['bend', 'angle']:
-                print >> f, '  %40s %12s % 12.6f #  free' %(
-                    'angle/%s/harm/angle/K' %atypes,
+            elif kind=='angle':
+                name = 'angle/%s/harm/angle/K' %atypes
+                print >> f, '  %50s %12s % 12.6f #  free' %(
+                    name + ' '*(50-len(name)),
                     'kjmol/rad^2', k/(kjmol/rad**2)
                 )
-                print >> f, '  %40s %12s % 12.6f #  free' %(
-                    'angle/%s/harm/angle/q0' %atypes,
+                name = 'angle/%s/harm/angle/q0' %atypes
+                print >> f, '  %50s %12s % 12.6f #  free' %(
+                    name + ' '*(50-len(name)),
                     'deg', q0/deg
                 )
-            elif kind in ['dihedral', 'dihed', 'torsion']:
-                print >> f, '  %40s %12s % 12.6f #  free' %(
-                    'dihed/%s/cos-m2-0/dihed/K' %atypes,
+            elif kind=='dihed':
+                m = self.pars[icname]['m'].mean
+                name = 'dihed/%s/cos-m%i-0/dihed/K' %(atypes,m)
+                print >> f, '  %50s %12s % 12.6f #  free' %(
+                    name + ' '*(50-len(name)),
                     'kjmol', k/kjmol
                 )
-        print >> f, '# ------------------------------------------------------------------#------'
+        print >> f, '# -----------------------------------------------------------------------------#------'
         f.close()
-        print 'FFTAB  DUMP : dumped parameters in FFit2 format to %s' %fn
+
+    def dump_yaff(self, fn, mode='w'):
+        f = open(fn, mode)
+        print >> f, '# Bond stretch'
+        print >> f, '# ============'
+        print >> f, ''
+        print >> f, '# Mathematical form depends on the kind selected below. Few kinds are supported:'
+        print >> f, '# - BONDHARM: 0.5*K*(r-R0)**2'
+        print >> f, '# - BONDFUES: 0.5*K*R0**2*(1+(R0/r)*((R0/r)-2.0))'
+        print >> f, ''
+        print >> f, '# The actual parameters and their units may depend on the kind.'
+        print >> f, 'BONDHARM:UNIT K kjmol/angstrom**2'
+        print >> f, 'BONDHARM:UNIT R0 angstrom'
+        print >> f, ''
+        print >> f, '# -----------------------------------------------------------------'
+        print >> f, '# KEY         ffatype0 ffatype1  K                 R0'
+        print >> f, '# -----------------------------------------------------------------'
+        for icname in sorted(self.pars.keys()):
+            if not icname.startswith('bond'): continue
+            atypes = icname.split('/')[1].split('.')
+            k, q0 = self[icname]
+            print >> f, 'BONDHARM:PARS %8s %8s % .10e % .10e' %(
+                atypes[0], atypes[1], k/(kjmol/angstrom**2), q0/angstrom
+            )
+        print >> f, ''
+        print >> f, '# Angle bending'
+        print >> f, '# ============='
+        print >> f, ''
+        print >> f, '# Mathematical form depends on the kind selected below. Few kinds are supported:'
+        print >> f, '# - BENDAHARM: 0.5*K*(theta-THETA0)**2'
+        print >> f, '# - BENDCHARM: 0.5*K*(cos(theta)-cos(THETA0))**2'
+        print >> f, '# - UBHARM: 0.5*K*(r-R0)**2'
+        print >> f, '# where theta is the bending angle and r is the distance between the non-bonded'
+        print >> f, '# pair of atoms.'
+        print >> f, ''
+        print >> f, '# The actual parameters and their units may depend on the kind.'
+        print >> f, 'BENDAHARM:UNIT K kjmol/rad**2'
+        print >> f, 'BENDAHARM:UNIT THETA0 deg'
+        print >> f, ''
+        print >> f, '# ---------------------------------------------------------------------------'
+        print >> f, '# KEY          ffatype0 ffatype1 ffatype2  K                 THETA0/COS0/R0'
+        print >> f, '# ---------------------------------------------------------------------------'
+        for icname in sorted(self.pars.keys()):
+            if not icname.startswith('angle'): continue
+            atypes = icname.split('/')[1].split('.')
+            k, q0 = self[icname]
+            print >> f, 'BENDAHARM:PARS %8s %8s %8s % .10e % .10e' %(
+                atypes[0], atypes[1], atypes[2], k/(kjmol/rad**2), q0/deg
+            )
+        print >> f, ''
+        print >> f, '# Torsional terms'
+        print >> f, '# ==============='
+        print >> f, ''
+        print >> f, '# The following mathemetical for is supported:'
+        print >> f, '#  - TORSION: 0.5*A*(1-COS(M*(PHI-PHI0)))'
+        print >> f, ''
+        print >> f, '# The actual parameters and their units may depend on the kind.'
+        print >> f, 'TORSION:UNIT A kjmol'
+        print >> f, 'TORSION:UNIT PHI0 deg'
+        print >> f, ''
+        print >> f, '# -------------------------------------------------------------------------------------'
+        print >> f, '# KEY        ffatype0 ffatype1 ffatype2 ffatype4  M  A                 PHI0'
+        print >> f, '# -------------------------------------------------------------------------------------'
+        for icname in sorted(self.pars.keys()):
+            if not icname.startswith('dihed'): continue
+            atypes = icname.split('/')[1].split('.')
+            k, q0 = self[icname]
+            m = self.pars[icname]['m'].mean
+            print >> f, 'TORSION:PARS %8s %8s %8s %8s %2i % .10e % .10e' %(
+                atypes[0], atypes[1], atypes[2], atypes[3],
+                m, k/kjmol, q0/deg
+            )
+        f.close()

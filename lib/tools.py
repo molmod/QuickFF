@@ -3,7 +3,10 @@
 import numpy as np
 from molmod.units import parse_unit
 
-__all__ = ['global_translation', 'global_rotation', 'calc_angles', 'statistics', 'fitpar', 'has_15_bonded']
+__all__ = [
+    'global_translation', 'global_rotation', 'calc_angles', 'statistics', 
+    'fitpar', 'has_15_bonded', 'get_atoms_within_3bonds', 'matrix_squared_sum'
+]
 
 def global_translation(coords):
     Natoms = len(coords)
@@ -56,46 +59,63 @@ def calc_angles(v, refs):
 
 
 def statistics(data):
-    N = len(data)
-    mean = None
-    std = None
-    if N==1:
-        mean=data[0]
-        std = 0.0
-    elif N>1:
-        mean = data.sum()/N
-        std = np.sqrt( ((data-mean)**2).sum()/(N-1) )
-    return mean, std, N
+    if data is None:
+        return None, None, None
+    else:
+        N = len(data)
+        if N==0:
+            return None, None, None    
+        elif N==1:
+            return data[0], 0.0, 1
+        elif N>1:
+            mean = data.sum()/N
+            std = np.sqrt( ((data-mean)**2).sum()/(N-1) )
+            return mean, std, N
 
 
-def fitpar(xs, ys, rcond=1e-3, verbose=False):
-    """
+def fitpar(xs, ys, rcond=1e-3):
+    '''
         Fit a parabola to xs and ys:
         
             ys[:] = a*xs[:]^2 + b*xs[:] + c
         
         Returns a, b and c.
-    """
+    '''
     assert len(xs)==len(ys)
     D = np.ones([len(xs),3], float)
     for i, x in enumerate(xs):
         D[i,0] = x**2
         D[i,1] = x
     sol, res, rank, sing = np.linalg.lstsq(D, ys, rcond=rcond)
-    if verbose:
-        print 'Solution = ', sol
-        print 'Residue  = ', res
-        print 'Rank     = ', rank
-        print 'Singular = ', sing
     return sol
 
 def has_15_bonded(system):
-    assert hasattr(system, 'neighbor_list')
-    if 'dihedrals' not in system.sample.keys():
+    assert hasattr(system, 'nlist')
+    if not hasattr(system, 'diheds'):
         return False
-    for dihed in system.sample['dihedrals']:
-        neigh0 = system.neighbor_list[dihed[0]]
-        neigh3 = system.neighbor_list[dihed[3]]
+    for dihed in system.diheds:
+        neigh0 = system.nlist[dihed[0]]
+        neigh3 = system.nlist[dihed[3]]
         if len(neigh0)>1 or len(neigh3)>1:
             return True
     return False
+
+def get_atoms_within_3bonds(system):
+    pairs = []
+    for bond in system.bonds:
+        pairs.append([bond[0], bond[1]])
+    for bend in system.bends:
+        pairs.append([bend[0], bend[2]])
+    for dihed in system.diheds:
+        pairs.append([dihed[0], dihed[3]])
+    return np.array(pairs)
+
+def matrix_squared_sum(A, B):
+    '''
+        Calculate the sum of the product of all matrix elements
+    
+            sum(Aij*Bij, i, j)
+    '''
+    tmp = np.dot(A.T, B)
+    dim = len(tmp)
+    return sum([tmp[i,i] for i in xrange(dim)])

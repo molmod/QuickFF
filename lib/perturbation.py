@@ -3,133 +3,117 @@
 from molmod.units import *
 from molmod.periodic import periodic as pt
 from molmod.io.xyz import XYZWriter
-import numpy as np, matplotlib.pyplot as pp
-from scipy.optimize import minimize
 
-from fftable import FFTable
+from scipy.optimize import minimize
+import numpy as np, matplotlib.pyplot as pp
+
 from tools import *
 from evaluators import *
 
-__all__ = ['PerturbationTheory', 'RelaxedGeometryPT']
+__all__ = ['BasePertTheory', 'RelaxedGeoPertTheory']
 
 
-class PerturbationTheory(object):
-    def __init__(self, system, skip_diheds, print_descr=True):
+class BasePertTheory(object):
+    def __init__(self, system, model):
+        '''
+            Base class to generate and analyze the perturbation trajectories
+            of an ic.
+            
+            **Arguments**
+            
+            system
+                an instance of the System class
+            
+            model
+                an instance of the Model class
+        '''
         self.system = system
-        self.skip_diheds = skip_diheds
-        self.description = "PERTUR THEOR: BasePerturbationTheory (NOT FOR DIRECT USE)"
-        if print_descr: print self.description
-    
-    def estimate(self, icnames):
-        """
-            Estimate force constant and rest value of all ics in the system
-            directly from the hessian using perturbation theory.
-        """
-        print 'PERTUR ESTIM: estimate all pars'
-        fctab = FFTable(icnames)
-        for icname in icnames:
-            ics = self.system.ics[icname]
-            unit = {'q': ics[0].qunit, 'k': ics[0].kunit}
-            if self.skip_diheds and icname.split('/')[0] in ['dihedral', 'dihed', 'torsion']:
-                fctab.add(icname, [0.0]*len(ics), [0.0]*len(ics))
-                continue
-            kdata = []
-            qdata = []
-            trajectories = self.perturbation_trajectory(icname)
-            for itraj, trajectory in enumerate(trajectories):
-                evaluators = [ic_evaluator(name=icname, i=itraj), energy_evaluator('totmodel'), energy_evaluator('eimodel')]
-                qs, tot, ei = self.analyze(trajectory, evaluators=evaluators)
-                pars = fitpar(qs, tot-ei, rcond=1e-6)
-                k = 2*pars[0]
-                q = -pars[1]/k
-                kdata.append(k)
-                qdata.append(q)
-            fctab.add(icname, kdata, qdata, unit=unit)
-        return fctab
+        self.model = model
+   
+    def generate(self, ic, start=None, end=None, steps=11):
+        '''
+        This method should be implemented in derived classes.
+        
+        **Arguments**
+            
+            ic
+                An instance of the IC class
+        
+        **Optional Arguments**
+            
+            start
+                a float defining the start value of the ic in the 
+                perturbation trajectory.
+            
+            end
+                a float defining the end value of the ic in the 
+                perturbation trajectory.
 
-    def perturbation_trajectory(self, icname):
+            steps
+                an integere defining the number of steps in the 
+                perturbation trajectory.
+        '''
         raise NotImplementedError
-
-    def analyze(self, trajectory, evaluators=[], fn_xyz=None):
-        if fn_xyz is not None:
-            symbols = np.array([pt[n].symbol for n in self.system.sample['numbers']])
-            xyzwriter = XYZWriter(file(fn_xyz, 'w'), symbols)
+   
+    def analyze(self, trajectory, evaluators):
         values = [[] for i in xrange(len(evaluators))]
         for idx, dx in enumerate(trajectory):
-            coords = self.system.sample['coordinates'] + dx
+            coords = self.system.ref.coords + dx
             for i, evaluator in enumerate(evaluators):
-                values[i].append(evaluator(self.system, coords))
-            if fn_xyz is not None: xyzwriter.dump('frame %i' %idx, coords)
-        if fn_xyz is not None: del(xyzwriter)
+                values[i].append(evaluator(self.model, coords))
         return np.array(values)
-
-    def plot_icname(self, icname, eunit='kjmol'):
-        print 'PERTUR SINGL: Calculating perturbation trajectory for %s' %self.description
-        trajectories = self.perturbation_trajectory(icname)
-        N = len(trajectories)
-        for iic, ic in enumerate(self.system.ics[icname]):
-            self.plot_ic_constrained([N,5,5*iic+1], ic, trajectories[iic])
-            QDM, other_ics = self.get_qdm(ic, return_other_ics=True)
-            bonds = [other_ic for other_ic in other_ics if other_ic.name.split('/')[0] in ['bond', 'dist']]
-            if len(bonds)>0: self.plot_ic_other_ics([N,5,5*iic+2], ic, bonds, trajectories[iic])
-            bends = [other_ic for other_ic in other_ics if other_ic.name.split('/')[0] in ['bend', 'angle']]
-            if len(bends)>0: self.plot_ic_other_ics([N,5,5*iic+3], ic, bends, trajectories[iic])
-            diheds = [other_ic for other_ic in other_ics if other_ic.name.split('/')[0] in ['dihed', 'dihedral', 'torsion']]
-            if len(diheds)>0: self.plot_ic_other_ics([N,5,5*iic+4], ic, diheds, trajectories[iic])
-            self.plot_ic_energies([N,5,5*iic+5], ic, trajectories[iic], eunit=eunit)
-        fig.set_size_inches([8*5, 8*N])
-        fig.tight_layout()
-        pp.savefig( '%s.pdf' %(icname.replace('/', '-')) )
-
-    def plot_ic_energies(self, plc, ic, trajectory, eunit='kjmol'):
-        fn_xyz = '%s.xyz' %(ic.name.replace('/','-'))
-        evaluators = [ic_evaluator(ic=ic), energy_evaluator('totmodel'), energy_evaluator('eimodel')]
-        qs, tot, ei = self.analyze(trajectory, evaluators=evaluators, fn_xyz=fn_xyz)
-        pars = fitpar(qs, tot-ei, rcond=1e-6)
-        fit  = pars[0]*qs**2 + pars[1]*qs + pars[2]
-        rmsd = np.sqrt( ((tot - ei - fit)**2).sum()/len(tot) )
-        title = "Energy Contributions"
-        curves = [
-            [qs, tot, 'b-', 'AI Total Energy'       ],
-            [qs, ei , 'r-', 'Electrostatic Energy'  ],
-            [qs, fit, 'g-', 'Fitted Covalent Energy'],
-        ]
-        ax = pp.subplot(plc[0], plc[1], plc[2])
-        add_plot(ax, curves, title=title, xunit=ic.qunit, yunit=eunit)
-
-
-
-
-class RelaxedGeometryPT(PerturbationTheory):
-    def __init__(self, system, skip_diheds=True, energy_penalty=1.0, strain_penalty=1.0, dq_rel=0.05, qsteps = 11):
-        PerturbationTheory.__init__(self, system, skip_diheds, print_descr=False)
-        self.energy_penalty = energy_penalty
-        self.strain_penalty = strain_penalty
-        self.dq_rel = dq_rel
-        self.qsteps = qsteps
-        self.description = """PERTUR THEOR: Relaxed Geometry Perturbation Theory with:
-        
-               energy cost weight           = %.3e
-               strain cost weight           = %.3e
-               relative amplitude of q scan = %.3e
-               number of steps of q scan    = %2i
-               skipping dihedrals           = %5s
-        """ %(self.energy_penalty, self.strain_penalty, self.dq_rel, self.qsteps, str(skip_diheds))
-        print self.description
     
-    def strain_matrix(self, ic=None):
-        """
-            Calculate the Strain Matrix.
-            If sandwiched between a geometry perturbation vector, this
-            represents the weighted sum of the deviations of the
-            internal coordinates, except for the ic given in args, 
-            from their equilibrium values.
+    def write(self, trajectory, fn):
+        f = open(fn, 'w')
+        xyz = XYZWriter(f, [pt[number].symbol for number in self.system.numbers])
+        for idx, dx in enumerate(trajectory):
+            coords = self.system.ref.coords + dx
+            xyz.dump('frame %i' %idx, coords)
+        f.close()
+    
+    def plot(self, ic, trajectory, fn, eunit='kjmol'):
+        evaluators = [eval_ic(ic), eval_energy('total'), eval_energy('ei')]
+        qs, tot, ei = self.analyze(trajectory, evaluators)
+        pp.clf()
+        pp.plot(qs/parse_unit(ic.qunit), tot/parse_unit(eunit), 'k', linewidth=2)
+        pp.plot(qs/parse_unit(ic.qunit), ei/parse_unit(eunit), 'b')
+        pp.title(ic.name)
+        pp.xlabel('%s [%s]' %(ic.name.split('/')[0], ic.qunit))
+        pp.ylabel('Energy [%s]' %eunit)
+        fig = pp.gcf()
+        fig.set_size_inches([8,8])
+        pp.savefig(fn)
+        
+    def estimate(self, ic, start=None, end=None, steps=11):
+        trajectory = self.generate(ic, start, end, steps)
+        evaluators = [eval_ic(ic), eval_energy('total'), eval_energy('ei')]
+        qs, tot, ei = self.analyze(trajectory, evaluators)
+        pars = fitpar(qs, tot-ei, rcond=1e-6)
+        k = 2*pars[0]
+        q0 = -pars[1]/k
+        return k, q0
+
+
+class RelaxedGeoPertTheory(BasePertTheory):
+    def __init__(self, system, model, weight_strain=1.0, weight_energy=0.0):
+        self.weight_strain = weight_strain
+        self.weight_energy = weight_energy
+        BasePertTheory.__init__(self, system, model)
+
+    def get_strain_matrix(self, ic):
+        '''
+            Method to calculate the strain matrix.
             
-        """
-        strain = np.zeros([3*self.system.Natoms, 3*self.system.Natoms], float)
-        coords0 = self.system.sample['coordinates']
-        for icname, ics in self.system.ics.iteritems():
-            Gq = np.array([ic0.grad(coords0) for ic0 in ics if ic is None or ic0.name!=ic.name])
+            If sandwiched between a geometry perturbation vector, this
+            represents the weighted sum of the deviations of the ics
+            from their equilibrium values, except for the ic given in args.
+        '''
+        strain = np.zeros([3*self.system.natoms, 3*self.system.natoms], float)
+        for icname, ics in sorted(self.system.ics.iteritems()):
+            if ic is None:
+                Gq = np.array([ic0.grad(self.system.ref.coords) for ic0 in ics])
+            else:
+                Gq = np.array([ic0.grad(self.system.ref.coords) for ic0 in ics if ic0.name!=ic.name])
             if len(Gq)>0:
                 U, S, Vt = np.linalg.svd(Gq)
                 svals = np.array([1.0 for s in S if s > 1e-6])
@@ -137,165 +121,57 @@ class RelaxedGeometryPT(PerturbationTheory):
                 S2 = np.diag(svals**2)
                 V  = Vt.T[:,:rank]
                 Vo = Vt.T[:,rank:]
-                strain += np.dot(V, np.dot(S2, V.T)) + 0.01*np.dot(Vo, Vo.T)/(3*self.system.Natoms)
+                strain += np.dot(V, np.dot(S2, V.T)) + 0.01*np.dot(Vo, Vo.T)/(3*self.system.natoms)
         return strain
-
-
     
-    
-    def perturbation_trajectory(self, icname):
-        """
-            Calculate the perturbation on the geometry when perturbing
-            along <icname> with magnitudes given in icrange. 
+    def generate(self, ic, start=None, end=None, steps=11):
+        '''
+            Calculate the perturbation trajectory, i.e. the trajectory that
+            arises when the geometry is perturbed in the direction of ic
+            and relaxed in all other directions. 
             
-              icrange = [1.0 - self.dq_rel  ,  1.0 + self.dq_rel]*ic0 
-              with a total of self.qsteps
-            
-            The perturbation on the geometry is calculated by minimizing
-            a cost function containing the energy change and the deviation
-            of all ics except the one under consideration. This minimization
-            is performed under the constraint of a value q (in icrange)
-            for the ic under consideration.
-        """
-        trajectories = []
-        coords0 = self.system.sample['coordinates']
-        for ic in self.system.ics[icname]:
-            q0 = ic.value(coords0)
-            if icname.startswith('bond'):
-                delta = 0.05*angstrom
-                qstart = q0 - delta
-                qend   = q0 + delta
-            elif icname.startswith('angle'):
-                delta = 15*deg
-                qstart = q0 - delta
-                qend   = q0 + delta
-                if qend>180.0*deg: qend = 179.0*deg
-                if q0==180.0*deg: qend = 180.0*deg
-            elif icname.startswith('dihed'):
-                delta = 15*deg
-                qstart = q0 - delta
-                qend   = q0 + delta
-                if qstart<-180.0*deg: qstart = -180.0*deg
-                if qend>180.0*deg: qend = 180.0*deg
-            else: raise ValueError('Invalid ic kind, recieved %s' %icname)
-
-            print 'PERTUR TRAJC: %s' %ic.name
-            qarray = qstart + (qend-qstart)/(self.qsteps-1)*np.array(range(self.qsteps),float)
-            #qarray = ( 1.0-self.dq_rel + 2.0*self.dq_rel/(self.qsteps-1)*np.array(range(self.qsteps),float) )*ic.value(coords0)
-
-            trajectory = []
-            #Define cost function (and its derivative) that needs to be minimized
-            H = self.system.totmodel.hess.reshape([3*self.system.Natoms, 3*self.system.Natoms])
-            S = self.strain_matrix(ic)
-            def chi(dx):
-                strain = 0.5*np.dot(dx.T, np.dot(S, dx))
-                energy = 0.5*np.dot(dx.T, np.dot(H, dx))
-                return self.strain_penalty*strain + self.energy_penalty*energy
-
-            #Guess delta_x first time
-            guess = np.random.normal(loc=0.0,scale=0.1,size=3*self.system.Natoms)
-            for iq, q in enumerate(qarray):
-                #Only use if the minimum is located in 180*deg
-                if q==180*deg:
-                    trajectory.append(np.zeros((self.system.Natoms,3)))
-                    continue
-                #Define the constraint under which the cost function needs to be minimized
-                constraints = (
-                    {'type': 'eq',
-                     'fun' : lambda dx: ic.value(coords0 + dx.reshape((-1, 3))) - q,
-                     'jac' : lambda dx: ic.grad(coords0 + dx.reshape((-1, 3)))},
-                )
-
-                #result = minimize(chi, np.zeros([3*self.system.Natoms], float), method='SLSQP', constraints=constraints, tol=1e-9)
-                result = minimize(chi, guess, method='SLSQP', constraints=constraints, tol=1e-9)
-
-                trajectory.append(result.x.reshape([-1, 3]))
-                #Use the result just found as the new guess to ensure continuity
-                guess = result.x
-
-            assert len(trajectory)==self.qsteps
-            trajectories.append(trajectory)
-        return trajectories
-    
-   
-    def plot_icname(self, icname, eunit='kjmol'):
-        trajectories = self.perturbation_trajectory(icname)
-        print 'PERTUR PLOT : Plot analysis of perturbation trajectory for %s' %(icname)
-        N = len(trajectories)
-        
-        for iic, (ic, trajectory) in enumerate(zip(self.system.ics[icname], trajectories)):
-            self.plot_ic_costs([N,6,iic], ic, trajectory)
-            self.plot_ic_constrained([N,6,6*iic+2], ic, trajectory)
-            other_ics = self.system.get_ics(exclude_ic=[ic.name])
-            bonds = [other_ic for other_ic in other_ics if other_ic.name.split('/')[0] in ['bond', 'dist']]
-            self.plot_ic_other_ics([N,6,6*iic+3], ic, bonds, trajectory, title='Free Bond Lengths', ylabel='Bond length [%s]', yunit='A')
-            bends = [other_ic for other_ic in other_ics if other_ic.name.split('/')[0] in ['bend', 'angle']]
-            self.plot_ic_other_ics([N,6,6*iic+4], ic, bends, trajectory, title='Free Bending Angles', ylabel='Bending Angle [%s]', yunit='deg')
-            diheds = [other_ic for other_ic in other_ics if other_ic.name.split('/')[0] in ['dihed', 'dihedral', 'torsion']]
-            self.plot_ic_other_ics([N,6,6*iic+5], ic, diheds, trajectory, title='Free Dihedral Angles', ylabel='Dihedral Angle [%s]', yunit='deg')
-            self.plot_ic_energies([N,6,6*iic+6], ic, trajectory, eunit=eunit)
-        
-        fig = pp.gcf()
-        fig.set_size_inches([10*6, 10*N])
-        pp.tight_layout()
-        pp.savefig( '%s.pdf' %(icname.replace('/', '-')))
-    
-    
-    def plot_ic_costs(self, plc, ic, trajectory, eunit='kjmol'):
-        'plc = plot configuration (array of form [Nrows, Ncols, current fig index])'
-        H = self.system.totmodel.hess.reshape([3*self.system.Natoms, 3*self.system.Natoms])
-        S = self.strain_matrix(ic)
-        q = np.zeros(len(trajectory), float)
-        strain = np.zeros(len(trajectory), float)
-        energy = np.zeros(len(trajectory), float)
-        total  = np.zeros(len(trajectory), float)
-        for i, dx in enumerate(trajectory):
-            q[i]      = ic.value(self.system.sample['coordinates'] + dx)
-            strain[i] = 0.5*np.dot(dx.reshape([3*self.system.Natoms]).T, np.dot(S, dx.reshape([3*self.system.Natoms])))
-            energy[i] = 0.5*np.dot(dx.reshape([3*self.system.Natoms]).T, np.dot(H, dx.reshape([3*self.system.Natoms])))
-        curves = [
-            [q, strain, 'b-', '_nolegend_'],
-            [q, energy, 'g-', '_nolegend_'],
-        ]
-        ax1 = pp.subplot(2*plc[0], plc[1], 2*plc[2]*plc[1]+1)
-        add_plot(ax1, [curves[0]], title='Strain Cost', xunit=ic.qunit, yunit='1.0', xlabel=None, ylabel='Strain [-]')
-        ax2 = pp.subplot(2*plc[0], plc[1], (2*plc[2]+1)*plc[1]+1, sharex=ax1)
-        add_plot(ax2, [curves[1]], title='Energy Cost', xunit=ic.qunit, yunit=eunit, xlabel='%s [%%s]' %(ic.name.split('/')[0]), ylabel='Energy [%s]')
-    
-    
-    def plot_ic_constrained(self, plc, ic, trajectory):
-        q = np.zeros(len(trajectory), float)
-        for i, dx in enumerate(trajectory):
-            q[i]      = ic.value(self.system.sample['coordinates'] + dx)
-        curves = [[np.array(range(len(trajectory))), q , 'b-', '_nolegend_']]
-        ax = pp.subplot(plc[0], plc[1], plc[2])
-        add_plot(ax, curves, title='Constrained IC - %s' %ic.name, xunit='1.0', yunit=ic.qunit, xlabel='Step [-]', ylabel='%s [%%s]' %(ic.name.split('/')[0]))
-    
-    
-    def plot_ic_other_ics(self, plc, ic, other_ics, trajectory, title='Other ICs', ylabel='IC [%%s]', yunit='au'):
-        styles = ['b-', 'r-', 'g-', 'c-', 'm-', 'y-', 'b--', 'r--', 'g--', 'c--', 'm--', 'y--']*100
-        curves = []
-        for iother, other_ic in enumerate(other_ics):
-            q  = np.zeros(len(trajectory), float)
-            q2 = np.zeros(len(trajectory), float)
-            for i, dx in enumerate(trajectory):
-                q[i]  = ic.value(self.system.sample['coordinates'] + dx)
-                q2[i] = other_ic.value(self.system.sample['coordinates'] + dx)
-            curves.append([q, q2 , styles[iother], other_ic.name.split('/')[1]])
-        ax = pp.subplot(plc[0], plc[1], plc[2])
-        add_plot(ax, curves, title=title, xunit=ic.qunit, yunit=yunit, xlabel='%s [%%s]' %(ic.name.split('/')[0]), ylabel=ylabel)
-
-
-
-def add_plot(ax, curves, title='', xunit='au', yunit='au', xlabel='IC [%s]', ylabel='Energy [%s]'):
-    for x, y, style, label in curves:
-        ax.plot(x/parse_unit(xunit), y/parse_unit(yunit), style, label=label)
-    if xlabel is not None:
-        if '%s' in xlabel: xlabel = xlabel %xunit
-        ax.set_xlabel(xlabel, fontsize=20)
-    if ylabel is not None:
-        if '%s' in ylabel: ylabel = ylabel %yunit
-        ax.set_ylabel(ylabel, fontsize=20)
-    ax.grid()
-    ax.set_title(title, fontsize=24)
-    ax.legend(loc='best')
+            The relaxation is implemented as the minimization of weighted
+            sum of the strain and the energy.
+        '''
+        #initialization
+        q0 = ic.value(self.system.ref.coords)
+        if ic.name.startswith('bond'):
+            if start is None: start = q0 - 0.05*angstrom
+            if end is None:   end   = q0 + 0.05*angstrom
+        elif ic.name.startswith('angle'):
+            if start is None: start = q0 - 5*deg
+            if end is None:     end = q0 + 5*deg
+            if end>180.0*deg:   end = 179.0*deg
+            if q0==180.0*deg:   end = 180.0*deg
+        elif ic.name.startswith('dihed'):
+            if start is None:    start = q0 - 5*deg
+            if end is None:        end = q0 + 5*deg
+            if start<-180.0*deg: start = -180.0*deg
+            if end>180.0*deg:      end = 180.0*deg
+        qarray = start + (end-start)/(steps-1)*np.array(range(steps),float)
+        trajectory = np.zeros([steps, self.system.natoms, 3], float)
+        #Define cost function that needs to be minimized
+        H = self.model.total.hessian.reshape([3*self.system.natoms, 3*self.system.natoms])
+        S = self.get_strain_matrix(ic)
+        def chi(dx):
+            strain = 0.5*np.dot(dx.T, np.dot(S, dx))
+            energy = 0.5*np.dot(dx.T, np.dot(H, dx))
+            return self.weight_strain*strain + self.weight_energy*energy
+        #Guess delta_x first time
+        guess = np.random.normal(loc=0.0,scale=0.0001,size=3*self.system.natoms)
+        for iq, q in enumerate(qarray):
+            #Only use if the minimum is located in 180*deg
+            if ic.name.startswith('angle') and q==180*deg and q0==180*deg:
+                trajectory[iq] = np.zeros([self.system.natoms, 3], float)
+                continue
+            #Define the constraint under which the cost function needs to be minimized
+            constraints = ({
+                'type': 'eq',
+                'fun' : lambda dx: ic.value(self.system.ref.coords + dx.reshape((-1, 3))) - q,
+                'jac' : lambda dx: ic.grad(self.system.ref.coords + dx.reshape((-1, 3))),
+            })
+            result = minimize(chi, guess, method='SLSQP', constraints=constraints, tol=1e-9)
+            trajectory[iq] = result.x.reshape([-1, 3])
+            #Use the result just found as the new guess to ensure continuity
+            guess = result.x
+        return trajectory

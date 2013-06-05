@@ -1,15 +1,14 @@
 #! /usr/bin/env python
 
-from molmod.periodic import periodic as pt
 import numpy as np
 
 __all__ = ['IC']
 
 class IC(object):
-    def __init__(self, indexes, icf, name=None, qunit='au', kunit='kjmol/au**2'):
+    def __init__(self, name, indexes, icf, qunit='au', kunit='kjmol/au**2'):
+        self.name = name
         self.indexes = indexes
         self.icf = icf
-        self.name = name
         self.qunit = qunit
         self.kunit = kunit
     
@@ -37,32 +36,18 @@ class IC(object):
                 hess[index1, :, index2, :] = q_hess[i1, :, i2, :]
         hess = hess.reshape([3*Natoms, 3*Natoms])
         return hess
-
-    def test(self, coords, epsilon=1e-4, ntests=None, threshold=1e-5):
-        Natoms = len(coords)
-        if ntests is None: ntests = 3*Natoms
-        oom = np.linalg.norm(coords)
-        hess = self.hess(coords)
-        for i in xrange(ntests):
-            v = np.random.normal(size=coords.shape)
-            v /= np.linalg.norm(v)
-            gp = self.grad(coords+epsilon*oom*v)
-            gm = self.grad(coords-epsilon*oom*v)
-            num = (gp-gm)/(2.0*epsilon)
-            ana = oom*np.dot( hess , v.reshape([3*Natoms]) )
-            error = np.linalg.norm(num-ana)/np.linalg.norm(num)
-            if error>threshold:
-                print '    IC TEST : test nr. %i for %s FAILED: epsilon=%.6f  norm(num)=%.6e  error=%.6e' %(i,self.name,epsilon,np.linalg.norm(num),error)
-
-def test_ics(system, epsilon=1e-4, ntests=50, threshold=1e-5):
-    print 'SYSTEM TEST : testing ic gradient and hessian'
-    for icname, ics in system.ics.iteritems():
-        for ic in ics:
-            ic.test(system.sample['coordinates'], epsilon=epsilon, ntests=ntests, threshold=threshold)
-    print 'SYSTEM TEST : testing non-bond pairs gradient and hessian'
-    for i, itype in enumerate(system.sample['ffatypes']):
-        for j, jtype in enumerate(system.sample['ffatypes'][:i]):
-            if (i,j) in system.sample['bonds']: continue
-            name = 'pair/%i(%s)-%i(%s)' %(i,itype,j,jtype)
-            ic = IC([i,j], bond_length, name=name)
-            ic.test(system.sample['coordinates'], epsilon=epsilon, ntests=ntests, threshold=threshold)
+    
+    def _get_pairs(self):
+        '''
+            A method to determine all pairs of atoms in this ic. This is
+            usefull later for determining which atom pairs are connected
+            by internal coordinates and hence which AI Hessian elements
+            are relevant.
+        '''
+        result = []
+        for i in xrange(self.ic.indexes):
+            for j in xrange(i+1):
+                result.append([i,j])
+        return result
+    
+    bpairs = property(_get_pairs)

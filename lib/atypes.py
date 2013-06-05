@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 
-from molmod.graphs import CritAnd, CritOr, CritNot
-from molmod.molecular_graphs import MolecularGraph, HasAtomNumber, HasNumNeighbors, HasNeighborNumbers, HasNeighbors
+from molmod.graphs import *
+from molmod.molecular_graphs import *
 from molmod.periodic import periodic as pt
+import numpy as np
 
-__all__ = ['assign_atypes']
+__all__ = ['assign_atypes', 'number_of_neighbors', 'number_of_X_neighbors']
 
 filters = {
     1: [('Hc', CritAnd(HasAtomNumber(1), HasNeighborNumbers(6  ))),
@@ -15,17 +16,17 @@ filters = {
         ('Ow', CritAnd(HasAtomNumber(8), HasNeighborNumbers(1,1)))],
 }
 
-def assign_atypes(bonds, numbers, level):
+def assign_atypes(system, level):
     if level=='low':
-        return [pt[number].symbol for number in numbers]
+        return np.array([pt[number].symbol for number in system.numbers])
     elif level=='high':
-        return ['%s%i' %(pt[n].symbol, i) for i, n in enumerate(numbers)]
+        return np.array(['%s%i' %(pt[n].symbol, i) for i, n in enumerate(system.numbers)])
     elif level=='medium':
-        graph = MolecularGraph(bonds, numbers)
+        graph = MolecularGraph(system.bonds, system.numbers)
         atypes = []
-        for index, number in enumerate(numbers):
+        for index, number in enumerate(system.numbers):
             if number in [6, 14]:
-                atype=pt[number].symbol+str(number_of_neighbors(index,graph))
+                atype = pt[number].symbol+str(number_of_neighbors(index,graph))
                 numC = number_of_X_neighbors(index, 6, graph)
                 if numC==1:
                     atype += '_c'
@@ -48,7 +49,7 @@ def assign_atypes(bonds, numbers, level):
                     atypes.append(pt[number].symbol)
             else:
                 atypes.append(pt[number].symbol)
-        return atypes
+        return np.array(atypes)
     else:
         raise ValueError('Invalid level, recieved %s' %level)
 
