@@ -42,6 +42,7 @@ class Program(object):
                 be calculated.
         '''
         ff = FFTable()
+        maxlength = max([len(icname) for icname in self.system.ics.keys()]) + 2
         for icname, ics in sorted(self.system.ics.iteritems()):
             if skip_dihedrals and icname.startswith('dihed'):
                 continue
@@ -52,7 +53,8 @@ class Program(object):
                 ks.append(k)
                 q0s.append(q0)
             ff.add(icname, ks, q0s)
-            print '%30s:   K = %s    q0 = %s' %(icname, ks.string(), q0s.string())
+            descr = icname + ' '*(maxlength-len(icname))
+            print '    %s   K = %s    q0 = %s' %(descr, ks.string(), q0s.string())
         self.model.val.update_fftable(ff)
         return ff
 
@@ -73,10 +75,16 @@ class Program(object):
         return ff
 
     def run(self):
+        print 'System information:'
+        print
+        self.system.print_atom_info()
+        print
         print 'Estimating ff pars from perturbation trajectories'
+        print
         fftab1 = self.estimate_pt()
         print
         print 'Refining force constants using a Hessian LSQ cost'
+        print
         fftab2 = self.refine_cost()
         return fftab2
 

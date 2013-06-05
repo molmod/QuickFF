@@ -360,11 +360,11 @@ def _get_excluded_pairs(system, exclude_rule):
     epairs = []
     if exclude_rule>0:
         for bond in system.bonds:
-            exclude.append([bond[0], bond[1]])
+            epairs.append([bond[0], bond[1]])
     if exclude_rule>1:
         for bend in system.bends:
-            exclude.append([bend[0], bend[2]])
+            epairs.append([bend[0], bend[2]])
     if exclude_rule>2:
         for dihed in system.diheds:
-            exclude.append([dihed[0], dihed[3]])
+            epairs.append([dihed[0], dihed[3]])
     return epairs

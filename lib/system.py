@@ -162,19 +162,42 @@ class System(object):
             self.dihedrals = np.array(psf.dihedrals)
             self.nlist = graph.neighbors
 
-    def guess_ffatypes(self, atypes_level):
+    def guess_ffatypes(self, level):
         '''
            A method to guess atom types. This will overwrite ffatypes
            that are already defined in the system.
 
            **Arguments:**
 
-           atypes_level
+           level
                 A string used for guessing atom types based on atomic
                 number (low), local topology (medium) or atomic index
                 in the molecule (high).
         '''
-        self.ffatypes = assign_atypes(self, atypes_level)
+        if level=='low':
+            return np.array([pt[number].symbol for number in self.numbers])
+        elif level=='high':
+            return np.array(['%s%i' %(pt[n].symbol, i) for i, n in enumerate(self.numbers)])
+        elif level=='medium':
+            atypes = []
+            for index, number in enumerate(self.numbers):
+                nind = self.nlist[index]
+                nsym = sorted([ pt[self.numbers[neighbor]].symbol.lower() for neighbor in nind ])
+                sym = pt[self.numbers[index]].symbol.upper()
+                if   len(nsym)==1: atype = '%s1_%s' %(sym, nsym[0])
+                elif len(nsym)==2: atype = '%s2_%s%s' %(sym, nsym[0], nsym[1])
+                else:
+                    atype = '%s%i' %(sym, len(nind))
+                    num_c = sum([1.0 for sym in nsym if sym=='c'])
+                    num_n = sum([1.0 for sym in nsym if sym=='n'])
+                    num_o = sum([1.0 for sym in nsym if sym=='o'])
+                    if num_c>0: atype += '_c%i' %num_c
+                    if num_n>0: atype += '_n%i' %num_n
+                    if num_o>0: atype += '_o%i' %num_o
+                atypes.append(atype)
+        else:
+            raise ValueError('Invalid level, recieved %s' %level)
+        self.ffatypes = np.array(atypes)
         self.average_charges_ffatypes()
 
     def average_charges_ffatypes(self):
@@ -269,13 +292,15 @@ class System(object):
             self.ics[icname] = match
 
     def print_atom_info(self):
-        print '    ---------------------------------'
-        print '      index   symbol  ffatype  charge'
-        print '    ---------------------------------'
+        print '    -----------------------------------------'
+        print '      index   symbol   ffatype       charge  '
+        print '    -----------------------------------------'
         for index, (number, ffatype, charge) in enumerate(zip(self.numbers, self.ffatypes, self.charges)):
-            print '        %3i      %3s %8s  % 6.3f' %(index, pt[number].symbol, ffatype, charge)
-        print '    ---------------------------------'
-        print
+            index_fmt   = str(index)        + ' '*(5 - len(str(index)))
+            symbol_fmt  = pt[number].symbol + ' '*(6 - len(pt[number].symbol))
+            ffatype_fmt = ffatype           + ' '*(10 - len(ffatype))
+            print '      %s   %s   %s    % 6.3f' %(index_fmt, symbol_fmt, ffatype_fmt, charge)
+        print '    -----------------------------------------'
 
     def print_ic_info(self):
         print '    -----------------------------------------------------'
@@ -285,7 +310,6 @@ class System(object):
             for ic in ics:
                 print '    %30s    ' %icname + ' '.join(['%3i' %index for index in ic.indexes])
         print '    -----------------------------------------------------'
-        print
 
     def dump(self, fn):
         sample = {}

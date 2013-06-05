@@ -73,8 +73,10 @@ class FFTable(object):
         return k, q0
 
     def print_screen(self):
+        maxlength = max([len(icname) for icname in self.pars.keys()]) + 2
         for icname, pars in sorted(self.pars.iteritems()):
-            print '%30s:   K = %s    q0 = %s' %(icname, pars['k'].string(), pars['q0'].string())
+            descr = icname + ' '*(maxlength-len(icname))
+            print '    %s   K = %s    q0 = %s' %(descr, pars['k'].string(), pars['q0'].string())
 
     def dump_ffit2(self, fn, mode='w'):
         f = open(fn, 'w')
