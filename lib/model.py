@@ -19,17 +19,17 @@ class Model(object):
         '''
            A class defining the total energy of the system,
            the electrostatic contribution and the valence terms.
-           
+
            **Arguments**
 
            total
                 A model for the total energy, should be an instance
                 of HarmonicPart
-           
-           ei           
+
+           ei
                 A model for the electrostatic energy, should be an instance
                 of HarmonicPart or CoulombPart
-           
+
            val
                 an instance of the ValencePart class containing all details
                 of the valence contributions.
@@ -37,26 +37,26 @@ class Model(object):
         self.total = total
         self.ei = ei
         self.val = val
-    
+
     @classmethod
     def from_system(cls, system, project=True, eirule=0, eikind='Harmonic'):
         '''
            **Arguments**
-           
+
            system
                 An instance of the System class containing all the
                 information of the system.
-        
+
            **Optional Arguments**
-           
+
            project
                 If True, project the translational and rotational
                 degrees of freedom out of the hessian.
-           
+
            eirule
                 an integer defining the exculsion rule of the
                 electrostatic interactions. Can be -1,0,1,2,3
-           
+
            eikind
                 a string defining the model kind of the electrostatic
                 interactions. Can be 'Harmonic' or 'Coulomb'
@@ -69,7 +69,7 @@ class Model(object):
         #EI model
         epairs = _get_excluded_pairs(system, eirule)
         if eirule==-1:
-            ei = ZeroPart('EI Zero')        
+            ei = ZeroPart('EI Zero')
         elif eikind=='Harmonic':
             grad_ei, hess_ei = _calc_ei_grad_hess(system, epairs)
             ei = HarmonicPart('EI Harmonic', system.ref.coords, 0.0, grad_ei, hess_ei)
@@ -83,13 +83,13 @@ class Model(object):
 class ZeroPart(object):
     def __init__(self, name):
         self.name = name
-    
+
     def calc_energy(self, coords):
         return 0.0
-    
+
     def calc_gradient(self, coords):
         return np.zeros([len(coords), 3], float)
-    
+
     def calc_hessian(self, coords):
         return np.zeros([len(coords), 3, len(coords), 3], float)
 
@@ -103,21 +103,21 @@ class HarmonicPart(object):
         self.hessian = hessian
         self.natoms = len(coords0)
         self.diagonalize()
-    
+
     def calc_energy(self, coords):
         energy = self.energy0
         dx = (coords - self.coords0).reshape([3*self.natoms])
         energy += np.dot(self.gradient.reshape([3*self.natoms]), dx)
         energy += 0.5*np.dot(dx, np.dot(self.hessian.reshape([3*self.natoms,3*self.natoms]), dx))
         return energy
-    
+
     def calc_gradient(self, coords):
         dx = (coords - self.coords0).reshape([3*self.natoms])
         return self.gradient + np.dot(self.hess.reshape([3*self.natoms, 3*self.natoms]), dx).reshape([self.natoms, 3])
-    
+
     def calc_hessian(self, coords):
         return self.hessian
-    
+
     def diagonalize(self):
         self.evals, self.evecs = np.linalg.eigh(self.hessian.reshape([3*self.natoms, 3*self.natoms]))
         self.ievals = np.zeros(len(self.evals), float)
@@ -125,20 +125,20 @@ class HarmonicPart(object):
             if abs(eigval)>1e-10:
                 self.ievals[i] = 1.0/eigval
         self.ihessian = np.dot(self.evecs, np.dot(np.diag(self.ievals), self.evecs.T)).reshape([self.natoms, 3, self.natoms, 3])
-    
+
     def hessian_springed(self, free, spring=10.0*kjmol/angstrom**2):
         '''
             Return a new hessian in which all atoms that are not free,
             are connected to their equilibrium position with an imaginairy
             additional spring.
-            
+
             **Arguments**
-            
+
             free
                 a list of atom indices of the free atoms
-            
+
             **Optional Arguments**
-            
+
             spring
                 the force constant of the imaginairy springs
         '''
@@ -146,20 +146,20 @@ class HarmonicPart(object):
         for i in free_indices:
             D[i,i] = 0.0
         return self.hessian + D.reshape([self.natoms, 3, self.natoms, 3])
-    
+
     def ihessian_springed(self, free, spring=10.0*kjmol/angstrom**2):
         '''
             Return a new ihessian (inverse of the hessian) in which all
             atoms that are not free, are connected to their equilibrium
             position with an imaginairy additional spring.
-            
+
             **Arguments**
-            
+
             free
                 a list of atom indices of the free atoms
-            
+
             **Optional Arguments**
-            
+
             spring
                 the force constant of the imaginairy springs
         '''
@@ -179,7 +179,7 @@ class CoulombPart(object):
         self.shift = 0.0
         if shift:
             self.shift -= self.calc_energy(coords0)
-    
+
     def calc_energy(self, coords):
         energy = -self.shift
         for i, qi in enumerate(self.charges):
@@ -200,7 +200,7 @@ class CoulombPart(object):
                 r = bond.value(coords)
                 grad += -qi*qj/(r**2)*bond.grad(coords)
         return grad
-    
+
     def calc_hessian(self, coords):
         hess = np.zeros([3*len(self.charges), 3*len(self.charges)], float)
         for i, qi in enumerate(self.charges):
@@ -240,19 +240,19 @@ class ValencePart(object):
                 else:
                     terms.append(HarmonicTerm(ic, system.ref.coords, None, None))
             self.vterms[icname] = terms
-    
+
     def _get_nterms(self):
         return len(self.vterms)
-    
+
     nterms = property(_get_nterms)
 
     def update_fftable(self, fftab):
         '''
             A method to update all force field parameters (force constants and
             rest values).
-            
+
             **Arguments**
-            
+
             fftab
                 An instance of the FFTable class containing force field
                 parameters.
@@ -267,7 +267,7 @@ class ValencePart(object):
 
     def get_fftable(self):
         '''
-            A method to return a FFTable instance containing all force field 
+            A method to return a FFTable instance containing all force field
             parameters (force constants and rest values).
         '''
         fftab = FFTable()
@@ -296,17 +296,17 @@ class ValencePart(object):
     def update_fcs(self, fcs):
         '''
             A method to update the force constants of the valence terms. The
-            ordering of fcs in the input argument should be the same as the 
+            ordering of fcs in the input argument should be the same as the
             ordering of sorted(system.ics.keys()).
         '''
         for i, icname in enumerate(sorted(self.vterms.keys())):
             for term in self.vterms[icname]:
                 term.k = fcs[i]
-    
+
     def get_fcs(self):
         '''
             A method to return the force constants of the valence terms. The
-            ordering of fcs in the input argument should be the same as the 
+            ordering of fcs in the input argument should be the same as the
             ordering of sorted(system.ics.keys()).
         '''
         fcs = np.zeros(self.nterms, float)
@@ -314,7 +314,7 @@ class ValencePart(object):
             for term in self.vterms[icname]:
                 fcs[i] = term.k
         return fcs
-   
+
     def calc_energy(self, coords):
         energy = 0.0
         for icname, vterms in sorted(self.vterms.iteritems()):
@@ -346,7 +346,7 @@ def _calc_ei_grad_hess(system, epairs):
     for i in xrange(system.natoms):
         for j in xrange(i):
             qi = system.charges[i]
-            qj = system.charges[j]           
+            qj = system.charges[j]
             if [i,j] in epairs or [j,i] in epairs: continue
             bond = IC('_inter_ei_bond', [i, j], bond_length)
             r = bond.value(system.ref.coords)

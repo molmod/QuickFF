@@ -26,7 +26,7 @@ def parser():
              'respectively are excluded from ei interactions. [default=-1]'
     )
     parser.add_option(
-        '--atypes-level', default=None, 
+        '--atypes-level', default=None,
         help='Overwrite the atom types according to level ATYPES_LEVEL. Low'  +\
              'will choose atom types based only on atom number, medium will'  +\
              'choose atom types based on local topology, high will choose'    +\
@@ -47,6 +47,6 @@ def main():
     model = Model.from_system(system, eirule=options.eirule)
     program = Program(system, model)
     program.plot_pt(icname)
-    
+
 if __name__=='__main__':
-    main()  
+    main()

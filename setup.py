@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # QuickFF is a python library to calculate Quick-and-Dirty force fields.
-# Copyright (C) 2012 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>, 
+# Copyright (C) 2012 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>,
 # Center for Molecular Modeling (CMM), Ghent University, Ghent, Belgium;
 # all rights reserved unless otherwise stated.
 #

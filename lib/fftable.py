@@ -22,7 +22,7 @@ class DataArray(object):
             self.data = np.array(data)
         self.unit = unit
         self.mean, self.std, self.num = statistics(self.data)
-    
+
     def append(self, value):
         if self.data is None:
             self.data = np.array([value])
@@ -30,10 +30,10 @@ class DataArray(object):
             assert isinstance(self.data, np.ndarray)
             self.data = np.append(self.data, value)
         self.mean, self.std, self.num = statistics(self.data)
-    
+
     def __len__(self):
         return len(self.data)
-    
+
     def string(self):
         if self.num==0:
             return ''
@@ -41,24 +41,24 @@ class DataArray(object):
             return u'%9.3f \u00B1 %6.3f ' %(self.mean/parse_unit(self.unit), self.std/parse_unit(self.unit)) + self.unit + ' '*(15-len(self.unit))
 
 
-class FFTable(object): 
+class FFTable(object):
     '''
         A class to read, store and dump Force Field parameters. The parameters
         of the force field term for an ic of kind icname can be accessed as
         follows:
-        
+
             k, q0 = fftable[icname]
-        
+
         The statistics of a parameter (e.q. the force constant of the term
         related to icname) can be accessed as follows:
-        
+
             k_mean = fftable.pars[icname]['k'].mean
             k_std = fftable.pars[icname]['k'].std
             k_num = fftable.pars[icname]['k'].num
-    '''   
+    '''
     def __init__(self):
         self.pars = {}
-    
+
     def add(self, icname, ks, q0s, **kwargs):
         assert isinstance(ks, DataArray)
         assert isinstance(q0s, DataArray)
@@ -66,12 +66,12 @@ class FFTable(object):
         for kw, data in kwargs.iteritems():
             assert isinstance(data, DataArray)
             self.pars[icname][kw] = data
-    
+
     def __getitem__(self, key):
         k  = self.pars[key]['k'].mean
         q0 = self.pars[key]['q0'].mean
         return k, q0
-    
+
     def print_screen(self):
         for icname, pars in sorted(self.pars.iteritems()):
             print '%30s:   K = %s    q0 = %s' %(icname, pars['k'].string(), pars['q0'].string())

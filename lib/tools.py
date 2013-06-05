@@ -4,7 +4,7 @@ import numpy as np
 from molmod.units import parse_unit
 
 __all__ = [
-    'global_translation', 'global_rotation', 'calc_angles', 'statistics', 
+    'global_translation', 'global_rotation', 'calc_angles', 'statistics',
     'fitpar', 'has_15_bonded', 'get_atoms_within_3bonds', 'matrix_squared_sum'
 ]
 
@@ -64,7 +64,7 @@ def statistics(data):
     else:
         N = len(data)
         if N==0:
-            return None, None, None    
+            return None, None, None
         elif N==1:
             return data[0], 0.0, 1
         elif N>1:
@@ -76,9 +76,9 @@ def statistics(data):
 def fitpar(xs, ys, rcond=1e-3):
     '''
         Fit a parabola to xs and ys:
-        
+
             ys[:] = a*xs[:]^2 + b*xs[:] + c
-        
+
         Returns a, b and c.
     '''
     assert len(xs)==len(ys)
@@ -113,7 +113,7 @@ def get_atoms_within_3bonds(system):
 def matrix_squared_sum(A, B):
     '''
         Calculate the sum of the product of all matrix elements
-    
+
             sum(Aij*Bij, i, j)
     '''
     tmp = np.dot(A.T, B)

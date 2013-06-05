@@ -11,12 +11,12 @@ class IC(object):
         self.icf = icf
         self.qunit = qunit
         self.kunit = kunit
-    
+
     def value(self, coords):
         rs = coords[self.indexes]
         q = self.icf(rs, deriv=0)[0]
         return q
-    
+
     def grad(self, coords):
         Natoms = len(coords)
         rs = coords[self.indexes]
@@ -25,7 +25,7 @@ class IC(object):
         grad[self.indexes] = q_deriv
         grad = grad.reshape([3*Natoms])
         return grad
-    
+
     def hess(self, coords):
         Natoms = len(coords)
         rs = coords[self.indexes]
@@ -36,7 +36,7 @@ class IC(object):
                 hess[index1, :, index2, :] = q_hess[i1, :, i2, :]
         hess = hess.reshape([3*Natoms, 3*Natoms])
         return hess
-    
+
     def _get_pairs(self):
         '''
             A method to determine all pairs of atoms in this ic. This is
@@ -49,5 +49,5 @@ class IC(object):
             for j in xrange(i+1):
                 result.append([i,j])
         return result
-    
+
     bpairs = property(_get_pairs)

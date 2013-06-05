@@ -29,18 +29,18 @@ class System(object):
            ffatypes
                 A numpy array (N) with force field atom types of a string
                 specifying how to guess the atom types [high, medium or low].
- 
+
            charges
                 A numpy array (N) with atomic charges. The default charges
                 are all zero.
-           
+
            ref
                 An instance of ReferenceData containing the reference data
                 from which the force field will be estimated.
-                     
+
            bonds
                 A numpy array (B,2) with atom indexes (counting starts from
-                zero) to define topological bond patterns. If no bonds are 
+                zero) to define topological bond patterns. If no bonds are
                 given, they are estimated from the geometry in ref.coords.
 
            bends
@@ -50,7 +50,7 @@ class System(object):
            diheds
                 A numpy array (D,4) with atom indexes (counting starts from
                 zero) to define topological dihedrall patterns.
-           
+
            nlist
                 A dictionnairy containing the neighbors for every every atom.
         '''
@@ -64,19 +64,19 @@ class System(object):
         self.nlist = nlist
         self.ref.check()
         self.check_topology()
-    
+
     def _get_natoms(self):
         return len(self.numbers)
-    
+
     natoms = property(_get_natoms)
-    
+
     @classmethod
     def from_files(cls, fns):
         '''
            A method to construct a System instance from input files. If
            the input files do not contain the topology, it is estimated
            from the geometry.
-        
+
            **Arguments:**
 
            fns
@@ -139,12 +139,12 @@ class System(object):
         if charges is None:
             charges = np.zeros(len(numbers), float)
         return cls(numbers, ffatypes, charges, ref, bonds, bends, diheds, nlist)
-    
+
     def check_topology(self):
         '''
            Check wether all topology information (bonds, bends, diheds
            and nlist) is present and complete if necessary.
-        '''   
+        '''
         if self.bonds is None:
             molecule = Molecule(self.numbers, coordinates=self.ref.coords)
             graph = MolecularGraph.from_geometry(molecule)
@@ -161,14 +161,14 @@ class System(object):
             self.bends = np.array(psf.bends)
             self.dihedrals = np.array(psf.dihedrals)
             self.nlist = graph.neighbors
-    
+
     def guess_ffatypes(self, atypes_level):
         '''
            A method to guess atom types. This will overwrite ffatypes
            that are already defined in the system.
-        
+
            **Arguments:**
-           
+
            atypes_level
                 A string used for guessing atom types based on atomic
                 number (low), local topology (medium) or atomic index
@@ -187,7 +187,7 @@ class System(object):
                 charges[atype].append(charge)
         for i, atype in enumerate(self.ffatypes):
             self.charges[i] = sum(charges[atype])/len(charges[atype])
-    
+
     def determine_ics_from_topology(self):
         '''
             Method to generate IC instances corresponding to all ics
@@ -233,11 +233,11 @@ class System(object):
         '''
             Method to generate IC instances corresponding to the names
             given as argument. For example, bond/Cph.Hph will search for
-            all ICs corresponding to a bond between atoms of type Cph and 
+            all ICs corresponding to a bond between atoms of type Cph and
             Hph.
-            
+
             **Arguments**
-            
+
             icnames
                 A list containing the names of ics. Format of icnames is:
                 kind/atype1.atype2...atypeN with kind=bond, bend or dihed
@@ -276,7 +276,7 @@ class System(object):
             print '        %3i      %3s %8s  % 6.3f' %(index, pt[number].symbol, ffatype, charge)
         print '    ---------------------------------'
         print
-    
+
     def print_ic_info(self):
         print '    -----------------------------------------------------'
         print '                            icname     indices           '

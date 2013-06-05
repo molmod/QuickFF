@@ -18,43 +18,43 @@ class BasePertTheory(object):
         '''
             Base class to generate and analyze the perturbation trajectories
             of an ic.
-            
+
             **Arguments**
-            
+
             system
                 an instance of the System class
-            
+
             model
                 an instance of the Model class
         '''
         self.system = system
         self.model = model
-   
+
     def generate(self, ic, start=None, end=None, steps=11):
         '''
         This method should be implemented in derived classes.
-        
+
         **Arguments**
-            
+
             ic
                 An instance of the IC class
-        
+
         **Optional Arguments**
-            
+
             start
-                a float defining the start value of the ic in the 
+                a float defining the start value of the ic in the
                 perturbation trajectory.
-            
+
             end
-                a float defining the end value of the ic in the 
+                a float defining the end value of the ic in the
                 perturbation trajectory.
 
             steps
-                an integere defining the number of steps in the 
+                an integere defining the number of steps in the
                 perturbation trajectory.
         '''
         raise NotImplementedError
-   
+
     def analyze(self, trajectory, evaluators):
         values = [[] for i in xrange(len(evaluators))]
         for idx, dx in enumerate(trajectory):
@@ -62,7 +62,7 @@ class BasePertTheory(object):
             for i, evaluator in enumerate(evaluators):
                 values[i].append(evaluator(self.model, coords))
         return np.array(values)
-    
+
     def write(self, trajectory, fn):
         f = open(fn, 'w')
         xyz = XYZWriter(f, [pt[number].symbol for number in self.system.numbers])
@@ -70,7 +70,7 @@ class BasePertTheory(object):
             coords = self.system.ref.coords + dx
             xyz.dump('frame %i' %idx, coords)
         f.close()
-    
+
     def plot(self, ic, trajectory, fn, eunit='kjmol'):
         evaluators = [eval_ic(ic), eval_energy('total'), eval_energy('ei')]
         qs, tot, ei = self.analyze(trajectory, evaluators)
@@ -83,7 +83,7 @@ class BasePertTheory(object):
         fig = pp.gcf()
         fig.set_size_inches([8,8])
         pp.savefig(fn)
-        
+
     def estimate(self, ic, start=None, end=None, steps=11):
         trajectory = self.generate(ic, start, end, steps)
         evaluators = [eval_ic(ic), eval_energy('total'), eval_energy('ei')]
@@ -103,7 +103,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
     def get_strain_matrix(self, ic):
         '''
             Method to calculate the strain matrix.
-            
+
             If sandwiched between a geometry perturbation vector, this
             represents the weighted sum of the deviations of the ics
             from their equilibrium values, except for the ic given in args.
@@ -123,13 +123,13 @@ class RelaxedGeoPertTheory(BasePertTheory):
                 Vo = Vt.T[:,rank:]
                 strain += np.dot(V, np.dot(S2, V.T)) + 0.01*np.dot(Vo, Vo.T)/(3*self.system.natoms)
         return strain
-    
+
     def generate(self, ic, start=None, end=None, steps=11):
         '''
             Calculate the perturbation trajectory, i.e. the trajectory that
             arises when the geometry is perturbed in the direction of ic
-            and relaxed in all other directions. 
-            
+            and relaxed in all other directions.
+
             The relaxation is implemented as the minimization of weighted
             sum of the strain and the energy.
         '''
