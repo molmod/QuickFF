@@ -30,30 +30,27 @@ def parser():
              'atom types based on atom index and None will not guess atom'    +\
              'types. [default=%default]'
     )
-    parser.add_option(
-        '--dump-system', default='None', dest='fn_sys', 
-        help='Construct the system, dump it to the file specified in' +\
-             'FN_SYS and break. [default=%default]'
-    )
     options, fns = parser.parse_args()
     return fns, options
 
 def main():
+    #Parse args
     fns, options = parser()
+    #Setup system, model and program
     system = System.from_files(fns)
     if options.atypes_level is not None:
-        system.guess_atypes(options.atypes_level)
+        system.guess_ffatypes(options.atypes_level)
     system.determine_ics_from_topology()
-    if options.fn_sys!='None':
-        system.dump(options.fn_sys)
-        return
     model = Model.from_system(system, eirule=options.eirule)
     program = Program(system, model)
+    #Run program
     ff = program.run()
+    #Make output
     ff.print_screen()    
     ff.dump_ffit2('pars_ffit2.txt', mode='w')
     ff.dump_yaff('pars_yaff.txt', mode='w')
     system.dump_charges_yaff('pars_yaff.txt', options.eirule, mode='a')
+    system.dump('system.chk')
     
 if __name__=='__main__':
     main()

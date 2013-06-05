@@ -162,7 +162,7 @@ class System(object):
             self.dihedrals = np.array(psf.dihedrals)
             self.nlist = graph.neighbors
     
-    def guess_atypes(self, atypes_level):
+    def guess_ffatypes(self, atypes_level):
         '''
            A method to guess atom types. This will overwrite ffatypes
            that are already defined in the system.
@@ -175,7 +175,19 @@ class System(object):
                 in the molecule (high).
         '''
         self.ffatypes = assign_atypes(self, atypes_level)
+        self.average_charges_ffatypes()
 
+    def average_charges_ffatypes(self):
+        'Average the atomic charges over the force field atom types'
+        charges = {}
+        for atype, charge in zip(self.ffatypes, self.charges):
+            if atype not in charges:
+                charges[atype] = [charge]
+            else:
+                charges[atype].append(charge)
+        for i, atype in enumerate(self.ffatypes):
+            self.charges[i] = sum(charges[atype])/len(charges[atype])
+    
     def determine_ics_from_topology(self):
         '''
             Method to generate IC instances corresponding to all ics
@@ -277,14 +289,14 @@ class System(object):
 
     def dump(self, fn):
         sample = {}
-        sample['numbers']  = self.numbers
-        sample['charges']  = self.charges
-        sample['ffatypes'] = self.ffatypes
-        sample['masses']   = np.array([pt[number].mass for number in self.numbers])
-        sample['bonds']    = self.bonds
-        sample['pos']      = self.ref.coords
-        sample['grad']     = self.ref.grad
-        sample['hess']     = self.ref.hess
+        sample['numbers']   = self.numbers
+        sample['charges']   = self.charges
+        sample['ffatypes']  = self.ffatypes
+        sample['masses']    = np.array([pt[number].mass for number in self.numbers])
+        sample['bonds']     = self.bonds
+        sample['bends']     = self.bends
+        sample['dihedrals'] = self.diheds
+        sample['pos']       = self.ref.coords
         dump_chk(fn, sample)
 
     def dump_charges_yaff(self, fn, eirule, mode='w'):
@@ -332,6 +344,9 @@ class System(object):
         print >> f, '# ----------------------------------------------------'
         print >> f, '# KEY        label  Q_0A              R_A'
         print >> f, '# ----------------------------------------------------'
+        added = []
         for atype, charge in zip(self.ffatypes, self.charges):
-            print >> f, 'FIXQ:ATOM %8s % .10f  0.0000000000e+00' %(atype, charge)
+            if atype not in added:
+                print >> f, 'FIXQ:ATOM %8s % .10f  0.0000000000e+00' %(atype, charge)
+                added.append(atype)
         f.close()

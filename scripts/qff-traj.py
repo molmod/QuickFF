@@ -42,7 +42,7 @@ def main():
     icname, fns, options = parser()
     system = System.from_files(fns)
     if options.atypes_level is not None:
-        system.guess_atypes(options.atypes_level)
+        system.guess_ffatypes(options.atypes_level)
     system.determine_ics_from_topology()
     model = Model.from_system(system, eirule=options.eirule)
     program = Program(system, model)
