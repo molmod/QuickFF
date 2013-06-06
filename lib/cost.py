@@ -91,13 +91,13 @@ class BaseConstraint(object):
     def __init__(self, type, npars):
         '''
             A class for defining constraints in the minimalization of the cost.
-            
+
             **Arguments**
-            
+
             type
                 the type of the constraint, can be 'eq' (equality, zero) or 'ineq'
                 (inequality, non-negative)
-            
+
             npars
                 the number of parameters of the cost function
         '''
@@ -111,14 +111,14 @@ class BaseConstraint(object):
             'fun' : self._fun(),
             'jac' : self._jac()
         }
-    
+
     def _fun(self):
         '''
             returns a function defining the constraint. Its argument should
             be the force constants.
         '''
         raise NotImplementedError
-        
+
     def _jac(self):
         '''
             returns the jacobian of the function. Its argument should
@@ -131,12 +131,12 @@ class PositiveFCConstraint(BaseConstraint):
     def __init__(self, index, npars):
         '''
             A positive force constant constraint
-            
+
             **Arguments**
-            
+
             index
                 the index of the fc constrained to be positive
-            
+
             npars
                 the number of parameters of the cost function
         '''
@@ -145,7 +145,7 @@ class PositiveFCConstraint(BaseConstraint):
 
     def _fun(self):
         return lambda k: k[self.index]
-    
+
     def _jac(self):
         jac = np.zeros(self.npars, float)
         jac[self.index] = 1.0
