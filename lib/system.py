@@ -3,7 +3,6 @@
 from molmod.periodic import periodic as pt
 from molmod.molecules import Molecule
 from molmod.molecular_graphs import MolecularGraph
-from molmod.io.psf import PSFFile
 from molmod.io.chk import load_chk, dump_chk
 from molmod.io.fchk import FCHKFile
 from molmod.io.psf import PSFFile
@@ -14,7 +13,6 @@ import numpy as np
 
 from refdata import ReferenceData
 from ic import IC
-from atypes import assign_atypes
 
 __all__ = ['System']
 
