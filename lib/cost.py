@@ -63,17 +63,9 @@ class HessianFCCost(object):
 
     def _define_positive_constraints(self):
         constraints = []
-        def jac(i):
-            result = np.zeros(self.model.val.nterms, float)
-            result[i] = 1.0
-            return result
         for i in xrange(self.model.val.nterms):
-            constraint = {
-                'type': 'ineq',
-                'fun': lambda k: k[i],
-                'jac': lambda k: jac(i),
-            }
-            constraints.append(constraint)
+            constraint = PositiveFCConstraint(i, self.model.val.nterms)
+            constraints.append(constraint())
         return tuple(constraints)
 
     def fun(self, k, do_grad=False):
@@ -93,3 +85,68 @@ class HessianFCCost(object):
         constraints = self._define_positive_constraints()
         result = minimize(self.fun, kinit, method='SLSQP', constraints=constraints, tol=tol)
         return result.x
+
+
+class BaseConstraint(object):
+    def __init__(self, type, npars):
+        '''
+            A class for defining constraints in the minimalization of the cost.
+            
+            **Arguments**
+            
+            type
+                the type of the constraint, can be 'eq' (equality, zero) or 'ineq'
+                (inequality, non-negative)
+            
+            npars
+                the number of parameters of the cost function
+        '''
+        self.type = type
+        self.npars = npars
+
+    def __call__(self):
+        'return the constraint in scipy.optimize.minimize format'
+        return {
+            'type': self.type,
+            'fun' : self._fun(),
+            'jac' : self._jac()
+        }
+    
+    def _fun(self):
+        '''
+            returns a function defining the constraint. Its argument should
+            be the force constants.
+        '''
+        raise NotImplementedError
+        
+    def _jac(self):
+        '''
+            returns the jacobian of the function. Its argument should
+            be the force constants.
+        '''
+        raise NotImplementedError
+
+
+class PositiveFCConstraint(BaseConstraint):
+    def __init__(self, index, npars):
+        '''
+            A positive force constant constraint
+            
+            **Arguments**
+            
+            index
+                the index of the fc constrained to be positive
+            
+            npars
+                the number of parameters of the cost function
+        '''
+        self.index = index
+        BaseConstraint.__init__(self, 'ineq', npars)
+
+    def _fun(self):
+        return lambda k: k[self.index]
+    
+    def _jac(self):
+        jac = np.zeros(self.npars, float)
+        jac[self.index] = 1.0
+        return lambda k: jac
