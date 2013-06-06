@@ -64,8 +64,10 @@ class HessianFCCost(object):
     def _define_positive_constraints(self):
         constraints = []
         for i in xrange(self.model.val.nterms):
-            constraint = PositiveFCConstraint(i, self.model.val.nterms)
-            constraints.append(constraint())
+            icname = sorted(self.model.val.vterms.keys())[i]
+            if not icname.startswith('dihed'):
+                constraint = PositiveFCConstraint(i, self.model.val.nterms)
+                constraints.append(constraint())
         return tuple(constraints)
 
     def fun(self, k, do_grad=False):
