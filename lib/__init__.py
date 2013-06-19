@@ -4,7 +4,6 @@ from model import *
 from perturbation import *
 from refdata import *
 from fftable import *
-from atypes import *
 from ic import *
 from evaluators import *
 from tools import *
