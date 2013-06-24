@@ -38,7 +38,8 @@ class DataArray(object):
         if self.num==0:
             return ''
         else:
-            return u'%9.3f \u00B1 %6.3f ' %(self.mean/parse_unit(self.unit), self.std/parse_unit(self.unit)) + self.unit + ' '*(15-len(self.unit))
+            s = u'%9.3f \u00B1 %6.3f ' %(self.mean/parse_unit(self.unit), self.std/parse_unit(self.unit)) + self.unit + ' '*(15-len(self.unit))
+            return s.encode('utf-8')
 
 
 class FFTable(object):
@@ -117,6 +118,17 @@ class FFTable(object):
                     name + ' '*(50-len(name)),
                     'kjmol', k/kjmol
                 )
+            elif kind=='opbend':
+                name = 'opbend/%s/harm/opdist/K' %atypes
+                print >>f, '  %50s %12s % 12.6f #  free' %(
+                     name + ' '*(50-len(name)),
+                    'kjmol/A^2', k/(kjmol/angstrom**2)
+                )
+                name = 'opbend/%s/harm/opdist/q0' %atypes
+                print >> f, '  %50s %12s % 12.6f #  free' %(
+                     name + ' '*(50-len(name)),
+                    'A', q0/angstrom
+                )
         print >> f, '# -----------------------------------------------------------------------------#------'
         f.close()
 
@@ -190,5 +202,27 @@ class FFTable(object):
             print >> f, 'TORSION:PARS %8s %8s %8s %8s %2i % .10e % .10e' %(
                 atypes[0], atypes[1], atypes[2], atypes[3],
                 m, k/kjmol, q0/deg
+            )
+        print >> f, ''
+        print >> f, '# Out-of-plane terms'
+        print >> f, '# ==============='
+        print >> f, ''
+        print >> f, '# The following mathemetical for is supported:'
+        print >> f, '#  - OPDIST: 0.5*K*(d - d0)^2'
+        print >> f, ''
+        print >> f, '# The actual parameters and their units may depend on the kind.'
+        print >> f, 'OPDIST:UNIT K kjmol/angstrom**2'
+        print >> f, 'OPDIST:UNIT D0 angstrom'
+        print >> f, ''
+        print >> f, '# -------------------------------------------------------------------------------------'
+        print >> f, '# KEY        ffatype0 ffatype1 ffatype2 ffatype4  K                 D0'
+        print >> f, '# -------------------------------------------------------------------------------------'
+        for icname in sorted(self.pars.keys()):
+            if not icname.startswith('opbend'): continue
+            atypes = icname.split('/')[1].split('.')
+            k, q0 = self[icname]
+            print >> f, 'OPDIST:PARS %8s %8s %8s %8s % .10e % .10e' %(
+                atypes[0], atypes[1], atypes[2], atypes[3],
+                k/(kjmol/angstrom**2), q0/angstrom
             )
         f.close()

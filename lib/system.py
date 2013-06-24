@@ -13,11 +13,12 @@ import numpy as np
 
 from refdata import ReferenceData
 from ic import IC
+from tools import find_dihed_patterns, find_opbend_patterns
 
 __all__ = ['System']
 
 class System(object):
-    def __init__(self, numbers, ffatypes, charges, ref, bonds, bends, diheds, nlist):
+    def __init__(self, numbers, ffatypes, charges, ref, bonds, bends, diheds, opbends, nlist):
         '''
            **Arguments:**
 
@@ -49,6 +50,12 @@ class System(object):
                 A numpy array (D,4) with atom indexes (counting starts from
                 zero) to define topological dihedrall patterns.
 
+           opbends
+                A numpy array (O,4) with atom indexes (counting starts from
+                zero) to define topological out of plane patterns. The first
+                three atoms define the plane, while the last atom defines
+                the center atom.
+
            nlist
                 A dictionnairy containing the neighbors for every every atom.
         '''
@@ -58,8 +65,9 @@ class System(object):
         self.bonds = bonds
         self.bends = bends
         self.diheds = diheds
-        self.ref = ref
+        self.opbends = opbends
         self.nlist = nlist
+        self.ref = ref
         self.ref.check()
         self.check_topology()
 
@@ -89,6 +97,7 @@ class System(object):
         bonds = None
         bends = None
         diheds = None
+        opbends = None
         nlist = None
         ref = ReferenceData()
         #Read all input files
@@ -107,6 +116,8 @@ class System(object):
                         bends = value
                     elif key in ['diheds', 'dihedrals']:
                         diheds = value
+                    elif key in ['opbends']:
+                        opbends = value
                     elif key in ['coords', 'coordinates', 'pos']:
                         ref.update(coords=value)
                     elif key in ['gradient', 'grad', 'gpos', 'forces']:
@@ -128,7 +139,6 @@ class System(object):
                 charges = np.array(psf.charges)
                 bonds = np.array(psf.bonds)
                 bends = np.array(psf.bends)
-                diheds = np.array(psf.dihedrals)
                 nlist = psf.get_molecular_graph().neighbors
             elif extension in ['txt']:
                 from hipart.io import load_atom_scalars
@@ -136,13 +146,14 @@ class System(object):
         #Finalise topology and estimate atom types if necessary
         if charges is None:
             charges = np.zeros(len(numbers), float)
-        return cls(numbers, ffatypes, charges, ref, bonds, bends, diheds, nlist)
+        return cls(numbers, ffatypes, charges, ref, bonds, bends, diheds, opbends, nlist)
 
     def check_topology(self):
         '''
            Check wether all topology information (bonds, bends, diheds
            and nlist) is present and complete if necessary.
         '''
+        assert self.numbers is not None
         if self.bonds is None:
             molecule = Molecule(self.numbers, coordinates=self.ref.coords)
             graph = MolecularGraph.from_geometry(molecule)
@@ -150,15 +161,22 @@ class System(object):
             psf.add_molecule(molecule)
             self.bonds = np.array(psf.bonds)
             self.bends = np.array(psf.bends)
-            self.diheds = np.array(psf.dihedrals)
+            self.diheds = find_dihed_patterns(graph)
+            self.opbends = find_opbend_patterns(graph)
             self.nlist = graph.neighbors
-        if self.bends is None or self.diheds is None or self.nlist is None:
+        else:
             graph = MolecularGraph(self.bonds, self.numbers)
-            psf = PSFFile()
-            psf.add_molecular_graph(graph)
-            self.bends = np.array(psf.bends)
-            self.dihedrals = np.array(psf.dihedrals)
-            self.nlist = graph.neighbors
+            if self.bends is None:
+                psf = PSFFile()
+                psf.add_molecular_graph(graph)
+                self.bends = np.array(psf.bends)
+            if self.diheds is None:
+                self.diheds = find_dihed_patterns(graph)
+            if self.opbends is None:
+                self.opbends = find_opbend_patterns(graph)
+            if self.nlist is None:
+                self.nlist = graph.neighbors
+
 
     def guess_ffatypes(self, level):
         '''
@@ -215,11 +233,18 @@ class System(object):
             present in the bonds, bends and dihedrals attributes.
         '''
         self.ics = {}
-        number = {}
-        def sort_ffatypes(ffatypes):
-            if ffatypes[0]<=ffatypes[-1]: return ffatypes
-            else: return ffatypes[::-1]
+        def sort_ffatypes(ffatypes, kind=''):
+            if kind=='':
+                if ffatypes[0]<=ffatypes[-1]:
+                    return ffatypes
+                else:
+                    return ffatypes[::-1]
+            elif kind=='opbend':
+                result = sorted(ffatypes[:3])
+                result.append(ffatypes[3])
+                return result
         #Find bonds
+        number = {}
         for bond in self.bonds:
             name = 'bond/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in bond]))
             if name not in number.keys(): number[name] = 0
@@ -230,6 +255,7 @@ class System(object):
             else:
                 self.ics[name] = [ic]
         #Find bends
+        number = {}
         for bend in self.bends:
             name = 'angle/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in bend]))
             if name not in number.keys(): number[name] = 0
@@ -240,11 +266,23 @@ class System(object):
             else:
                 self.ics[name] = [ic]
         #Find dihedrals
+        number = {}
         for dihed in self.diheds:
             name = 'dihed/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in dihed]))
             if name not in number.keys(): number[name] = 0
             else: number[name] += 1
             ic = IC(name+str(number[name]), dihed, dihed_angle, qunit='deg', kunit='kjmol')
+            if name in self.ics.keys():
+                self.ics[name].append(ic)
+            else:
+                self.ics[name] = [ic]
+        #Find opbends
+        number = {}
+        for opbend in self.opbends:
+            name = 'opbend/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in opbend], kind='opbend'))
+            if name not in number.keys(): number[name] = 0
+            else: number[name] += 1
+            ic = IC(name+str(number[name]), opbend, opbend_dist, qunit='A', kunit='kjmol/A**2')
             if name in self.ics.keys():
                 self.ics[name].append(ic)
             else:
@@ -283,6 +321,11 @@ class System(object):
                 for dihed in self.dihedrals:
                     if (self.ffatypes[dihed]==atypes).all() or (self.ffatypes[dihed]==atypes[::-1]).all():
                         match.append(IC(icname+str(len(match)), dihed, dihed_angle, qunit='deg', kunit='kjmol'))
+            elif ickind in ['opbend']:
+                assert len(atypes)==4
+                for opbend in self.opbends:
+                    if self.ffatypes[opbend[3]]==atypes[3] and set(self.ffatypes[opbend[:3]])==set(atypes[:3]):
+                        match.append(IC(icname+str(len(match)), opbend, opbend_mcos, qunit='au', kunit='kjmol'))
             else:
                 raise ValueError('Invalid icname, recieved %s' %icname)
             if len(match)==0:

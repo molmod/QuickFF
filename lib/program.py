@@ -7,6 +7,7 @@ import numpy as np
 from fftable import DataArray, FFTable
 from perturbation import RelaxedGeoPertTheory
 from cost import HessianFCCost
+from terms import CosineTerm
 
 __all__ = ['Program']
 
@@ -50,6 +51,9 @@ class Program(object):
             q0s = DataArray(unit=ics[0].qunit)
             for ic in ics:
                 k, q0 = self.pt.estimate(ic)
+                vterm = self.model.val.vterms[icname][0]
+                if isinstance(vterm, CosineTerm):
+                    k *= 2.0/vterm.A**2
                 ks.append(k)
                 q0s.append(q0)
             ff.add(icname, ks, q0s)

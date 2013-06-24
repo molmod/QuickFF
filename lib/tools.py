@@ -2,10 +2,12 @@
 
 import numpy as np
 from molmod.units import parse_unit
+from molmod.molecular_graphs import HasNumNeighbors
 
 __all__ = [
     'global_translation', 'global_rotation', 'calc_angles', 'statistics',
-    'fitpar', 'has_15_bonded', 'get_atoms_within_3bonds', 'matrix_squared_sum'
+    'fitpar', 'has_15_bonded', 'get_atoms_within_3bonds', 'matrix_squared_sum',
+    'find_dihed_patterns', 'find_opbend_patterns',
 ]
 
 def global_translation(coords):
@@ -119,3 +121,41 @@ def matrix_squared_sum(A, B):
     tmp = np.dot(A.T, B)
     dim = len(tmp)
     return sum([tmp[i,i] for i in xrange(dim)])
+
+def find_dihed_patterns(graph):
+    '''
+        Find patterns of 4 atoms in a head-tail bond configuration in which
+        at most 1 of the 2 central atoms has neighbors that are bonded to another
+        atom different from the central atoms.
+    '''
+    diheds = []
+    for atom1, atom2 in graph.edges:
+        neighs1 = [i for i in graph.neighbors[atom1] if not i==atom2]
+        neighs2 = [i for i in graph.neighbors[atom2] if not i==atom1]
+        term_at_1 = True
+        for i in neighs1:
+            if not HasNumNeighbors(1)(i, graph):
+                term_at_1 = False
+                break
+        term_at_2 = True
+        for i in neighs2:
+            if not HasNumNeighbors(1)(i, graph):
+                term_at_2 = False
+                break
+        if term_at_1 or term_at_2:
+            for i in neighs1:
+                for j in neighs2:
+                    diheds.append([i, atom1, atom2, j])
+    return diheds
+
+def find_opbend_patterns(graph):
+    '''
+        Find patterns of 4 atoms where 3 border atoms are bonded to the same central atom.
+        The central atom cannot have any other neighbor except for these 3 border atoms.
+    '''
+    opbends = []
+    for atom in xrange(len(graph.numbers)):
+        if HasNumNeighbors(3)(atom, graph):
+            neighs = tuple(graph.neighbors[atom])
+            opbends.append([neighs[0], neighs[1], neighs[2], atom])
+    return opbends
