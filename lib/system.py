@@ -361,6 +361,7 @@ class System(object):
         sample['bonds']     = self.bonds
         sample['bends']     = self.bends
         sample['dihedrals'] = self.diheds
+        sample['opbends']   = self.opbends
         sample['pos']       = self.ref.coords
         dump_chk(fn, sample)
 
