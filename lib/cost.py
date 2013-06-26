@@ -86,7 +86,7 @@ class HessianFCCost(object):
         self._update_lstsq_matrices()
         kinit = self.model.val.get_fcs()
         constraints = self._define_constraints()
-        result = minimize(self.fun, kinit, method='SLSQP', constraints=constraints, tol=tol, options={'disp': True})
+        result = minimize(self.fun, kinit, method='SLSQP', constraints=constraints, tol=tol, options={'disp': False})
         return result.x
 
 

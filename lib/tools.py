@@ -160,7 +160,7 @@ def find_opbend_patterns(graph):
             opbends.append([neighs[0], neighs[1], neighs[2], atom])
     return opbends
 
-def dihedral_round(psi, m, verbose=True):
+def dihedral_round(psi, m, verbose=False):
     period = 2.0*np.pi/m
     sgn = np.sign(psi)
     #Step 1: bring rounded into fundamental period

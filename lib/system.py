@@ -161,7 +161,7 @@ class System(object):
             psf.add_molecule(molecule)
             self.bonds = np.array(psf.bonds)
             self.bends = np.array(psf.bends)
-            self.diheds = np.array(psf.dihedrals) #find_dihed_patterns(graph)
+            self.diheds = np.array(psf.dihedrals)
             self.opbends = find_opbend_patterns(graph)
             self.nlist = graph.neighbors
         else:
@@ -171,7 +171,7 @@ class System(object):
                 psf.add_molecular_graph(graph)
                 self.bends = np.array(psf.bends)
             if self.diheds is None:
-                self.diheds = np.array(psf.dihedrals) #find_dihed_patterns(graph)
+                self.diheds = np.array(psf.dihedrals)
             if self.opbends is None:
                 self.opbends = find_opbend_patterns(graph)
             if self.nlist is None:
