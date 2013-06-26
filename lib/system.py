@@ -161,7 +161,7 @@ class System(object):
             psf.add_molecule(molecule)
             self.bonds = np.array(psf.bonds)
             self.bends = np.array(psf.bends)
-            self.diheds = find_dihed_patterns(graph)
+            self.diheds = np.array(psf.dihedrals) #find_dihed_patterns(graph)
             self.opbends = find_opbend_patterns(graph)
             self.nlist = graph.neighbors
         else:
@@ -171,7 +171,7 @@ class System(object):
                 psf.add_molecular_graph(graph)
                 self.bends = np.array(psf.bends)
             if self.diheds is None:
-                self.diheds = find_dihed_patterns(graph)
+                self.diheds = np.array(psf.dihedrals) #find_dihed_patterns(graph)
             if self.opbends is None:
                 self.opbends = find_opbend_patterns(graph)
             if self.nlist is None:
@@ -192,9 +192,14 @@ class System(object):
         '''
         if level=='low':
             return np.array([pt[number].symbol for number in self.numbers])
-        elif level=='high':
-            return np.array(['%s%i' %(pt[n].symbol, i) for i, n in enumerate(self.numbers)])
         elif level=='medium':
+            atypes = []
+            for index, number in enumerate(self.numbers):
+                nind = self.nlist[index]
+                sym = pt[self.numbers[index]].symbol.upper()
+                atype = '%s%i' %(sym, len(nind))
+                atypes.append(atype)
+        elif level=='high':
             atypes = []
             for index, number in enumerate(self.numbers):
                 nind = self.nlist[index]
@@ -211,6 +216,8 @@ class System(object):
                     if num_n>0: atype += '_n%i' %num_n
                     if num_o>0: atype += '_o%i' %num_o
                 atypes.append(atype)
+        elif level=='highest':
+            return np.array(['%s%i' %(pt[n].symbol, i) for i, n in enumerate(self.numbers)])
         else:
             raise ValueError('Invalid level, recieved %s' %level)
         self.ffatypes = np.array(atypes)
@@ -268,6 +275,9 @@ class System(object):
         #Find dihedrals
         number = {}
         for dihed in self.diheds:
+            if bend_angle(np.array([self.ref.coords[i] for i in dihed[0:3]]), deriv=0)[0]>175*deg \
+            or bend_angle(np.array([self.ref.coords[i] for i in dihed[1:4]]), deriv=0)[0]>175*deg:
+                continue
             name = 'dihed/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in dihed]))
             if name not in number.keys(): number[name] = 0
             else: number[name] += 1
@@ -279,6 +289,9 @@ class System(object):
         #Find opbends
         number = {}
         for opbend in self.opbends:
+            if bend_angle(np.array([self.ref.coords[i] for i in opbend[0:3]]), deriv=0)[0]>175*deg \
+            or bend_angle(np.array([self.ref.coords[i] for i in opbend[0:3]]), deriv=0)[0]<5*deg:
+                continue
             name = 'opbend/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in opbend], kind='opbend'))
             if name not in number.keys(): number[name] = 0
             else: number[name] += 1

@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import numpy as np
-from molmod.units import parse_unit
+from molmod.units import parse_unit, deg
 from molmod.molecular_graphs import HasNumNeighbors
 
 __all__ = [
@@ -159,3 +159,36 @@ def find_opbend_patterns(graph):
             neighs = tuple(graph.neighbors[atom])
             opbends.append([neighs[0], neighs[1], neighs[2], atom])
     return opbends
+
+def dihedral_round(psi, m, verbose=True):
+    period = 2.0*np.pi/m
+    sgn = np.sign(psi)
+    #Step 1: bring rounded into fundamental period
+    rounded = abs(psi)
+    while rounded>=period:
+        rounded -= period
+    #Step 2: round to fundamental dihedral angle (0,30,45,60,90,120,135,150,180)
+    if rounded<=15.0*deg:
+        rounded = 0.0
+    elif rounded<=37.5*deg:
+        rounded = 30.0*deg
+    elif rounded<=52.5*deg:
+        rounded = 45.0*deg
+    elif rounded<=75.0*deg:
+        rounded = 60.0*deg
+    elif rounded<=105.0*deg:
+        rounded = 90.0*deg
+    elif rounded<=127.5*deg:
+        rounded = 120.0*deg
+    elif rounded<=142.5*deg:
+        rounded = 135.0*deg
+    elif rounded<=165.0*deg:
+        rounded = 150.0*deg
+    else:
+        rounded = 180.0*deg
+    #Step 3: bring back into fundamental period
+    while rounded>=period:
+        rounded -= period
+    if verbose:
+        print '   init = % 7.2f ==> period = %3f ==> rounded = %7.2f'%(psi/deg, period/deg, rounded/deg)
+    return rounded

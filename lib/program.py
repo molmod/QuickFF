@@ -8,6 +8,7 @@ from fftable import DataArray, FFTable
 from perturbation import RelaxedGeoPertTheory
 from cost import HessianFCCost
 from terms import CosineTerm
+from tools import dihedral_round
 
 __all__ = ['Program']
 
@@ -31,7 +32,7 @@ class Program(object):
         self.pt = RelaxedGeoPertTheory(system, model)
         self.cost = HessianFCCost(self.system, self.model)
 
-    def estimate_pt(self, skip_dihedrals=True):
+    def estimate_pt(self, skip_dihedrals=False):
         '''
             First Step: calculate harmonic force field parameters from perturbation
             trajectories.
@@ -54,6 +55,11 @@ class Program(object):
                 vterm = self.model.val.vterms[icname][0]
                 if isinstance(vterm, CosineTerm):
                     k *= 2.0/vterm.A**2
+                    if k>100*kjmol:
+                        k = 100*kjmol
+                    elif k<-100*kjmol:
+                        k = -100*kjmol
+                    q0 = dihedral_round(q0, vterm.A)
                 ks.append(k)
                 q0s.append(q0)
             ff.add(icname, ks, q0s)
@@ -76,6 +82,7 @@ class Program(object):
         fcs = self.cost.estimate(tol)
         self.model.val.update_fcs(fcs)
         ff = self.model.val.get_fftable()
+        ff.print_screen()
         return ff
 
     def run(self):

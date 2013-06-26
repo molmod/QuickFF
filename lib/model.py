@@ -237,8 +237,6 @@ class ValencePart(object):
                     elif 2 in [n1, n2]: m = 1
                     else: raise ValueError('Dihedral %s has no atoms bonded to central pair' %str(ic.indexes))
                     terms.append(CosineTerm(ic, system.ref.coords, 0.0, 0.0, m))
-                elif icname.startswith('opbend'):
-                    terms.append(HarmonicTerm(ic, system.ref.coords, None, None))
                 else:
                     terms.append(HarmonicTerm(ic, system.ref.coords, None, None))
             self.vterms[icname] = terms

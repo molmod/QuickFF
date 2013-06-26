@@ -46,7 +46,6 @@ def main():
     #Run program
     ff = program.run()
     #Make output
-    ff.print_screen()
     ff.dump_ffit2('pars_ffit2.txt', mode='w')
     ff.dump_yaff('pars_yaff.txt', mode='w')
     system.dump_charges_yaff('pars_yaff.txt', options.eirule, mode='a')

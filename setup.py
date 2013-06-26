@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# QuickFF is a python library to calculate Quick-and-Dirty force fields.
-# Copyright (C) 2012 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>,
+# QuickFF is a python library to quickly derive force fields from ab initio training data.
+# Copyright (C) 2013 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>,
 # Center for Molecular Modeling (CMM), Ghent University, Ghent, Belgium;
 # all rights reserved unless otherwise stated.
 #
@@ -28,8 +28,8 @@ from distutils.core import setup
 
 setup(
     name='QuickFF',
-    version='0.0',
-    description='Python library to quickly derive force fields',
+    version='0.1',
+    description='Python library to quickly derive force fields from ab initio training data.',
     author='Louis Vanduyfhuys',
     author_email='Louis.Vanduyfhuys@UGent.be',
     url='http://molmod.ugent.be/code/',

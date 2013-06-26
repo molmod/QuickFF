@@ -58,20 +58,21 @@ class HessianFCCost(object):
             for j in xrange(i+1):
                  self.A[i,j] = matrix_squared_sum(h[i], h[j])
                  self.A[j,i] = self.A[i,j]
-        del h
         self.C = matrix_squared_sum(ref, ref)
 
-    def _define_positive_constraints(self):
+    def _define_constraints(self):
         constraints = []
         for i in xrange(self.model.val.nterms):
             icname = sorted(self.model.val.vterms.keys())[i]
-            if not icname.startswith('dihed'):
-                constraint = PositiveFCConstraint(i, self.model.val.nterms)
-                constraints.append(constraint())
+            if icname.startswith('dihed'):
+                constraints.append( LowerLimitConstraint(i,    0*kjmol, self.model.val.nterms)() )
+                constraints.append( UpperLimitConstraint(i,  100*kjmol, self.model.val.nterms)() )
+            else:
+                constraints.append( LowerLimitConstraint(i, 0.0, self.model.val.nterms)() )
         return tuple(constraints)
 
     def fun(self, k, do_grad=False):
-        chi2 = 0.5*np.dot(k.T, np.dot(self.A, k)) - np.dot(self.B.T, k) +0.5*self.C
+        chi2 = 0.5*np.dot(k.T, np.dot(self.A, k)) - np.dot(self.B.T, k) + 0.5*self.C
         if do_grad:
             gchi2 = np.dot(self.A, k) - self.B
             return chi2, gchi2
@@ -84,8 +85,8 @@ class HessianFCCost(object):
         '''
         self._update_lstsq_matrices()
         kinit = self.model.val.get_fcs()
-        constraints = self._define_positive_constraints()
-        result = minimize(self.fun, kinit, method='SLSQP', constraints=constraints, tol=tol)
+        constraints = self._define_constraints()
+        result = minimize(self.fun, kinit, method='SLSQP', constraints=constraints, tol=tol, options={'disp': True})
         return result.x
 
 
@@ -129,26 +130,59 @@ class BaseConstraint(object):
         raise NotImplementedError
 
 
-class PositiveFCConstraint(BaseConstraint):
-    def __init__(self, index, npars):
+class LowerLimitConstraint(BaseConstraint):
+    def __init__(self, index, lower, npars):
         '''
-            A positive force constant constraint
+            An upper limit constraint
 
             **Arguments**
 
             index
-                the index of the fc constrained to be positive
+                the index of the constrained fc
+
+            lower
+                the upper limit of the constrained fc
 
             npars
                 the number of parameters of the cost function
         '''
         self.index = index
+        self.lower = lower
         BaseConstraint.__init__(self, 'ineq', npars)
 
     def _fun(self):
-        return lambda k: k[self.index]
+        return lambda k: k[self.index] - self.lower
 
     def _jac(self):
         jac = np.zeros(self.npars, float)
         jac[self.index] = 1.0
+        return lambda k: jac
+
+
+class UpperLimitConstraint(BaseConstraint):
+    def __init__(self, index, upper, npars):
+        '''
+            An upper limit constraint
+
+            **Arguments**
+
+            index
+                the index of the constrained fc
+
+            upper
+                the upper limit of the constrained fc
+
+            npars
+                the number of parameters of the cost function
+        '''
+        self.index = index
+        self.upper = upper
+        BaseConstraint.__init__(self, 'ineq', npars)
+
+    def _fun(self):
+        return lambda k: self.upper - k[self.index]
+
+    def _jac(self):
+        jac = np.zeros(self.npars, float)
+        jac[self.index] = -1.0
         return lambda k: jac
