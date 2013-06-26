@@ -211,8 +211,8 @@ class FFTable(object):
         print >> f, '#  - OPDIST: 0.5*K*(d - d0)^2'
         print >> f, ''
         print >> f, '# The actual parameters and their units may depend on the kind.'
-        print >> f, 'OPDIST:UNIT K kjmol/angstrom**2'
-        print >> f, 'OPDIST:UNIT D0 angstrom'
+        print >> f, 'OOPDIST:UNIT K kjmol/angstrom**2'
+        print >> f, 'OOPDIST:UNIT D0 angstrom'
         print >> f, ''
         print >> f, '# -------------------------------------------------------------------------------------'
         print >> f, '# KEY        ffatype0 ffatype1 ffatype2 ffatype4  K                 D0'
@@ -221,7 +221,7 @@ class FFTable(object):
             if not icname.startswith('opbend'): continue
             atypes = icname.split('/')[1].split('.')
             k, q0 = self[icname]
-            print >> f, 'OPDIST:PARS %8s %8s %8s %8s % .10e % .10e' %(
+            print >> f, 'OOPDIST:PARS %8s %8s %8s %8s % .10e % .10e' %(
                 atypes[0], atypes[1], atypes[2], atypes[3],
                 k/(kjmol/angstrom**2), q0/angstrom
             )
