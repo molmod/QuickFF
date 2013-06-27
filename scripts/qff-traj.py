@@ -19,20 +19,20 @@ def parser():
     parser = OptionParser(usage=usage, description=description)
     parser.add_option(
         '--eirule', default=-1, type=int,
-        help='Defines the exclusion rule for the electrostatic interactions.' +\
-             'If set to -1, no electrostatic interactions are taken into '    +\
-             'account during force field fitting. If the rule is set to '     +\
-             '0,1,2,3: pairs seperated by less then or equal to 0,1,2,3 bonds'+\
+        help='Defines the exclusion rule for the electrostatic interactions. '  +\
+             'If set to -1, no electrostatic interactions are taken into '      +\
+             'account during force field fitting. If the rule is set to '       +\
+             '0,1,2,3: pairs seperated by less then or equal to 0,1,2,3 bonds ' +\
              'respectively are excluded from ei interactions. [default=-1]'
     )
     parser.add_option(
         '--atypes-level', default=None,
-        help='Assign atom types according to level ATYPES_LEVEL. LOW will'    +\
-             'assign atom types based only on atom number. MEDIUM will assign'+\
-             'atom types based on atom number and the number of neighbors.'   +\
-             'HIGH will assign atom types based on atom number, number of'    +\
-             'neighbors and the nature of the neighbors. HIGHEST will assign' +\
-             'atom types based on atom index. NONE will not guess but use the'+\
+        help='Assign atom types according to level ATYPES_LEVEL. LOW will '     +\
+             'assign atom types based only on atom number. MEDIUM will assign ' +\
+             'atom types based on atom number and the number of neighbors. '    +\
+             'HIGH will assign atom types based on atom number, number of '     +\
+             'neighbors and the nature of the neighbors. HIGHEST will assign '  +\
+             'atom types based on atom index. NONE will not guess but use the ' +\
              'atom types defined in the input files fns. [default=%default]'
     )
     options, args = parser.parse_args()

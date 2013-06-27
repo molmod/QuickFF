@@ -127,6 +127,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
                     #if the gradient of the current ic is zero in equilibrium (e.g.: the cosine of an
                     #out-of-plane bend of a planar opbend-quadruple), use the second order contribution
                     #to the ic-Taylor expansion (without the square)
+                    print '    WARNING: %s gradient is zero, using second order Taylor to estimate strain' %icname
                     Hq = np.zeros([3*self.system.natoms, 3*self.system.natoms], float)
                     for ic0 in ics:
                         if ic is None or ic0.name!=ic.name:
