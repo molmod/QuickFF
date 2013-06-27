@@ -24,11 +24,13 @@ def parser():
     )
     parser.add_option(
         '--atypes-level', default=None,
-        help='Overwrite the atom types according to level ATYPES_LEVEL. Low'  +\
-             'will choose atom types based only on atom number, medium will'  +\
-             'choose atom types based on local topology, high will choose'    +\
-             'atom types based on atom index and None will not guess atom'    +\
-             'types. [default=%default]'
+        help='Assign atom types according to level ATYPES_LEVEL. LOW will'    +\
+             'assign atom types based only on atom number. MEDIUM will assign'+\
+             'atom types based on atom number and the number of neighbors.'   +\
+             'HIGH will assign atom types based on atom number, number of'    +\
+             'neighbors and the nature of the neighbors. HIGHEST will assign' +\
+             'atom types based on atom index. NONE will not guess but use the'+\
+             'atom types defined in the input files fns. [default=%default]'
     )
     options, fns = parser.parse_args()
     return fns, options
