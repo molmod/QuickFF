@@ -161,34 +161,21 @@ def find_opbend_patterns(graph):
     return opbends
 
 def dihedral_round(psi, m, verbose=False):
+    '''
+        Take absolute value of psi and then round to zero or pi/m
+    '''
     period = 2.0*np.pi/m
-    sgn = np.sign(psi)
-    #Step 1: bring rounded into fundamental period
+    #Step 1: take absolute value
+    rounded = abs(psi)
+    #Step 2: bring into fundamental period [0 , 2*pi/m]
     rounded = abs(psi)
     while rounded>=period:
         rounded -= period
-    #Step 2: round to fundamental dihedral angle (0,30,45,60,90,120,135,150,180)
-    if rounded<=15.0*deg:
-        rounded = 0.0
-    elif rounded<=37.5*deg:
-        rounded = 30.0*deg
-    elif rounded<=52.5*deg:
-        rounded = 45.0*deg
-    elif rounded<=75.0*deg:
-        rounded = 60.0*deg
-    elif rounded<=105.0*deg:
-        rounded = 90.0*deg
-    elif rounded<=127.5*deg:
-        rounded = 120.0*deg
-    elif rounded<=142.5*deg:
-        rounded = 135.0*deg
-    elif rounded<=165.0*deg:
-        rounded = 150.0*deg
+    #Step 3: round to zero or pi/m
+    if 3*np.pi/(2*m)>rounded and rounded>np.pi/(2*m):
+        rounded = np.pi/m
     else:
-        rounded = 180.0*deg
-    #Step 3: bring back into fundamental period
-    while rounded>=period:
-        rounded -= period
+        rounded = 0.0
     if verbose:
         print '   init = % 7.2f ==> period = %3f ==> rounded = %7.2f'%(psi/deg, period/deg, rounded/deg)
     return rounded
