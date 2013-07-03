@@ -188,6 +188,7 @@ class FFTable(object):
             if not icname.startswith('angle'): continue
             atypes = icname.split('/')[1].split('.')
             k, q0 = self[icname]
+            if q0>180.0*deg: q0 = 2*np.pi - q0
             print >> f, 'BENDAHARM:PARS %8s %8s %8s % .10e % .10e' %(
                 atypes[0], atypes[1], atypes[2], k/(kjmol/rad**2), q0/deg
             )
