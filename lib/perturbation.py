@@ -163,7 +163,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
             if end is None:        end = q0 + 5*deg
             if start<-180.0*deg: start = -180.0*deg
             if end>180.0*deg:      end = 180.0*deg
-        elif ic.name.startswith('opbend'):
+        elif ic.name.startswith('opdist'):
             if start is None: start = q0 - 0.05*angstrom
             if end is None:     end = q0 + 0.05*angstrom
         qarray = start + (end-start)/(steps-1)*np.array(range(steps),float)
@@ -176,7 +176,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
             energy = 0.5*np.dot(dx.T, np.dot(H, dx))
             return self.weight_strain*strain + self.weight_energy*energy
         #Guess delta_x first time
-        if ic.name.startswith('opbend'):
+        if ic.name.startswith('opdist'):
             guess = np.random.normal(loc=0.0,scale=0.01,size=3*self.system.natoms)
         else:
             guess = np.random.normal(loc=0.0,scale=0.000001,size=3*self.system.natoms)

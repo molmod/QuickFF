@@ -226,17 +226,8 @@ class ValencePart(object):
             terms = []
             for ic in ics:
                 if icname.startswith('dihed'):
-                    #TODO: This rule to determine dihedral multiplicity may be
-                    #      too simplistic. This should be checked!!
-                    n1 = len(system.nlist[ic.indexes[1]])
-                    n2 = len(system.nlist[ic.indexes[2]])
-                    if   6 in [n1, n2]: m = 4
-                    elif 5 in [n1, n2]: m = 1
-                    elif 4 in [n1, n2]: m = 3
-                    elif 3 in [n1, n2]: m = 2
-                    elif 2 in [n1, n2]: m = 1
-                    else: raise ValueError('Dihedral %s has no atoms bonded to central pair' %str(ic.indexes))
-                    terms.append(CosineTerm(ic, system.ref.coords, 0.0, 0.0, m))
+                    #Dihedral potential is determined later based on the geometry
+                    terms.append(None)
                 else:
                     terms.append(HarmonicTerm(ic, system.ref.coords, None, None))
             self.vterms[icname] = terms
@@ -278,9 +269,9 @@ class ValencePart(object):
             for term in self.vterms[icname]:
                 ks.append(term.k)
                 q0s.append(term.q0)
-                if icname.startswith('dihed'):
+                if isinstance(term, CosineTerm):
                     ms.append(term.A)
-            if icname.startswith('dihed'):
+            if isinstance(term, CosineTerm):
                 fftab.add(icname,
                     DataArray(data=ks, unit=term.ic.kunit),
                     DataArray(data=q0s, unit=term.ic.qunit),

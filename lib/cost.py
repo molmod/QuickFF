@@ -60,13 +60,15 @@ class HessianFCCost(object):
                  self.A[j,i] = self.A[i,j]
         self.C = matrix_squared_sum(ref, ref)
 
-    def _define_constraints(self):
+    def _define_constraints(self, fixed, kinit):
         constraints = []
         for i in xrange(self.model.val.nterms):
             icname = sorted(self.model.val.vterms.keys())[i]
-            if icname.startswith('dihed'):
+            if icname.split('/')[0] in fixed:
+                constraints.append( FixedValueConstraint(i, kinit[i], self.model.val.nterms)() )
+            elif icname.startswith('dihed'):
                 constraints.append( LowerLimitConstraint(i,    0*kjmol, self.model.val.nterms)() )
-                constraints.append( UpperLimitConstraint(i,  100*kjmol, self.model.val.nterms)() )
+                constraints.append( UpperLimitConstraint(i,  200*kjmol, self.model.val.nterms)() )
             else:
                 constraints.append( LowerLimitConstraint(i, 0.0, self.model.val.nterms)() )
         return tuple(constraints)
@@ -79,14 +81,20 @@ class HessianFCCost(object):
         else:
             return chi2
 
-    def estimate(self, tol=1e-9):
+    def estimate(self, fixed=[]):
         '''
             Estimate the force constants by minimizing the cost function
+            
+            **Arguments*
+
+            fixed
+                A list containing bonds, angles, dihedrals and/or opdists
+                if these ics should be kept fixed.
         '''
-        self._update_lstsq_matrices()
         kinit = self.model.val.get_fcs()
-        constraints = self._define_constraints()
-        result = minimize(self.fun, kinit, method='SLSQP', constraints=constraints, tol=tol, options={'disp': False})
+        constraints = self._define_constraints(fixed, kinit)
+        self._update_lstsq_matrices()
+        result = minimize(self.fun, kinit, method='SLSQP', constraints=constraints, tol=1e-9, options={'disp': False})
         return result.x
 
 
@@ -128,6 +136,35 @@ class BaseConstraint(object):
             be the force constants.
         '''
         raise NotImplementedError
+
+
+class FixedValueConstraint(BaseConstraint):
+    def __init__(self, index, value, npars):
+        '''
+            A fixed value constraint
+
+            **Arguments**
+
+            index
+                the index of the constrained fc
+
+            value
+                the fixed value of the constrained fc
+
+            npars
+                the number of parameters of the cost function
+        '''
+        self.index = index
+        self.value = value
+        BaseConstraint.__init__(self, 'eq', npars)
+
+    def _fun(self):
+        return lambda k: k[self.index] - self.value
+
+    def _jac(self):
+        jac = np.zeros(self.npars, float)
+        jac[self.index] = 1.0
+        return lambda k: jac
 
 
 class LowerLimitConstraint(BaseConstraint):

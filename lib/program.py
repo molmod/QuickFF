@@ -1,14 +1,14 @@
 #! /usr/bin/env python
 
 from molmod.units import *
+from molmod.ic import dihed_cos, dihed_angle
 
 import numpy as np
 
 from fftable import DataArray, FFTable
 from perturbation import RelaxedGeoPertTheory
 from cost import HessianFCCost
-from terms import CosineTerm
-from tools import dihedral_round
+from terms import HarmonicTerm, CosineTerm
 
 __all__ = ['Program']
 
@@ -32,7 +32,7 @@ class Program(object):
         self.pt = RelaxedGeoPertTheory(system, model)
         self.cost = HessianFCCost(self.system, self.model)
 
-    def estimate_pt(self, skip_dihedrals=False):
+    def estimate_from_pt(self, skip_dihedrals=True):
         '''
             First Step: calculate harmonic force field parameters from perturbation
             trajectories.
@@ -52,14 +52,6 @@ class Program(object):
             q0s = DataArray(unit=ics[0].qunit)
             for ic in ics:
                 k, q0 = self.pt.estimate(ic)
-                vterm = self.model.val.vterms[icname][0]
-                if isinstance(vterm, CosineTerm):
-                    k *= 2.0/vterm.A**2
-                    if k>100*kjmol:
-                        k = 100*kjmol
-                    elif k<-100*kjmol:
-                        k = -100*kjmol
-                    q0 = dihedral_round(q0, vterm.A)
                 ks.append(k)
                 q0s.append(q0)
             ff.add(icname, ks, q0s)
@@ -68,36 +60,92 @@ class Program(object):
         self.model.val.update_fftable(ff)
         return ff
 
-    def refine_cost(self, tol=1e-9):
+    def determine_dihedral_potentials(self, marge2=15*deg, marge3=15*deg):
+        '''
+            Determine the potential of every dihedral based on the values of
+            the dihedral angles in the geometry. First try if a cosine potential
+            of the form 0.5*K*[1 - cos(m(psi-psi0))] works well with m=2,3 and
+            psi0 = 0,pi/m. Else use a term harmonic in cos(psi).
+        '''
+        maxlength = max([len(icname) for icname in self.system.ics.keys()]) + 2
+        deleted_diheds = []
+        for icname, ics in self.system.ics.iteritems():
+            if not icname.startswith('dihed'):
+                continue
+            ms = []
+            rvs = []
+            descr = icname + ' '*(maxlength-len(icname))
+            for ic in ics:
+                psi0 = abs(ic.value(self.system.ref.coords))
+                n1 = len(self.system.nlist[ic.indexes[1]])
+                n2 = len(self.system.nlist[ic.indexes[2]])
+                if psi0>=0 and psi0<=max([marge2,marge3]):
+                    if 4 in [n1, n2]: #use m=3 if at least one of the central atoms has 4 neighbors
+                        ms.append(3)
+                        rvs.append(0.0)
+                    elif 3 in [n1, n2]: #use m=2 if at least one of the central atoms has 3 neighbors
+                        ms.append(2)
+                        rvs.append(0.0)
+                    else: #use m=1 else (system has exactly 4 atoms)
+                        ms.append(1)
+                        rvs.append(0.0)
+                elif psi0>=60*deg-marge3 and psi0<=60*deg+marge3:
+                    ms.append(3)
+                    rvs.append(60.0*deg)
+                elif psi0>=90*deg-marge2 and psi0<=90*deg+marge2:
+                    ms.append(2)
+                    rvs.append(90.0*deg)
+                elif psi0>=120*deg-marge3 and psi0<=120*deg+marge3:
+                    ms.append(3)
+                    rvs.append(0.0*deg)
+                elif psi0>=180*deg-marge2 and psi0<=180*deg+marge2:
+                    if 4 in [n1, n2]: #use m=3 if at least one of the central atoms has 4 neighbors
+                        ms.append(3)
+                        rvs.append(60.0*deg)
+                    elif 3 in [n1, n2]: #use m=2 if at least one of the central atoms has 3 neighbors
+                        ms.append(2)
+                        rvs.append(0.0)
+                    else: #use m=1 else (system has exactly 4 atoms)
+                        ms.append(1)
+                        rvs.append(180.0*deg)
+                else:
+                    ms.append(-1)
+                    rvs.append(np.cos(psi0))
+            m = DataArray(ms, unit='au')
+            if m.mean==-1 or m.std>0.0:
+                print '    %s   WARNING: could not determine clear trent in dihedral angles, dihedral is ignored in force field !!!' %descr
+                deleted_diheds.append(icname)
+            else:
+                rv = DataArray(rvs, unit='deg')
+                print '    %s   0.5*K*[1 - cos(%i(psi - psi0))]    psi0 = %s' %(descr, m.mean, rv.string())
+                for i, ic in enumerate(ics):
+                    ic.icf = dihed_angle
+                    ic.qunit = 'deg'
+                    self.model.val.vterms[icname][i] = CosineTerm(ic, self.system.ref.coords, 0.0, rv.mean, m.mean)
+        for icname in deleted_diheds:
+            del self.system.ics[icname]
+            del self.model.val.vterms[icname]
+
+
+    def refine_cost(self, fixed=[]):
         '''
             Second Step: refine the force constants using a Hessian least
                          squares cost function.
-
-            **Optional Arguments**
-
-            tol
-                a float defining the convergence tolerence on the force
-                constants.
         '''
-        fcs = self.cost.estimate(tol)
+        fcs = self.cost.estimate(fixed=fixed)
         self.model.val.update_fcs(fcs)
-        ff = self.model.val.get_fftable()
-        ff.print_screen()
-        return ff
+        self.model.val.get_fftable().print_screen()
 
     def run(self):
-        print 'System information:'
-        print
+        print 'System information:\n'
         self.system.print_atom_info()
-        print
-        print 'Estimating ff pars from perturbation trajectories'
-        print
-        fftab1 = self.estimate_pt()
-        print
-        print 'Refining force constants using a Hessian LSQ cost'
-        print
-        fftab2 = self.refine_cost()
-        return fftab2
+        print '\nDetermine dihedral potentials\n'
+        self.determine_dihedral_potentials()
+        print '\nEstimating ff pars from perturbation trajectories for bonds, bends and opdists\n'
+        self.estimate_from_pt(skip_dihedrals=True)
+        print '\nRefining force constants using a Hessian LSQ cost\n'
+        self.refine_cost(fixed=[])
+        return self.model.val.get_fftable()
 
     def plot_pt(self, icname):
         '''

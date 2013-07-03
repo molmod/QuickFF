@@ -38,7 +38,7 @@ class DataArray(object):
         if self.num==0:
             return ''
         else:
-            s = u'%9.3f \u00B1 %6.3f ' %(self.mean/parse_unit(self.unit), self.std/parse_unit(self.unit)) + self.unit + ' '*(15-len(self.unit))
+            s = u'%9.3f \u00B1 %9.3f ' %(self.mean/parse_unit(self.unit), self.std/parse_unit(self.unit)) + self.unit + ' '*(15-len(self.unit))
             return s.encode('utf-8')
 
 
@@ -112,19 +112,30 @@ class FFTable(object):
                     'deg', q0/deg
                 )
             elif kind=='dihed':
-                m = self.pars[icname]['m'].mean
-                name = 'dihed/%s/cos-m%i-0/dihed/K' %(atypes,m)
-                print >> f, '  %50s %12s % 12.6f #  free' %(
-                    name + ' '*(50-len(name)),
-                    'kjmol', k/kjmol
-                )
-            elif kind=='opbend':
-                name = 'opbend/%s/harm/opdist/K' %atypes
+                if 'm' in self.pars[icname].keys():
+                    m = self.pars[icname]['m'].mean
+                    name = 'dihed/%s/cos-m%i-0/dihed/K' %(atypes,m)
+                    print >> f, '  %50s %12s % 12.6f #  free' %(
+                        name + ' '*(50-len(name)),
+                        'kjmol', k/kjmol
+                    )
+                else:
+                    name = 'dihed/%s/harm/cdihed' %(atypes)
+                    print >> f, '  %50s %12s % 12.6f #  free' %(
+                        name+'/K' + ' '*(48-len(name)),
+                        'kjmol', k/kjmol
+                    )
+                    print >> f, '  %50s %12s % 12.6f #  free' %(
+                        name+'/q0' + ' '*(47-len(name)),
+                        'au', q0
+                    )
+            elif kind=='opdist':
+                name = 'opdist/%s/harm/opdist/K' %atypes
                 print >>f, '  %50s %12s % 12.6f #  free' %(
                      name + ' '*(50-len(name)),
                     'kjmol/A^2', k/(kjmol/angstrom**2)
                 )
-                name = 'opbend/%s/harm/opdist/q0' %atypes
+                name = 'opdist/%s/harm/opdist/q0' %atypes
                 print >> f, '  %50s %12s % 12.6f #  free' %(
                      name + ' '*(50-len(name)),
                     'A', q0/angstrom
@@ -185,24 +196,33 @@ class FFTable(object):
         print >> f, '# ==============='
         print >> f, ''
         print >> f, '# The following mathemetical for is supported:'
-        print >> f, '#  - TORSION: 0.5*A*(1-COS(M*(PHI-PHI0)))'
+        print >> f, '#  - TORSION:   0.5*A*(1-COS(M*(PHI-PHI0)))'
+        print >> f, '#  - TORSCHARM: 0.5*A*(COS(PHI)-COS0)**2'
         print >> f, ''
         print >> f, '# The actual parameters and their units may depend on the kind.'
         print >> f, 'TORSION:UNIT A kjmol'
         print >> f, 'TORSION:UNIT PHI0 deg'
+        print >> f, 'TORSCHARM:UNIT A kjmol'
+        print >> f, 'TORSCHARM:UNIT COS0 au'
         print >> f, ''
         print >> f, '# -------------------------------------------------------------------------------------'
-        print >> f, '# KEY        ffatype0 ffatype1 ffatype2 ffatype4  M  A                 PHI0'
+        print >> f, '# KEY          ffatype0 ffatype1 ffatype2 ffatype4  M  A                 PHI0/COS0'
         print >> f, '# -------------------------------------------------------------------------------------'
         for icname in sorted(self.pars.keys()):
             if not icname.startswith('dihed'): continue
             atypes = icname.split('/')[1].split('.')
             k, q0 = self[icname]
-            m = self.pars[icname]['m'].mean
-            print >> f, 'TORSION:PARS %8s %8s %8s %8s %2i % .10e % .10e' %(
-                atypes[0], atypes[1], atypes[2], atypes[3],
-                m, k/kjmol, q0/deg
-            )
+            if 'm' in self.pars[icname].keys():
+                m = self.pars[icname]['m'].mean
+                print >> f, 'TORSION:PARS   %8s %8s %8s %8s %2i % .10e % .10e' %(
+                    atypes[0], atypes[1], atypes[2], atypes[3],
+                    m, k/kjmol, q0/deg
+                )
+            else:
+                print >> f, 'TORSCHARM:PARS %8s %8s %8s %8s    % .10e % .10e' %(
+                    atypes[0], atypes[1], atypes[2], atypes[3],
+                    k/kjmol, q0
+                )
         print >> f, ''
         print >> f, '# Out-of-plane terms'
         print >> f, '# ==============='
@@ -218,7 +238,7 @@ class FFTable(object):
         print >> f, '# KEY        ffatype0 ffatype1 ffatype2 ffatype4  K                 D0'
         print >> f, '# -------------------------------------------------------------------------------------'
         for icname in sorted(self.pars.keys()):
-            if not icname.startswith('opbend'): continue
+            if not icname.startswith('opdist'): continue
             atypes = icname.split('/')[1].split('.')
             k, q0 = self[icname]
             print >> f, 'OOPDIST:PARS %8s %8s %8s %8s % .10e % .10e' %(

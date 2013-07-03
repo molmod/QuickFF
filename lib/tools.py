@@ -7,7 +7,7 @@ from molmod.molecular_graphs import HasNumNeighbors
 __all__ = [
     'global_translation', 'global_rotation', 'calc_angles', 'statistics',
     'fitpar', 'has_15_bonded', 'get_atoms_within_3bonds', 'matrix_squared_sum',
-    'find_dihed_patterns', 'find_opbend_patterns',
+    'find_dihed_patterns', 'find_opdist_patterns',
 ]
 
 def global_translation(coords):
@@ -148,19 +148,19 @@ def find_dihed_patterns(graph):
                     diheds.append([i, atom1, atom2, j])
     return diheds
 
-def find_opbend_patterns(graph):
+def find_opdist_patterns(graph):
     '''
         Find patterns of 4 atoms where 3 border atoms are bonded to the same central atom.
         The central atom cannot have any other neighbor except for these 3 border atoms.
     '''
-    opbends = []
+    opdists = []
     for atom in xrange(len(graph.numbers)):
         if HasNumNeighbors(3)(atom, graph):
             neighs = tuple(graph.neighbors[atom])
-            opbends.append([neighs[0], neighs[1], neighs[2], atom])
-    return opbends
+            opdists.append([neighs[0], neighs[1], neighs[2], atom])
+    return opdists
 
-def dihedral_round(psi, m, verbose=False):
+def dihedral_round(psi, m, verbose=True):
     '''
         Take absolute value of psi and then round to zero or pi/m
     '''
