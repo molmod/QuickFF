@@ -57,7 +57,7 @@ class System(object):
                 the center atom.
 
            nlist
-                A dictionnairy containing the neighbors for every every atom.
+                A dictionnairy containing the neighbors for every atom.
         '''
         self.numbers = numbers
         self.ffatypes = ffatypes
@@ -143,7 +143,7 @@ class System(object):
             elif extension in ['txt']:
                 from hipart.io import load_atom_scalars
                 charges = load_atom_scalars(fn)
-        #Finalise topology and estimate atom types if necessary
+        #Set charges to zero if they are not defined
         if charges is None:
             charges = np.zeros(len(numbers), float)
         return cls(numbers, ffatypes, charges, ref, bonds, bends, diheds, opdists, nlist)

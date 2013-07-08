@@ -84,7 +84,7 @@ class HessianFCCost(object):
     def estimate(self, fixed=[]):
         '''
             Estimate the force constants by minimizing the cost function
-            
+
             **Arguments*
 
             fixed
