@@ -6,19 +6,21 @@ from molmod.molecular_graphs import MolecularGraph
 from molmod.io.chk import load_chk, dump_chk
 from molmod.io.fchk import FCHKFile
 from molmod.io.psf import PSFFile
-from molmod.units import *
-from molmod.ic import *
+from molmod.units import deg
+from molmod.ic import bond_length, bend_angle, dihed_angle, opbend_dist
 
 import numpy as np
 
-from refdata import ReferenceData
-from ic import IC
-from tools import find_dihed_patterns, find_opdist_patterns
+from quickff.refdata import ReferenceData
+from quickff.ic import IC
+from quickff.tools import find_opdist_patterns
 
 __all__ = ['System']
 
 class System(object):
-    def __init__(self, numbers, ffatypes, charges, ref, bonds, bends, diheds, opdists, nlist):
+    "A class for storing all system properties"
+    def __init__(self, numbers, ffatypes, charges, ref, bonds, bends, diheds, 
+                 opdists, nlist):
         '''
            **Arguments:**
 
@@ -70,8 +72,10 @@ class System(object):
         self.ref = ref
         self.ref.check()
         self.check_topology()
+        self.ics = {}
 
     def _get_natoms(self):
+        'Get the number of atoms in the system'
         return len(self.numbers)
 
     natoms = property(_get_natoms)
@@ -135,13 +139,13 @@ class System(object):
                     elif key in ['hessian', 'hess']:
                         ref.update(hess=value)
                     else:
-                        print 'WARNING: Skipped key %s in sample %s' %(key, fn)
+                        print 'WARNING: Skipped key %s in sample %s' % (key, fn)
             elif extension in ['fchk']:
                 fchk = FCHKFile(fn)
                 numbers = fchk.fields.get('Atomic numbers')
-                ref.update(coords=fchk.fields.get('Current cartesian coordinates').reshape([len(numbers),3]))
-                ref.update(grad=fchk.fields.get('Cartesian Gradient').reshape([len(numbers),3]))
-                ref.update(hess=fchk.get_hessian().reshape([len(numbers),3, len(numbers),3]))
+                ref.update(coords=fchk.fields.get('Current cartesian coordinates').reshape([len(numbers), 3]))
+                ref.update(grad=fchk.fields.get('Cartesian Gradient').reshape([len(numbers), 3]))
+                ref.update(hess=fchk.get_hessian().reshape([len(numbers), 3, len(numbers), 3]))
             elif extension in ['psf']:
                 psf = PSFFile(fn)
                 numbers = np.array(psf.numbers)
@@ -156,11 +160,12 @@ class System(object):
             elif extension in ['h5']:
                 import h5py
                 f = h5py.File(fn, 'r')
-                charges = f['wpart/%s/charges' %charge_scheme][:]
+                charges = f['wpart/%s/charges' % charge_scheme][:]
         #Set charges to zero if they are not defined
         if charges is None:
             charges = np.zeros(len(numbers), float)
-        return cls(numbers, ffatypes, charges, ref, bonds, bends, diheds, opdists, nlist)
+        return cls(numbers, ffatypes, charges, ref, bonds, bends, diheds, 
+                   opdists, nlist)
 
     def check_topology(self):
         '''
@@ -200,40 +205,49 @@ class System(object):
            **Arguments:**
 
            level
-                A string used for guessing atom types based on atomic
-                number (low), local topology (medium) or atomic index
-                in the molecule (high).
+                A string used for guessing atom types:
+                    low     - based on atomic number
+                    medium  - based on atomic number and number of neighbors
+                    high    - based on atomic number, number of neighbors and 
+                              atomic number of neighbors
+                    highest - based on index in the molecule
         '''
-        if level=='low':
+        if level == 'low':
             return np.array([pt[number].symbol for number in self.numbers])
-        elif level=='medium':
+        elif level == 'medium':
             atypes = []
             for index, number in enumerate(self.numbers):
                 nind = self.nlist[index]
                 sym = pt[self.numbers[index]].symbol.upper()
-                atype = '%s%i' %(sym, len(nind))
+                atype = '%s%i' % (sym, len(nind))
                 atypes.append(atype)
-        elif level=='high':
+        elif level == 'high':
             atypes = []
             for index, number in enumerate(self.numbers):
                 nind = self.nlist[index]
-                nsym = sorted([ pt[self.numbers[neighbor]].symbol.lower() for neighbor in nind ])
+                nsym = sorted([ 
+                    pt[self.numbers[neigh]].symbol.lower() for neigh in nind 
+                ])
                 sym = pt[self.numbers[index]].symbol.upper()
-                if   len(nsym)==1: atype = '%s1_%s' %(sym, nsym[0])
-                elif len(nsym)==2: atype = '%s2_%s%s' %(sym, nsym[0], nsym[1])
+                if len(nsym)==1:
+                    atype = '%s1_%s' % (sym, nsym[0])
+                elif len(nsym)==2:
+                    atype = '%s2_%s%s' % (sym, nsym[0], nsym[1])
                 else:
-                    atype = '%s%i' %(sym, len(nind))
-                    num_c = sum([1.0 for sym in nsym if sym=='c'])
-                    num_n = sum([1.0 for sym in nsym if sym=='n'])
-                    num_o = sum([1.0 for sym in nsym if sym=='o'])
-                    if num_c>0: atype += '_c%i' %num_c
-                    if num_n>0: atype += '_n%i' %num_n
-                    if num_o>0: atype += '_o%i' %num_o
+                    atype = '%s%i' % (sym, len(nind))
+                    num_c = sum([1.0 for sym in nsym if sym == 'c'])
+                    num_n = sum([1.0 for sym in nsym if sym == 'n'])
+                    num_o = sum([1.0 for sym in nsym if sym == 'o'])
+                    if num_c > 0: atype += '_c%i' % num_c
+                    if num_n > 0: atype += '_n%i' % num_n
+                    if num_o > 0: atype += '_o%i' % num_o
                 atypes.append(atype)
-        elif level=='highest':
-            return np.array(['%s%i' %(pt[n].symbol, i) for i, n in enumerate(self.numbers)])
+        elif level == 'highest':
+            return np.array([
+                '%s%i' % (pt[n].symbol, i) for i, n in enumerate(self.numbers)
+            ])
         else:
-            raise ValueError('Invalid level, recieved %s' %level)
+            raise ValueError('Invalid level, recieved %s' % level)
         self.ffatypes = np.array(atypes)
         self.average_charges_ffatypes()
 
@@ -255,22 +269,29 @@ class System(object):
         '''
         self.ics = {}
         def sort_ffatypes(ffatypes, kind=''):
-            if kind=='':
-                if ffatypes[0]<=ffatypes[-1]:
+            if kind == '':
+                if ffatypes[0] <= ffatypes[-1]:
                     return ffatypes
                 else:
                     return ffatypes[::-1]
-            elif kind=='opdist':
+            elif kind == 'opdist':
                 result = sorted(ffatypes[:3])
                 result.append(ffatypes[3])
                 return result
         #Find bonds
         number = {}
         for bond in self.bonds:
-            name = 'bond/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in bond]))
-            if name not in number.keys(): number[name] = 0
-            else: number[name] += 1
-            ic = IC(name+str(number[name]), bond, bond_length, qunit='A', kunit='kjmol/A**2')
+            name = 'bond/'+'.'.join(sort_ffatypes(
+                [self.ffatypes[at] for at in bond]
+            ))
+            if name not in number.keys():
+                number[name] = 0
+            else:
+                number[name] += 1
+            ic = IC(
+                name+str(number[name]), bond, bond_length, 
+                qunit='A', kunit='kjmol/A**2'
+            )
             if name in self.ics.keys():
                 self.ics[name].append(ic)
             else:
@@ -278,10 +299,17 @@ class System(object):
         #Find bends
         number = {}
         for bend in self.bends:
-            name = 'angle/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in bend]))
-            if name not in number.keys(): number[name] = 0
-            else: number[name] += 1
-            ic = IC(name+str(number[name]), bend, bend_angle, qunit='deg', kunit='kjmol/rad**2')
+            name = 'angle/'+'.'.join(sort_ffatypes(
+                [self.ffatypes[at] for at in bend]
+            ))
+            if name not in number.keys():
+                number[name] = 0
+            else:
+                number[name] += 1
+            ic = IC(
+                name+str(number[name]), bend, bend_angle, 
+                qunit='deg', kunit='kjmol/rad**2'
+            )
             if name in self.ics.keys():
                 self.ics[name].append(ic)
             else:
@@ -289,29 +317,43 @@ class System(object):
         #Find dihedrals
         number = {}
         for dihed in self.diheds:
-            if bend_angle(np.array([self.ref.coords[i] for i in dihed[0:3]]), deriv=0)[0]>175*deg \
-            or bend_angle(np.array([self.ref.coords[i] for i in dihed[1:4]]), deriv=0)[0]>175*deg:
+            #if bend_angle(np.array([self.ref.coords[i] for i in dihed[0:3]]), deriv=0)[0]>175*deg \
+            #or bend_angle(np.array([self.ref.coords[i] for i in dihed[1:4]]), deriv=0)[0]>175*deg:
+            if bend_angle(self.ref.coords[dihed[0:3]], deriv=0)[0] > 175*deg \
+            or bend_angle(self.ref.coords[dihed[1:4]], deriv=0)[0] > 175*deg:
                 continue
-            name = 'dihed/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in dihed]))
-            if name not in number.keys(): number[name] = 0
-            else: number[name] += 1
-            #ic function is temporary set to dihed_angle, it can change when determining
-            #the dihedral potential
-            ic = IC(name+str(number[name]), dihed, dihed_angle, qunit='deg', kunit='kjmol')
+            name = 'dihed/'+'.'.join(sort_ffatypes(
+                [self.ffatypes[at] for at in dihed]
+            ))
+            if name not in number.keys():
+                number[name] = 0
+            else:
+                number[name] += 1
+            ic = IC(
+                name+str(number[name]), dihed, dihed_angle, 
+                qunit='deg', kunit='kjmol'
+            )
             if name in self.ics.keys():
                 self.ics[name].append(ic)
             else:
                 self.ics[name] = [ic]
-        #Find opdists
+        #Find out-of-plane distances
         number = {}
         for opdist in self.opdists:
-            if bend_angle(np.array([self.ref.coords[i] for i in opdist[0:3]]), deriv=0)[0]>175*deg \
-            or bend_angle(np.array([self.ref.coords[i] for i in opdist[0:3]]), deriv=0)[0]<5*deg:
+            #if bend_angle(np.array([self.ref.coords[i] for i in opdist[0:3]]), deriv=0)[0]>175*deg \
+            #or bend_angle(np.array([self.ref.coords[i] for i in opdist[0:3]]), deriv=0)[0]<5*deg:
+            if bend_angle(self.ref.coords[opdist[0:3]], deriv=0)[0] > 175*deg \
+            or bend_angle(self.ref.coords[opdist[0:3]], deriv=0)[0] < 5*deg:
                 continue
-            name = 'opdist/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in opdist], kind='opdist'))
+            name = 'opdist/'+'.'.join(sort_ffatypes(
+                [self.ffatypes[at] for at in opdist], kind='opdist'
+            ))
             if name not in number.keys(): number[name] = 0
             else: number[name] += 1
-            ic = IC(name+str(number[name]), opdist, opbend_dist, qunit='A', kunit='kjmol/A**2')
+            ic = IC(
+                name+str(number[name]), opdist, opbend_dist,
+                qunit='A', kunit='kjmol/A**2'
+            )
             if name in self.ics.keys():
                 self.ics[name].append(ic)
             else:
@@ -330,63 +372,89 @@ class System(object):
                 A list containing the names of ics. Format of icnames is:
                 kind/atype1.atype2...atypeN with kind=bond, bend or dihed
         '''
-        self.ics = {}
         for icname in icnames:
             match = []
             atypes = icname.split('/')[1].split('.')
             ickind = icname.split('/')[0]
             if ickind in ['bond']:
-                assert len(atypes)==2
+                assert len(atypes) == 2
                 for bond in self.bonds:
-                    if (self.ffatypes[bond]==atypes).all() or (self.ffatypes[bond]==atypes[::-1]).all():
-                        match.append(IC(icname+str(len(match)), bond, bond_length, qunit='A', kunit='kjmol/A**2'))
+                    if (self.ffatypes[bond] == atypes).all() \
+                    or (self.ffatypes[bond] == atypes[::-1]).all():
+                        match.append(IC(
+                            icname+str(len(match)), bond, bond_length, 
+                            qunit='A', kunit='kjmol/A**2'
+                        ))
             elif ickind in ['angle']:
-                assert len(atypes)==3
+                assert len(atypes) == 3
                 for bend in self.bends:
-                    if (self.ffatypes[bend]==atypes).all() or (self.ffatypes[bend]==atypes[::-1]).all():
-                        match.append(IC(icname+str(len(match)), bend, bend_angle, qunit='deg', kunit='kjmol/rad**2'))
+                    if (self.ffatypes[bend] == atypes).all() \
+                    or (self.ffatypes[bend] == atypes[::-1]).all():
+                        match.append(IC(
+                            icname+str(len(match)), bend, bend_angle,
+                            qunit='deg', kunit='kjmol/rad**2'
+                        ))
             elif ickind in ['dihed']:
-                assert len(atypes)==4
-                for dihed in self.dihedrals:
-                    if (self.ffatypes[dihed]==atypes).all() or (self.ffatypes[dihed]==atypes[::-1]).all():
-                        match.append(IC(icname+str(len(match)), dihed, dihed_angle, qunit='deg', kunit='kjmol'))
+                assert len(atypes) == 4
+                for dihed in self.diheds:
+                    if (self.ffatypes[dihed] == atypes).all() \
+                    or (self.ffatypes[dihed] == atypes[::-1]).all():
+                        match.append(IC(
+                            icname+str(len(match)), dihed, dihed_angle,
+                            qunit='deg', kunit='kjmol'
+                        ))
             elif ickind in ['opdist']:
-                assert len(atypes)==4
+                assert len(atypes) == 4
                 for opdist in self.opdists:
-                    if self.ffatypes[opdist[3]]==atypes[3] and set(self.ffatypes[opdist[:3]])==set(atypes[:3]):
-                        match.append(IC(icname+str(len(match)), opdist, opbend_dist, qunit='A', kunit='kjmol/A**2'))
+                    if self.ffatypes[opdist[3]] == atypes[3] \
+                    and set(self.ffatypes[opdist[:3]]) == set(atypes[:3]):
+                        match.append(IC(
+                            icname+str(len(match)), opdist, opbend_dist,
+                            qunit='A', kunit='kjmol/A**2'
+                        ))
             else:
-                raise ValueError('Invalid icname, recieved %s' %icname)
+                raise ValueError('Invalid icname, recieved %s' % icname)
             if len(match)==0:
-                raise ValueError('Found no match for icname %s' %icname)
+                raise ValueError('Found no match for icname %s' % icname)
             self.ics[icname] = match
 
     def print_atom_info(self):
+        'Print information about the atoms in the system to the screen'
         print '    -----------------------------------------'
         print '      index   symbol   ffatype       charge  '
         print '    -----------------------------------------'
-        for index, (number, ffatype, charge) in enumerate(zip(self.numbers, self.ffatypes, self.charges)):
+        for index, (number, ffatype, charge) \
+        in enumerate(zip(self.numbers, self.ffatypes, self.charges)):
             index_fmt   = str(index)        + ' '*(5 - len(str(index)))
             symbol_fmt  = pt[number].symbol + ' '*(6 - len(pt[number].symbol))
             ffatype_fmt = ffatype           + ' '*(10 - len(ffatype))
-            print '      %s   %s   %s    % 6.3f' %(index_fmt, symbol_fmt, ffatype_fmt, charge)
+            print '      %s   %s   %s    % 6.3f' % (
+                index_fmt, symbol_fmt, ffatype_fmt, charge
+            )
         print '    -----------------------------------------'
 
     def print_ic_info(self):
+        '''
+            Print information about internal coordinate in the system 
+            to the screen
+        '''
         print '    -----------------------------------------------------'
         print '                            icname     indices           '
         print '    -----------------------------------------------------'
         for icname, ics in self.ics.iteritems():
             for ic in ics:
-                print '    %30s    ' %icname + ' '.join(['%3i' %index for index in ic.indexes])
+                print '    %30s    ' % icname + ' '.join(
+                    ['%3i' % index for index in ic.indexes]
+                )
         print '    -----------------------------------------------------'
 
     def dump(self, fn):
+        'Dump system to a MolMod checkpoint file.'
         sample = {}
         sample['numbers']   = self.numbers
         sample['charges']   = self.charges
         sample['ffatypes']  = self.ffatypes
-        sample['masses']    = np.array([pt[number].mass for number in self.numbers])
+        sample['masses']    = np.array([pt[Z].mass for Z in self.numbers])
         sample['bonds']     = self.bonds
         sample['bends']     = self.bends
         sample['dihedrals'] = self.diheds
@@ -395,21 +463,22 @@ class System(object):
         dump_chk(fn, sample)
 
     def dump_charges_yaff(self, fn, eirule, mode='w'):
-        if eirule==-1:
+        'Write or append charges to a file in Yaff format.'
+        if eirule == -1:
             return
-        elif eirule==0:
+        elif eirule == 0:
             scale1 = 1.0
             scale2 = 1.0
             scale3 = 1.0
-        elif eirule==1:
+        elif eirule == 1:
             scale1 = 0.0
             scale2 = 1.0
             scale3 = 1.0
-        elif eirule==2:
+        elif eirule == 2:
             scale1 = 0.0
             scale2 = 0.0
             scale3 = 1.0
-        elif eirule==3:
+        elif eirule == 3:
             scale1 = 0.0
             scale2 = 0.0
             scale3 = 0.0
@@ -430,9 +499,9 @@ class System(object):
         print >> f, 'FIXQ:UNIT Q0 e'
         print >> f, 'FIXQ:UNIT P e'
         print >> f, 'FIXQ:UNIT R angstrom'
-        print >> f, 'FIXQ:SCALE 1 %3.1f' %scale1
-        print >> f, 'FIXQ:SCALE 2 %3.1f' %scale2
-        print >> f, 'FIXQ:SCALE 3 %3.1f' %scale3
+        print >> f, 'FIXQ:SCALE 1 %3.1f' % scale1
+        print >> f, 'FIXQ:SCALE 2 %3.1f' % scale2
+        print >> f, 'FIXQ:SCALE 3 %3.1f' % scale3
         print >> f, 'FIXQ:DIELECTRIC 1.0'
         print >> f, ''
         print >> f, '# Atomic parameters'
@@ -440,8 +509,8 @@ class System(object):
         print >> f, '# KEY        label  Q_0A              R_A'
         print >> f, '# ----------------------------------------------------'
         added = []
-        for atype, charge in zip(self.ffatypes, self.charges):
+        for atype, q in zip(self.ffatypes, self.charges):
             if atype not in added:
-                print >> f, 'FIXQ:ATOM %8s % .10f  0.0000000000e+00' %(atype, charge)
+                print >> f, 'FIXQ:ATOM %8s % .10f  0.0000000000e+00' % (atype, q)
                 added.append(atype)
         f.close()

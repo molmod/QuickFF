@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
-from molmod.units import *
+from molmod.units import deg, angstrom, kjmol, parse_unit, rad
 import numpy as np
 
-from tools import statistics
+from quickff.tools import statistics
 
 
 __all__ = ['DataArray', 'FFTable']
@@ -24,6 +24,7 @@ class DataArray(object):
         self.mean, self.std, self.num = statistics(self.data)
 
     def append(self, value):
+        'Add value to array and update statistics'
         if self.data is None:
             self.data = np.array([value])
         else:
@@ -32,13 +33,19 @@ class DataArray(object):
         self.mean, self.std, self.num = statistics(self.data)
 
     def __len__(self):
+        'Get the number of elements in the array'
         return len(self.data)
 
     def string(self):
-        if self.num==0:
+        'Convert the statistics of the array into a human readable string'
+        if self.num == 0:
             return ''
         else:
-            s = u'%9.3f \u00B1 %9.3f ' %(self.mean/parse_unit(self.unit), self.std/parse_unit(self.unit)) + self.unit + ' '*(15-len(self.unit))
+            s = u'%9.3f \u00B1 %9.3f ' % (
+                self.mean/parse_unit(self.unit),
+                self.std/parse_unit(self.unit)) + \
+                self.unit + ' '*(15-len(self.unit)
+            )
             return s.encode('utf-8')
 
 
@@ -61,6 +68,7 @@ class FFTable(object):
         self.pars = {}
 
     def add(self, icname, ks, q0s, **kwargs):
+        'Add force field parameters for ic with name icname'
         assert isinstance(ks, DataArray)
         assert isinstance(q0s, DataArray)
         self.pars[icname] = {'k': ks, 'q0': q0s}
@@ -68,19 +76,24 @@ class FFTable(object):
             assert isinstance(data, DataArray)
             self.pars[icname][kw] = data
 
-    def __getitem__(self, key):
-        k  = self.pars[key]['k'].mean
-        q0 = self.pars[key]['q0'].mean
+    def __getitem__(self, icname):
+        'Get the mean force constant and restvalue of ic with name icname'
+        k  = self.pars[icname]['k'].mean
+        q0 = self.pars[icname]['q0'].mean
         return k, q0
 
     def print_screen(self):
+        'Print force field parameters of all ics to a human readable table'
         maxlength = max([len(icname) for icname in self.pars.keys()]) + 2
         for icname, pars in sorted(self.pars.iteritems()):
             descr = icname + ' '*(maxlength-len(icname))
-            print '    %s   K = %s    q0 = %s' %(descr, pars['k'].string(), pars['q0'].string())
+            print '    %s   K = %s    q0 = %s' % (
+                descr, pars['k'].string(), pars['q0'].string()
+            )
 
     def dump_ffit2(self, fn, mode='w'):
-        f = open(fn, 'w')
+        'Dump force field parameters to a file in FFit2 format'
+        f = open(fn, mode)
         print >> f, '# Parameters'
         print >> f, '# -----------------------------------------------------------------------------#------'
         print >> f, '# longname                                                   unit        value # fx/fr'
@@ -89,54 +102,54 @@ class FFTable(object):
             kind = icname.split('/')[0]
             atypes = icname.split('/')[1]
             k, q0 = self[icname]
-            if kind=='bond':
-                name = 'bond/%s/harm/dist/K' %atypes
-                print >>f, '  %50s %12s % 12.6f #  free' %(
+            if kind == 'bond':
+                name = 'bond/%s/harm/dist/K' % atypes
+                print >> f, '  %50s %12s % 12.6f #  free' % (
                      name + ' '*(50-len(name)),
                     'kjmol/A^2', k/(kjmol/angstrom**2)
                 )
-                name = 'bond/%s/harm/dist/q0' %atypes
-                print >> f, '  %50s %12s % 12.6f #  free' %(
+                name = 'bond/%s/harm/dist/q0' % atypes
+                print >> f, '  %50s %12s % 12.6f #  free' % (
                      name + ' '*(50-len(name)),
                     'A', q0/angstrom
                 )
-            elif kind=='angle':
-                name = 'angle/%s/harm/angle/K' %atypes
-                print >> f, '  %50s %12s % 12.6f #  free' %(
+            elif kind == 'angle':
+                name = 'angle/%s/harm/angle/K' % atypes
+                print >> f, '  %50s %12s % 12.6f #  free' % (
                     name + ' '*(50-len(name)),
                     'kjmol/rad^2', k/(kjmol/rad**2)
                 )
-                name = 'angle/%s/harm/angle/q0' %atypes
-                print >> f, '  %50s %12s % 12.6f #  free' %(
+                name = 'angle/%s/harm/angle/q0' % atypes
+                print >> f, '  %50s %12s % 12.6f #  free' % (
                     name + ' '*(50-len(name)),
                     'deg', q0/deg
                 )
-            elif kind=='dihed':
+            elif kind == 'dihed':
                 if 'm' in self.pars[icname].keys():
                     m = self.pars[icname]['m'].mean
-                    name = 'dihed/%s/cos-m%i-0/dihed/K' %(atypes,m)
-                    print >> f, '  %50s %12s % 12.6f #  free' %(
+                    name = 'dihed/%s/cos-m%i-0/dihed/K' % (atypes, m)
+                    print >> f, '  %50s %12s % 12.6f #  free' % (
                         name + ' '*(50-len(name)),
                         'kjmol', k/kjmol
                     )
                 else:
-                    name = 'dihed/%s/harm/cdihed' %(atypes)
-                    print >> f, '  %50s %12s % 12.6f #  free' %(
+                    name = 'dihed/%s/harm/cdihed' % (atypes)
+                    print >> f, '  %50s %12s % 12.6f #  free' % (
                         name+'/K' + ' '*(48-len(name)),
                         'kjmol', k/kjmol
                     )
-                    print >> f, '  %50s %12s % 12.6f #  free' %(
+                    print >> f, '  %50s %12s % 12.6f #  free' % (
                         name+'/q0' + ' '*(47-len(name)),
                         'au', q0
                     )
-            elif kind=='opdist':
-                name = 'opdist/%s/harm/opdist/K' %atypes
-                print >>f, '  %50s %12s % 12.6f #  free' %(
+            elif kind == 'opdist':
+                name = 'opdist/%s/harm/opdist/K' % atypes
+                print >> f, '  %50s %12s % 12.6f #  free' % (
                      name + ' '*(50-len(name)),
                     'kjmol/A^2', k/(kjmol/angstrom**2)
                 )
-                name = 'opdist/%s/harm/opdist/q0' %atypes
-                print >> f, '  %50s %12s % 12.6f #  free' %(
+                name = 'opdist/%s/harm/opdist/q0' % atypes
+                print >> f, '  %50s %12s % 12.6f #  free' % (
                      name + ' '*(50-len(name)),
                     'A', q0/angstrom
                 )
@@ -144,6 +157,7 @@ class FFTable(object):
         f.close()
 
     def dump_yaff(self, fn, mode='w'):
+        'Dump force field parameters to a file in Yaff format'
         f = open(fn, mode)
         print >> f, '# Bond stretch'
         print >> f, '# ============'
@@ -163,7 +177,7 @@ class FFTable(object):
             if not icname.startswith('bond'): continue
             atypes = icname.split('/')[1].split('.')
             k, q0 = self[icname]
-            print >> f, 'BONDHARM:PARS %8s %8s % .10e % .10e' %(
+            print >> f, 'BONDHARM:PARS %8s %8s % .10e % .10e' % (
                 atypes[0], atypes[1], k/(kjmol/angstrom**2), q0/angstrom
             )
         print >> f, ''
@@ -188,8 +202,9 @@ class FFTable(object):
             if not icname.startswith('angle'): continue
             atypes = icname.split('/')[1].split('.')
             k, q0 = self[icname]
-            if q0>180.0*deg: q0 = 2*np.pi - q0
-            print >> f, 'BENDAHARM:PARS %8s %8s %8s % .10e % .10e' %(
+            if q0 > 180.0*deg:
+                q0 = 2*np.pi - q0
+            print >> f, 'BENDAHARM:PARS %8s %8s %8s % .10e % .10e' % (
                 atypes[0], atypes[1], atypes[2], k/(kjmol/rad**2), q0/deg
             )
         print >> f, ''
@@ -215,12 +230,12 @@ class FFTable(object):
             k, q0 = self[icname]
             if 'm' in self.pars[icname].keys():
                 m = self.pars[icname]['m'].mean
-                print >> f, 'TORSION:PARS   %8s %8s %8s %8s %2i % .10e % .10e' %(
+                print >> f, 'TORSION:PARS   %8s %8s %8s %8s %2i % .10e % .10e' % (
                     atypes[0], atypes[1], atypes[2], atypes[3],
                     m, k/kjmol, q0/deg
                 )
             else:
-                print >> f, 'TORSCHARM:PARS %8s %8s %8s %8s    % .10e % .10e' %(
+                print >> f, 'TORSCHARM:PARS %8s %8s %8s %8s    % .10e % .10e' % (
                     atypes[0], atypes[1], atypes[2], atypes[3],
                     k/kjmol, q0
                 )
@@ -242,7 +257,7 @@ class FFTable(object):
             if not icname.startswith('opdist'): continue
             atypes = icname.split('/')[1].split('.')
             k, q0 = self[icname]
-            print >> f, 'OOPDIST:PARS %8s %8s %8s %8s % .10e % .10e' %(
+            print >> f, 'OOPDIST:PARS %8s %8s %8s %8s % .10e % .10e' % (
                 atypes[0], atypes[1], atypes[2], atypes[3],
                 k/(kjmol/angstrom**2), q0/angstrom
             )

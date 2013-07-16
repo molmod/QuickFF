@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 
-from molmod.units import *
-from molmod.ic import bond_length
+from molmod.units import deg
+from molmod.ic import bond_length, dihed_angle
 
 import numpy as np
 
-from ic import IC
-from terms import HarmonicTerm, CosineTerm
-from fftable import DataArray, FFTable
+from quickff.ic import IC
+from quickff.terms import HarmonicTerm, CosineTerm
+from quickff.fftable import DataArray, FFTable
 
 __all__ = [
     'Model', 'ZeroPart', 'HarmonicPart', 'CoulombPart', 'ValencePart'
@@ -17,22 +17,23 @@ __all__ = [
 class Model(object):
     def __init__(self, total, val, ei):
         '''
-           A class defining the total energy of the system,
-           the electrostatic contribution and the valence terms.
+           A class defining the ab initio total energy of the system,
+           the force field electrostatic contribution and the 
+           force field valence terms.
 
            **Arguments**
 
            total
-                A model for the total energy, should be an instance
+                A model for the ab initio total energy, should be an instance
                 of HarmonicPart
 
            ei
-                A model for the electrostatic energy, should be an instance
-                of HarmonicPart or CoulombPart
+                A model for the force field electrostatic energy, should be 
+                an instance of HarmonicPart or CoulombPart
 
            val
                 an instance of the ValencePart class containing all details
-                of the valence contributions.
+                of the force field valence contributions.
         '''
         self.total = total
         self.ei = ei
@@ -68,12 +69,12 @@ class Model(object):
             total = HarmonicPart('Total Harmonic', system.ref.coords, 0.0, system.ref.grad, system.ref.hess)
         #EI model
         epairs = _get_excluded_pairs(system, eirule)
-        if eirule==-1:
+        if eirule == -1:
             ei = ZeroPart('EI Zero')
-        elif eikind=='Harmonic':
+        elif eikind == 'Harmonic':
             grad_ei, hess_ei = _calc_ei_grad_hess(system, epairs)
             ei = HarmonicPart('EI Harmonic', system.ref.coords, 0.0, grad_ei, hess_ei)
-        elif eikind=='Coulomb':
+        elif eikind == 'Coulomb':
             ei = CoulombPart('EI Coulomb', system.ref.coords, system.charges, epairs)
         #Valence terms
         val = ValencePart(system)
@@ -102,18 +103,22 @@ class HarmonicPart(object):
         self.gradient = gradient
         self.hessian = hessian
         self.natoms = len(coords0)
+        self.evals = np.zeros(3*self.natoms, float)
+        self.evecs = np.zeros([3*self.natoms, 3*self.natoms], float)
+        self.ievals = np.zeros(3*self.natoms, float)
+        self.ihessian = np.zeros([3*self.natoms, 3*self.natoms], float)
         self.diagonalize()
 
     def calc_energy(self, coords):
         energy = self.energy0
         dx = (coords - self.coords0).reshape([3*self.natoms])
         energy += np.dot(self.gradient.reshape([3*self.natoms]), dx)
-        energy += 0.5*np.dot(dx, np.dot(self.hessian.reshape([3*self.natoms,3*self.natoms]), dx))
+        energy += 0.5*np.dot(dx, np.dot(self.hessian.reshape([3*self.natoms, 3*self.natoms]), dx))
         return energy
 
     def calc_gradient(self, coords):
         dx = (coords - self.coords0).reshape([3*self.natoms])
-        return self.gradient + np.dot(self.hess.reshape([3*self.natoms, 3*self.natoms]), dx).reshape([self.natoms, 3])
+        return self.gradient + np.dot(self.hessian.reshape([3*self.natoms, 3*self.natoms]), dx).reshape([self.natoms, 3])
 
     def calc_hessian(self, coords):
         return self.hessian
@@ -125,50 +130,6 @@ class HarmonicPart(object):
             if abs(eigval)>1e-10:
                 self.ievals[i] = 1.0/eigval
         self.ihessian = np.dot(self.evecs, np.dot(np.diag(self.ievals), self.evecs.T)).reshape([self.natoms, 3, self.natoms, 3])
-
-    def hessian_springed(self, free, spring=10.0*kjmol/angstrom**2):
-        '''
-            Return a new hessian in which all atoms that are not free,
-            are connected to their equilibrium position with an imaginairy
-            additional spring.
-
-            **Arguments**
-
-            free
-                a list of atom indices of the free atoms
-
-            **Optional Arguments**
-
-            spring
-                the force constant of the imaginairy springs
-        '''
-        D = spring*np.identity(3*self.natoms)
-        for i in free_indices:
-            D[i,i] = 0.0
-        return self.hessian + D.reshape([self.natoms, 3, self.natoms, 3])
-
-    def ihessian_springed(self, free, spring=10.0*kjmol/angstrom**2):
-        '''
-            Return a new ihessian (inverse of the hessian) in which all
-            atoms that are not free, are connected to their equilibrium
-            position with an imaginairy additional spring.
-
-            **Arguments**
-
-            free
-                a list of atom indices of the free atoms
-
-            **Optional Arguments**
-
-            spring
-                the force constant of the imaginairy springs
-        '''
-        evals, evecs = np.linalg.eigh(self.hessian_springed(free, spring=spring).reshape([3*self.natoms, 3*self.natoms]))
-        ievals = np.zeros(len(evals), float)
-        for i, eigval in enumerate(evals):
-            if abs(eigval)>1e-10:
-                ievals[i] = 1.0/eigval
-        return np.dot(evecs, np.dot(np.diag(ievals), evecs.T)).reshape([self.natoms, 3, self.natoms, 3])
 
 
 class CoulombPart(object):
@@ -184,8 +145,8 @@ class CoulombPart(object):
         energy = -self.shift
         for i, qi in enumerate(self.charges):
             for j, qj in enumerate(self.charges):
-                if j>=i: break
-                if [i,j] in self.epairs or [j,i] in self.epairs: continue
+                if j >= i: break
+                if [i, j] in self.epairs or [j, i] in self.epairs: continue
                 bond = IC('_inter_ei_bond', [i, j], bond_length)
                 energy += qi*qj/bond.value(coords)
         return energy
@@ -194,8 +155,8 @@ class CoulombPart(object):
         grad = np.zeros(3*len(self.charges), float)
         for i, qi in enumerate(self.charges):
             for j, qj in enumerate(self.charges):
-                if j>=i: break
-                if [i,j] in self.epairs or [j,i] in self.epairs: continue
+                if j >= i: break
+                if [i, j] in self.epairs or [j, i] in self.epairs: continue
                 bond = IC('_inter_ei_bond', [i, j], bond_length)
                 r = bond.value(coords)
                 grad += -qi*qj/(r**2)*bond.grad(coords)
@@ -205,8 +166,8 @@ class CoulombPart(object):
         hess = np.zeros([3*len(self.charges), 3*len(self.charges)], float)
         for i, qi in enumerate(self.charges):
             for j, qj in enumerate(self.charges):
-                if j>=i: break
-                if [i,j] in epairs or [j,i] in epairs: continue
+                if j >= i: break
+                if [i, j] in self.epairs or [j, i] in self.epairs: continue
                 bond = IC('_inter_ei_bond', [i, j], bond_length)
                 r = bond.value(coords)
                 qgrad = bond.grad(coords)
@@ -232,7 +193,91 @@ class ValencePart(object):
                     terms.append(HarmonicTerm(ic, system.ref.coords, None, None))
             self.vterms[icname] = terms
 
+    def determine_dihedral_potentials(self, system, marge2=15*deg, marge3=15*deg):
+        '''
+            Determine the potential of every dihedral based on the values of
+            the dihedral angles in the geometry. First try if a cosine potential
+            of the form 0.5*K*[1 - cos(m(psi-psi0))] works well with m=2,3 and
+            psi0 = 0,pi/m. If this doesn't work, raise a warning and ignore 
+            dihedral.
+        '''
+        maxlength = max([len(icname) for icname in system.ics.keys()]) + 2
+        deleted_diheds = []
+        for icname, ics in system.ics.iteritems():
+            if not icname.startswith('dihed'):
+                continue
+            ms = []
+            rvs = []
+            descr = icname + ' '*(maxlength-len(icname))
+            for ic in ics:
+                psi0 = abs(ic.value(system.ref.coords))
+                n1 = len(system.nlist[ic.indexes[1]])
+                n2 = len(system.nlist[ic.indexes[2]])
+                if psi0 >= 0 and psi0 <= max([marge2, marge3]):
+                    #use m=3 if at least one of the central atoms
+                    #has 4 neighbors
+                    if 4 in [n1, n2]:
+                        ms.append(3)
+                        rvs.append(0.0)
+                    #use m=2 if at least one of the central atoms
+                    #has 3 neighbors
+                    elif 3 in [n1, n2]:
+                        ms.append(2)
+                        rvs.append(0.0)
+                    #use m=1 in all other cases
+                    else:
+                        ms.append(1)
+                        rvs.append(0.0)
+                elif psi0 >= 60*deg-marge3 and psi0 <= 60*deg+marge3:
+                    ms.append(3)
+                    rvs.append(60.0*deg)
+                elif psi0 >= 90*deg-marge2 and psi0 <= 90*deg+marge2:
+                    ms.append(2)
+                    rvs.append(90.0*deg)
+                elif psi0 >= 120*deg-marge3 and psi0 <= 120*deg+marge3:
+                    ms.append(3)
+                    rvs.append(0.0*deg)
+                elif psi0 >= 180*deg-marge2 and psi0 <= 180*deg+marge2:
+                    #use m=3 if at least one of the central atoms
+                    #has 4 neighbors
+                    if 4 in [n1, n2]:
+                        ms.append(3)
+                        rvs.append(60.0*deg)
+                    #use m=2 if at least one of the central atoms
+                    #has 3 neighbors
+                    elif 3 in [n1, n2]:
+                        ms.append(2)
+                        rvs.append(0.0)
+                    #use m=1 in all other cases
+                    else:
+                        ms.append(1)
+                        rvs.append(180.0*deg)
+                else:
+                    ms.append(-1)
+                    rvs.append(np.cos(psi0))
+            m = DataArray(ms, unit='au')
+            if m.mean == -1 or m.std > 0.0:
+                print '    %s   WARNING: ' % descr +\
+                      'could not determine clear trent in dihedral angles, ' +\
+                      'dihedral is ignored in force field !!!'
+                deleted_diheds.append(icname)
+            else:
+                rv = DataArray(rvs, unit='deg')
+                print '    %s   0.5*K*[1 - cos(%i(psi - psi0))]    psi0 = %s' % (
+                    descr, m.mean, rv.string()
+                )
+                for i, ic in enumerate(ics):
+                    ic.icf = dihed_angle
+                    ic.qunit = 'deg'
+                    self.vterms[icname][i] = CosineTerm(
+                        ic, system.ref.coords, 0.0, rv.mean, m.mean
+                    )
+        for icname in deleted_diheds:
+            del system.ics[icname]
+            del self.vterms[icname]
+    
     def _get_nterms(self):
+        'Method that returns the number of valence terms in the force field.'
         return len(self.vterms)
 
     nterms = property(_get_nterms)
@@ -248,7 +293,7 @@ class ValencePart(object):
                 An instance of the FFTable class containing force field
                 parameters.
         '''
-        for i, icname in enumerate(sorted(self.vterms.keys())):
+        for icname in sorted(self.vterms.keys()):
             if not icname in fftab.pars.keys():
                 continue
             for term in self.vterms[icname]:
@@ -262,7 +307,7 @@ class ValencePart(object):
             parameters (force constants and rest values).
         '''
         fftab = FFTable()
-        for i, icname in enumerate(sorted(self.vterms.keys())):
+        for icname in sorted(self.vterms.keys()):
             ks = []
             q0s = []
             ms = []
@@ -311,7 +356,7 @@ class ValencePart(object):
         for icname, vterms in sorted(self.vterms.iteritems()):
             for vterm in vterms:
                 energy += vterm.calc_energy(coords=coords)
-        return hess
+        return energy
 
     def calc_gradient(self, coords):
         natoms = len(coords)
@@ -338,7 +383,7 @@ def _calc_ei_grad_hess(system, epairs):
         for j in xrange(i):
             qi = system.charges[i]
             qj = system.charges[j]
-            if [i,j] in epairs or [j,i] in epairs: continue
+            if [i, j] in epairs or [j, i] in epairs: continue
             bond = IC('_inter_ei_bond', [i, j], bond_length)
             r = bond.value(system.ref.coords)
             qgrad = bond.grad(system.ref.coords)
@@ -349,13 +394,13 @@ def _calc_ei_grad_hess(system, epairs):
 
 def _get_excluded_pairs(system, exclude_rule):
     epairs = []
-    if exclude_rule>0:
+    if exclude_rule > 0:
         for bond in system.bonds:
             epairs.append([bond[0], bond[1]])
-    if exclude_rule>1:
+    if exclude_rule > 1:
         for bend in system.bends:
             epairs.append([bend[0], bend[2]])
-    if exclude_rule>2:
+    if exclude_rule > 2:
         for dihed in system.diheds:
             epairs.append([dihed[0], dihed[3]])
     return epairs

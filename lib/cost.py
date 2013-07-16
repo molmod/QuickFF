@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 
-from molmod.units import *
+from molmod.units import kjmol
 
 import numpy as np
 
-from tools import get_atoms_within_3bonds, matrix_squared_sum
+from quickff.tools import matrix_squared_sum
 from scipy.optimize import minimize
 
 __all__ = ['HessianFCCost']
@@ -41,47 +41,62 @@ class HessianFCCost(object):
         '''
         self.system = system
         self.model = model
+        self._A = np.zeros([model.val.nterms, model.val.nterms], float)
+        self._B = np.zeros([model.val.nterms], float)
+        self._C = 0.0
 
     def _update_lstsq_matrices(self):
         '''
             Calculate the matrix A, vector B and scalar C of the cost function
         '''
-        ref  = self.system.ref.hess.reshape([3*self.system.natoms, 3*self.system.natoms])
-        ref -= self.model.ei.calc_hessian(self.system.ref.coords).reshape([3*self.system.natoms, 3*self.system.natoms])
-        self.A = np.zeros([self.model.val.nterms, self.model.val.nterms], float)
-        self.B = np.zeros([self.model.val.nterms], float)
-        h = np.zeros([self.model.val.nterms, 3*self.system.natoms, 3*self.system.natoms], float)
+        ndofs = 3*self.system.natoms
+        ref  = self.system.ref.hess.reshape([ndofs, ndofs])
+        ref -= self.model.ei.calc_hessian(self.system.ref.coords).reshape([ndofs, ndofs])
+        self._A = np.zeros([self.model.val.nterms, self.model.val.nterms], float)
+        self._B = np.zeros([self.model.val.nterms], float)
+        h = np.zeros([self.model.val.nterms, ndofs, ndofs], float)
         for i, icname in enumerate(sorted(self.system.ics.keys())):
             for vterm in self.model.val.vterms[icname]:
                 h[i] += vterm.calc_hessian(coords=self.system.ref.coords, k=1.0)
-            self.B[i] = matrix_squared_sum(h[i], ref)
+            self._B[i] = matrix_squared_sum(h[i], ref)
             for j in xrange(i+1):
-                 self.A[i,j] = matrix_squared_sum(h[i], h[j])
-                 self.A[j,i] = self.A[i,j]
-        self.C = matrix_squared_sum(ref, ref)
+                self._A[i, j] = matrix_squared_sum(h[i], h[j])
+                self._A[j, i] = self._A[i, j]
+        self._C = matrix_squared_sum(ref, ref)
 
     def _define_constraints(self, fixed, kinit):
+        'Define the constraints active during the minimization'
         constraints = []
         for i in xrange(self.model.val.nterms):
             icname = sorted(self.model.val.vterms.keys())[i]
-            if icname.split('/')[0] in fixed:
-                constraints.append( FixedValueConstraint(i, kinit[i], self.model.val.nterms)() )
+            if fixed is not None and icname.split('/')[0] in fixed:
+                constraints.append(
+                    FixedValueConstraint(i, kinit[i], self.model.val.nterms)()
+                )
             elif icname.startswith('dihed'):
-                constraints.append( LowerLimitConstraint(i,    0*kjmol, self.model.val.nterms)() )
-                constraints.append( UpperLimitConstraint(i,  200*kjmol, self.model.val.nterms)() )
+                constraints.append(
+                    LowerLimitConstraint(i,   0*kjmol, self.model.val.nterms)()
+                )
+                constraints.append(
+                    UpperLimitConstraint(i, 200*kjmol, self.model.val.nterms)()
+                )
             else:
-                constraints.append( LowerLimitConstraint(i, 0.0, self.model.val.nterms)() )
+                constraints.append(
+                    LowerLimitConstraint(i, 0.0, self.model.val.nterms)()
+                )
         return tuple(constraints)
 
     def fun(self, k, do_grad=False):
-        chi2 = 0.5*np.dot(k.T, np.dot(self.A, k)) - np.dot(self.B.T, k) + 0.5*self.C
+        'Calculate the actual cost'
+        chi2 = 0.5*np.dot(k.T, np.dot(self._A, k)) \
+             - np.dot(self._B.T, k) + 0.5*self._C
         if do_grad:
-            gchi2 = np.dot(self.A, k) - self.B
+            gchi2 = np.dot(self._A, k) - self._B
             return chi2, gchi2
         else:
             return chi2
 
-    def estimate(self, fixed=[]):
+    def estimate(self, fixed=None):
         '''
             Estimate the force constants by minimizing the cost function
 
@@ -94,46 +109,49 @@ class HessianFCCost(object):
         kinit = self.model.val.get_fcs()
         constraints = self._define_constraints(fixed, kinit)
         self._update_lstsq_matrices()
-        result = minimize(self.fun, kinit, method='SLSQP', constraints=constraints, tol=1e-9, options={'disp': False})
+        result = minimize(
+            self.fun, kinit, method='SLSQP', constraints=constraints, 
+            tol=1e-9, options={'disp': False}
+        )
         return result.x
 
 
 class BaseConstraint(object):
-    def __init__(self, type, npars):
+    def __init__(self, ctype, npars):
         '''
             A class for defining constraints in the minimalization of the cost.
 
             **Arguments**
 
-            type
-                the type of the constraint, can be 'eq' (equality, zero) or 'ineq'
-                (inequality, non-negative)
+            ctype
+                the type of the constraint, can be 'eq' (equality, zero) or
+                'ineq' (inequality, non-negative)
 
             npars
                 the number of parameters of the cost function
         '''
-        self.type = type
+        self.ctype = ctype
         self.npars = npars
 
     def __call__(self):
         'return the constraint in scipy.optimize.minimize format'
         return {
-            'type': self.type,
+            'type': self.ctype,
             'fun' : self._fun(),
             'jac' : self._jac()
         }
 
     def _fun(self):
         '''
-            returns a function defining the constraint. Its argument should
-            be the force constants.
+            Method to return the function defining the constraint. The arguments 
+            of the returned function should be the force constants.
         '''
         raise NotImplementedError
 
     def _jac(self):
         '''
-            returns the jacobian of the function. Its argument should
-            be the force constants.
+            Method to return the jacobian of the function. The argument 
+            of the returned function should be the force constants.
         '''
         raise NotImplementedError
 
@@ -159,9 +177,17 @@ class FixedValueConstraint(BaseConstraint):
         BaseConstraint.__init__(self, 'eq', npars)
 
     def _fun(self):
+        '''
+            Method to return the function defining the constraint. The arguments 
+            of the returned function should be the force constants.
+        '''
         return lambda k: k[self.index] - self.value
 
     def _jac(self):
+        '''
+            Method to return the jacobian of the function. The argument 
+            of the returned function should be the force constants.
+        '''
         jac = np.zeros(self.npars, float)
         jac[self.index] = 1.0
         return lambda k: jac
@@ -188,9 +214,17 @@ class LowerLimitConstraint(BaseConstraint):
         BaseConstraint.__init__(self, 'ineq', npars)
 
     def _fun(self):
+        '''
+            Method to return the function defining the constraint. The arguments 
+            of the returned function should be the force constants.
+        '''
         return lambda k: k[self.index] - self.lower
 
     def _jac(self):
+        '''
+            Method to return the jacobian of the function. The argument 
+            of the returned function should be the force constants.
+        '''
         jac = np.zeros(self.npars, float)
         jac[self.index] = 1.0
         return lambda k: jac
@@ -217,9 +251,17 @@ class UpperLimitConstraint(BaseConstraint):
         BaseConstraint.__init__(self, 'ineq', npars)
 
     def _fun(self):
+        '''
+            Method to return the function defining the constraint. The arguments 
+            of the returned function should be the force constants.
+        '''
         return lambda k: self.upper - k[self.index]
 
     def _jac(self):
+        '''
+            Method to return the jacobian of the function. The argument 
+            of the returned function should be the force constants.
+        '''
         jac = np.zeros(self.npars, float)
         jac[self.index] = -1.0
         return lambda k: jac

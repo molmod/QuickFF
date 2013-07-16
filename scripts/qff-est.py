@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 
-import numpy as np
 from optparse import OptionParser
-from molmod.units import *
 
 from quickff.system import System
 from quickff.model import Model

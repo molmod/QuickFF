@@ -5,6 +5,12 @@ import numpy as np
 __all__ = ['IC']
 
 class IC(object):
+    '''
+        A class functioning as a wrapper around the MolMod ic functions.
+        This class should be able to calculate the value of an internal
+        coordinate and its first and second order derivatives toward the
+        cartesian coordinates.
+    '''
     def __init__(self, name, indexes, icf, qunit='au', kunit='kjmol/au**2'):
         self.name = name
         self.indexes = indexes
@@ -13,41 +19,27 @@ class IC(object):
         self.kunit = kunit
 
     def value(self, coords):
-        rs = coords[self.indexes]
-        q = self.icf(rs, deriv=0)[0]
-        return q
+        'Calculate the value of the internal coordinate'
+        _rs = coords[self.indexes]
+        return self.icf(_rs, deriv=0)[0]
 
     def grad(self, coords):
-        Natoms = len(coords)
-        rs = coords[self.indexes]
-        q, q_deriv = self.icf(rs, deriv=1)
+        'Calculate the first order derivative of the internal coordinate'
+        _rs = coords[self.indexes]
+        _q_deriv = self.icf(_rs, deriv=1)[1]
         grad = np.zeros(coords.shape, float)
-        grad[self.indexes] = q_deriv
-        grad = grad.reshape([3*Natoms])
+        grad[self.indexes] = _q_deriv
+        grad = grad.reshape([3*len(coords)])
         return grad
 
     def hess(self, coords):
+        'Calculate the second order derivative of the internal coordinate'
         Natoms = len(coords)
-        rs = coords[self.indexes]
-        q, q_deriv, q_hess = self.icf(rs, deriv=2)
+        _rs = coords[self.indexes]
+        _q_hess = self.icf(_rs, deriv=2)[2]
         hess = np.zeros([Natoms, 3, Natoms, 3], float)
-        for i1, index1 in enumerate(self.indexes):
-            for i2, index2 in enumerate(self.indexes):
-                hess[index1, :, index2, :] = q_hess[i1, :, i2, :]
+        for i_1, index1 in enumerate(self.indexes):
+            for i_2, index2 in enumerate(self.indexes):
+                hess[index1, :, index2, :] = _q_hess[i_1, :, i_2, :]
         hess = hess.reshape([3*Natoms, 3*Natoms])
         return hess
-
-    def _get_pairs(self):
-        '''
-            A method to determine all pairs of atoms in this ic. This is
-            usefull later for determining which atom pairs are connected
-            by internal coordinates and hence which AI Hessian elements
-            are relevant.
-        '''
-        result = []
-        for i in xrange(self.ic.indexes):
-            for j in xrange(i+1):
-                result.append([i,j])
-        return result
-
-    bpairs = property(_get_pairs)
