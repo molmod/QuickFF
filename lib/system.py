@@ -77,7 +77,7 @@ class System(object):
     natoms = property(_get_natoms)
 
     @classmethod
-    def from_files(cls, fns):
+    def from_files(cls, fns, charge_scheme=None):
         '''
            A method to construct a System instance from input files. If
            the input files do not contain the topology, it is estimated
@@ -88,7 +88,17 @@ class System(object):
            fns
                 A list of file names. Files further on in the list will
                 overwrite earlier files if there is overlap. txt files
-                can only be used in hipart format to define charges.
+                can only be used in hipart format to define charges. HDF5
+                files can only be used in Horton format to define charges.
+                The set of charges that will be extracted from the HDF5
+                file is dependant on the charge scheme defined in the
+                kwargs.
+
+           **Optional Arguments:**
+
+           charge_scheme
+                A string defining the charge scheme for which the charges
+                will be extracted from the HDF5 file given in fns.
         '''
         #initialise
         numbers = None
@@ -143,6 +153,10 @@ class System(object):
             elif extension in ['txt']:
                 from hipart.io import load_atom_scalars
                 charges = load_atom_scalars(fn)
+            elif extension in ['h5']:
+                import h5py
+                f = h5py.File(fn, 'r')
+                charges = f['wpart/%s/charges' %charge_scheme][:]
         #Set charges to zero if they are not defined
         if charges is None:
             charges = np.zeros(len(numbers), float)
