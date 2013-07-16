@@ -19,7 +19,7 @@ __all__ = ['System']
 
 class System(object):
     "A class for storing all system properties"
-    def __init__(self, numbers, ffatypes, charges, ref, bonds, bends, diheds, 
+    def __init__(self, numbers, ffatypes, charges, ref, bonds, bends, diheds,
                  opdists, nlist):
         '''
            **Arguments:**
@@ -164,7 +164,7 @@ class System(object):
         #Set charges to zero if they are not defined
         if charges is None:
             charges = np.zeros(len(numbers), float)
-        return cls(numbers, ffatypes, charges, ref, bonds, bends, diheds, 
+        return cls(numbers, ffatypes, charges, ref, bonds, bends, diheds,
                    opdists, nlist)
 
     def check_topology(self):
@@ -208,7 +208,7 @@ class System(object):
                 A string used for guessing atom types:
                     low     - based on atomic number
                     medium  - based on atomic number and number of neighbors
-                    high    - based on atomic number, number of neighbors and 
+                    high    - based on atomic number, number of neighbors and
                               atomic number of neighbors
                     highest - based on index in the molecule
         '''
@@ -225,8 +225,8 @@ class System(object):
             atypes = []
             for index, number in enumerate(self.numbers):
                 nind = self.nlist[index]
-                nsym = sorted([ 
-                    pt[self.numbers[neigh]].symbol.lower() for neigh in nind 
+                nsym = sorted([
+                    pt[self.numbers[neigh]].symbol.lower() for neigh in nind
                 ])
                 sym = pt[self.numbers[index]].symbol.upper()
                 if len(nsym)==1:
@@ -289,7 +289,7 @@ class System(object):
             else:
                 number[name] += 1
             ic = IC(
-                name+str(number[name]), bond, bond_length, 
+                name+str(number[name]), bond, bond_length,
                 qunit='A', kunit='kjmol/A**2'
             )
             if name in self.ics.keys():
@@ -307,7 +307,7 @@ class System(object):
             else:
                 number[name] += 1
             ic = IC(
-                name+str(number[name]), bend, bend_angle, 
+                name+str(number[name]), bend, bend_angle,
                 qunit='deg', kunit='kjmol/rad**2'
             )
             if name in self.ics.keys():
@@ -330,7 +330,7 @@ class System(object):
             else:
                 number[name] += 1
             ic = IC(
-                name+str(number[name]), dihed, dihed_angle, 
+                name+str(number[name]), dihed, dihed_angle,
                 qunit='deg', kunit='kjmol'
             )
             if name in self.ics.keys():
@@ -382,7 +382,7 @@ class System(object):
                     if (self.ffatypes[bond] == atypes).all() \
                     or (self.ffatypes[bond] == atypes[::-1]).all():
                         match.append(IC(
-                            icname+str(len(match)), bond, bond_length, 
+                            icname+str(len(match)), bond, bond_length,
                             qunit='A', kunit='kjmol/A**2'
                         ))
             elif ickind in ['angle']:
@@ -435,7 +435,7 @@ class System(object):
 
     def print_ic_info(self):
         '''
-            Print information about internal coordinate in the system 
+            Print information about internal coordinate in the system
             to the screen
         '''
         print '    -----------------------------------------------------'

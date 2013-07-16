@@ -110,7 +110,7 @@ class HessianFCCost(object):
         constraints = self._define_constraints(fixed, kinit)
         self._update_lstsq_matrices()
         result = minimize(
-            self.fun, kinit, method='SLSQP', constraints=constraints, 
+            self.fun, kinit, method='SLSQP', constraints=constraints,
             tol=1e-9, options={'disp': False}
         )
         return result.x
@@ -143,14 +143,14 @@ class BaseConstraint(object):
 
     def _fun(self):
         '''
-            Method to return the function defining the constraint. The arguments 
+            Method to return the function defining the constraint. The arguments
             of the returned function should be the force constants.
         '''
         raise NotImplementedError
 
     def _jac(self):
         '''
-            Method to return the jacobian of the function. The argument 
+            Method to return the jacobian of the function. The argument
             of the returned function should be the force constants.
         '''
         raise NotImplementedError
@@ -178,14 +178,14 @@ class FixedValueConstraint(BaseConstraint):
 
     def _fun(self):
         '''
-            Method to return the function defining the constraint. The arguments 
+            Method to return the function defining the constraint. The arguments
             of the returned function should be the force constants.
         '''
         return lambda k: k[self.index] - self.value
 
     def _jac(self):
         '''
-            Method to return the jacobian of the function. The argument 
+            Method to return the jacobian of the function. The argument
             of the returned function should be the force constants.
         '''
         jac = np.zeros(self.npars, float)
@@ -215,14 +215,14 @@ class LowerLimitConstraint(BaseConstraint):
 
     def _fun(self):
         '''
-            Method to return the function defining the constraint. The arguments 
+            Method to return the function defining the constraint. The arguments
             of the returned function should be the force constants.
         '''
         return lambda k: k[self.index] - self.lower
 
     def _jac(self):
         '''
-            Method to return the jacobian of the function. The argument 
+            Method to return the jacobian of the function. The argument
             of the returned function should be the force constants.
         '''
         jac = np.zeros(self.npars, float)
@@ -252,14 +252,14 @@ class UpperLimitConstraint(BaseConstraint):
 
     def _fun(self):
         '''
-            Method to return the function defining the constraint. The arguments 
+            Method to return the function defining the constraint. The arguments
             of the returned function should be the force constants.
         '''
         return lambda k: self.upper - k[self.index]
 
     def _jac(self):
         '''
-            Method to return the jacobian of the function. The argument 
+            Method to return the jacobian of the function. The argument
             of the returned function should be the force constants.
         '''
         jac = np.zeros(self.npars, float)

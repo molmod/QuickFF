@@ -60,7 +60,7 @@ class BaseTerm(object):
 class HarmonicTerm(BaseTerm):
     '''
         A harmonic term of the form
-        
+
             0.5*k*(q-q0)^2
     '''
     def __init__(self, ic, coords, k, q0):
@@ -87,8 +87,8 @@ class HarmonicTerm(BaseTerm):
 
 class CosineTerm(BaseTerm):
     '''
-        A single cosine term of the form 
-        
+        A single cosine term of the form
+
             0.5*k*[1-cos(A*(q-q0))]
     '''
     def calc_energy(self, **kwargs):

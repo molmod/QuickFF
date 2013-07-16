@@ -128,7 +128,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
                     strain += np.dot(V, np.dot(S2, V.T)) \
                             + np.dot(Vo, Vo.T)/ndofs
                 else:
-                    #if the gradient of the current ic is zero in equilibrium, 
+                    #if the gradient of the current ic is zero in equilibrium,
                     #use the second order contribution to the Taylor expansion
                     #of the ic (without the square)
                     print '    WARNING: %s gradient is zero, using second ' +\
@@ -191,7 +191,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
             if ic.name.startswith('angle') and q == 180*deg and q0 == 180*deg:
                 trajectory[iq] = np.zeros([self.system.natoms, 3], float)
                 continue
-            #Define the constraint under which the cost function needs 
+            #Define the constraint under which the cost function needs
             #to be minimized
             constraints = ({
                 'type': 'eq',
@@ -199,8 +199,8 @@ class RelaxedGeoPertTheory(BasePertTheory):
                 'jac' : lambda dx: ic.grad(self.system.ref.coords + dx.reshape((-1, 3))),
             },)
             result = minimize(
-                chi, guess, method='SLSQP', 
-                constraints=constraints, 
+                chi, guess, method='SLSQP',
+                constraints=constraints,
                 tol=1e-9
             )
             trajectory[iq] = result.x.reshape([-1, 3])

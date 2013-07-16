@@ -18,7 +18,7 @@ class Model(object):
     def __init__(self, total, val, ei):
         '''
            A class defining the ab initio total energy of the system,
-           the force field electrostatic contribution and the 
+           the force field electrostatic contribution and the
            force field valence terms.
 
            **Arguments**
@@ -28,7 +28,7 @@ class Model(object):
                 of HarmonicPart
 
            ei
-                A model for the force field electrostatic energy, should be 
+                A model for the force field electrostatic energy, should be
                 an instance of HarmonicPart or CoulombPart
 
            val
@@ -198,7 +198,7 @@ class ValencePart(object):
             Determine the potential of every dihedral based on the values of
             the dihedral angles in the geometry. First try if a cosine potential
             of the form 0.5*K*[1 - cos(m(psi-psi0))] works well with m=2,3 and
-            psi0 = 0,pi/m. If this doesn't work, raise a warning and ignore 
+            psi0 = 0,pi/m. If this doesn't work, raise a warning and ignore
             dihedral.
         '''
         maxlength = max([len(icname) for icname in system.ics.keys()]) + 2
@@ -275,7 +275,7 @@ class ValencePart(object):
         for icname in deleted_diheds:
             del system.ics[icname]
             del self.vterms[icname]
-    
+
     def _get_nterms(self):
         'Method that returns the number of valence terms in the force field.'
         return len(self.vterms)

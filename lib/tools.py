@@ -140,8 +140,8 @@ def find_dihed_patterns(graph):
 
 def find_opdist_patterns(graph):
     '''
-        Find patterns of 4 atoms where 3 border atoms are bonded to the same 
-        central atom. The central atom cannot have any other neighbor except 
+        Find patterns of 4 atoms where 3 border atoms are bonded to the same
+        central atom. The central atom cannot have any other neighbor except
         for these 3 border atoms.
     '''
     opdists = []
