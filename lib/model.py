@@ -256,13 +256,13 @@ class ValencePart(object):
                     ms.append(-1)
                     rvs.append(np.cos(psi0))
             m = DataArray(ms, unit='au')
-            if m.mean == -1 or m.std > 0.0:
+            rv = DataArray(rvs, unit='deg')
+            if m.mean == -1 or m.std > 0.0 or rv.std > 0.0:
                 print '    %s   WARNING: ' % descr +\
                       'could not determine clear trent in dihedral angles, ' +\
                       'dihedral is ignored in force field !!!'
                 deleted_diheds.append(icname)
             else:
-                rv = DataArray(rvs, unit='deg')
                 print '    %s   0.5*K*[1 - cos(%i(psi - psi0))]    psi0 = %s' % (
                     descr, m.mean, rv.string()
                 )
