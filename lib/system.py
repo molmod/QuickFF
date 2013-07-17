@@ -153,6 +153,7 @@ class System(object):
                 charges = np.array(psf.charges)
                 bonds = np.array(psf.bonds)
                 bends = np.array(psf.bends)
+                diheds = np.array(psf.dihedrals)
                 nlist = psf.get_molecular_graph().neighbors
             elif extension in ['txt']:
                 from hipart.io import load_atom_scalars
@@ -185,9 +186,9 @@ class System(object):
             self.nlist = graph.neighbors
         else:
             graph = MolecularGraph(self.bonds, self.numbers)
+            psf = PSFFile()
+            psf.add_molecular_graph(graph)
             if self.bends is None:
-                psf = PSFFile()
-                psf.add_molecular_graph(graph)
                 self.bends = np.array(psf.bends)
             if self.diheds is None:
                 self.diheds = np.array(psf.dihedrals)
@@ -317,8 +318,6 @@ class System(object):
         #Find dihedrals
         number = {}
         for dihed in self.diheds:
-            #if bend_angle(np.array([self.ref.coords[i] for i in dihed[0:3]]), deriv=0)[0]>175*deg \
-            #or bend_angle(np.array([self.ref.coords[i] for i in dihed[1:4]]), deriv=0)[0]>175*deg:
             if bend_angle(self.ref.coords[dihed[0:3]], deriv=0)[0] > 175*deg \
             or bend_angle(self.ref.coords[dihed[1:4]], deriv=0)[0] > 175*deg:
                 continue
@@ -340,8 +339,6 @@ class System(object):
         #Find out-of-plane distances
         number = {}
         for opdist in self.opdists:
-            #if bend_angle(np.array([self.ref.coords[i] for i in opdist[0:3]]), deriv=0)[0]>175*deg \
-            #or bend_angle(np.array([self.ref.coords[i] for i in opdist[0:3]]), deriv=0)[0]<5*deg:
             if bend_angle(self.ref.coords[opdist[0:3]], deriv=0)[0] > 175*deg \
             or bend_angle(self.ref.coords[opdist[0:3]], deriv=0)[0] < 5*deg:
                 continue
@@ -358,65 +355,6 @@ class System(object):
                 self.ics[name].append(ic)
             else:
                 self.ics[name] = [ic]
-
-    def determine_ics_from_names(self, icnames):
-        '''
-            Method to generate IC instances corresponding to the names
-            given as argument. For example, bond/Cph.Hph will search for
-            all ICs corresponding to a bond between atoms of type Cph and
-            Hph.
-
-            **Arguments**
-
-            icnames
-                A list containing the names of ics. Format of icnames is:
-                kind/atype1.atype2...atypeN with kind=bond, bend or dihed
-        '''
-        for icname in icnames:
-            match = []
-            atypes = icname.split('/')[1].split('.')
-            ickind = icname.split('/')[0]
-            if ickind in ['bond']:
-                assert len(atypes) == 2
-                for bond in self.bonds:
-                    if (self.ffatypes[bond] == atypes).all() \
-                    or (self.ffatypes[bond] == atypes[::-1]).all():
-                        match.append(IC(
-                            icname+str(len(match)), bond, bond_length,
-                            qunit='A', kunit='kjmol/A**2'
-                        ))
-            elif ickind in ['angle']:
-                assert len(atypes) == 3
-                for bend in self.bends:
-                    if (self.ffatypes[bend] == atypes).all() \
-                    or (self.ffatypes[bend] == atypes[::-1]).all():
-                        match.append(IC(
-                            icname+str(len(match)), bend, bend_angle,
-                            qunit='deg', kunit='kjmol/rad**2'
-                        ))
-            elif ickind in ['dihed']:
-                assert len(atypes) == 4
-                for dihed in self.diheds:
-                    if (self.ffatypes[dihed] == atypes).all() \
-                    or (self.ffatypes[dihed] == atypes[::-1]).all():
-                        match.append(IC(
-                            icname+str(len(match)), dihed, dihed_angle,
-                            qunit='deg', kunit='kjmol'
-                        ))
-            elif ickind in ['opdist']:
-                assert len(atypes) == 4
-                for opdist in self.opdists:
-                    if self.ffatypes[opdist[3]] == atypes[3] \
-                    and set(self.ffatypes[opdist[:3]]) == set(atypes[:3]):
-                        match.append(IC(
-                            icname+str(len(match)), opdist, opbend_dist,
-                            qunit='A', kunit='kjmol/A**2'
-                        ))
-            else:
-                raise ValueError('Invalid icname, recieved %s' % icname)
-            if len(match)==0:
-                raise ValueError('Found no match for icname %s' % icname)
-            self.ics[icname] = match
 
     def print_atom_info(self):
         'Print information about the atoms in the system to the screen'
