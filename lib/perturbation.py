@@ -5,7 +5,7 @@ from molmod.periodic import periodic as pt
 from molmod.io.xyz import XYZWriter
 
 from scipy.optimize import minimize
-import numpy as np, matplotlib.pyplot as pp
+import numpy as np
 
 from quickff.tools import fitpar
 from quickff.evaluators import *
@@ -72,6 +72,7 @@ class BasePertTheory(object):
         _f.close()
 
     def plot(self, ic, trajectory, filename, eunit='kjmol'):
+        import matplotlib.pyplot as pp
         evaluators = [eval_ic(ic), eval_energy('total'), eval_energy('ei')]
         qs, tot, ei = self.analyze(trajectory, evaluators)
         pp.clf()
