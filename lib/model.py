@@ -139,10 +139,10 @@ class CoulombPart(object):
         self.epairs = epairs
         self.shift = 0.0
         if shift:
-            self.shift = self.calc_energy(coords0)
+            self.shift = -self.calc_energy(coords0)
 
     def calc_energy(self, coords):
-        energy = -self.shift
+        energy = self.shift
         for i, qi in enumerate(self.charges):
             for j, qj in enumerate(self.charges):
                 if j >= i: break
