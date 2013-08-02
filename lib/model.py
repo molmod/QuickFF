@@ -139,7 +139,7 @@ class CoulombPart(object):
         self.epairs = epairs
         self.shift = 0.0
         if shift:
-            self.shift -= self.calc_energy(coords0)
+            self.shift = self.calc_energy(coords0)
 
     def calc_energy(self, coords):
         energy = -self.shift
@@ -147,7 +147,7 @@ class CoulombPart(object):
             for j, qj in enumerate(self.charges):
                 if j >= i: break
                 if [i, j] in self.epairs or [j, i] in self.epairs: continue
-                bond = IC('_inter_ei_bond', [i, j], bond_length)
+                bond = IC('_internal_ei_bond', [i, j], bond_length)
                 energy += qi*qj/bond.value(coords)
         return energy
 
@@ -157,7 +157,7 @@ class CoulombPart(object):
             for j, qj in enumerate(self.charges):
                 if j >= i: break
                 if [i, j] in self.epairs or [j, i] in self.epairs: continue
-                bond = IC('_inter_ei_bond', [i, j], bond_length)
+                bond = IC('_internal_ei_bond', [i, j], bond_length)
                 r = bond.value(coords)
                 grad += -qi*qj/(r**2)*bond.grad(coords)
         return grad
@@ -168,7 +168,7 @@ class CoulombPart(object):
             for j, qj in enumerate(self.charges):
                 if j >= i: break
                 if [i, j] in self.epairs or [j, i] in self.epairs: continue
-                bond = IC('_inter_ei_bond', [i, j], bond_length)
+                bond = IC('_internal_ei_bond', [i, j], bond_length)
                 r = bond.value(coords)
                 qgrad = bond.grad(coords)
                 hess += qi*qj/(r**2)*(2.0/r*np.outer(qgrad, qgrad) - bond.hess(coords))
