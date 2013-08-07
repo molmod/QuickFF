@@ -214,7 +214,7 @@ class System(object):
                     highest - based on index in the molecule
         '''
         if level == 'low':
-            return np.array([pt[number].symbol for number in self.numbers])
+            atypes = np.array([pt[number].symbol for number in self.numbers])
         elif level == 'medium':
             atypes = []
             for index, number in enumerate(self.numbers):
@@ -244,7 +244,7 @@ class System(object):
                     if num_o > 0: atype += '_o%i' % num_o
                 atypes.append(atype)
         elif level == 'highest':
-            return np.array([
+            atypes = np.array([
                 '%s%i' % (pt[n].symbol, i) for i, n in enumerate(self.numbers)
             ])
         else:
