@@ -83,6 +83,6 @@ class Program(object):
         '''
         for ic in self.system.ics[icname]:
             name = ic.name.replace('/', '-')
-            trajectory = self.pert_theory.generate(ic)
-            self.pert_theory.plot(ic, trajectory, 'energies-'+name+'.png')
+            trajectory = self.pert_theory.generate(ic, steps=51)
+            self.pert_theory.plot(ic, trajectory, 'energies-'+name+'.pdf')
             self.pert_theory.write(trajectory, 'trajectory-'+name+'.xyz')

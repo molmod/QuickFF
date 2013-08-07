@@ -23,6 +23,11 @@ def parser():
              'respectively are excluded from ei interactions. [default=-1]'
     )
     parser.add_option(
+        '--charge-scheme', default=None,
+        help='Defines the charge scheme for which the charges will be extracted ' +\
+             'from the Horton-formatted HDF5 file given in fns. [default=%default]'
+    )
+    parser.add_option(
         '--atypes-level', default=None,
         help='Assign atom types according to level ATYPES_LEVEL. LOW will '     +\
              'assign atom types based only on atom number. MEDIUM will assign ' +\
@@ -38,8 +43,10 @@ def parser():
     return icname, fns, options
 
 def main():
+    #Parse args
     icname, fns, options = parser()
-    system = System.from_files(fns)
+    #Setup system, model and program
+    system = System.from_files(fns, charge_scheme=options.charge_scheme)
     if options.atypes_level is not None:
         system.guess_ffatypes(options.atypes_level)
     system.determine_ics_from_topology()
