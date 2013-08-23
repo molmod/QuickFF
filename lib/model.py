@@ -202,7 +202,8 @@ class ValencePart(object):
             ms = []
             rvs = []
             descr = icname + ' '*(maxlength-len(icname))
-            for ic in system.ics[icname]:
+            ics = system.ics[icname]
+            for ic in ics:
                 psi0 = abs(ic.value(system.ref.coords))
                 n1 = len(system.nlist[ic.indexes[1]])
                 n2 = len(system.nlist[ic.indexes[2]])
