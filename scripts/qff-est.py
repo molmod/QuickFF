@@ -45,6 +45,8 @@ def main():
     system = System.from_files(fns, charge_scheme=options.charge_scheme)
     if options.atypes_level is not None:
         system.guess_ffatypes(options.atypes_level)
+    else:
+        system.average_charges_ffatypes()
     system.determine_ics_from_topology()
     model = Model.from_system(system, eirule=options.eirule)
     program = Program(system, model)

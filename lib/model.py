@@ -19,7 +19,7 @@ class Model(object):
         '''
            A class defining the ab initio total energy of the system,
            the force field electrostatic contribution and the
-           force field valence terms.
+           force field valence contribution.
 
            **Arguments**
 
@@ -33,7 +33,7 @@ class Model(object):
 
            val
                 an instance of the ValencePart class containing all details
-                of the force field valence contributions.
+                of the force field valence terms.
         '''
         self.total = total
         self.ei = ei

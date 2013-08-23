@@ -373,7 +373,7 @@ class System(object):
 
     def print_ic_info(self):
         '''
-            Print information about internal coordinate in the system
+            Print information about the internal coordinate in the system
             to the screen
         '''
         print '    -----------------------------------------------------'
