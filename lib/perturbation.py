@@ -109,9 +109,7 @@ class BasePertTheory(object):
 
 
 class RelaxedGeoPertTheory(BasePertTheory):
-    def __init__(self, system, model, weight_strain=1.0, weight_energy=0.0):
-        self.weight_strain = weight_strain
-        self.weight_energy = weight_energy
+    def __init__(self, system, model):
         BasePertTheory.__init__(self, system, model)
 
     def get_strain_matrix(self, ic):
@@ -143,9 +141,8 @@ class RelaxedGeoPertTheory(BasePertTheory):
                     #if the gradient of the current ic is zero in equilibrium,
                     #use the second order contribution to the Taylor expansion
                     #of the ic (without the square)
-                    print '    WARNING: %s gradient is zero, using second ' +\
-                          'order Taylor to estimate strain' % icname
-                    Hq = np.zeros([ndofs, ndofs], float)
+                    print '    WARNING: %s '  % icname + 'gradient is zero,' +\
+                          'using second order Taylor to estimate strain'
                     for ic0 in ics:
                         if ic is None or ic0.name != ic.name:
                             Hq += ic0.hess(self.system.ref.coords)
@@ -190,9 +187,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
         H = self.model.total.hessian.reshape([ndofs, ndofs])
         S = self.get_strain_matrix(ic)
         def chi(dx):
-            strain = 0.5*np.dot(dx.T, np.dot(S, dx))
-            energy = 0.5*np.dot(dx.T, np.dot(H, dx))
-            return self.weight_strain*strain + self.weight_energy*energy
+            return 0.5*np.dot(dx.T, np.dot(S, dx))
         #Guess delta_x first time
         if ic.name.startswith('opdist'):
             guess = np.random.normal(loc=0.0, scale=0.01, size=ndofs)

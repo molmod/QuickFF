@@ -55,7 +55,7 @@ class HessianFCCost(object):
         self._A = np.zeros([self.model.val.nterms, self.model.val.nterms], float)
         self._B = np.zeros([self.model.val.nterms], float)
         h = np.zeros([self.model.val.nterms, ndofs, ndofs], float)
-        for i, icname in enumerate(sorted(self.system.ics.keys())):
+        for i, icname in enumerate(sorted(self.model.val.vterms.keys())):
             for vterm in self.model.val.vterms[icname]:
                 h[i] += vterm.calc_hessian(coords=self.system.ref.coords, k=1.0)
             self._B[i] = matrix_squared_sum(h[i], ref)
@@ -64,16 +64,11 @@ class HessianFCCost(object):
                 self._A[j, i] = self._A[i, j]
         self._C = matrix_squared_sum(ref, ref)
 
-    def _define_constraints(self, fixed, kinit):
+    def _define_constraints(self, kinit):
         'Define the constraints active during the minimization'
         constraints = []
-        for i in xrange(self.model.val.nterms):
-            icname = sorted(self.model.val.vterms.keys())[i]
-            if fixed is not None and icname.split('/')[0] in fixed:
-                constraints.append(
-                    FixedValueConstraint(i, kinit[i], self.model.val.nterms)()
-                )
-            elif icname.startswith('dihed'):
+        for i, icname in enumerate(sorted(self.model.val.vterms.keys())):
+            if icname.startswith('dihed'):
                 constraints.append(
                     LowerLimitConstraint(i,   0*kjmol, self.model.val.nterms)()
                 )
@@ -96,18 +91,13 @@ class HessianFCCost(object):
         else:
             return chi2
 
-    def estimate(self, fixed=None):
+    def estimate(self):
         '''
             Estimate the force constants by minimizing the cost function
 
-            **Arguments*
-
-            fixed
-                A list containing bonds, angles, dihedrals and/or opdists
-                if these ics should be kept fixed.
         '''
         kinit = self.model.val.get_fcs()
-        constraints = self._define_constraints(fixed, kinit)
+        constraints = self._define_constraints(kinit)
         self._update_lstsq_matrices()
         result = minimize(
             self.fun, kinit, method='SLSQP', constraints=constraints,

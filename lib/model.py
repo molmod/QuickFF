@@ -103,11 +103,12 @@ class HarmonicPart(object):
         self.gradient = gradient
         self.hessian = hessian
         self.natoms = len(coords0)
-        self.evals = np.zeros(3*self.natoms, float)
-        self.evecs = np.zeros([3*self.natoms, 3*self.natoms], float)
-        self.ievals = np.zeros(3*self.natoms, float)
-        self.ihessian = np.zeros([3*self.natoms, 3*self.natoms], float)
-        self.diagonalize()
+        self.evals, self.evecs = np.linalg.eigh(self.hessian.reshape([3*self.natoms, 3*self.natoms]))
+        self.ievals = np.zeros(len(self.evals), float)
+        for i, eigval in enumerate(self.evals):
+            if abs(eigval)>1e-10:
+                self.ievals[i] = 1.0/eigval
+        self.ihessian = np.dot(self.evecs, np.dot(np.diag(self.ievals), self.evecs.T)).reshape([self.natoms, 3, self.natoms, 3])
 
     def calc_energy(self, coords):
         energy = self.energy0
@@ -122,14 +123,6 @@ class HarmonicPart(object):
 
     def calc_hessian(self, coords):
         return self.hessian
-
-    def diagonalize(self):
-        self.evals, self.evecs = np.linalg.eigh(self.hessian.reshape([3*self.natoms, 3*self.natoms]))
-        self.ievals = np.zeros(len(self.evals), float)
-        for i, eigval in enumerate(self.evals):
-            if abs(eigval)>1e-10:
-                self.ievals[i] = 1.0/eigval
-        self.ihessian = np.dot(self.evecs, np.dot(np.diag(self.ievals), self.evecs.T)).reshape([self.natoms, 3, self.natoms, 3])
 
 
 class CoulombPart(object):
@@ -203,13 +196,13 @@ class ValencePart(object):
         '''
         maxlength = max([len(icname) for icname in system.ics.keys()]) + 2
         deleted_diheds = []
-        for icname, ics in system.ics.iteritems():
+        for icname in sorted(self.vterms.keys()):
             if not icname.startswith('dihed'):
                 continue
             ms = []
             rvs = []
             descr = icname + ' '*(maxlength-len(icname))
-            for ic in ics:
+            for ic in system.ics[icname]:
                 psi0 = abs(ic.value(system.ref.coords))
                 n1 = len(system.nlist[ic.indexes[1]])
                 n2 = len(system.nlist[ic.indexes[2]])
@@ -285,7 +278,7 @@ class ValencePart(object):
     def update_fftable(self, fftab):
         '''
             A method to update all force field parameters (force constants and
-            rest values).
+            rest values) with the values from the given FFTable.
 
             **Arguments**
 

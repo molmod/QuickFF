@@ -28,8 +28,9 @@ class Program(object):
 
     def estimate_from_pt(self, skip_dihedrals=True):
         '''
-            First Step: calculate harmonic force field parameters from
-            perturbation trajectories.
+            Second Step of force field development: calculate harmonic force field 
+            parameters for every internal coordinate separately from perturbation
+            trajectories.
 
             **Optional Arguments**
 
@@ -38,8 +39,9 @@ class Program(object):
                 be calculated.
         '''
         ff = FFTable()
-        maxlength = max([len(icname) for icname in self.system.ics.keys()]) + 2
-        for icname, ics in sorted(self.system.ics.iteritems()):
+        maxlength = max([len(icname) for icname in self.model.val.vterms.keys()]) + 2
+        for icname in sorted(self.model.val.vterms.keys()):
+            ics = self.system.ics[icname]
             if skip_dihedrals and icname.startswith('dihed'):
                 continue
             ks  = DataArray(unit=ics[0].kunit)
@@ -56,12 +58,12 @@ class Program(object):
         self.model.val.update_fftable(ff)
         return ff
 
-    def refine_cost(self, fixed=None):
+    def refine_cost(self):
         '''
-            Second Step: refine the force constants using a Hessian least
-                         squares cost function.
+            Second step of force field development: refine the force constants 
+            using a Hessian least squares cost function.
         '''
-        fcs = self.cost.estimate(fixed=fixed)
+        fcs = self.cost.estimate()
         self.model.val.update_fcs(fcs)
         self.model.val.get_fftable().print_screen()
 
@@ -71,7 +73,7 @@ class Program(object):
         print '\nDetermine dihedral potentials\n'
         self.model.val.determine_dihedral_potentials(self.system)
         print '\nEstimating all pars for bonds, bends and opdists\n'
-        self.estimate_from_pt(skip_dihedrals=True)
+        self.estimate_from_pt()
         print '\nRefining force constants using a Hessian LSQ cost\n'
         self.refine_cost()
         return self.model.val.get_fftable()
