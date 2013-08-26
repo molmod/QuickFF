@@ -35,6 +35,10 @@ def parser():
              'atom types based on atom index. NONE will not guess but use the ' +\
              'atom types defined in the input files fns. [default=%default]'
     )
+    parser.add_option(
+        '--suffix', default='',
+        help = "Suffix that will be added to all output files. [default='']"
+    )
     options, fns = parser.parse_args()
     return fns, options
 
@@ -53,10 +57,13 @@ def main():
     #Run program
     ff = program.run()
     #Make output
-    ff.dump_ffit2('pars_ffit2.txt', mode='w')
-    ff.dump_yaff('pars_yaff.txt', mode='w')
-    system.dump_charges_yaff('pars_yaff.txt', options.eirule, mode='a')
-    system.dump('system.chk')
+    ff.dump_ffit2('pars_ffit2%s.txt' % options.suffix, mode='w')
+    ff.dump_yaff('pars_yaff%s.txt' % options.suffix, mode='w')
+    system.dump_charges_yaff(
+        'pars_yaff%s.txt' % options.suffix,
+        options.eirule, mode='a'
+    )
+    system.dump('system%s.chk' % options.suffix)
 
 if __name__=='__main__':
     main()
