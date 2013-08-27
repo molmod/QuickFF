@@ -122,6 +122,8 @@ class System(object):
                 for key, value in sample.iteritems():
                     if key in ['numbers']:
                         numbers = value
+                    elif key in ['charges', 'ac', 'aq']:
+                        charges = value
                     elif key in ['ffatypes', 'atypes']:
                         ffatypes = value
                     elif key in ['bonds']:
@@ -133,11 +135,12 @@ class System(object):
                     elif key in ['opdists']:
                         opdists = value
                     elif key in ['coords', 'coordinates', 'pos']:
-                        ref.update(coords=value)
+                        ref.update(coords=value.reshape([-1, 3]))
                     elif key in ['gradient', 'grad', 'gpos', 'forces']:
-                        ref.update(grad=value)
+                        ref.update(grad=value.reshape([-1, 3]))
                     elif key in ['hessian', 'hess']:
-                        ref.update(hess=value)
+                        natoms = int(np.sqrt(value.size/9))
+                        ref.update(hess=value.reshape([natoms, 3, natoms, 3]))
                     else:
                         print 'WARNING: Skipped key %s in sample %s' % (key, fn)
             elif extension in ['fchk']:
@@ -398,6 +401,8 @@ class System(object):
         sample['dihedrals'] = self.diheds
         sample['opdists']   = self.opdists
         sample['pos']       = self.ref.coords
+        sample['grad']      = self.ref.grad
+        sample['hess']      = self.ref.hess
         dump_chk(fn, sample)
 
     def dump_charges_yaff(self, fn, eirule, mode='w'):

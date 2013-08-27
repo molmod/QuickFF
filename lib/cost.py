@@ -50,7 +50,7 @@ class HessianFCCost(object):
             Calculate the matrix A, vector B and scalar C of the cost function
         '''
         ndofs = 3*self.system.natoms
-        ref  = self.system.ref.hess.reshape([ndofs, ndofs])
+        ref  = self.system.ref.hess.reshape([ndofs, ndofs]).copy()
         ref -= self.model.ei.calc_hessian(self.system.ref.coords).reshape([ndofs, ndofs])
         self._A = np.zeros([self.model.val.nterms, self.model.val.nterms], float)
         self._B = np.zeros([self.model.val.nterms], float)
