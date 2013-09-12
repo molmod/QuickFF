@@ -143,6 +143,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
                     #of the ic (without the square)
                     print '    WARNING: %s '  % icname + 'gradient is zero,' +\
                           'using second order Taylor to estimate strain'
+                    Hq = np.zeros([ndofs, ndofs], float)
                     for ic0 in ics:
                         if ic is None or ic0.name != ic.name:
                             Hq += ic0.hess(self.system.ref.coords)
