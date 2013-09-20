@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>5. Module quickff.cost – Cost function for force constant refinement &mdash; QuickFF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="QuickFF 1.0 documentation" href="index.html" />
+    <link rel="next" title="6. Module quickff.refdata – Ab initio reference data" href="rg_refdata.html" />
+    <link rel="prev" title="4. Module quickff.perturbation – Perturbation trajectories" href="rg_perturbation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_refdata.html" title="6. Module quickff.refdata – Ab initio reference data"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rg_perturbation.html" title="4. Module quickff.perturbation – Perturbation trajectories"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">QuickFF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-quickff.cost">
+<span id="module-quickff-cost-cost-function-for-force-constant-refinement"></span><h1>5. Module <tt class="docutils literal"><span class="pre">quickff.cost</span></tt> &#8211; Cost function for force constant refinement<a class="headerlink" href="#module-quickff.cost" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="quickff.cost.HessianFCCost">
+<em class="property">class </em><tt class="descclassname">quickff.cost.</tt><tt class="descname">HessianFCCost</tt><big>(</big><em>system</em>, <em>model</em><big>)</big><a class="reference internal" href="_modules/quickff/cost.html#HessianFCCost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.cost.HessianFCCost" title="Permalink to this definition">¶</a></dt>
+<dd><p>A least squares cost function measuring the deviation of the force
+field hessian from the ab initio hessian. Only the force constants
+are regarded as variable parameters, the rest values are kept fixed.
+The initial force constants and fixed rest values should be stored
+in attributes of the members of model.val.pot.terms.</p>
+<p>The cost function measures half the sum of the squares of the
+difference between ab initio and force field hessian elements:</p>
+<blockquote>
+<div>chi^2 = 0.5*sum( (H^ai_ij - H^ff_ij)^2 , ij=...)</div></blockquote>
+<p>This cost function can be rewritten as:</p>
+<blockquote>
+<div>chi^2(k) = 0.5*np.dot(k.T, np.dot(A, k)) - np.dot(B.T, k) + 0.5*C</div></blockquote>
+<p>in which k is the vector of unknown force constants.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>An instance of the System class containing all system info</dd>
+<dt>model</dt>
+<dd>An instance of the Model class defining the total ab initio
+energy, the electrostatic contribution, the van der Waals
+contribution and the valence terms.</dd>
+</dl>
+<dl class="method">
+<dt id="quickff.cost.HessianFCCost.estimate">
+<tt class="descname">estimate</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quickff/cost.html#HessianFCCost.estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.cost.HessianFCCost.estimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the force constants by minimizing the cost function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.cost.HessianFCCost.fun">
+<tt class="descname">fun</tt><big>(</big><em>k</em>, <em>do_grad=False</em><big>)</big><a class="reference internal" href="_modules/quickff/cost.html#HessianFCCost.fun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.cost.HessianFCCost.fun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the actual cost</p>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>do_grad</dt>
+<dd>also calculate and return the analytical gradient of the cost
+function towards the parameters</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rg_perturbation.html"
+                        title="previous chapter">4. Module <tt class="docutils literal"><span class="pre">quickff.perturbation</span></tt> &#8211; Perturbation trajectories</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="rg_refdata.html"
+                        title="next chapter">6. Module <tt class="docutils literal"><span class="pre">quickff.refdata</span></tt> &#8211; Ab initio reference data</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/rg_cost.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_refdata.html" title="6. Module quickff.refdata – Ab initio reference data"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rg_perturbation.html" title="4. Module quickff.perturbation – Perturbation trajectories"
+             >previous</a> |</li>
+        <li><a href="index.html">QuickFF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

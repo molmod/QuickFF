@@ -1,0 +1,212 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>12. Module quickff.tools – Some mathematical and numerical tools &mdash; QuickFF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="QuickFF 1.0 documentation" href="index.html" />
+    <link rel="next" title="1. Script qff-est.py – Main script to run QuickFF calculation" href="rg_qffest.html" />
+    <link rel="prev" title="11. Module quickff.fftable – Table to store FF parameters" href="rg_fftable.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_qffest.html" title="1. Script qff-est.py – Main script to run QuickFF calculation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rg_fftable.html" title="11. Module quickff.fftable – Table to store FF parameters"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">QuickFF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-quickff.tools">
+<span id="module-quickff-tools-some-mathematical-and-numerical-tools"></span><h1>12. Module <tt class="docutils literal"><span class="pre">quickff.tools</span></tt> &#8211; Some mathematical and numerical tools<a class="headerlink" href="#module-quickff.tools" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="quickff.tools.global_translation">
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">global_translation</tt><big>(</big><em>coords</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#global_translation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.global_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to generate vectors that represent global translations
+of a system.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>coords</dt>
+<dd>a (N,3) numpy array describing the system that has to be translated</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.global_rotation">
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">global_rotation</tt><big>(</big><em>coords</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#global_rotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.global_rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to generate vectors that represent global translations
+of a system. Rx is a matrix of rotatino around the x-axis minus
+the identity matrix. VRx is a vector of rotation around x-axis.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>coords</dt>
+<dd>a (N,3) numpy array describing the system that has to be translated</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.calc_angles">
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">calc_angles</tt><big>(</big><em>v</em>, <em>refs</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#calc_angles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.calc_angles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the angles between v and each of the refs</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>v</dt>
+<dd>a (D) numpy array defining a D-dimensional vector</dd>
+<dt>ref</dt>
+<dd>a (N, D) numpy array containing N D-dimensional vectors</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.statistics">
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">statistics</tt><big>(</big><em>data</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#statistics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.statistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate mean, standard deviation and dimension of data</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>data</dt>
+<dd>a (N) numpy array containing the statistical input data</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.fitpar">
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">fitpar</tt><big>(</big><em>xs</em>, <em>ys</em>, <em>rcond=0.001</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#fitpar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.fitpar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a parabola to the samples (xs, ys):</p>
+<blockquote>
+<div>ys[:] = a*xs[:]^2 + b*xs[:] + c</div></blockquote>
+<p>Returns the parabola parameters a, b and c.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>xs</dt>
+<dd>a (N) numpy array containing the x values of the samples</dd>
+<dt>ys</dt>
+<dd>a (N) numpy array containing the x values of the samples</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.matrix_squared_sum">
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">matrix_squared_sum</tt><big>(</big><em>A</em>, <em>B</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#matrix_squared_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.matrix_squared_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the sum of the product of all matrix elements</p>
+<blockquote>
+<div>sum(Aij*Bij, i, j)</div></blockquote>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>A</dt>
+<dd>a (M,N) numpy array</dd>
+<dt>B</dt>
+<dd>a (M,N) numpy array</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.find_opdist_patterns">
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">find_opdist_patterns</tt><big>(</big><em>graph</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#find_opdist_patterns"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.find_opdist_patterns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find patterns of 4 atoms where 3 border atoms are bonded to the same
+central atom. The central atom cannot have any other neighbor except
+for these 3 border atoms. Returns a list of 4-tuples in which the first
+three atoms are the border atoms and the last atom is the central atom.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>graph</dt>
+<dd>An instance of the MolecularGraph class from the MolMod package.
+More info on this class can be found in the
+<a class="reference external" href="http://molmod.github.io/molmod/reference/basic.html#molmod-molecular-graphs-molecular-graphs">MolMod documentation</a>.</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rg_fftable.html"
+                        title="previous chapter">11. Module <tt class="docutils literal"><span class="pre">quickff.fftable</span></tt> &#8211; Table to store FF parameters</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="rg_qffest.html"
+                        title="next chapter">1. Script <tt class="docutils literal"><span class="pre">qff-est.py</span></tt> &#8211; Main script to run QuickFF calculation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/rg_tools.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_qffest.html" title="1. Script qff-est.py – Main script to run QuickFF calculation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rg_fftable.html" title="11. Module quickff.fftable – Table to store FF parameters"
+             >previous</a> |</li>
+        <li><a href="index.html">QuickFF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

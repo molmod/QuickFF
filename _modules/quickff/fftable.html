@@ -1,0 +1,380 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>quickff.fftable &mdash; QuickFF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="QuickFF 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">QuickFF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for quickff.fftable</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c"># QuickFF is a code to quickly derive accurate force fields from ab initio input.</span>
+<span class="c"># Copyright (C) 2012 - 2015 Louis Vanduyfhuys &lt;Louis.Vanduyfhuys@UGent.be&gt;</span>
+<span class="c"># Steven Vandenbrande &lt;Steven.Vandenbrande@UGent.be&gt;,</span>
+<span class="c"># Toon Verstraelen &lt;Toon.Verstraelen@UGent.be&gt;, Center for Molecular Modeling</span>
+<span class="c"># (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise</span>
+<span class="c"># stated.</span>
+<span class="c">#</span>
+<span class="c"># This file is part of QuickFF.</span>
+<span class="c">#</span>
+<span class="c"># QuickFF is free software; you can redistribute it and/or</span>
+<span class="c"># modify it under the terms of the GNU General Public License</span>
+<span class="c"># as published by the Free Software Foundation; either version 3</span>
+<span class="c"># of the License, or (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># QuickFF is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with this program; if not, see &lt;http://www.gnu.org/licenses/&gt;</span>
+<span class="c">#</span>
+<span class="c">#--</span>
+
+<span class="kn">from</span> <span class="nn">molmod.units</span> <span class="kn">import</span> <span class="n">deg</span><span class="p">,</span> <span class="n">angstrom</span><span class="p">,</span> <span class="n">kjmol</span><span class="p">,</span> <span class="n">parse_unit</span><span class="p">,</span> <span class="n">rad</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">quickff.tools</span> <span class="kn">import</span> <span class="n">statistics</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;DataArray&#39;</span><span class="p">,</span> <span class="s">&#39;FFTable&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="DataArray"><a class="viewcode-back" href="../../rg_fftable.html#quickff.fftable.DataArray">[docs]</a><span class="k">class</span> <span class="nc">DataArray</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        A class to store data representing measurements (or calculations) of</span>
+<span class="sd">        the same observable. Some basic statistics will be done automatically</span>
+<span class="sd">        and can be accessed at all time.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;au&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">=</span> <span class="n">statistics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DataArray.append"><a class="viewcode-back" href="../../rg_fftable.html#quickff.fftable.DataArray.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="s">&#39;Add value to array and update statistics&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">value</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">=</span> <span class="n">statistics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s">&#39;Get the number of elements in the array&#39;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DataArray.string"><a class="viewcode-back" href="../../rg_fftable.html#quickff.fftable.DataArray.string">[docs]</a>    <span class="k">def</span> <span class="nf">string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s">&#39;Convert the statistics of the array into a human readable string&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="s">u&#39;</span><span class="si">%9.3f</span><span class="s"> </span><span class="se">\u00B1</span><span class="s"> </span><span class="si">%9.3f</span><span class="s"> &#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">))</span> <span class="o">+</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">15</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="FFTable"><a class="viewcode-back" href="../../rg_fftable.html#quickff.fftable.FFTable">[docs]</a><span class="k">class</span> <span class="nc">FFTable</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        A class to read, store and dump Force Field parameters. The parameters</span>
+<span class="sd">        of the force field term for an ic of kind icname can be accessed as</span>
+<span class="sd">        follows:</span>
+
+<span class="sd">            k, q0 = fftable[icname]</span>
+
+<span class="sd">        The statistics of a parameter (e.q. the force constant of the term</span>
+<span class="sd">        related to icname) can be accessed as follows:</span>
+
+<span class="sd">            k_mean = fftable.pars[icname][&#39;k&#39;].mean</span>
+<span class="sd">            k_std = fftable.pars[icname][&#39;k&#39;].std</span>
+<span class="sd">            k_num = fftable.pars[icname][&#39;k&#39;].num</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pars</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="FFTable.add"><a class="viewcode-back" href="../../rg_fftable.html#quickff.fftable.FFTable.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">icname</span><span class="p">,</span> <span class="n">ks</span><span class="p">,</span> <span class="n">q0s</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="s">&#39;Add force field parameters for ic with name icname&#39;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">DataArray</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">q0s</span><span class="p">,</span> <span class="n">DataArray</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">[</span><span class="n">icname</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;k&#39;</span><span class="p">:</span> <span class="n">ks</span><span class="p">,</span> <span class="s">&#39;q0&#39;</span><span class="p">:</span> <span class="n">q0s</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">kw</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">DataArray</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">[</span><span class="n">icname</span><span class="p">][</span><span class="n">kw</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+</div>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">icname</span><span class="p">):</span>
+        <span class="s">&#39;Get the mean force constant and restvalue of ic with name icname&#39;</span>
+        <span class="n">k</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">[</span><span class="n">icname</span><span class="p">][</span><span class="s">&#39;k&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span>
+        <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">[</span><span class="n">icname</span><span class="p">][</span><span class="s">&#39;q0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span>
+        <span class="k">return</span> <span class="n">k</span><span class="p">,</span> <span class="n">q0</span>
+
+<div class="viewcode-block" id="FFTable.print_screen"><a class="viewcode-back" href="../../rg_fftable.html#quickff.fftable.FFTable.print_screen">[docs]</a>    <span class="k">def</span> <span class="nf">print_screen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s">&#39;Print force field parameters of all ics to a human readable table&#39;</span>
+        <span class="n">maxlength</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">icname</span><span class="p">)</span> <span class="k">for</span> <span class="n">icname</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="k">for</span> <span class="n">icname</span><span class="p">,</span> <span class="n">pars</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()):</span>
+            <span class="n">descr</span> <span class="o">=</span> <span class="n">icname</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="n">maxlength</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">icname</span><span class="p">))</span>
+            <span class="k">print</span> <span class="s">&#39;    </span><span class="si">%s</span><span class="s">   K = </span><span class="si">%s</span><span class="s">    q0 = </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">descr</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="s">&#39;k&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">string</span><span class="p">(),</span> <span class="n">pars</span><span class="p">[</span><span class="s">&#39;q0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">string</span><span class="p">()</span>
+            <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FFTable.dump_ffit2"><a class="viewcode-back" href="../../rg_fftable.html#quickff.fftable.FFTable.dump_ffit2">[docs]</a>    <span class="k">def</span> <span class="nf">dump_ffit2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">):</span>
+        <span class="s">&#39;Dump force field parameters to a file in FFit2 format&#39;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# Parameters&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# -----------------------------------------------------------------------------#------&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# longname                                                   unit        value # fx/fr&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# -----------------------------------------------------------------------------#------&#39;</span>
+        <span class="k">for</span> <span class="n">icname</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">kind</span> <span class="o">=</span> <span class="n">icname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">atypes</span> <span class="o">=</span> <span class="n">icname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">icname</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;bond&#39;</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;bond/</span><span class="si">%s</span><span class="s">/harm/dist/K&#39;</span> <span class="o">%</span> <span class="n">atypes</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;  </span><span class="si">%50s</span><span class="s"> </span><span class="si">%12s</span><span class="s"> </span><span class="si">% 12.6f</span><span class="s"> #  free&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                     <span class="n">name</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">50</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                    <span class="s">&#39;kjmol/A^2&#39;</span><span class="p">,</span> <span class="n">k</span><span class="o">/</span><span class="p">(</span><span class="n">kjmol</span><span class="o">/</span><span class="n">angstrom</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;bond/</span><span class="si">%s</span><span class="s">/harm/dist/q0&#39;</span> <span class="o">%</span> <span class="n">atypes</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;  </span><span class="si">%50s</span><span class="s"> </span><span class="si">%12s</span><span class="s"> </span><span class="si">% 12.6f</span><span class="s"> #  free&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                     <span class="n">name</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">50</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                    <span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">q0</span><span class="o">/</span><span class="n">angstrom</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;angle&#39;</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;angle/</span><span class="si">%s</span><span class="s">/harm/angle/K&#39;</span> <span class="o">%</span> <span class="n">atypes</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;  </span><span class="si">%50s</span><span class="s"> </span><span class="si">%12s</span><span class="s"> </span><span class="si">% 12.6f</span><span class="s"> #  free&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">name</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">50</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                    <span class="s">&#39;kjmol/rad^2&#39;</span><span class="p">,</span> <span class="n">k</span><span class="o">/</span><span class="p">(</span><span class="n">kjmol</span><span class="o">/</span><span class="n">rad</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;angle/</span><span class="si">%s</span><span class="s">/harm/angle/q0&#39;</span> <span class="o">%</span> <span class="n">atypes</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;  </span><span class="si">%50s</span><span class="s"> </span><span class="si">%12s</span><span class="s"> </span><span class="si">% 12.6f</span><span class="s"> #  free&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">name</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">50</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                    <span class="s">&#39;deg&#39;</span><span class="p">,</span> <span class="n">q0</span><span class="o">/</span><span class="n">deg</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;dihed&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s">&#39;m&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">[</span><span class="n">icname</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">[</span><span class="n">icname</span><span class="p">][</span><span class="s">&#39;m&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;dihed/</span><span class="si">%s</span><span class="s">/cos-m</span><span class="si">%i</span><span class="s">-0/dihed/K&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">atypes</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+                    <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;  </span><span class="si">%50s</span><span class="s"> </span><span class="si">%12s</span><span class="s"> </span><span class="si">% 12.6f</span><span class="s"> #  free&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">name</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">50</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                        <span class="s">&#39;kjmol&#39;</span><span class="p">,</span> <span class="n">k</span><span class="o">/</span><span class="n">kjmol</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;dihed/</span><span class="si">%s</span><span class="s">/harm/cdihed&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">atypes</span><span class="p">)</span>
+                    <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;  </span><span class="si">%50s</span><span class="s"> </span><span class="si">%12s</span><span class="s"> </span><span class="si">% 12.6f</span><span class="s"> #  free&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">name</span><span class="o">+</span><span class="s">&#39;/K&#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">48</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                        <span class="s">&#39;kjmol&#39;</span><span class="p">,</span> <span class="n">k</span><span class="o">/</span><span class="n">kjmol</span>
+                    <span class="p">)</span>
+                    <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;  </span><span class="si">%50s</span><span class="s"> </span><span class="si">%12s</span><span class="s"> </span><span class="si">% 12.6f</span><span class="s"> #  free&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">name</span><span class="o">+</span><span class="s">&#39;/q0&#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">47</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                        <span class="s">&#39;au&#39;</span><span class="p">,</span> <span class="n">q0</span>
+                    <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;opdist&#39;</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;opdist/</span><span class="si">%s</span><span class="s">/harm/opdist/K&#39;</span> <span class="o">%</span> <span class="n">atypes</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;  </span><span class="si">%50s</span><span class="s"> </span><span class="si">%12s</span><span class="s"> </span><span class="si">% 12.6f</span><span class="s"> #  free&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                     <span class="n">name</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">50</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                    <span class="s">&#39;kjmol/A^2&#39;</span><span class="p">,</span> <span class="n">k</span><span class="o">/</span><span class="p">(</span><span class="n">kjmol</span><span class="o">/</span><span class="n">angstrom</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;opdist/</span><span class="si">%s</span><span class="s">/harm/opdist/q0&#39;</span> <span class="o">%</span> <span class="n">atypes</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;  </span><span class="si">%50s</span><span class="s"> </span><span class="si">%12s</span><span class="s"> </span><span class="si">% 12.6f</span><span class="s"> #  free&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                     <span class="n">name</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">50</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                    <span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">q0</span><span class="o">/</span><span class="n">angstrom</span>
+                <span class="p">)</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# -----------------------------------------------------------------------------#------&#39;</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="FFTable.dump_yaff"><a class="viewcode-back" href="../../rg_fftable.html#quickff.fftable.FFTable.dump_yaff">[docs]</a>    <span class="k">def</span> <span class="nf">dump_yaff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">):</span>
+        <span class="s">&#39;Dump force field parameters to a file in Yaff format&#39;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# Bond stretch&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ============&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# Mathematical form depends on the kind selected below. Few kinds are supported:&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# - BONDHARM: 0.5*K*(r-R0)**2&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# - BONDFUES: 0.5*K*R0**2*(1+(R0/r)*((R0/r)-2.0))&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# The actual parameters and their units may depend on the kind.&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;BONDHARM:UNIT K kjmol/angstrom**2&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;BONDHARM:UNIT R0 angstrom&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# -----------------------------------------------------------------&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# KEY         ffatype0 ffatype1  K                 R0&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# -----------------------------------------------------------------&#39;</span>
+        <span class="k">for</span> <span class="n">icname</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">icname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;bond&#39;</span><span class="p">):</span> <span class="k">continue</span>
+            <span class="n">atypes</span> <span class="o">=</span> <span class="n">icname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">icname</span><span class="p">]</span>
+            <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;BONDHARM:PARS </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">% .10e</span><span class="s"> </span><span class="si">% .10e</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">atypes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">k</span><span class="o">/</span><span class="p">(</span><span class="n">kjmol</span><span class="o">/</span><span class="n">angstrom</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">q0</span><span class="o">/</span><span class="n">angstrom</span>
+            <span class="p">)</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# Angle bending&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# =============&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# Mathematical form depends on the kind selected below. Few kinds are supported:&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# - BENDAHARM: 0.5*K*(theta-THETA0)**2&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# - BENDCHARM: 0.5*K*(cos(theta)-cos(THETA0))**2&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# - UBHARM: 0.5*K*(r-R0)**2&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# where theta is the bending angle and r is the distance between the non-bonded&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# pair of atoms.&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# The actual parameters and their units may depend on the kind.&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;BENDAHARM:UNIT K kjmol/rad**2&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;BENDAHARM:UNIT THETA0 deg&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ---------------------------------------------------------------------------&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# KEY          ffatype0 ffatype1 ffatype2  K                 THETA0/COS0/R0&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ---------------------------------------------------------------------------&#39;</span>
+        <span class="k">for</span> <span class="n">icname</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">icname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;angle&#39;</span><span class="p">):</span> <span class="k">continue</span>
+            <span class="n">atypes</span> <span class="o">=</span> <span class="n">icname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">icname</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">q0</span> <span class="o">&gt;</span> <span class="mf">180.0</span><span class="o">*</span><span class="n">deg</span><span class="p">:</span>
+                <span class="n">q0</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">q0</span>
+            <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;BENDAHARM:PARS </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">% .10e</span><span class="s"> </span><span class="si">% .10e</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">atypes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">k</span><span class="o">/</span><span class="p">(</span><span class="n">kjmol</span><span class="o">/</span><span class="n">rad</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">q0</span><span class="o">/</span><span class="n">deg</span>
+            <span class="p">)</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# Torsional terms&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ===============&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# The following mathemetical for is supported:&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;#  - TORSION:   0.5*A*(1-COS(M*(PHI-PHI0)))&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;#  - TORSCHARM: 0.5*A*(COS(PHI)-COS0)**2&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# The actual parameters and their units may depend on the kind.&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;TORSION:UNIT A kjmol&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;TORSION:UNIT PHI0 deg&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;TORSCHARM:UNIT A kjmol&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;TORSCHARM:UNIT COS0 au&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# -------------------------------------------------------------------------------------&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# KEY          ffatype0 ffatype1 ffatype2 ffatype4  M  A                 PHI0/COS0&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# -------------------------------------------------------------------------------------&#39;</span>
+        <span class="k">for</span> <span class="n">icname</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">icname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;dihed&#39;</span><span class="p">):</span> <span class="k">continue</span>
+            <span class="n">atypes</span> <span class="o">=</span> <span class="n">icname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">icname</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s">&#39;m&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">[</span><span class="n">icname</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">[</span><span class="n">icname</span><span class="p">][</span><span class="s">&#39;m&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;TORSION:PARS   </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">%2i</span><span class="s"> </span><span class="si">% .10e</span><span class="s"> </span><span class="si">% .10e</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">atypes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                    <span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="o">/</span><span class="n">kjmol</span><span class="p">,</span> <span class="n">q0</span><span class="o">/</span><span class="n">deg</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;TORSCHARM:PARS </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s">    </span><span class="si">% .10e</span><span class="s"> </span><span class="si">% .10e</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">atypes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                    <span class="n">k</span><span class="o">/</span><span class="n">kjmol</span><span class="p">,</span> <span class="n">q0</span>
+                <span class="p">)</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# Out-of-plane terms&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ===============&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# The following mathemetical for is supported:&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;#  - OPDIST: 0.5*K*(d - d0)^2&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# The actual parameters and their units may depend on the kind.&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;OOPDIST:UNIT K kjmol/angstrom**2&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;OOPDIST:UNIT D0 angstrom&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# -------------------------------------------------------------------------------------&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# KEY        ffatype0 ffatype1 ffatype2 ffatype4  K                 D0&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# -------------------------------------------------------------------------------------&#39;</span>
+        <span class="k">for</span> <span class="n">icname</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">icname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;opdist&#39;</span><span class="p">):</span> <span class="k">continue</span>
+            <span class="n">atypes</span> <span class="o">=</span> <span class="n">icname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">icname</span><span class="p">]</span>
+            <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;OOPDIST:PARS </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">%8s</span><span class="s"> </span><span class="si">% .10e</span><span class="s"> </span><span class="si">% .10e</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">atypes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                <span class="n">k</span><span class="o">/</span><span class="p">(</span><span class="n">kjmol</span><span class="o">/</span><span class="n">angstrom</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">q0</span><span class="o">/</span><span class="n">angstrom</span>
+            <span class="p">)</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">QuickFF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

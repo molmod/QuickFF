@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>4. Module quickff.perturbation – Perturbation trajectories &mdash; QuickFF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="QuickFF 1.0 documentation" href="index.html" />
+    <link rel="next" title="5. Module quickff.cost – Cost function for force constant refinement" href="rg_cost.html" />
+    <link rel="prev" title="3. Module quickff.program – Management of the entire program" href="rg_program.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_cost.html" title="5. Module quickff.cost – Cost function for force constant refinement"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rg_program.html" title="3. Module quickff.program – Management of the entire program"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">QuickFF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-quickff.perturbation">
+<span id="module-quickff-perturbation-perturbation-trajectories"></span><h1>4. Module <tt class="docutils literal"><span class="pre">quickff.perturbation</span></tt> &#8211; Perturbation trajectories<a class="headerlink" href="#module-quickff.perturbation" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="quickff.perturbation.BasePertTheory">
+<em class="property">class </em><tt class="descclassname">quickff.perturbation.</tt><tt class="descname">BasePertTheory</tt><big>(</big><em>system</em>, <em>model</em><big>)</big><a class="reference internal" href="_modules/quickff/perturbation.html#BasePertTheory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.BasePertTheory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class to generate and analyze the perturbation trajectories of an
+ic.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>an instance of the System class</dd>
+<dt>model</dt>
+<dd>an instance of the Model class</dd>
+</dl>
+<dl class="method">
+<dt id="quickff.perturbation.BasePertTheory.analyze">
+<tt class="descname">analyze</tt><big>(</big><em>trajectory</em>, <em>evaluators</em><big>)</big><a class="reference internal" href="_modules/quickff/perturbation.html#BasePertTheory.analyze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.BasePertTheory.analyze" title="Permalink to this definition">¶</a></dt>
+<dd><p>A method to analyze the perturbation trajectory, i.e. apply all
+evaluators to the trajectory and return an array of values along
+the trajectory for each evaluator given.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>trajectory</dt>
+<dd>A (F, N, 3) numpy array defining the perturbation trajectory.
+It contains F frames of (N,3)-dimensional geometry arrays.</dd>
+<dt>evaluators</dt>
+<dd>A list of evaluators that is to be applied to the trajectory.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.perturbation.BasePertTheory.estimate">
+<tt class="descname">estimate</tt><big>(</big><em>ic</em>, <em>trajectory</em><big>)</big><a class="reference internal" href="_modules/quickff/perturbation.html#BasePertTheory.estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.BasePertTheory.estimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to estimate the FF parameters for the given ic from the given
+perturbation trajectory by fitting a harmonic potential to the
+covalent energy along the trajectory.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>ic</dt>
+<dd>an instance of the class <a class="reference internal" href="rg_ic.html#quickff.ic.IC" title="quickff.ic.IC"><tt class="xref py py-class docutils literal"><span class="pre">quickff.ic.IC</span></tt></a> defining for
+which ic the FF parameters will be estimated</dd>
+<dt>trajectory</dt>
+<dd>a (F,N,3) numpy array defining the perturbation trajectory
+associated to the given ic. It contains F frames of
+(N,3)-dimensional geometry arrays.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.perturbation.BasePertTheory.generate">
+<tt class="descname">generate</tt><big>(</big><em>ic</em>, <em>start=None</em>, <em>end=None</em>, <em>steps=11</em><big>)</big><a class="reference internal" href="_modules/quickff/perturbation.html#BasePertTheory.generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.BasePertTheory.generate" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method should be implemented in derived classes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.perturbation.BasePertTheory.plot">
+<tt class="descname">plot</tt><big>(</big><em>ic</em>, <em>trajectory</em>, <em>filename</em>, <em>eunit='kjmol'</em><big>)</big><a class="reference internal" href="_modules/quickff/perturbation.html#BasePertTheory.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.BasePertTheory.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot the energy contributions along a perturbation
+trajectory associated to a given ic.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>ic</dt>
+<dd>an instance of the class <a class="reference internal" href="rg_ic.html#quickff.ic.IC" title="quickff.ic.IC"><tt class="xref py py-class docutils literal"><span class="pre">quickff.ic.IC</span></tt></a> defining for
+which ic the plot will be made.</dd>
+<dt>trajectory</dt>
+<dd>a (F,N,3) numpy array defining the perturbation trajectory
+associated to the given ic. It contains F frames of
+(N,3)-dimensional geometry arrays.</dd>
+<dt>filename</dt>
+<dd>a string defining the name of the figure</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>eunit</dt>
+<dd>a string describing the conversion of the unit of energy. More
+info regarding possible strings can be found in the
+<a class="reference external" href="http://molmod.github.io/molmod/reference/const.html#module-molmod.units">MolMod documentation</a>.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.perturbation.BasePertTheory.write">
+<tt class="descname">write</tt><big>(</big><em>trajectory</em>, <em>filename</em><big>)</big><a class="reference internal" href="_modules/quickff/perturbation.html#BasePertTheory.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.BasePertTheory.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to write the given trajectory to a file</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>trajectory</dt>
+<dd>a (F,N,3) numpy array defining the perturbation trajectory.
+It contains F frames of (N,3)-dimensional geometry arrays.</dd>
+<dt>filename</dt>
+<dd>a string defining the name of the output file</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="quickff.perturbation.RelaxedGeoPertTheory">
+<em class="property">class </em><tt class="descclassname">quickff.perturbation.</tt><tt class="descname">RelaxedGeoPertTheory</tt><big>(</big><em>system</em>, <em>model</em><big>)</big><a class="reference internal" href="_modules/quickff/perturbation.html#RelaxedGeoPertTheory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.RelaxedGeoPertTheory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for generating relaxed perturbation trajectories. These
+trajectories are constructed as an array of geometries that are
+perturbed in the direction of a given ic and relaxed in all other
+directions. The relaxation is implemented as the minimization of the
+strain due to all other ics.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>an instance of the System class</dd>
+<dt>model</dt>
+<dd>an instance of the Model class</dd>
+</dl>
+<dl class="method">
+<dt id="quickff.perturbation.RelaxedGeoPertTheory.generate">
+<tt class="descname">generate</tt><big>(</big><em>ic</em>, <em>start=None</em>, <em>end=None</em>, <em>steps=11</em><big>)</big><a class="reference internal" href="_modules/quickff/perturbation.html#RelaxedGeoPertTheory.generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.RelaxedGeoPertTheory.generate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate the perturbation trajectory, i.e. the trajectory
+that arises when the geometry is perturbed in the direction of ic
+and relaxed in all other directions.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>ic</dt>
+<dd>an instance of the class <a class="reference internal" href="rg_ic.html#quickff.ic.IC" title="quickff.ic.IC"><tt class="xref py py-class docutils literal"><span class="pre">quickff.ic.IC</span></tt></a> that defines
+for which ic the perturbation trajectory will be calculated.</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>start</dt>
+<dd>a float defining the lower limit of the perturbation value of
+the given ic. If not given, a standard value is choosen
+according to the kind of internal coordinate.</dd>
+<dt>end</dt>
+<dd>a float defining the upper limit of the perturbations value of
+the given ic. If not given, a standard value is choosen
+according to the kind of internal coordinate.</dd>
+<dt>steps</dt>
+<dd>an integer defining the number of steps in the perturbation
+trajectory. The default value is 11 steps.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.perturbation.RelaxedGeoPertTheory.get_strain_matrix">
+<tt class="descname">get_strain_matrix</tt><big>(</big><em>ic</em><big>)</big><a class="reference internal" href="_modules/quickff/perturbation.html#RelaxedGeoPertTheory.get_strain_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.RelaxedGeoPertTheory.get_strain_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate the strain matrix.</p>
+<p>If sandwiched between a geometry perturbation vector, this
+represents the weighted sum of the deviations of the ics
+from their equilibrium values, except for the ic given in args.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>ic</dt>
+<dd>an instance of the class <a class="reference internal" href="rg_ic.html#quickff.ic.IC" title="quickff.ic.IC"><tt class="xref py py-class docutils literal"><span class="pre">quickff.ic.IC</span></tt></a> defining which
+ic is to be excluded from the strain cost.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rg_program.html"
+                        title="previous chapter">3. Module <tt class="docutils literal"><span class="pre">quickff.program</span></tt> &#8211; Management of the entire program</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="rg_cost.html"
+                        title="next chapter">5. Module <tt class="docutils literal"><span class="pre">quickff.cost</span></tt> &#8211; Cost function for force constant refinement</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/rg_perturbation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_cost.html" title="5. Module quickff.cost – Cost function for force constant refinement"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rg_program.html" title="3. Module quickff.program – Management of the entire program"
+             >previous</a> |</li>
+        <li><a href="index.html">QuickFF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

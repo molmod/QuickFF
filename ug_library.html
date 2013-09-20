@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>2. Importing QuickFF as a library &mdash; QuickFF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="QuickFF 1.0 documentation" href="index.html" />
+    <link rel="next" title="Tutorial 1 - Benzene" href="tu_benzene.html" />
+    <link rel="prev" title="1. Running QuickFF using qff-est.py" href="ug_script.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tu_benzene.html" title="Tutorial 1 - Benzene"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ug_script.html" title="1. Running QuickFF using qff-est.py"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">QuickFF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="importing-quickff-as-a-library">
+<h1>2. Importing QuickFF as a library<a class="headerlink" href="#importing-quickff-as-a-library" title="Permalink to this headline">¶</a></h1>
+<p>QuickFF can also be used as a library that can be imported in external scripts.
+This approach is particulary usefull to process large amounts of molecules,
+derive a force field and perform force field simulations for each of them. The
+basics if such an approach will be discussed in this section.</p>
+<div class="section" id="defining-the-system">
+<h2>2.1. Defining the system<a class="headerlink" href="#defining-the-system" title="Permalink to this headline">¶</a></h2>
+<p>One should always start by defining the system of interest, which is done by
+creating an instance of the System class. This can be done by calling the
+<a class="reference internal" href="rg_system.html#quickff.system.System" title="quickff.system.System"><tt class="xref py py-meth docutils literal"><span class="pre">quickff.system.System()</span></tt></a> constructor:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">quickff</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c">#define potential energy surface</span>
+<span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+<span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+<span class="n">hess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+<span class="n">ref</span> <span class="o">=</span> <span class="n">ReferenceData</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="n">hess</span><span class="p">)</span>
+
+<span class="c">#define molecular system</span>
+<span class="n">numbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+<span class="n">bonds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">bonds</span><span class="o">=</span><span class="n">bonds</span><span class="p">)</span>
+
+<span class="c">#guess atom types automatically</span>
+<span class="n">system</span><span class="o">.</span><span class="n">guess_ffatypes</span><span class="p">(</span><span class="s">&#39;high&#39;</span><span class="p">)</span>
+
+<span class="c">#determine internal coordinates from topology</span>
+<span class="n">system</span><span class="o">.</span><span class="n">determine_ics_from_topology</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The system can also be defined by reading input files (similarly as with the
+<cite>qff-est.py</cite> script):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">quickff</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c">#read system from input files</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="n">from_files</span><span class="p">([</span><span class="s">&#39;gaussian.fchk&#39;</span><span class="p">,</span> <span class="s">&#39;gaussian_wpart.h5&#39;</span><span class="p">],</span> <span class="n">ei_path</span><span class="o">=</span><span class="s">&#39;wpart/he&#39;</span><span class="p">)</span>
+
+<span class="c">#guess atom types</span>
+<span class="n">system</span><span class="o">.</span><span class="n">guess_ffatypes</span><span class="p">(</span><span class="s">&#39;high&#39;</span><span class="p">)</span>
+
+<span class="c">#determine internal coordinates from topology</span>
+<span class="n">system</span><span class="o">.</span><span class="n">determine_ics_from_topology</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="defining-the-model-and-program">
+<h2>2.2. Defining the model and program<a class="headerlink" href="#defining-the-model-and-program" title="Permalink to this headline">¶</a></h2>
+<p>Next, a model can be constucted using the method
+<a class="reference internal" href="rg_model.html#quickff.model.Model.from_system" title="quickff.model.Model.from_system"><tt class="xref py py-meth docutils literal"><span class="pre">quickff.model.Model.from_system()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">from_system</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Define an instance of the class <a class="reference internal" href="rg_program.html#quickff.program.Program" title="quickff.program.Program"><tt class="xref py py-class docutils literal"><span class="pre">quickff.program.Program</span></tt></a> to manage the
+force field derivation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">program</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="constructing-the-force-field">
+<h2>2.3. Constructing the force field<a class="headerlink" href="#constructing-the-force-field" title="Permalink to this headline">¶</a></h2>
+<p>Now we can apply the QuickFF methodology and derive a force field for the
+system. This can be done all at once using the method
+<a class="reference internal" href="rg_program.html#quickff.program.Program.run" title="quickff.program.Program.run"><tt class="xref py py-meth docutils literal"><span class="pre">quickff.program.Program.run()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fftab</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Or the user can perform every step manually:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#estimate rest angle and multiplicity of dihedral potentials from geometry</span>
+<span class="n">model</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">determine_dihedral_potentials</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+
+<span class="c">#Determine the coordinates of the perturbation trajectories</span>
+<span class="n">trajectories</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">generate_trajectories</span><span class="p">()</span>
+
+<span class="c">#Estimating all pars for bonds, bends and opdists</span>
+<span class="n">fftab</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">estimate_from_pt</span><span class="p">(</span><span class="n">trajectories</span><span class="p">)</span>
+
+<span class="c">#Refining force constants using a Hessian LSQ cost</span>
+<span class="n">fftab</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">refine_cost</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="generating-output">
+<h2>2.4. Generating output<a class="headerlink" href="#generating-output" title="Permalink to this headline">¶</a></h2>
+<p>The force field parameters can be dumped to the screen:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fftab</span><span class="o">.</span><span class="n">print_screen</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The parameters can also be writen to files in various formats:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fftab</span><span class="o">.</span><span class="n">dump_ffit2</span><span class="p">(</span><span class="s">&#39;pars_ffit2.txt&#39;</span><span class="p">)</span>
+<span class="n">fftab</span><span class="o">.</span><span class="n">dump_yaff</span><span class="p">(</span><span class="s">&#39;pars_yaff.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">2. Importing QuickFF as a library</a><ul>
+<li><a class="reference internal" href="#defining-the-system">2.1. Defining the system</a></li>
+<li><a class="reference internal" href="#defining-the-model-and-program">2.2. Defining the model and program</a></li>
+<li><a class="reference internal" href="#constructing-the-force-field">2.3. Constructing the force field</a></li>
+<li><a class="reference internal" href="#generating-output">2.4. Generating output</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ug_script.html"
+                        title="previous chapter">1. Running QuickFF using qff-est.py</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tu_benzene.html"
+                        title="next chapter">Tutorial 1 - Benzene</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/ug_library.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tu_benzene.html" title="Tutorial 1 - Benzene"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ug_script.html" title="1. Running QuickFF using qff-est.py"
+             >previous</a> |</li>
+        <li><a href="index.html">QuickFF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
