@@ -70,6 +70,8 @@ class Program(object):
     def run(self):
         print 'System information:\n'
         self.system.print_atom_info()
+        print 'Model information:\n'
+        self.model.print_info()
         print '\nDetermine dihedral potentials\n'
         self.model.val.determine_dihedral_potentials(self.system)
         print '\nEstimating all pars for bonds, bends and opdists\n'

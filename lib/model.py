@@ -15,7 +15,7 @@ __all__ = [
 
 
 class Model(object):
-    def __init__(self, total, val, ei):
+    def __init__(self, total, val, ei, eirule, eikind, project):
         '''
            A class defining the ab initio total energy of the system,
            the force field electrostatic contribution and the
@@ -38,6 +38,9 @@ class Model(object):
         self.total = total
         self.ei = ei
         self.val = val
+        self.eirule = eirule
+        self.eikind = eikind
+        self.project = project
 
     @classmethod
     def from_system(cls, system, project=True, eirule=0, eikind='Harmonic'):
@@ -60,7 +63,11 @@ class Model(object):
 
            eikind
                 a string defining the model kind of the electrostatic
-                interactions. Can be 'Harmonic' or 'Coulomb'
+                interactions. Can be 'Harmonic' or 'Coulomb'. If Coulomb
+                is chose, the exact Coulombic potential will be used to
+                evaluate EI interactions. If Harmonic is chosen, a second
+                order Taylor expansion is used. Harmonic is a lot faster and
+                should already give accurate results.
         '''
         #Total model
         if project:
@@ -78,7 +85,14 @@ class Model(object):
             ei = CoulombPart('EI Coulomb', system.ref.coords, system.charges, epairs)
         #Valence terms
         val = ValencePart(system)
-        return cls(total, val, ei)
+        return cls(total, val, ei, eirule, eikind, project)
+    
+    def print_info(self):
+        print ''
+        print '    EI rule = %i' %self.eirule
+        print '    EI kind = %s' %self.eikind
+        print '    Project Rot/Trans dof out of Hessian? ', self.project
+        print ''
 
 
 class ZeroPart(object):
@@ -257,8 +271,8 @@ class ValencePart(object):
                       'dihedral is ignored in force field !!!'
                 deleted_diheds.append(icname)
             else:
-                print '    %s   0.5*K*[1 - cos(%i(psi - psi0))]    psi0 = %s' % (
-                    descr, m.mean, rv.string()
+                print '    %s   0.5*K*[1 - cos(%i(psi - %5.1f))]' % (
+                    descr, m.mean, rv.mean
                 )
                 for i, ic in enumerate(ics):
                     ic.icf = dihed_angle
