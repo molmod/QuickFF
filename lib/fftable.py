@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from molmod.units import deg, angstrom, kjmol, parse_unit, rad
 import numpy as np
 

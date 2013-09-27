@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from molmod.units import angstrom, deg, parse_unit
 from molmod.periodic import periodic as pt
 from molmod.io.xyz import XYZWriter
@@ -73,7 +71,7 @@ class BasePertTheory(object):
 
     def plot(self, ic, trajectory, filename, eunit='kjmol'):
         import matplotlib.pyplot as pp
-        evaluators = [eval_ic(ic), eval_energy('total'), eval_energy('ei')]
+        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei')]
         qs, tot, ei = self.analyze(trajectory, evaluators)
         pars = fitpar(qs, tot-ei, rcond=1e-6)
         pp.clf()
@@ -102,7 +100,7 @@ class BasePertTheory(object):
 
     def estimate(self, ic, start=None, end=None, steps=11):
         trajectory = self.generate(ic, start, end, steps)
-        evaluators = [eval_ic(ic), eval_energy('total'), eval_energy('ei')]
+        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei')]
         qs, tot, ei = self.analyze(trajectory, evaluators)
         pars = fitpar(qs, tot-ei, rcond=1e-6)
         return 2*pars[0], -pars[1]/(2*pars[0])
@@ -185,7 +183,6 @@ class RelaxedGeoPertTheory(BasePertTheory):
         qarray = start + (end-start)/(steps-1)*np.array(range(steps), float)
         trajectory = np.zeros([steps, self.system.natoms, 3], float)
         #Define cost function that needs to be minimized
-        H = self.model.total.hessian.reshape([ndofs, ndofs])
         S = self.get_strain_matrix(ic)
         def chi(dx):
             return 0.5*np.dot(dx.T, np.dot(S, dx))

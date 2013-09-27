@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 __all__ = ['eval_ic', 'eval_energy']
 
 def eval_ic(ic):

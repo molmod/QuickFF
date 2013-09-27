@@ -1,13 +1,10 @@
-#! /usr/bin/env python
-
 import numpy as np
 from molmod.units import deg
 from molmod.molecular_graphs import HasNumNeighbors
 
 __all__ = [
     'global_translation', 'global_rotation', 'calc_angles', 'statistics',
-    'fitpar', 'matrix_squared_sum', 'find_dihed_patterns',
-     'find_opdist_patterns',
+    'fitpar', 'matrix_squared_sum', 'find_opdist_patterns',
 ]
 
 def global_translation(coords):
@@ -112,32 +109,6 @@ def matrix_squared_sum(A, B):
     dim = len(tmp)
     return sum([tmp[i, i] for i in xrange(dim)])
 
-def find_dihed_patterns(graph):
-    '''
-        Find patterns of 4 atoms in a head-tail bond configuration in which
-        another at most 1 of the 2 central atoms has neighbors that are bonded
-        to atom different from the central atoms.
-    '''
-    diheds = []
-    for atom1, atom2 in graph.edges:
-        neighs1 = [i for i in graph.neighbors[atom1] if not i == atom2]
-        neighs2 = [i for i in graph.neighbors[atom2] if not i == atom1]
-        term_at_1 = True
-        for i in neighs1:
-            if not HasNumNeighbors(1)(i, graph):
-                term_at_1 = False
-                break
-        term_at_2 = True
-        for i in neighs2:
-            if not HasNumNeighbors(1)(i, graph):
-                term_at_2 = False
-                break
-        if term_at_1 or term_at_2:
-            for i in neighs1:
-                for j in neighs2:
-                    diheds.append([i, atom1, atom2, j])
-    return diheds
-
 def find_opdist_patterns(graph):
     '''
         Find patterns of 4 atoms where 3 border atoms are bonded to the same
@@ -150,25 +121,3 @@ def find_opdist_patterns(graph):
             neighs = tuple(graph.neighbors[atom])
             opdists.append([neighs[0], neighs[1], neighs[2], atom])
     return opdists
-
-def dihedral_round(psi, m, verbose=True):
-    '''
-        Take absolute value of psi and then round to zero or pi/m
-    '''
-    period = 2.0*np.pi/m
-    #Step 1: take absolute value
-    rounded = abs(psi)
-    #Step 2: bring into fundamental period [0 , 2*pi/m]
-    rounded = abs(psi)
-    while rounded >= period:
-        rounded -= period
-    #Step 3: round to zero or pi/m
-    if 3*np.pi/(2*m) > rounded and rounded > np.pi/(2*m):
-        rounded = np.pi/m
-    else:
-        rounded = 0.0
-    if verbose:
-        print '   init = % 7.2f ==> period = %3f ==> rounded = %7.2f' % (
-            psi/deg, period/deg, rounded/deg
-        )
-    return rounded

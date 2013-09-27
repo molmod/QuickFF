@@ -1,7 +1,4 @@
-#! /usr/bin/env python
-
 import numpy as np
-
 
 __all__ = ['BaseTerm', 'HarmonicTerm', 'CosineTerm']
 

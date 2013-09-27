@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 import numpy as np
 from quickff.tools import global_translation, global_rotation
 

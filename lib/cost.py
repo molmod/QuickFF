@@ -1,11 +1,8 @@
-#! /usr/bin/env python
-
 from molmod.units import kjmol
-
-import numpy as np
-
 from quickff.tools import matrix_squared_sum
 from scipy.optimize import minimize
+
+import numpy as np
 
 __all__ = ['HessianFCCost']
 
@@ -55,8 +52,8 @@ class HessianFCCost(object):
         self._A = np.zeros([self.model.val.nterms, self.model.val.nterms], float)
         self._B = np.zeros([self.model.val.nterms], float)
         h = np.zeros([self.model.val.nterms, ndofs, ndofs], float)
-        for i, icname in enumerate(sorted(self.model.val.vterms.keys())):
-            for vterm in self.model.val.vterms[icname]:
+        for i, icname in enumerate(sorted(self.model.val.pot.terms.keys())):
+            for vterm in self.model.val.pot.terms[icname]:
                 h[i] += vterm.calc_hessian(coords=self.system.ref.coords, k=1.0)
             self._B[i] = matrix_squared_sum(h[i], ref)
             for j in xrange(i+1):
@@ -67,7 +64,7 @@ class HessianFCCost(object):
     def _define_constraints(self, kinit):
         'Define the constraints active during the minimization'
         constraints = []
-        for i, icname in enumerate(sorted(self.model.val.vterms.keys())):
+        for i, icname in enumerate(sorted(self.model.val.pot.terms.keys())):
             if icname.startswith('dihed'):
                 constraints.append(
                     LowerLimitConstraint(i,   0*kjmol, self.model.val.nterms)()

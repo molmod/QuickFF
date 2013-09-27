@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from molmod.units import deg
 from molmod.ic import bond_length, dihed_angle
 
@@ -10,12 +8,13 @@ from quickff.terms import HarmonicTerm, CosineTerm
 from quickff.fftable import DataArray, FFTable
 
 __all__ = [
-    'Model', 'ZeroPart', 'HarmonicPart', 'CoulombPart', 'ValencePart'
+    'Model', 'AIPart', 'EIPart', 'ValencePart',
+    'ZeroPot', 'HarmonicPot', 'CoulombPot', 'TermListPot',
 ]
 
 
 class Model(object):
-    def __init__(self, total, val, ei, eirule, eikind, project):
+    def __init__(self, ai, val, ei):
         '''
            A class defining the ab initio total energy of the system,
            the force field electrostatic contribution and the
@@ -23,7 +22,7 @@ class Model(object):
 
            **Arguments**
 
-           total
+           ai
                 A model for the ab initio total energy, should be an instance
                 of HarmonicPart
 
@@ -35,161 +34,157 @@ class Model(object):
                 an instance of the ValencePart class containing all details
                 of the force field valence terms.
         '''
-        self.total = total
+        self.ai = ai
         self.ei = ei
         self.val = val
-        self.eirule = eirule
-        self.eikind = eikind
-        self.project = project
 
     @classmethod
-    def from_system(cls, system, project=True, eirule=0, eikind='Harmonic'):
+    def from_system(cls, system, eirule=0, eikind='Harmonic', project=True):
         '''
-           **Arguments**
+            **Arguments**
 
-           system
+            system
                 An instance of the System class containing all the
                 information of the system.
 
-           **Optional Arguments**
+            **Optional Arguments**
 
-           project
-                If True, project the translational and rotational
-                degrees of freedom out of the hessian.
-
-           eirule
+            eirule
                 an integer defining the exculsion rule of the
                 electrostatic interactions. Can be -1,0,1,2,3
 
-           eikind
+            eikind
                 a string defining the model kind of the electrostatic
                 interactions. Can be 'Harmonic' or 'Coulomb'. If Coulomb
                 is chose, the exact Coulombic potential will be used to
                 evaluate EI interactions. If Harmonic is chosen, a second
                 order Taylor expansion is used. Harmonic is a lot faster and
                 should already give accurate results.
+          
+            project
+                If True, project the translational and rotational
+                degrees of freedom out of the hessian.
         '''
-        #Total model
-        if project:
-            total = HarmonicPart('Total Harmonic', system.ref.coords, 0.0, system.ref.grad, system.ref.phess)
-        else:
-            total = HarmonicPart('Total Harmonic', system.ref.coords, 0.0, system.ref.grad, system.ref.hess)
-        #EI model
-        epairs = _get_excluded_pairs(system, eirule)
-        if eirule == -1:
-            ei = ZeroPart('EI Zero')
-        elif eikind == 'Harmonic':
-            grad_ei, hess_ei = _calc_ei_grad_hess(system, epairs)
-            ei = HarmonicPart('EI Harmonic', system.ref.coords, 0.0, grad_ei, hess_ei)
-        elif eikind == 'Coulomb':
-            ei = CoulombPart('EI Coulomb', system.ref.coords, system.charges, epairs)
-        #Valence terms
-        val = ValencePart(system)
-        return cls(total, val, ei, eirule, eikind, project)
+        ai  = AIPart.from_system(system, project)
+        ei  = EIPart.from_system(system, eirule, eikind)
+        val = ValencePart.from_system(system)
+        return cls(ai, val, ei)
     
     def print_info(self):
-        print ''
-        print '    EI rule = %i' %self.eirule
-        print '    EI kind = %s' %self.eikind
-        print '    Project Rot/Trans dof out of Hessian? ', self.project
-        print ''
+        self.ai.print_info()
+        self.ei.print_info()
+        self.val.print_info()
 
 
-class ZeroPart(object):
-    def __init__(self, name):
+#####  PES Parts
+
+
+class BasePart(object):
+    '''
+        A base class for several parts to the AI and/or FF PES
+    '''
+    def __init__(self, name, pot):
         self.name = name
-
+        self.pot = pot
+    
     def calc_energy(self, coords):
-        return 0.0
-
+        return self.pot.calc_energy(coords)
+    
     def calc_gradient(self, coords):
-        return np.zeros([len(coords), 3], float)
-
+        return self.pot.calc_gradient(coords)
+    
     def calc_hessian(self, coords):
-        return np.zeros([len(coords), 3, len(coords), 3], float)
+        return self.pot.calc_hessian(coords)
+
+    def print_info(self):
+        print '    %s kind = %s' %(self.name, self.pot.kind)
 
 
-class HarmonicPart(object):
-    def __init__(self, name, coords0, energy0, gradient, hessian):
-        self.name = name
-        self.coords0 = coords0
-        self.energy0 = energy0
-        self.gradient = gradient
-        self.hessian = hessian
-        self.natoms = len(coords0)
-        self.evals, self.evecs = np.linalg.eigh(self.hessian.reshape([3*self.natoms, 3*self.natoms]))
-        self.ievals = np.zeros(len(self.evals), float)
-        for i, eigval in enumerate(self.evals):
-            if abs(eigval)>1e-10:
-                self.ievals[i] = 1.0/eigval
-        self.ihessian = np.dot(self.evecs, np.dot(np.diag(self.ievals), self.evecs.T)).reshape([self.natoms, 3, self.natoms, 3])
+class AIPart(BasePart):
+    '''
+        A class for describing the Ab initio PES.
+    '''
+    def __init__(self, pot, project=None):
+        BasePart.__init__(self, 'AI Total', pot)
+        self.project = project
+        
+    @classmethod
+    def from_system(cls, system, project=True):
+        if project:
+            hess = system.ref.phess.copy()
+        else:
+            hess = system.ref.hess.copy()
+        pot = HarmonicPot(
+            system.ref.coords.copy(), 0.0, 
+            system.ref.grad.copy(), hess
+        )
+        return cls(pot, project)
 
-    def calc_energy(self, coords):
-        energy = self.energy0
-        dx = (coords - self.coords0).reshape([3*self.natoms])
-        energy += np.dot(self.gradient.reshape([3*self.natoms]), dx)
-        energy += 0.5*np.dot(dx, np.dot(self.hessian.reshape([3*self.natoms, 3*self.natoms]), dx))
-        return energy
-
-    def calc_gradient(self, coords):
-        dx = (coords - self.coords0).reshape([3*self.natoms])
-        return self.gradient + np.dot(self.hessian.reshape([3*self.natoms, 3*self.natoms]), dx).reshape([self.natoms, 3])
-
-    def calc_hessian(self, coords):
-        return self.hessian
+    def print_info(self):
+        print '    %s project Rot/Trans = ' %self.name, self.project
+        BasePart.print_info(self)
 
 
-class CoulombPart(object):
-    def __init__(self, name, coords0, charges, epairs, shift=True):
-        self.name = name
-        self.charges = charges
-        self.epairs = epairs
-        self.shift = 0.0
-        if shift:
-            self.shift = -self.calc_energy(coords0)
+class EIPart(BasePart):
+    '''
+        A class for describing the electrostatic part to the FF PES.
+    '''
+    def __init__(self, pot, rule):
+         BasePart.__init__(self, 'FF Electrostatic', pot)
+         self.rule = rule
+    
+    @classmethod
+    def from_system(cls, system, rule, pot_kind):
+        if rule == -1:
+            pot = ZeroPot()
+        else:
+            #Generate list of exclude pairs
+            epairs = []
+            if rule > 0:
+                for bond in system.bonds:
+                    epairs.append([bond[0], bond[1]])
+            if rule > 1:
+                for bend in system.bends:
+                    epairs.append([bend[0], bend[2]])
+            if rule > 2:
+                for dihed in system.diheds:
+                    epairs.append([dihed[0], dihed[3]])
+            #Construct the potential
+            if pot_kind == 'Harmonic':
+                grad = np.zeros(3*system.natoms, float)
+                hess = np.zeros([3*system.natoms, 3*system.natoms], float)
+                for i in xrange(system.natoms):
+                    for j in xrange(i):
+                        qi = system.charges[i]
+                        qj = system.charges[j]
+                        if [i, j] in epairs or [j, i] in epairs: continue
+                        bond = IC('_inter_ei_bond', [i, j], bond_length)
+                        r = bond.value(system.ref.coords)
+                        qgrad = bond.grad(system.ref.coords)
+                        grad += -qi*qj/(r**2)*qgrad
+                        hess += qi*qj/(r**2)*(2.0/r*np.outer(qgrad, qgrad) - bond.hess(system.ref.coords))
+                pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess)
+            elif pot_kind == 'Coulomb':
+                pot = CoulombPot('EI Coulomb', system.ref.coords, system.charges, epairs)
+        return cls(pot, rule)
 
-    def calc_energy(self, coords):
-        energy = self.shift
-        for i, qi in enumerate(self.charges):
-            for j, qj in enumerate(self.charges):
-                if j >= i: break
-                if [i, j] in self.epairs or [j, i] in self.epairs: continue
-                bond = IC('_internal_ei_bond', [i, j], bond_length)
-                energy += qi*qj/bond.value(coords)
-        return energy
-
-    def calc_gradient(self, coords):
-        grad = np.zeros(3*len(self.charges), float)
-        for i, qi in enumerate(self.charges):
-            for j, qj in enumerate(self.charges):
-                if j >= i: break
-                if [i, j] in self.epairs or [j, i] in self.epairs: continue
-                bond = IC('_internal_ei_bond', [i, j], bond_length)
-                r = bond.value(coords)
-                grad += -qi*qj/(r**2)*bond.grad(coords)
-        return grad
-
-    def calc_hessian(self, coords):
-        hess = np.zeros([3*len(self.charges), 3*len(self.charges)], float)
-        for i, qi in enumerate(self.charges):
-            for j, qj in enumerate(self.charges):
-                if j >= i: break
-                if [i, j] in self.epairs or [j, i] in self.epairs: continue
-                bond = IC('_internal_ei_bond', [i, j], bond_length)
-                r = bond.value(coords)
-                qgrad = bond.grad(coords)
-                hess += qi*qj/(r**2)*(2.0/r*np.outer(qgrad, qgrad) - bond.hess(coords))
-        return hess
+    def print_info(self):
+        print '    %s exclusion rule = %i' %(self.name, self.rule)
+        BasePart.print_info(self)
 
 
-class ValencePart(object):
+class ValencePart(BasePart):
     '''
         A class managing all valence force field terms. This class will mainly
         be used in the second step of the fitting procedure, when the force
         constants are refined at fixed values for the rest values.
     '''
-    def __init__(self, system):
-        self.vterms = {}
+    def __init__(self, pot):
+        BasePart.__init__(self, 'FF Covalent', pot)
+    
+    @classmethod
+    def from_system(cls, system):
+        vterms = {}
         for icname, ics in sorted(system.ics.iteritems()):
             terms = []
             for ic in ics:
@@ -198,7 +193,9 @@ class ValencePart(object):
                     terms.append(None)
                 else:
                     terms.append(HarmonicTerm(ic, system.ref.coords, None, None))
-            self.vterms[icname] = terms
+            vterms[icname] = terms
+        pot = TermListPot(vterms)
+        return cls(pot)
 
     def determine_dihedral_potentials(self, system, marge2=15*deg, marge3=15*deg):
         '''
@@ -210,7 +207,7 @@ class ValencePart(object):
         '''
         maxlength = max([len(icname) for icname in system.ics.keys()]) + 2
         deleted_diheds = []
-        for icname in sorted(self.vterms.keys()):
+        for icname in sorted(self.pot.terms.keys()):
             if not icname.startswith('dihed'):
                 continue
             ms = []
@@ -277,16 +274,16 @@ class ValencePart(object):
                 for i, ic in enumerate(ics):
                     ic.icf = dihed_angle
                     ic.qunit = 'deg'
-                    self.vterms[icname][i] = CosineTerm(
+                    self.pot.terms[icname][i] = CosineTerm(
                         ic, system.ref.coords, 0.0, rv.mean, m.mean
                     )
         for icname in deleted_diheds:
             del system.ics[icname]
-            del self.vterms[icname]
+            del self.pot.terms[icname]
 
     def _get_nterms(self):
         'Method that returns the number of valence terms in the force field.'
-        return len(self.vterms)
+        return len(self.pot.terms)
 
     nterms = property(_get_nterms)
 
@@ -301,10 +298,10 @@ class ValencePart(object):
                 An instance of the FFTable class containing force field
                 parameters.
         '''
-        for icname in sorted(self.vterms.keys()):
+        for icname in sorted(self.pot.terms.keys()):
             if not icname in fftab.pars.keys():
                 continue
-            for term in self.vterms[icname]:
+            for term in self.pot.terms[icname]:
                 k, q0 = fftab[icname]
                 term.k = k
                 term.q0 = q0
@@ -315,11 +312,11 @@ class ValencePart(object):
             parameters (force constants and rest values).
         '''
         fftab = FFTable()
-        for icname in sorted(self.vterms.keys()):
+        for icname in sorted(self.pot.terms.keys()):
             ks = []
             q0s = []
             ms = []
-            for term in self.vterms[icname]:
+            for term in self.pot.terms[icname]:
                 ks.append(term.k)
                 q0s.append(term.q0)
                 if isinstance(term, CosineTerm):
@@ -343,8 +340,8 @@ class ValencePart(object):
             ordering of fcs in the input argument should be the same as the
             ordering of sorted(system.ics.keys()).
         '''
-        for i, icname in enumerate(sorted(self.vterms.keys())):
-            for term in self.vterms[icname]:
+        for i, icname in enumerate(sorted(self.pot.terms.keys())):
+            for term in self.pot.terms[icname]:
                 term.k = fcs[i]
 
     def get_fcs(self):
@@ -354,61 +351,138 @@ class ValencePart(object):
             ordering of sorted(system.ics.keys()).
         '''
         fcs = np.zeros(self.nterms, float)
-        for i, icname in enumerate(sorted(self.vterms.keys())):
-            for term in self.vterms[icname]:
+        for i, icname in enumerate(sorted(self.pot.terms.keys())):
+            for term in self.pot.terms[icname]:
                 fcs[i] = term.k
         return fcs
 
+
+#####  Potentials
+
+
+class BasePot(object):
+    def __init__(self, kind):
+        self.kind = kind
+    
+    def  calc_energy(self, coords):
+        raise NotImplementedError
+    
+    def  calc_gradient(self, coords):
+        raise NotImplementedError
+        
+    def  calc_hessian(self, coords):
+        raise NotImplementedError
+
+
+class ZeroPot(BasePot):
+    def __init__(self):
+        BasePot.__init__(self, 'Zero')
+
+    def calc_energy(self, coords):
+        return 0.0
+
+    def calc_gradient(self, coords):
+        return np.zeros([len(coords), 3], float)
+
+    def calc_hessian(self, coords):
+        return np.zeros([len(coords), 3, len(coords), 3], float)
+
+
+class HarmonicPot(BasePot):
+    def __init__(self, coords0, energy0, grad0, hess0):
+        BasePot.__init__(self, 'Harmonic')
+        self.coords0 = coords0
+        self.energy0 = energy0
+        self.grad0 = grad0
+        self.hess0 = hess0
+        self.natoms = len(coords0)
+
+    def calc_energy(self, coords):
+        energy = self.energy0
+        dx = (coords - self.coords0).reshape([3*self.natoms])
+        energy += np.dot(self.grad0.reshape([3*self.natoms]), dx)
+        energy += 0.5*np.dot(dx, np.dot(self.hess0.reshape([3*self.natoms, 3*self.natoms]), dx))
+        return energy
+
+    def calc_gradient(self, coords):
+        dx = (coords - self.coords0).reshape([3*self.natoms])
+        return self.grad0 + np.dot(self.hess0.reshape([3*self.natoms, 3*self.natoms]), dx).reshape([self.natoms, 3])
+
+    def calc_hessian(self, coords):
+        return self.hess0
+
+
+class CoulombPot(BasePot):
+    def __init__(self, coords0, charges, epairs, shift=True):
+        BasePot.__init__(self, 'Coulomb')
+        self.charges = charges
+        self.epairs = epairs
+        self.shift = 0.0
+        if shift:
+            self.shift = -self.calc_energy(coords0)
+
+    def calc_energy(self, coords):
+        energy = self.shift
+        for i, qi in enumerate(self.charges):
+            for j, qj in enumerate(self.charges):
+                if j >= i: break
+                if [i, j] in self.epairs or [j, i] in self.epairs: continue
+                bond = IC('_internal_ei_bond', [i, j], bond_length)
+                energy += qi*qj/bond.value(coords)
+        return energy
+
+    def calc_gradient(self, coords):
+        grad = np.zeros(3*len(self.charges), float)
+        for i, qi in enumerate(self.charges):
+            for j, qj in enumerate(self.charges):
+                if j >= i: break
+                if [i, j] in self.epairs or [j, i] in self.epairs: continue
+                bond = IC('_internal_ei_bond', [i, j], bond_length)
+                r = bond.value(coords)
+                grad += -qi*qj/(r**2)*bond.grad(coords)
+        return grad
+
+    def calc_hessian(self, coords):
+        hess = np.zeros([3*len(self.charges), 3*len(self.charges)], float)
+        for i, qi in enumerate(self.charges):
+            for j, qj in enumerate(self.charges):
+                if j >= i: break
+                if [i, j] in self.epairs or [j, i] in self.epairs: continue
+                bond = IC('_internal_ei_bond', [i, j], bond_length)
+                r = bond.value(coords)
+                qgrad = bond.grad(coords)
+                hess += qi*qj/(r**2)*(2.0/r*np.outer(qgrad, qgrad) - bond.hess(coords))
+        return hess
+
+
+class TermListPot(BasePot):
+    '''
+        A potential specified by a list of terms to describe the FF valence
+        energy.
+    '''
+    def __init__(self, terms):
+        BasePot.__init__(self, 'TermList')
+        self.terms = terms
+
     def calc_energy(self, coords):
         energy = 0.0
-        for icname, vterms in sorted(self.vterms.iteritems()):
-            for vterm in vterms:
-                energy += vterm.calc_energy(coords=coords)
+        for icname, terms in sorted(self.terms.iteritems()):
+            for term in terms:
+                energy += term.calc_energy(coords=coords)
         return energy
 
     def calc_gradient(self, coords):
         natoms = len(coords)
         gradient = np.zeros([natoms, 3], float)
-        for icname, vterms in sorted(self.vterms.iteritems()):
-            for vterm in vterms:
-                gradient += vterm.calc_gradient(coords=coords)
+        for icname, terms in sorted(self.terms.iteritems()):
+            for term in terms:
+                gradient += term.calc_gradient(coords=coords)
         return gradient
 
     def calc_hessian(self, coords):
         natoms = len(coords)
         hessian = np.zeros([natoms, 3, natoms, 3], float)
-        for icname, vterms in sorted(self.vterms.iteritems()):
-            for vterm in vterms:
-                hessian += vterm.calc_hessian(coords=coords)
+        for icname, terms in sorted(self.terms.iteritems()):
+            for term in terms:
+                hessian += term.calc_hessian(coords=coords)
         return hessian
-
-
-
-def _calc_ei_grad_hess(system, epairs):
-    grad = np.zeros(3*system.natoms, float)
-    hess = np.zeros([3*system.natoms, 3*system.natoms], float)
-    for i in xrange(system.natoms):
-        for j in xrange(i):
-            qi = system.charges[i]
-            qj = system.charges[j]
-            if [i, j] in epairs or [j, i] in epairs: continue
-            bond = IC('_inter_ei_bond', [i, j], bond_length)
-            r = bond.value(system.ref.coords)
-            qgrad = bond.grad(system.ref.coords)
-            grad += -qi*qj/(r**2)*qgrad
-            hess += qi*qj/(r**2)*(2.0/r*np.outer(qgrad, qgrad) - bond.hess(system.ref.coords))
-    return grad, hess
-
-
-def _get_excluded_pairs(system, exclude_rule):
-    epairs = []
-    if exclude_rule > 0:
-        for bond in system.bonds:
-            epairs.append([bond[0], bond[1]])
-    if exclude_rule > 1:
-        for bend in system.bends:
-            epairs.append([bend[0], bend[2]])
-    if exclude_rule > 2:
-        for dihed in system.diheds:
-            epairs.append([dihed[0], dihed[3]])
-    return epairs

@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from molmod.periodic import periodic as pt
 from molmod.molecules import Molecule
 from molmod.molecular_graphs import MolecularGraph
