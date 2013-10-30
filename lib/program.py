@@ -2,7 +2,7 @@ from quickff.fftable import DataArray, FFTable
 from quickff.perturbation import RelaxedGeoPertTheory
 from quickff.cost import HessianFCCost
 
-import os, sys, getpass, datetime
+import cPickle, os, sys, getpass, datetime
 
 __all__ = ['Program']
 
@@ -43,7 +43,7 @@ def sysinfo():
     return info
 
 class Program(object):
-    def __init__(self, system, model):
+    def __init__(self, system, model, fns_traj=None):
         '''
             The central class to manage the entire program.
 
@@ -56,15 +56,60 @@ class Program(object):
             model
                 An instance of the Model class and contains all the info
                 to define the total PES and its electrostatic contribution.
+            
+            **Optional Arguments**
+            
+            fns_traj
+                A file name to store the perturbation trajectories to. The
+                trajectories are stored after Pickling.
         '''
         self.system = system
         self.model = model
         self.pert_theory = RelaxedGeoPertTheory(system, model)
         self.cost = HessianFCCost(system, model)
-
-    def estimate_from_pt(self, skip_dihedrals=True):
+        self.fns_traj = fns_traj
+        
+    def generate_trajectories(self, skip_dihedrals=True):
         '''
-            Second Step of force field development: calculate harmonic force field 
+            Generate a perturbation trajectory for all ics (dihedrals can be
+            excluded and store the coordinates in a dictionary.
+
+            **Optional Arguments**
+
+            skip_dihedrals
+                If set to True, the dihedral ff parameters will not
+                be calculated.
+        '''
+        maxlength = max([len(icname) for icname in self.model.val.pot.terms.keys()]) + 2
+        #Check if a filename with trajectories is given. If the file exists,
+        #read it and return the trajectories
+        if self.fns_traj is not None:
+            if os.path.isfile(self.fns_traj):
+                with open(self.fns_traj,'r') as f:
+                    trajectories = cPickle.load(f)
+                return trajectories 
+        #Generate trajectories from scratch
+        trajectories = {}
+        for icname in sorted(self.model.val.pot.terms.keys()):
+            ics = self.system.ics[icname]
+            if skip_dihedrals and icname.startswith('dihed'):
+                continue
+            for i_ics, ic in enumerate(ics):
+                sys.stdout.write('\r    %s Processing %2i/%i' %(
+                    icname+' '*(maxlength-len(icname)), i_ics+1, len(ics)
+                ))
+                sys.stdout.flush()
+                trajectories[ic.name] = self.pert_theory.generate(ic)
+            print ''
+        #Check if we need to write the generated trajectories to a file
+        if self.fns_traj is not None:
+            with open(self.fns_traj,'w') as f:
+                cPickle.dump(trajectories,f)
+        return trajectories
+
+    def estimate_from_pt(self, trajectories, skip_dihedrals=True):
+        '''
+            Second Step of force field development: calculate harmonic force field
             parameters for every internal coordinate separately from perturbation
             trajectories.
 
@@ -83,7 +128,7 @@ class Program(object):
             ks  = DataArray(unit=ics[0].kunit)
             q0s = DataArray(unit=ics[0].qunit)
             for ic in ics:
-                k, q0 = self.pert_theory.estimate(ic)
+                k, q0 = self.pert_theory.estimate(ic,trajectories[ic.name])
                 ks.append(k)
                 q0s.append(q0)
             ff.add(icname, ks, q0s)
@@ -96,7 +141,7 @@ class Program(object):
 
     def refine_cost(self):
         '''
-            Second step of force field development: refine the force constants 
+            Second step of force field development: refine the force constants
             using a Hessian least squares cost function.
         '''
         fcs = self.cost.estimate()
@@ -113,8 +158,10 @@ class Program(object):
         self.model.print_info()
         print '\nDetermine dihedral potentials\n'
         self.model.val.determine_dihedral_potentials(self.system)
+        print '\nDetermine the coordinates of the perturbation trajectories\n'
+        self.trajectories = self.generate_trajectories()
         print '\nEstimating all pars for bonds, bends and opdists\n'
-        self.estimate_from_pt()
+        self.estimate_from_pt(self.trajectories)
         print '\nRefining force constants using a Hessian LSQ cost\n'
         self.refine_cost()
         print '\n'+'~'*120+'\n'

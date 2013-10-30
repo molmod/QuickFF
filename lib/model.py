@@ -39,7 +39,7 @@ class Model(object):
         self.val = val
 
     @classmethod
-    def from_system(cls, system, eirule=0, eikind='Harmonic', project=True):
+    def from_system(cls, system, ei_pot_kind='Harmonic', ei_scales=[1.0,1.0,1.0], ai_project=True):
         '''
             **Arguments**
 
@@ -49,24 +49,24 @@ class Model(object):
 
             **Optional Arguments**
 
-            eirule
-                an integer defining the exculsion rule of the
-                electrostatic interactions. Can be -1,0,1,2,3
-
-            eikind
-                a string defining the model kind of the electrostatic
-                interactions. Can be 'Harmonic' or 'Coulomb'. If Coulomb
-                is chose, the exact Coulombic potential will be used to
+            ei_pot_kind
+                a string defining the potential kind of the electrostatic
+                interactions. Can be 'Zero', 'Harmonic' or 'Coulomb'. If Coulomb
+                is chosen, the exact Coulombic potential will be used to
                 evaluate EI interactions. If Harmonic is chosen, a second
                 order Taylor expansion is used. Harmonic is a lot faster and
                 should already give accurate results.
+            
+            ei_scales
+                a list containing the scales for the 1-2, 1-3 and 1-4
+                contribution to the electrostatic interactions
           
-            project
+            ai_project
                 If True, project the translational and rotational
                 degrees of freedom out of the hessian.
         '''
-        ai  = AIPart.from_system(system, project)
-        ei  = EIPart.from_system(system, eirule, eikind)
+        ai  = AIPart.from_system(system, ai_project)
+        ei  = EIPart.from_system(system, ei_scales, ei_pot_kind)
         val = ValencePart.from_system(system)
         return cls(ai, val, ei)
     
@@ -129,47 +129,35 @@ class EIPart(BasePart):
     '''
         A class for describing the electrostatic part to the FF PES.
     '''
-    def __init__(self, pot, rule):
+    def __init__(self, pot, scales):
          BasePart.__init__(self, 'FF Electrostatic', pot)
-         self.rule = rule
+         self.scales = scales
     
     @classmethod
-    def from_system(cls, system, rule, pot_kind):
-        if rule == -1:
+    def from_system(cls, system, scales, pot_kind):
+        if pot_kind.lower() == 'zero':
             pot = ZeroPot()
         else:
-            #Generate list of exclude pairs
-            epairs = []
-            if rule > 0:
-                for bond in system.bonds:
-                    epairs.append([bond[0], bond[1]])
-            if rule > 1:
-                for bend in system.bends:
-                    epairs.append([bend[0], bend[2]])
-            if rule > 2:
-                for dihed in system.diheds:
-                    epairs.append([dihed[0], dihed[3]])
+            #Generate list of atom pairs subject ot EI-scaling according to scales
+            scaled_pairs = [[],[],[]]
+            for bond in system.bonds:
+                scaled_pairs[0].append([bond[0], bond[1]])
+            for bend in system.bends:
+                scaled_pairs[1].append([bend[0], bend[2]])
+            for dihed in system.diheds:
+                scaled_pairs[2].append([dihed[0], dihed[3]])
             #Construct the potential
-            if pot_kind == 'Harmonic':
-                grad = np.zeros(3*system.natoms, float)
-                hess = np.zeros([3*system.natoms, 3*system.natoms], float)
-                for i in xrange(system.natoms):
-                    for j in xrange(i):
-                        qi = system.charges[i]
-                        qj = system.charges[j]
-                        if [i, j] in epairs or [j, i] in epairs: continue
-                        bond = IC('_inter_ei_bond', [i, j], bond_length)
-                        r = bond.value(system.ref.coords)
-                        qgrad = bond.grad(system.ref.coords)
-                        grad += -qi*qj/(r**2)*qgrad
-                        hess += qi*qj/(r**2)*(2.0/r*np.outer(qgrad, qgrad) - bond.hess(system.ref.coords))
+            exact = CoulombPot(system.ref.coords.copy(), system.charges.copy(), scales, scaled_pairs)
+            if pot_kind.lower() in ['harm', 'harmonic']:
+                grad = exact.calc_gradient(system.ref.coords.copy())
+                hess = exact.calc_hessian(system.ref.coords.copy())
                 pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess)
-            elif pot_kind == 'Coulomb':
-                pot = CoulombPot('EI Coulomb', system.ref.coords, system.charges, epairs)
-        return cls(pot, rule)
+            elif pot_kind.lower() in ['coul', 'coulomb', 'exact']:
+                pot = exact
+        return cls(pot, scales)
 
     def print_info(self):
-        print '    %s exclusion rule = %i' %(self.name, self.rule)
+        print '    %s scales = %.2f %.2f %.2f' %(self.name, self.scales[0], self.scales[1], self.scales[2])
         BasePart.print_info(self)
 
 
@@ -413,22 +401,34 @@ class HarmonicPot(BasePot):
 
 
 class CoulombPot(BasePot):
-    def __init__(self, coords0, charges, epairs, shift=True):
+    def __init__(self, coords0, charges, scales, scaled_pairs, shift=True):
         BasePot.__init__(self, 'Coulomb')
         self.charges = charges
-        self.epairs = epairs
+        self.scales = scales
+        self.scaled_pairs = scaled_pairs
         self.shift = 0.0
         if shift:
             self.shift = -self.calc_energy(coords0)
 
+    def _get_scale(self, i, j):
+        if [i, j] in self.scaled_pairs[0] or [j, i] in self.scaled_pairs[0]:
+            return self.scales[0]
+        elif [i, j] in self.scaled_pairs[1] or [j, i] in self.scaled_pairs[1]:
+            return self.scales[1]
+        elif [i, j] in self.scaled_pairs[2] or [j, i] in self.scaled_pairs[2]:
+            return self.scales[2]
+        else:
+            return 1.0
+    
     def calc_energy(self, coords):
         energy = self.shift
         for i, qi in enumerate(self.charges):
             for j, qj in enumerate(self.charges):
                 if j >= i: break
-                if [i, j] in self.epairs or [j, i] in self.epairs: continue
+                scale = self._get_scale(i, j)
+                if scale==0.0: continue
                 bond = IC('_internal_ei_bond', [i, j], bond_length)
-                energy += qi*qj/bond.value(coords)
+                energy += qi*qj/bond.value(coords)*scale
         return energy
 
     def calc_gradient(self, coords):
@@ -436,10 +436,11 @@ class CoulombPot(BasePot):
         for i, qi in enumerate(self.charges):
             for j, qj in enumerate(self.charges):
                 if j >= i: break
-                if [i, j] in self.epairs or [j, i] in self.epairs: continue
+                scale = self._get_scale(i, j)
+                if scale==0.0: continue
                 bond = IC('_internal_ei_bond', [i, j], bond_length)
                 r = bond.value(coords)
-                grad += -qi*qj/(r**2)*bond.grad(coords)
+                grad += -qi*qj/(r**2)*bond.grad(coords)*scale
         return grad
 
     def calc_hessian(self, coords):
@@ -447,11 +448,12 @@ class CoulombPot(BasePot):
         for i, qi in enumerate(self.charges):
             for j, qj in enumerate(self.charges):
                 if j >= i: break
-                if [i, j] in self.epairs or [j, i] in self.epairs: continue
+                scale = self._get_scale(i, j)
+                if scale==0.0: continue
                 bond = IC('_internal_ei_bond', [i, j], bond_length)
                 r = bond.value(coords)
                 qgrad = bond.grad(coords)
-                hess += qi*qj/(r**2)*(2.0/r*np.outer(qgrad, qgrad) - bond.hess(coords))
+                hess += qi*qj/(r**2)*(2.0/r*np.outer(qgrad, qgrad) - bond.hess(coords))*scale
         return hess
 
 

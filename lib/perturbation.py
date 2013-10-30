@@ -82,7 +82,7 @@ class BasePertTheory(object):
         )
         pp.plot(
             qs/parse_unit(ic.qunit),
-            ei/parse_unit(eunit), 
+            ei/parse_unit(eunit),
             'b--', linewidth=1, label='FF electrostatic'
         )
         pp.plot(
@@ -98,8 +98,7 @@ class BasePertTheory(object):
         fig.set_size_inches([8, 8])
         pp.savefig(filename)
 
-    def estimate(self, ic, start=None, end=None, steps=11):
-        trajectory = self.generate(ic, start, end, steps)
+    def estimate(self, ic, trajectory):
         evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei')]
         qs, tot, ei = self.analyze(trajectory, evaluators)
         pars = fitpar(qs, tot-ei, rcond=1e-6)

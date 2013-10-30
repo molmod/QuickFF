@@ -79,7 +79,7 @@ class System(object):
     natoms = property(_get_natoms)
 
     @classmethod
-    def from_files(cls, fns, charge_scheme=None):
+    def from_files(cls, fns, ei_scheme=None):
         '''
            A method to construct a System instance from input files. If
            the input files do not contain the topology, it is estimated
@@ -98,7 +98,7 @@ class System(object):
 
            **Optional Arguments:**
 
-           charge_scheme
+           ei_scheme
                 A string defining the charge scheme for which the charges
                 will be extracted from the HDF5 file given in fns.
         '''
@@ -139,8 +139,6 @@ class System(object):
                     elif key in ['hessian', 'hess']:
                         natoms = int(np.sqrt(value.size/9))
                         ref.update(hess=value.reshape([natoms, 3, natoms, 3]))
-                    else:
-                        print 'WARNING: Skipped key %s in sample %s' % (key, fn)
             elif extension in ['fchk']:
                 fchk = FCHKFile(fn)
                 numbers = fchk.fields.get('Atomic numbers')
@@ -160,9 +158,10 @@ class System(object):
                 from hipart.io import load_atom_scalars
                 charges = load_atom_scalars(fn)
             elif extension in ['h5']:
+                assert ei_scheme is not None, 'The ei-scheme must be specified when using HDF5 files.'
                 import h5py
                 f = h5py.File(fn, 'r')
-                charges = f['wpart/%s/charges' % charge_scheme][:]
+                charges = f['wpart/%s/charges' % ei_scheme][:]
         #Set charges to zero if they are not defined
         if charges is None:
             charges = np.zeros(len(numbers), float)
@@ -403,26 +402,8 @@ class System(object):
         sample['hess']      = self.ref.hess
         dump_chk(fn, sample)
 
-    def dump_charges_yaff(self, fn, eirule, mode='w'):
+    def dump_charges_yaff(self, fn, ei_scales, mode='w'):
         'Write or append charges to a file in Yaff format.'
-        if eirule == -1:
-            return
-        elif eirule == 0:
-            scale1 = 1.0
-            scale2 = 1.0
-            scale3 = 1.0
-        elif eirule == 1:
-            scale1 = 0.0
-            scale2 = 1.0
-            scale3 = 1.0
-        elif eirule == 2:
-            scale1 = 0.0
-            scale2 = 0.0
-            scale3 = 1.0
-        elif eirule == 3:
-            scale1 = 0.0
-            scale2 = 0.0
-            scale3 = 0.0
         f = open(fn, mode)
         print >> f, ''
         print >> f, '# Fixed charges'
@@ -440,9 +421,9 @@ class System(object):
         print >> f, 'FIXQ:UNIT Q0 e'
         print >> f, 'FIXQ:UNIT P e'
         print >> f, 'FIXQ:UNIT R angstrom'
-        print >> f, 'FIXQ:SCALE 1 %3.1f' % scale1
-        print >> f, 'FIXQ:SCALE 2 %3.1f' % scale2
-        print >> f, 'FIXQ:SCALE 3 %3.1f' % scale3
+        print >> f, 'FIXQ:SCALE 1 %3.1f' % ei_scales[0]
+        print >> f, 'FIXQ:SCALE 2 %3.1f' % ei_scales[1]
+        print >> f, 'FIXQ:SCALE 3 %3.1f' % ei_scales[2]
         print >> f, 'FIXQ:DIELECTRIC 1.0'
         print >> f, ''
         print >> f, '# Atomic parameters'

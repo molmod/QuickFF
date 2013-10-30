@@ -13,17 +13,26 @@ def parser():
                   'ff parameters a system specified in the files fns.'
     parser = OptionParser(usage=usage, description=description)
     parser.add_option(
-        '--eirule', default=-1, type=int,
-        help='Defines the exclusion rule for the electrostatic interactions. '  +\
-             'If set to -1, no electrostatic interactions are taken into '      +\
-             'account during force field fitting. If the rule is set to '       +\
-             '0,1,2,3: pairs seperated by less then or equal to 0,1,2,3 bonds ' +\
-             'respectively are excluded from ei interactions. [default=-1]'
+        '--ei-model', default='Harm',
+        help='Defines the model used for electrostatic interactions. Possible ' +\
+             'choices are: Exact, Harmonic and Zero. Exact implies using the '  +\
+             'exact coulomb potential, Harmonic implies the approximation of '  +\
+             'the electrostatic energy by means of a second order Taylor '      +\
+             'expansion. Zero implies ignoring electrostatic interactions. '    +\
+             '[default=%default]'
     )
     parser.add_option(
-        '--charge-scheme', default=None,
+        '--ei-scales', default='1.0,1.0,1.0', type=str,
+        help='Defines the scaling rule for the electrostatic interactions. '  +\
+             'Three comma-separated floats are required. The first one sets the ' +\
+             'scale for atoms separated by 1 bond, the second for atoms ' +\
+             'separated by 2 bonds etc... By default, all interactions are '+\
+             'left unscaled [default=%default] '
+    )
+    parser.add_option(
+        '--ei-scheme', default=None,
         help='Defines the charge scheme for which the charges will be extracted ' +\
-             'from the Horton-formatted HDF5 file given in fns. [default=%default]'
+             'from the Horton-formatted HDF5 file given in fns.'
     )
     parser.add_option(
         '--atypes-level', default=None,
@@ -40,19 +49,20 @@ def parser():
         help = "Suffix that will be added to all output files. [default='']"
     )
     options, fns = parser.parse_args()
+    options.ei_scales = [float(x) for x in options.ei_scales.split(',')]
     return fns, options
 
 def main():
     #Parse args
     fns, options = parser()
     #Setup system, model and program
-    system = System.from_files(fns, charge_scheme=options.charge_scheme)
+    system = System.from_files(fns, ei_scheme=options.ei_scheme)
     if options.atypes_level is not None:
         system.guess_ffatypes(options.atypes_level)
     else:
         system.average_charges_ffatypes()
     system.determine_ics_from_topology()
-    model = Model.from_system(system, eirule=options.eirule)
+    model = Model.from_system(system, ei_pot_kind=options.ei_model, ei_scales=options.ei_scales)
     program = Program(system, model)
     #Run program
     ff = program.run()
@@ -61,7 +71,7 @@ def main():
     ff.dump_yaff('pars_yaff%s.txt' % options.suffix, mode='w')
     system.dump_charges_yaff(
         'pars_yaff%s.txt' % options.suffix,
-        options.eirule, mode='a'
+        options.ei_scales, mode='a'
     )
     system.dump('system%s.chk' % options.suffix)
 

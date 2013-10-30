@@ -12,7 +12,7 @@ class HessianFCCost(object):
         field hessian from the ab initio hessian. Only the force constants
         are regarded as variable parameters, the rest values are kept fixed.
         The initial force constants and fixed rest values should be stored
-        in attributes of the members of model.vterms.
+        in attributes of the members of model.val.pot.terms.
 
         The cost function measures half the sum of the squares of the
         difference between ab initio and force field hessian elements:
