@@ -270,21 +270,27 @@ class System(object):
         '''
         self.ics = {}
         def sort_ffatypes(ffatypes, kind=''):
-            if kind == '':
-                if ffatypes[0] <= ffatypes[-1]:
+            if kind != 'opdist':
+                if ffatypes[0] < ffatypes[-1]:
                     return ffatypes
+                elif ffatypes[0]==ffatypes[-1]:
+                    if len(ffatypes)==4:
+                        if ffatypes[1]<ffatypes[2]:
+                            return ffatypes
+                        else:
+                            return ffatypes[::-1]
+                    else:
+                        return ffatypes
                 else:
                     return ffatypes[::-1]
-            elif kind == 'opdist':
+            else:
                 result = sorted(ffatypes[:3])
                 result.append(ffatypes[3])
                 return result
         #Find bonds
         number = {}
         for bond in self.bonds:
-            name = 'bond/'+'.'.join(sort_ffatypes(
-                [self.ffatypes[at] for at in bond]
-            ))
+            name = 'bond/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in bond]))
             if name not in number.keys():
                 number[name] = 0
             else:
@@ -300,9 +306,7 @@ class System(object):
         #Find bends
         number = {}
         for bend in self.bends:
-            name = 'angle/'+'.'.join(sort_ffatypes(
-                [self.ffatypes[at] for at in bend]
-            ))
+            name = 'angle/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in bend]))
             if name not in number.keys():
                 number[name] = 0
             else:
@@ -321,9 +325,7 @@ class System(object):
             if bend_angle(self.ref.coords[dihed[0:3]], deriv=0)[0] > 175*deg \
             or bend_angle(self.ref.coords[dihed[1:4]], deriv=0)[0] > 175*deg:
                 continue
-            name = 'dihed/'+'.'.join(sort_ffatypes(
-                [self.ffatypes[at] for at in dihed]
-            ))
+            name = 'dihed/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in dihed]))
             if name not in number.keys():
                 number[name] = 0
             else:
@@ -342,9 +344,7 @@ class System(object):
             if bend_angle(self.ref.coords[opdist[0:3]], deriv=0)[0] > 175*deg \
             or bend_angle(self.ref.coords[opdist[0:3]], deriv=0)[0] < 5*deg:
                 continue
-            name = 'opdist/'+'.'.join(sort_ffatypes(
-                [self.ffatypes[at] for at in opdist], kind='opdist'
-            ))
+            name = 'opdist/'+'.'.join(sort_ffatypes([self.ffatypes[at] for at in opdist], kind='opdist'))
             if name not in number.keys(): number[name] = 0
             else: number[name] += 1
             ic = IC(

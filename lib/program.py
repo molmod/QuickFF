@@ -69,7 +69,7 @@ class Program(object):
         self.cost = HessianFCCost(system, model)
         self.fns_traj = fns_traj
         
-    def generate_trajectories(self, skip_dihedrals=True):
+    def generate_trajectories(self, skip_dihedrals=True, verbose=True):
         '''
             Generate a perturbation trajectory for all ics (dihedrals can be
             excluded and store the coordinates in a dictionary.
@@ -95,19 +95,21 @@ class Program(object):
             if skip_dihedrals and icname.startswith('dihed'):
                 continue
             for i_ics, ic in enumerate(ics):
-                sys.stdout.write('\r    %s Processing %2i/%i' %(
-                    icname+' '*(maxlength-len(icname)), i_ics+1, len(ics)
-                ))
-                sys.stdout.flush()
+                if verbose:
+                    sys.stdout.write('\r    %s Processing %2i/%i' %(
+                        icname+' '*(maxlength-len(icname)), i_ics+1, len(ics)
+                    ))
+                    sys.stdout.flush()
                 trajectories[ic.name] = self.pert_theory.generate(ic)
-            print ''
+            if verbose:
+                print ''
         #Check if we need to write the generated trajectories to a file
         if self.fns_traj is not None:
             with open(self.fns_traj,'w') as f:
                 cPickle.dump(trajectories,f)
         return trajectories
 
-    def estimate_from_pt(self, trajectories, skip_dihedrals=True):
+    def estimate_from_pt(self, trajectories, skip_dihedrals=True, verbose=True):
         '''
             Second Step of force field development: calculate harmonic force field
             parameters for every internal coordinate separately from perturbation
@@ -133,20 +135,24 @@ class Program(object):
                 q0s.append(q0)
             ff.add(icname, ks, q0s)
             descr = icname + ' '*(maxlength-len(icname))
-            print '    %s   K = %s    q0 = %s' % (
-                descr, ks.string(), q0s.string()
-            )
+            if verbose:
+                print '    %s   K = %s    q0 = %s' % (
+                    descr, ks.string(), q0s.string()
+                )
         self.model.val.update_fftable(ff)
         return ff
 
-    def refine_cost(self):
+    def refine_cost(self, verbose=True):
         '''
             Second step of force field development: refine the force constants
             using a Hessian least squares cost function.
         '''
         fcs = self.cost.estimate()
         self.model.val.update_fcs(fcs)
-        self.model.val.get_fftable().print_screen()
+        fftab = self.model.val.get_fftable()
+        if verbose:
+            fftab.print_screen()
+        return fftab
 
     def run(self):
         print header
@@ -161,13 +167,13 @@ class Program(object):
         print '\nDetermine the coordinates of the perturbation trajectories\n'
         self.trajectories = self.generate_trajectories()
         print '\nEstimating all pars for bonds, bends and opdists\n'
-        self.estimate_from_pt(self.trajectories)
+        fftab = self.estimate_from_pt(self.trajectories)
         print '\nRefining force constants using a Hessian LSQ cost\n'
-        self.refine_cost()
+        fftab = self.refine_cost()
         print '\n'+'~'*120+'\n'
         print 'Time:           ' + datetime.datetime.now().isoformat().replace('T', ' ') + '\n'
         print footer
-        return self.model.val.get_fftable()
+        return fftab
 
     def plot_pt(self, icname):
         '''

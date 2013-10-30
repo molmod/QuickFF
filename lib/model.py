@@ -185,7 +185,7 @@ class ValencePart(BasePart):
         pot = TermListPot(vterms)
         return cls(pot)
 
-    def determine_dihedral_potentials(self, system, marge2=15*deg, marge3=15*deg):
+    def determine_dihedral_potentials(self, system, marge2=15*deg, marge3=15*deg, verbose=True):
         '''
             Determine the potential of every dihedral based on the values of
             the dihedral angles in the geometry. First try if a cosine potential
@@ -251,14 +251,16 @@ class ValencePart(BasePart):
             m = DataArray(ms, unit='au')
             rv = DataArray(rvs, unit='deg')
             if m.mean == -1 or m.std > 0.0 or rv.std > 0.0:
-                print '    %s   WARNING: ' % descr +\
-                      'could not determine clear trent in dihedral angles, ' +\
-                      'dihedral is ignored in force field !!!'
+                if verbose:
+                    print '    %s   WARNING: ' % descr +\
+                          'could not determine clear trent in dihedral angles, ' +\
+                          'dihedral is ignored in force field !!!'
                 deleted_diheds.append(icname)
             else:
-                print '    %s   0.5*K*[1 - cos(%i(psi - %5.1f))]' % (
-                    descr, m.mean, rv.mean
-                )
+                if verbose:
+                    print '    %s   0.5*K*[1 - cos(%i(psi - %5.1f))]' % (
+                        descr, m.mean, rv.mean
+                    )
                 for i, ic in enumerate(ics):
                     ic.icf = dihed_angle
                     ic.qunit = 'deg'
