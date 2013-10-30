@@ -56,9 +56,9 @@ class Program(object):
             model
                 An instance of the Model class and contains all the info
                 to define the total PES and its electrostatic contribution.
-            
+
             **Optional Arguments**
-            
+
             fns_traj
                 A file name to store the perturbation trajectories to. The
                 trajectories are stored after Pickling.
@@ -68,7 +68,7 @@ class Program(object):
         self.pert_theory = RelaxedGeoPertTheory(system, model)
         self.cost = HessianFCCost(system, model)
         self.fns_traj = fns_traj
-        
+
     def generate_trajectories(self, skip_dihedrals=True, verbose=True):
         '''
             Generate a perturbation trajectory for all ics (dihedrals can be
@@ -87,7 +87,7 @@ class Program(object):
             if os.path.isfile(self.fns_traj):
                 with open(self.fns_traj,'r') as f:
                     trajectories = cPickle.load(f)
-                return trajectories 
+                return trajectories
         #Generate trajectories from scratch
         trajectories = {}
         for icname in sorted(self.model.val.pot.terms.keys()):

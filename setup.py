@@ -29,8 +29,8 @@ from distutils.core import setup
 from distutils.command.install_data import install_data
 
 class my_install_data(install_data):
-    """Add a share_dir.txt file that points to the root for the shared files. 
-       It is otherwise impossible to figure out the location of these data 
+    """Add a share_dir.txt file that points to the root for the shared files.
+       It is otherwise impossible to figure out the location of these data
        files at runtime.
     """
     def run(self):

@@ -56,11 +56,11 @@ class Model(object):
                 evaluate EI interactions. If Harmonic is chosen, a second
                 order Taylor expansion is used. Harmonic is a lot faster and
                 should already give accurate results.
-            
+
             ei_scales
                 a list containing the scales for the 1-2, 1-3 and 1-4
                 contribution to the electrostatic interactions
-          
+
             ai_project
                 If True, project the translational and rotational
                 degrees of freedom out of the hessian.
@@ -69,7 +69,7 @@ class Model(object):
         ei  = EIPart.from_system(system, ei_scales, ei_pot_kind)
         val = ValencePart.from_system(system)
         return cls(ai, val, ei)
-    
+
     def print_info(self):
         self.ai.print_info()
         self.ei.print_info()
@@ -86,13 +86,13 @@ class BasePart(object):
     def __init__(self, name, pot):
         self.name = name
         self.pot = pot
-    
+
     def calc_energy(self, coords):
         return self.pot.calc_energy(coords)
-    
+
     def calc_gradient(self, coords):
         return self.pot.calc_gradient(coords)
-    
+
     def calc_hessian(self, coords):
         return self.pot.calc_hessian(coords)
 
@@ -107,7 +107,7 @@ class AIPart(BasePart):
     def __init__(self, pot, project=None):
         BasePart.__init__(self, 'AI Total', pot)
         self.project = project
-        
+
     @classmethod
     def from_system(cls, system, project=True):
         if project:
@@ -115,7 +115,7 @@ class AIPart(BasePart):
         else:
             hess = system.ref.hess.copy()
         pot = HarmonicPot(
-            system.ref.coords.copy(), 0.0, 
+            system.ref.coords.copy(), 0.0,
             system.ref.grad.copy(), hess
         )
         return cls(pot, project)
@@ -132,7 +132,7 @@ class EIPart(BasePart):
     def __init__(self, pot, scales):
          BasePart.__init__(self, 'FF Electrostatic', pot)
          self.scales = scales
-    
+
     @classmethod
     def from_system(cls, system, scales, pot_kind):
         if pot_kind.lower() == 'zero':
@@ -169,7 +169,7 @@ class ValencePart(BasePart):
     '''
     def __init__(self, pot):
         BasePart.__init__(self, 'FF Covalent', pot)
-    
+
     @classmethod
     def from_system(cls, system):
         vterms = {}
@@ -353,13 +353,13 @@ class ValencePart(BasePart):
 class BasePot(object):
     def __init__(self, kind):
         self.kind = kind
-    
+
     def  calc_energy(self, coords):
         raise NotImplementedError
-    
+
     def  calc_gradient(self, coords):
         raise NotImplementedError
-        
+
     def  calc_hessian(self, coords):
         raise NotImplementedError
 
@@ -421,7 +421,7 @@ class CoulombPot(BasePot):
             return self.scales[2]
         else:
             return 1.0
-    
+
     def calc_energy(self, coords):
         energy = self.shift
         for i, qi in enumerate(self.charges):
