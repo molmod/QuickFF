@@ -20,10 +20,10 @@ _____________________\//////____\/////////___\///_____\////////__\///____\///__\
 
 User:           louis
 Machine info:   Linux molmod91 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC 2013 x86_64
-Time:           2013-10-30 18:56:49.879048
+Time:           2013-10-30 18:56:41.004691
 Python version: 2.7.5+ (default, Sep 19 2013, 13:48:49) [GCC 4.8.1]
-Current Dir:    /home/louis/build/quickff/share/examples/methane
-Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,0.0 --ei-model=harm gaussian.fchk gaussian.fchk.h5
+Current Dir:    /home/louis/build/quickff/share/examples/ethene
+Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,1.0,1.0 --ei-model=harm gaussian.fchk gaussian.fchk.h5
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -32,42 +32,54 @@ System information:
     -----------------------------------------
       index   symbol   ffatype       charge  
     -----------------------------------------
-      0       C        C4            -0.370
-      1       H        H1_c           0.092
-      2       H        H1_c           0.092
-      3       H        H1_c           0.092
-      4       H        H1_c           0.092
+      0       C        C3_c1         -0.132
+      1       H        H1_c           0.066
+      2       C        C3_c1         -0.132
+      3       H        H1_c           0.066
+      4       H        H1_c           0.066
+      5       H        H1_c           0.066
     -----------------------------------------
 
 Model information:
 
     AI Total project Rot/Trans =  True
     AI Total kind = Harmonic
-    FF Electrostatic scales = 0.00 0.00 0.00
+    FF Electrostatic scales = 0.00 1.00 1.00
     FF Electrostatic kind = Harmonic
     FF Covalent kind = TermList
 
 Determine dihedral potentials
 
+    dihed/H1_c.C3_c1.C3_c1.H1_c      0.5*K*[1 - cos(2(psi -   0.0))]
 
 Determine the coordinates of the perturbation trajectories
 
-    angle/H1_c.C4.H1_c   Processing  1/6    angle/H1_c.C4.H1_c   Processing  2/6    angle/H1_c.C4.H1_c   Processing  3/6    angle/H1_c.C4.H1_c   Processing  4/6    angle/H1_c.C4.H1_c   Processing  5/6    angle/H1_c.C4.H1_c   Processing  6/6
-    bond/C4.H1_c         Processing  1/4    bond/C4.H1_c         Processing  2/4    bond/C4.H1_c         Processing  3/4    bond/C4.H1_c         Processing  4/4
+    angle/C3_c1.C3_c1.H1_c         Processing  1/4    angle/C3_c1.C3_c1.H1_c         Processing  2/4    angle/C3_c1.C3_c1.H1_c         Processing  3/4    angle/C3_c1.C3_c1.H1_c         Processing  4/4
+    angle/H1_c.C3_c1.H1_c          Processing  1/2    angle/H1_c.C3_c1.H1_c          Processing  2/2
+    bond/C3_c1.C3_c1               Processing  1/1
+    bond/C3_c1.H1_c                Processing  1/4    bond/C3_c1.H1_c                Processing  2/4    bond/C3_c1.H1_c                Processing  3/4    bond/C3_c1.H1_c                Processing  4/4
+    opdist/C3_c1.H1_c.H1_c.C3_c1   Processing  1/2    opdist/C3_c1.H1_c.H1_c.C3_c1   Processing  2/2
 
 Estimating all pars for bonds, bends and opdists
 
-    angle/H1_c.C4.H1_c     K =   436.939905 ±     0.047059 kjmol/rad**2       q0 =   109.456723 ±     0.000943 deg            
-    bond/C4.H1_c           K =  3174.672988 ±     0.339794 kjmol/A**2         q0 =     1.090919 ±     0.000002 A              
+    angle/C3_c1.C3_c1.H1_c           K =   700.068500 ±     0.000003 kjmol/rad**2       q0 =   121.733510 ±     0.000000 deg            
+    angle/H1_c.C3_c1.H1_c            K =   524.739863 ±     0.000001 kjmol/rad**2       q0 =   116.459457 ±     0.000000 deg            
+    bond/C3_c1.C3_c1                 K =  5835.142855 ±     0.000000 kjmol/A**2         q0 =     1.329916 ±     0.000000 A              
+    bond/C3_c1.H1_c                  K =  3367.264682 ±     0.000001 kjmol/A**2         q0 =     1.084763 ±     0.000000 A              
+    opdist/C3_c1.H1_c.H1_c.C3_c1     K =  1029.884894 ±     0.000001 kjmol/A**2         q0 =    -0.000000 ±     0.000000 A              
 
 Refining force constants using a Hessian LSQ cost
 
-    angle/H1_c.C4.H1_c     K =   258.219353 ±     0.000000 kjmol/rad**2       q0 =   109.456723 ±     0.000000 deg            
-    bond/C4.H1_c           K =  3003.681610 ±     0.000000 kjmol/A**2         q0 =     1.090919 ±     0.000000 A              
+    angle/C3_c1.C3_c1.H1_c           K =   299.682105 ±     0.000000 kjmol/rad**2       q0 =   121.733510 ±     0.000000 deg            
+    angle/H1_c.C3_c1.H1_c            K =   181.419743 ±     0.000000 kjmol/rad**2       q0 =   116.459457 ±     0.000000 deg            
+    bond/C3_c1.C3_c1                 K =  5344.787586 ±     0.000000 kjmol/A**2         q0 =     1.329916 ±     0.000000 A              
+    bond/C3_c1.H1_c                  K =  3200.458689 ±     0.000000 kjmol/A**2         q0 =     1.084763 ±     0.000000 A              
+    dihed/H1_c.C3_c1.C3_c1.H1_c      K =    42.656267 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
+    opdist/C3_c1.H1_c.H1_c.C3_c1     K =   103.549890 ±     0.000000 kjmol/A**2         q0 =    -0.000000 ±     0.000000 A              
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Time:           2013-10-30 18:56:50.471114
+Time:           2013-10-30 18:56:42.232901
 
 
 __/\\\__________________________________________________________________________________________________________/\\\____

@@ -20,7 +20,7 @@ _____________________\//////____\/////////___\///_____\////////__\///____\///__\
 
 User:           louis
 Machine info:   Linux molmod91 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC 2013 x86_64
-Time:           2013-10-30 18:22:42.478651
+Time:           2013-10-30 18:56:22.770154
 Python version: 2.7.5+ (default, Sep 19 2013, 13:48:49) [GCC 4.8.1]
 Current Dir:    /home/louis/build/quickff/share/examples/ethanol
 Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,1.0,1.0 --ei-model=harm gaussian.fchk gaussian.fchk.h5
@@ -109,7 +109,7 @@ Refining force constants using a Hessian LSQ cost
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Time:           2013-10-30 18:22:44.946325
+Time:           2013-10-30 18:56:26.582455
 
 
 __/\\\__________________________________________________________________________________________________________/\\\____

@@ -20,7 +20,7 @@ _____________________\//////____\/////////___\///_____\////////__\///____\///__\
 
 User:           louis
 Machine info:   Linux molmod91 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC 2013 x86_64
-Time:           2013-10-30 18:22:55.625542
+Time:           2013-10-30 18:56:50.773595
 Python version: 2.7.5+ (default, Sep 19 2013, 13:48:49) [GCC 4.8.1]
 Current Dir:    /home/louis/build/quickff/share/examples/methane
 Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,0.0 --ei-model=zero gaussian.fchk gaussian.fchk.h5
@@ -62,12 +62,12 @@ Estimating all pars for bonds, bends and opdists
 
 Refining force constants using a Hessian LSQ cost
 
-    angle/H1_c.C4.H1_c     K =   258.219354 ±     0.000000 kjmol/rad**2       q0 =   109.456723 ±     0.000000 deg            
-    bond/C4.H1_c           K =  3003.681603 ±     0.000000 kjmol/A**2         q0 =     1.090919 ±     0.000000 A              
+    angle/H1_c.C4.H1_c     K =   258.219353 ±     0.000000 kjmol/rad**2       q0 =   109.456723 ±     0.000000 deg            
+    bond/C4.H1_c           K =  3003.681610 ±     0.000000 kjmol/A**2         q0 =     1.090919 ±     0.000000 A              
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Time:           2013-10-30 18:22:55.994396
+Time:           2013-10-30 18:56:51.355719
 
 
 __/\\\__________________________________________________________________________________________________________/\\\____

@@ -38,7 +38,7 @@ def compare(fftable, ref, tol_bond_k=1e-1*kjmol/(angstrom**2), tol_bond_q=1e-6*a
             print '    %s k = %12.6f    ref = %12.6f  [kjmol]' %(icname, k/kjmol, kref/kjmol)
             print ''
             assert abs(k-kref)<tol_dihed_k
-        elif icname.startswith('oopdist'):
+        elif icname.startswith('opdist'):
             print '    %s k  = %12.6f    ref = %12.6f  [kjmol/A^2]' %(icname, k/(kjmol/angstrom**2), kref/(kjmol/angstrom**2))
             print '    %s d0 = %12.6f    ref = %12.6f  [A]' %(icname, q0/angstrom, q0ref/angstrom)
             print ''
@@ -79,3 +79,48 @@ def test_ethanol_high_he_2():
 
 def test_ethanol_high_he_3():
     run_example('ethanol', 3, 'he', 'high')
+
+def test_ethene_high_he_noei():
+    run_example('ethene', -1, 'he', 'high')
+
+def test_ethene_high_he_0():
+    run_example('ethene', 0, 'he', 'high')
+
+def test_ethene_high_he_1():
+    run_example('ethene', 1, 'he', 'high')
+
+def test_ethene_high_he_2():
+    run_example('ethene', 2, 'he', 'high')
+
+def test_ethene_high_he_3():
+    run_example('ethene', 3, 'he', 'high')
+
+def test_benzene_high_he_noei():
+    run_example('benzene', -1, 'he', 'high')
+
+def test_benzene_high_he_0():
+    run_example('benzene', 0, 'he', 'high')
+
+def test_benzene_high_he_1():
+    run_example('benzene', 1, 'he', 'high')
+
+def test_benzene_high_he_2():
+    run_example('benzene', 2, 'he', 'high')
+
+def test_benzene_high_he_3():
+    run_example('benzene', 3, 'he', 'high')
+
+def test_amoniak_high_he_noei():
+    run_example('amoniak', -1, 'he', 'high')
+
+def test_amoniak_high_he_0():
+    run_example('amoniak', 0, 'he', 'high')
+
+def test_amoniak_high_he_1():
+    run_example('amoniak', 1, 'he', 'high')
+
+def test_amoniak_high_he_2():
+    run_example('amoniak', 2, 'he', 'high')
+
+def test_amoniak_high_he_3():
+    run_example('amoniak', 3, 'he', 'high')
