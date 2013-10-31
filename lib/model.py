@@ -147,7 +147,7 @@ class EIPart(BasePart):
             for dihed in system.diheds:
                 scaled_pairs[2].append([dihed[0], dihed[3]])
             #Construct the potential
-            exact = CoulombPot(system.ref.coords.copy(), system.charges.copy(), scales, scaled_pairs)
+            exact = CoulombPot(system.charges.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
             if pot_kind.lower() in ['harm', 'harmonic']:
                 grad = exact.calc_gradient(system.ref.coords.copy())
                 hess = exact.calc_hessian(system.ref.coords.copy())
@@ -396,20 +396,20 @@ class HarmonicPot(BasePot):
 
     def calc_gradient(self, coords):
         dx = (coords - self.coords0).reshape([3*self.natoms])
-        return self.grad0 + np.dot(self.hess0.reshape([3*self.natoms, 3*self.natoms]), dx).reshape([self.natoms, 3])
+        return self.grad0 + np.dot(self.hess0.reshape([3*self.natoms, 3*self.natoms]), dx)
 
     def calc_hessian(self, coords):
         return self.hess0
 
 
 class CoulombPot(BasePot):
-    def __init__(self, coords0, charges, scales, scaled_pairs, shift=True):
+    def __init__(self, charges, scales, scaled_pairs, coords0=None):
         BasePot.__init__(self, 'Coulomb')
         self.charges = charges
         self.scales = scales
         self.scaled_pairs = scaled_pairs
         self.shift = 0.0
-        if shift:
+        if coords0 is not None:
             self.shift = -self.calc_energy(coords0)
 
     def _get_scale(self, i, j):

@@ -1,13 +1,19 @@
-from molmod.units import parse_unit
+from molmod.units import parse_unit, angstrom
 
 from quickff.system import System
-from quickff.model import Model
-from quickff.program import Program
 from quickff.context import context
 
 import numpy as np, os
 
-def get_program(molecule, atypes_level, ei_scheme, ei_rule):
+def get_water_coords():
+    coords0 = np.array([
+        [ 0.000000000,  0.763382315, -0.468300621],
+        [ 0.000000000, -0.000000000,  0.117075156],
+        [-0.000000000, -0.763382315, -0.468300621],
+    ])*angstrom
+    return coords0
+
+def get_system(molecule, atypes_level, ei_scheme):
     moldir = context.get_fn('examples/%s' %molecule)
     system = System.from_files(
         [os.path.join(moldir, 'gaussian.fchk'), os.path.join(moldir, 'gaussian.fchk.h5')],
@@ -15,37 +21,12 @@ def get_program(molecule, atypes_level, ei_scheme, ei_rule):
     )
     system.guess_ffatypes(atypes_level)
     system.determine_ics_from_topology()
-    print sorted(system.ics.keys())
-    if ei_rule==-1:
-        ei_pot_kind='Zero'
-        ei_scales = [0.0,0.0,0.0]
-    elif ei_rule==0:
-        ei_pot_kind='Harm'
-        ei_scales = [1.0,1.0,1.0]
-    elif ei_rule==1:
-        ei_pot_kind='Harm'
-        ei_scales = [0.0,1.0,1.0]
-    elif ei_rule==2:
-        ei_pot_kind='Harm'
-        ei_scales = [0.0,0.0,1.0]
-    elif ei_rule==3:
-        ei_pot_kind='Harm'
-        ei_scales = [0.0,0.0,0.0]
-    else:
-        raise ValueError('Invalid ei-rule %i' %ei_rule)
-    model = Model.from_system(system, ei_pot_kind=ei_pot_kind, ei_scales=ei_scales)
-    model.val.determine_dihedral_potentials(system, verbose=False)
-    program = Program(system, model)
-    return program
+    return system
     
-def get_ref_ffs(molecule, atypes_level, ei_scheme, ei_rule):
+def get_reference_ff(molecule, atypes_level, ei_scheme, ei_rule):
     moldir = context.get_fn('examples/%s' %molecule)
     fn = os.path.join(moldir, '%s_%s_%s.qff' %(atypes_level, ei_rule, ei_scheme) )
-    ffs = read_ff(fn)
-    return ffs
-
-def read_ff(fn):
-    ffs = {'pre': {}, 'post': {}}
+    ffs = {'pt': {}, 'refined': {}}
     f = open(fn, 'r')
     section = 'skip'
     for line in f.readlines():
@@ -53,10 +34,10 @@ def read_ff(fn):
         if len(words)==0:
             continue
         if line.startswith('Estimating all pars'):
-            section = 'pre'
+            section = 'pt'
             continue
         elif line.startswith('Refining force constants'):
-            section = 'post'
+            section = 'refined'
             continue
         elif line.startswith('~~~~~~~~~~~~~~~~~~~~~~~~'):
             section = 'skip'
