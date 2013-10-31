@@ -1,9 +1,8 @@
 from molmod.units import parse_unit, angstrom
+import numpy as np, os
 
 from quickff.system import System
 from quickff.context import context
-
-import numpy as np, os
 
 def get_water_coords():
     coords0 = np.array([
