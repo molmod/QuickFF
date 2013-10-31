@@ -4,6 +4,7 @@ import numpy as np
 
 from quickff.model import *
 from quickff.perturbation import RelaxedGeoPertTheory
+from quickff.uff import get_uff_sigmas_epsilons
 
 from common import get_water_coords, get_system
 
@@ -34,7 +35,7 @@ def run_ei_taylor(molecule):
     system = get_system(molecule, 'high', 'he')
     coords0 = system.ref.coords
     coul = CoulombPot(system.charges, [1.0, 1.0, 1.0],  [[], [], []], coords0=coords0.copy())
-    model = Model.from_system(system, ei_scales=[1.0, 1.0, 1.0], ei_pot_kind='harm')
+    model = Model.from_system(system, ei_scales=[1.0, 1.0, 1.0], ei_pot_kind='harm', vdw_pot_kind='zero')
     model.val.determine_dihedral_potentials(system, verbose=False)
     pt = RelaxedGeoPertTheory(system, model)
     print ''

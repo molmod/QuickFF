@@ -51,8 +51,17 @@ def main():
         system.guess_ffatypes(options.atypes_level)
     else:
         system.average_charges_ffatypes()
+    if options.vdw_model.lower() != 'zero':
+        if options.vdw_from.lower() == 'uff':
+            system.read_uff_vdw()
+        else:
+            raise ValueError('Unsupported value for vdw_from, recieved %s' %options.vdw_from)
     system.determine_ics_from_topology()
-    model = Model.from_system(system, eirule=options.eirule)
+    model = Model.from_system(
+        system,
+        ei_scales=options.ei_scales  , ei_pot_kind=options.ei_model  ,
+        vdw_scales=options.vdw_scales, vdw_pot_kind=options.vdw_model,
+    )
     program = Program(system, model)
     program.plot_pt(icname)
 

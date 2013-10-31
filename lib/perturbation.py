@@ -99,9 +99,9 @@ class BasePertTheory(object):
         pp.savefig(filename)
 
     def estimate(self, ic, trajectory):
-        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei')]
-        qs, tot, ei = self.analyze(trajectory, evaluators)
-        pars = fitpar(qs, tot-ei, rcond=1e-6)
+        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw')]
+        qs, tot, ei, vdw = self.analyze(trajectory, evaluators)
+        pars = fitpar(qs, tot-ei-vdw, rcond=1e-6)
         return 2*pars[0], -pars[1]/(2*pars[0])
 
 

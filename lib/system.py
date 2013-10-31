@@ -4,7 +4,7 @@ from molmod.molecular_graphs import MolecularGraph
 from molmod.io.chk import load_chk, dump_chk
 from molmod.io.fchk import FCHKFile
 from molmod.io.psf import PSFFile
-from molmod.units import deg
+from molmod.units import deg, angstrom, kjmol
 from molmod.ic import bond_length, bend_angle, dihed_angle, opbend_dist
 
 import numpy as np
@@ -12,12 +12,13 @@ import numpy as np
 from quickff.refdata import ReferenceData
 from quickff.ic import IC
 from quickff.tools import find_opdist_patterns
+from quickff.uff import get_uff_sigmas_epsilons
 
 __all__ = ['System']
 
 class System(object):
     "A class for storing all system properties"
-    def __init__(self, numbers, ffatypes, charges, ref, bonds, bends, diheds,
+    def __init__(self, numbers, ffatypes, charges, sigmas, epsilons, ref, bonds, bends, diheds,
                  opdists, nlist):
         '''
            **Arguments:**
@@ -32,6 +33,12 @@ class System(object):
            charges
                 A numpy array (N) with atomic charges. The default charges
                 are all zero.
+
+           sigmas
+                A numpy array (N) with vdw sigma values.
+
+           epsilons
+                A numpy array (N) with vdw epsilons values.
 
            ref
                 An instance of ReferenceData containing the reference data
@@ -62,6 +69,8 @@ class System(object):
         self.numbers = numbers
         self.ffatypes = ffatypes
         self.charges = charges
+        self.sigmas = sigmas
+        self.epsilons = epsilons
         self.bonds = bonds
         self.bends = bends
         self.diheds = diheds
@@ -105,6 +114,8 @@ class System(object):
         #initialise
         numbers = None
         charges = None
+        sigmas = None
+        epsilons = None
         ffatypes = None
         bonds = None
         bends = None
@@ -162,11 +173,22 @@ class System(object):
                 import h5py
                 f = h5py.File(fn, 'r')
                 charges = f['wpart/%s/charges' % ei_scheme][:]
-        #Set charges to zero if they are not defined
+        #Set attributes to zero if they are not defined
         if charges is None:
             charges = np.zeros(len(numbers), float)
-        return cls(numbers, ffatypes, charges, ref, bonds, bends, diheds,
-                   opdists, nlist)
+        if sigmas is None:
+            sigmas = np.zeros(len(numbers), float)
+        if epsilons is None:
+            epsilons = np.zeros(len(numbers), float)
+        return cls(numbers, ffatypes, charges, sigmas, epsilons, ref,
+                   bonds, bends, diheds, opdists, nlist)
+
+    def read_uff_vdw(self):
+        '''
+            Read Lennart-Jones vdW parameters from the UFF force field.
+        '''
+        print ''
+        self.sigmas, self.epsilons = get_uff_sigmas_epsilons(self.numbers)
 
     def check_topology(self):
         '''
@@ -402,7 +424,7 @@ class System(object):
         sample['hess']      = self.ref.hess
         dump_chk(fn, sample)
 
-    def dump_charges_yaff(self, fn, ei_scales, mode='w'):
+    def dump_charges_yaff(self, fn, scales, mode='w'):
         'Write or append charges to a file in Yaff format.'
         f = open(fn, mode)
         print >> f, ''
@@ -421,9 +443,9 @@ class System(object):
         print >> f, 'FIXQ:UNIT Q0 e'
         print >> f, 'FIXQ:UNIT P e'
         print >> f, 'FIXQ:UNIT R angstrom'
-        print >> f, 'FIXQ:SCALE 1 %3.1f' % ei_scales[0]
-        print >> f, 'FIXQ:SCALE 2 %3.1f' % ei_scales[1]
-        print >> f, 'FIXQ:SCALE 3 %3.1f' % ei_scales[2]
+        print >> f, 'FIXQ:SCALE 1 %3.1f' % scales[0]
+        print >> f, 'FIXQ:SCALE 2 %3.1f' % scales[1]
+        print >> f, 'FIXQ:SCALE 3 %3.1f' % scales[2]
         print >> f, 'FIXQ:DIELECTRIC 1.0'
         print >> f, ''
         print >> f, '# Atomic parameters'
@@ -434,5 +456,31 @@ class System(object):
         for atype, q in zip(self.ffatypes, self.charges):
             if atype not in added:
                 print >> f, 'FIXQ:ATOM %8s % .10f  0.0000000000e+00' % (atype, q)
+                added.append(atype)
+        f.close()
+
+    def dump_vdw_yaff(self, fn, scales, pot_kind, mode='w'):
+        'Write or append van der Waals parameters to a file in Yaff format.'
+        f = open(fn, mode)
+        print >> f, '# van der Waals'
+        print >> f, '#=============='
+        print >> f, '# The following mathemetical form is supported:'
+        print >> f, '#  - MM3:   EPSILON*(1.84e5*exp(-12*r/SIGMA)-2.25*(SIGMA/r)^6)'
+        print >> f, '#  - LJ:    4.0*EPSILON*((SIGMA/r)^12 - (SIGMA/r)^6)'
+        print >> f, '#  - PAULI: A*exp(-B*r)'
+        print >> f, ''
+        print >> f, '%s:UNIT SIGMA angstrom' %pot_kind.upper()
+        print >> f, '%s:UNIT EPSILON kjmol'%pot_kind.upper()
+        print >> f, '%s:SCALE 1 %4.2f' %(pot_kind.upper(), scales[0])
+        print >> f, '%s:SCALE 2 %4.2f' %(pot_kind.upper(), scales[1])
+        print >> f, '%s:SCALE 3 %4.2f' %(pot_kind.upper(), scales[2])
+        print >> f, ''
+        print >> f, '# -------------------------------------------'
+        print >> f, '# KEY    ffatype  SIGMA         EPSILON'
+        print >> f, '# -------------------------------------------'
+        added = []
+        for atype, sigma, epsilon in zip(self.ffatypes, self.sigmas, self.epsilons):
+            if atype not in added:
+                print >> f, '%s:PARS %8s % .10f % .10f' %(pot_kind.upper(), atype, sigma/angstrom, epsilon/kjmol)
                 added.append(atype)
         f.close()

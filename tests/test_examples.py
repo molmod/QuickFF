@@ -27,7 +27,7 @@ def run_example(molecule, ei_rule, ei_scheme, atypes_level):
         ei_scales = [0.0,0.0,0.0]
     else:
         raise ValueError('Invalid ei-rule %i' %ei_rule)
-    model = Model.from_system(system, ei_pot_kind=ei_pot_kind, ei_scales=ei_scales)
+    model = Model.from_system(system, ei_pot_kind=ei_pot_kind, ei_scales=ei_scales, vdw_pot_kind='zero')
     model.val.determine_dihedral_potentials(system, verbose=False)
     program = Program(system, model)
     print 'Comparing ff from perturbation theory ...'

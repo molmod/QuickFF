@@ -26,13 +26,34 @@ def parser():
         help='Defines the scaling rule for the electrostatic interactions. '  +\
              'Three comma-separated floats are required. The first one sets the ' +\
              'scale for atoms separated by 1 bond, the second for atoms ' +\
-             'separated by 2 bonds etc... By default, all interactions are '+\
-             'left unscaled [default=%default] '
+             'separated by 2 bonds etc ... By default, all interactions are '+\
+             'left unscaled [default=%default]'
     )
     parser.add_option(
         '--ei-scheme', default=None,
         help='Defines the charge scheme for which the charges will be extracted ' +\
              'from the Horton-formatted HDF5 file given in fns.'
+    )
+    parser.add_option(
+        '--vdw-model', default='Harm',
+        help='Defines the model used for van der Waals interactions. Possible ' +\
+             'choices are: Exact, Harmonic and Zero. Exact implies using the '  +\
+             'exact potential, Harmonic implies the approximation of the '      +\
+             'van der Waals energy by means of a second order Taylor expansion. '+\
+             'Zero implies ignoring electrostatic interactions. '               +\
+             '[default=%default]'
+    )
+    parser.add_option(
+        '--vdw-scales', default=[0.0,0.0,1.0],
+        help='Defines the scaling rule for the van der Waals interactions. '  +\
+             'Three comma-separated floats are required. The first one sets the ' +\
+             'scale for atoms separated by 1 bond, the second for atoms ' +\
+             'separated by 2 bonds etc ... [default=%default]'
+    )
+    parser.add_option(
+        '--vdw-from', default='uff',
+        help='Defines from which force field to extract vdW parameters. '       +\
+             'Currently only UFF is supported. [default=%default]'
     )
     parser.add_option(
         '--atypes-level', default=None,
@@ -61,18 +82,33 @@ def main():
         system.guess_ffatypes(options.atypes_level)
     else:
         system.average_charges_ffatypes()
+    if options.vdw_model.lower() != 'zero':
+        if options.vdw_from.lower() == 'uff':
+            system.read_uff_vdw()
+        else:
+            raise ValueError('Unsupported value for vdw_from, recieved %s' %options.vdw_from)
     system.determine_ics_from_topology()
-    model = Model.from_system(system, ei_pot_kind=options.ei_model, ei_scales=options.ei_scales)
+    model = Model.from_system(
+        system,
+        ei_scales=options.ei_scales  , ei_pot_kind=options.ei_model  ,
+        vdw_scales=options.vdw_scales, vdw_pot_kind=options.vdw_model,
+    )
     program = Program(system, model)
     #Run program
     ff = program.run()
     #Make output
     ff.dump_ffit2('pars_ffit2%s.txt' % options.suffix, mode='w')
     ff.dump_yaff('pars_yaff%s.txt' % options.suffix, mode='w')
-    system.dump_charges_yaff(
-        'pars_yaff%s.txt' % options.suffix,
-        options.ei_scales, mode='a'
-    )
+    if options.ei_model.lower() != 'zero':
+        system.dump_charges_yaff(
+            'pars_yaff%s.txt' % options.suffix,
+            options.ei_scales, mode='a'
+        )
+    if options.vdw_model.lower() != 'zero':
+        system.dump_vdw_yaff(
+            'pars_yaff%s.txt' % options.suffix,
+            options.vdw_scales, options.vdw_model, mode='a'
+        )
     system.dump('system%s.chk' % options.suffix)
 
 if __name__=='__main__':
