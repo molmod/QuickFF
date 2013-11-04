@@ -20,28 +20,28 @@ _____________________\//////____\/////////___\///_____\////////__\///____\///__\
 
 User:           louis
 Machine info:   Linux molmod91 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC 2013 x86_64
-Time:           2013-10-30 18:56:35.223008
+Time:           2013-11-04 10:53:29.339261
 Python version: 2.7.5+ (default, Sep 19 2013, 13:48:49) [GCC 4.8.1]
 Current Dir:    /home/louis/build/quickff/share/examples/ethanol
-Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,0.0 --ei-model=zero gaussian.fchk gaussian.fchk.h5
+Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,0.0 --ei-model=zero --vdw-from=uff --vdw-scales=0.0,0.0,0.0 --vdw-model=zero gaussian.fchk gaussian.fchk.h5
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 System information:
 
-    -----------------------------------------
-      index   symbol   ffatype       charge  
-    -----------------------------------------
-      0       C        C4_c1         -0.259
-      1       C        C4_c1_o1       0.292
-      2       H        H1_c           0.031
-      3       H        H1_c           0.031
-      4       H        H1_c           0.031
-      5       H        H1_c           0.031
-      6       O        O2_ch         -0.521
-      7       H        H1_c           0.031
-      8       H        H1_o           0.334
-    -----------------------------------------
+    -------------------------------------------------------------------------------
+      index   symbol   ffatype       charge [e]     sigma [A]    epsilon [kJ/mol]  
+    -------------------------------------------------------------------------------
+      0       C        C4_c1           -0.259         0.000           0.000
+      1       C        C4_c1_o1         0.292         0.000           0.000
+      2       H        H1_c             0.031         0.000           0.000
+      3       H        H1_c             0.031         0.000           0.000
+      4       H        H1_c             0.031         0.000           0.000
+      5       H        H1_c             0.031         0.000           0.000
+      6       O        O2_ch           -0.521         0.000           0.000
+      7       H        H1_c             0.031         0.000           0.000
+      8       H        H1_o             0.334         0.000           0.000
+    -------------------------------------------------------------------------------
 
 Model information:
 
@@ -49,6 +49,8 @@ Model information:
     AI Total kind = Harmonic
     FF Electrostatic scales = 0.00 0.00 0.00
     FF Electrostatic kind = Zero
+    FF van der Waals scales = 0.00 0.00 0.00
+    FF van der Waals kind = Zero
     FF Covalent kind = TermList
 
 Determine dihedral potentials
@@ -109,7 +111,7 @@ Refining force constants using a Hessian LSQ cost
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Time:           2013-10-30 18:56:39.117636
+Time:           2013-11-04 10:53:33.175356
 
 
 __/\\\__________________________________________________________________________________________________________/\\\____

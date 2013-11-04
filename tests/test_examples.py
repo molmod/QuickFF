@@ -1,53 +1,49 @@
 from molmod.units import kjmol, angstrom, deg, rad
+import os
 
 from quickff.model import Model
 from quickff.program import Program
+from quickff.context import context
 
-from common import get_system, get_reference_ff
+from common import get_system, read_qff_out, translate_rule
 
-def run_example(molecule, ei_rule, ei_scheme, atypes_level):
-    #get system and reference force field
-    system = get_system(molecule, atypes_level, ei_scheme)
-    reference = get_reference_ff(molecule, atypes_level, ei_scheme, ei_rule)   
-    #Construct model
-    if ei_rule==-1:
-        ei_pot_kind='Zero'
-        ei_scales = [0.0,0.0,0.0]
-    elif ei_rule==0:
-        ei_pot_kind='Harm'
-        ei_scales = [1.0,1.0,1.0]
-    elif ei_rule==1:
-        ei_pot_kind='Harm'
-        ei_scales = [0.0,1.0,1.0]
-    elif ei_rule==2:
-        ei_pot_kind='Harm'
-        ei_scales = [0.0,0.0,1.0]
-    elif ei_rule==3:
-        ei_pot_kind='Harm'
-        ei_scales = [0.0,0.0,0.0]
-    else:
-        raise ValueError('Invalid ei-rule %i' %ei_rule)
-    model = Model.from_system(system, ei_pot_kind=ei_pot_kind, ei_scales=ei_scales, vdw_pot_kind='zero')
-    model.val.determine_dihedral_potentials(system, verbose=False)
-    program = Program(system, model)
+def run_example(molecule, ei_rule=2, vdw_rule=2, vdw_from='uff', ei_scheme='he', atypes_level='high', verbose=True):
+    #Preparing calc
+    moldir = context.get_fn('examples/%s' %molecule)
+    ei_scales, ei_pot_kind = translate_rule(ei_rule)
+    vdw_scales, vdw_pot_kind = translate_rule(vdw_rule)
+    command  = 'qff-est.py --atypes-level=%s ' % atypes_level
+    command += '--ei-scheme=%s --ei-scales=%s --ei-model=%s ' %(ei_scheme, ','.join([str(x) for x in ei_scales]), ei_pot_kind)
+    command += '--vdw-from=%s --vdw-scales=%s --vdw-model=%s ' %(vdw_from, ','.join([str(x) for x in vdw_scales]), vdw_pot_kind)
+    command += '%s/gaussian.fchk %s/gaussian.fchk.h5' %(moldir, moldir)
+    #Running quickff calc
+    cwd = os.getcwd()
+    os.system('mkdir -p %s/testwork/%s' %(cwd,molecule))
+    os.system('cd %s/testwork/%s; %s > %s_%s%s_%s%s.qff; rm pars_*.txt system.chk; cd %s' %(
+        cwd, molecule, command, atypes_level, ei_scheme, ei_rule, vdw_from, vdw_rule, cwd
+    ))
+    #Reading new quickff calc and comparing with reference
+    fn_ref = os.path.join(moldir, '%s_%s%s_%s%s.qff' %(atypes_level, ei_scheme, ei_rule, vdw_from, vdw_rule) )
+    fn_new = '%s/testwork/%s/%s_%s%s_%s%s.qff' %(cwd, molecule, atypes_level, ei_scheme, ei_rule, vdw_from, vdw_rule)
+    ref = read_qff_out(fn_ref)
+    new = read_qff_out(fn_new)
     print 'Comparing ff from perturbation theory ...'
-    trajectories = program.generate_trajectories(verbose=False)
-    fftab1 = program.estimate_from_pt(trajectories, verbose=False)
-    compare(fftab1, reference['pt'])
+    compare(new['pt'], ref['pt'])
     print 'Comparing ff after refinement ...'
-    fftab2 = program.refine_cost(verbose=False)
-    compare(fftab2, reference['refined'])
+    compare(new['refined'], ref['refined'])
+    #Remove directory with temporary files
+    os.system('rm -r %s/testwork' %cwd)
 
-def compare(fftable, ref):
-    assert sorted(ref.keys())==sorted(fftable.pars.keys())
+def compare(new, ref):
+    assert sorted(ref.keys())==sorted(new.keys())
     tolerance = {
-        'bond'  : [1e-1*kjmol/angstrom**2, 1e-4*angstrom],
-        'bend'  : [1e-1*kjmol/rad**2     , 1e-1*deg     ],
-        'dihed' : [1e-1*kjmol            , None         ],
-        'opdist': [1e-1*kjmol/angstrom**2, 1e-4*angstrom],
+        'bond'  : [1e-6*kjmol/angstrom**2, 1e-6*angstrom],
+        'bend'  : [1e-6*kjmol/rad**2     , 1e-6*deg     ],
+        'dihed' : [1e-6*kjmol            , None         ],
+        'opdist': [1e-6*kjmol/angstrom**2, 1e-6*angstrom],
     }
     for icname in sorted(ref.keys()):
-        k, q0 = fftable[icname]
+        k, q0 = new[icname]
         kref, q0ref = ref[icname]
         if icname.startswith('bond'):
             print '    %s k  = %12.6f    ref = %12.6f  [kjmol/A^2]' %(icname, k/(kjmol/angstrom**2), kref/(kjmol/angstrom**2))
@@ -74,80 +70,63 @@ def compare(fftable, ref):
         else:
             raise ValueError('Recieved invalid ic %s' %icname)
 
-def test_water_high_he_noei():
-    run_example('water', -1, 'he', 'high')
 
-def test_water_high_he_0():
-    run_example('water', 0, 'he', 'high')
+#water
+def test_water_noei_novdw():
+    run_example('water', ei_rule=-1, vdw_rule=-1)
 
-def test_water_high_he_1():
-    run_example('water', 1, 'he', 'high')
+def test_water_ei0_novdw():
+    run_example('water', ei_rule=0, vdw_rule=-1)
 
-def test_methane_high_he_noei():
-    run_example('methane', -1, 'he', 'high')
 
-def test_methane_high_he_0():
-    run_example('methane', 0, 'he', 'high')
+#methane
+def test_methane_noei_novdw():
+    run_example('methane', ei_rule=-1, vdw_rule=-1)
 
-def test_methane_high_he_1():
-    run_example('methane', 1, 'he', 'high')
+def test_methane_ei0_novdw():
+    run_example('methane', ei_rule=0, vdw_rule=-1)
 
-def test_ethanol_high_he_noei():
-    run_example('ethanol', -1, 'he', 'high')
 
-def test_ethanol_high_he_0():
-    run_example('ethanol', 0, 'he', 'high')
+#ethanol
+def test_ethanol_noei_novdw():
+    run_example('ethanol', ei_rule=-1, vdw_rule=-1)
 
-def test_ethanol_high_he_1():
-    run_example('ethanol', 1, 'he', 'high')
+def test_ethanol_ei0_novdw():
+    run_example('ethanol', ei_rule=0, vdw_rule=-1)
 
-def test_ethanol_high_he_2():
-    run_example('ethanol', 2, 'he', 'high')
+def test_ethanol_ei2_uff2():
+    run_example('ethanol', ei_rule=2, vdw_rule=2)
 
-def test_ethanol_high_he_3():
-    run_example('ethanol', 3, 'he', 'high')
 
-def test_ethene_high_he_noei():
-    run_example('ethene', -1, 'he', 'high')
+#ethane
+def test_ethene_noei_novdw():
+    run_example('ethene', ei_rule=-1, vdw_rule=-1)
 
-def test_ethene_high_he_0():
-    run_example('ethene', 0, 'he', 'high')
+def test_ethene_ei0_novdw():
+    run_example('ethene', ei_rule=0, vdw_rule=-1)
 
-def test_ethene_high_he_1():
-    run_example('ethene', 1, 'he', 'high')
+def test_ethene_ei2_uff2():
+    run_example('ethene', ei_rule=2, vdw_rule=2)
 
-def test_ethene_high_he_2():
-    run_example('ethene', 2, 'he', 'high')
 
-def test_ethene_high_he_3():
-    run_example('ethene', 3, 'he', 'high')
+#benzene
+def test_benzene_noei_novdw():
+    run_example('benzene', ei_rule=-1, vdw_rule=-1)
 
-def test_benzene_high_he_noei():
-    run_example('benzene', -1, 'he', 'high')
+def test_benzene_ei0_novdw():
+    run_example('benzene', ei_rule=0, vdw_rule=-1)
 
-def test_benzene_high_he_0():
-    run_example('benzene', 0, 'he', 'high')
 
-def test_benzene_high_he_1():
-    run_example('benzene', 1, 'he', 'high')
+def test_benzene_ei2_uff2():
+    run_example('benzene', ei_rule=2, vdw_rule=2)
 
-def test_benzene_high_he_2():
-    run_example('benzene', 2, 'he', 'high')
 
-def test_benzene_high_he_3():
-    run_example('benzene', 3, 'he', 'high')
+#amoniak
+def test_amoniak_noei_novdw():
+    run_example('amoniak', ei_rule=-1, vdw_rule=-1)
 
-def test_amoniak_high_he_noei():
-    run_example('amoniak', -1, 'he', 'high')
+def test_amoniak_ei0_novdw():
+    run_example('amoniak', ei_rule=0, vdw_rule=-1)
 
-def test_amoniak_high_he_0():
-    run_example('amoniak', 0, 'he', 'high')
-
-def test_amoniak_high_he_1():
-    run_example('amoniak', 1, 'he', 'high')
-
-def test_amoniak_high_he_2():
-    run_example('amoniak', 2, 'he', 'high')
-
-def test_amoniak_high_he_3():
-    run_example('amoniak', 3, 'he', 'high')
+def test_amoniak_ei2_uff2():
+    run_example('amoniak', ei_rule=2, vdw_rule=2)

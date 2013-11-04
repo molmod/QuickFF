@@ -44,7 +44,7 @@ def parser():
              '[default=%default]'
     )
     parser.add_option(
-        '--vdw-scales', default=[0.0,0.0,1.0],
+        '--vdw-scales', default='0.0,0.0,1.0', type=str,
         help='Defines the scaling rule for the van der Waals interactions. '  +\
              'Three comma-separated floats are required. The first one sets the ' +\
              'scale for atoms separated by 1 bond, the second for atoms ' +\
@@ -71,6 +71,7 @@ def parser():
     )
     options, fns = parser.parse_args()
     options.ei_scales = [float(x) for x in options.ei_scales.split(',')]
+    options.vdw_scales = [float(x) for x in options.vdw_scales.split(',')]
     return fns, options
 
 def main():

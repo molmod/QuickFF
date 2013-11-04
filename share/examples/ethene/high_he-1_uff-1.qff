@@ -20,32 +20,34 @@ _____________________\//////____\/////////___\///_____\////////__\///____\///__\
 
 User:           louis
 Machine info:   Linux molmod91 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC 2013 x86_64
-Time:           2013-10-30 18:56:42.565259
+Time:           2013-11-04 10:53:41.768760
 Python version: 2.7.5+ (default, Sep 19 2013, 13:48:49) [GCC 4.8.1]
 Current Dir:    /home/louis/build/quickff/share/examples/ethene
-Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,1.0 --ei-model=harm gaussian.fchk gaussian.fchk.h5
+Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,0.0 --ei-model=zero --vdw-from=uff --vdw-scales=0.0,0.0,0.0 --vdw-model=zero gaussian.fchk gaussian.fchk.h5
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 System information:
 
-    -----------------------------------------
-      index   symbol   ffatype       charge  
-    -----------------------------------------
-      0       C        C3_c1         -0.132
-      1       H        H1_c           0.066
-      2       C        C3_c1         -0.132
-      3       H        H1_c           0.066
-      4       H        H1_c           0.066
-      5       H        H1_c           0.066
-    -----------------------------------------
+    -------------------------------------------------------------------------------
+      index   symbol   ffatype       charge [e]     sigma [A]    epsilon [kJ/mol]  
+    -------------------------------------------------------------------------------
+      0       C        C3_c1           -0.132         0.000           0.000
+      1       H        H1_c             0.066         0.000           0.000
+      2       C        C3_c1           -0.132         0.000           0.000
+      3       H        H1_c             0.066         0.000           0.000
+      4       H        H1_c             0.066         0.000           0.000
+      5       H        H1_c             0.066         0.000           0.000
+    -------------------------------------------------------------------------------
 
 Model information:
 
     AI Total project Rot/Trans =  True
     AI Total kind = Harmonic
-    FF Electrostatic scales = 0.00 0.00 1.00
-    FF Electrostatic kind = Harmonic
+    FF Electrostatic scales = 0.00 0.00 0.00
+    FF Electrostatic kind = Zero
+    FF van der Waals scales = 0.00 0.00 0.00
+    FF van der Waals kind = Zero
     FF Covalent kind = TermList
 
 Determine dihedral potentials
@@ -62,24 +64,24 @@ Determine the coordinates of the perturbation trajectories
 
 Estimating all pars for bonds, bends and opdists
 
-    angle/C3_c1.C3_c1.H1_c           K =   698.180175 ±     0.000003 kjmol/rad**2       q0 =   121.689431 ±     0.000000 deg            
-    angle/H1_c.C3_c1.H1_c            K =   525.402954 ±     0.000001 kjmol/rad**2       q0 =   116.567659 ±     0.000000 deg            
-    bond/C3_c1.C3_c1                 K =  5829.840696 ±     0.000000 kjmol/A**2         q0 =     1.328475 ±     0.000000 A              
-    bond/C3_c1.H1_c                  K =  3367.221992 ±     0.000001 kjmol/A**2         q0 =     1.084777 ±     0.000000 A              
-    opdist/C3_c1.H1_c.H1_c.C3_c1     K =  1032.217154 ±     0.000001 kjmol/A**2         q0 =     0.000000 ±     0.000000 A              
+    angle/C3_c1.C3_c1.H1_c           K =   699.158817 ±     0.000003 kjmol/rad**2       q0 =   121.720911 ±     0.000000 deg            
+    angle/H1_c.C3_c1.H1_c            K =   525.964722 ±     0.000000 kjmol/rad**2       q0 =   116.490457 ±     0.000000 deg            
+    bond/C3_c1.C3_c1                 K =  5830.851880 ±     0.000000 kjmol/A**2         q0 =     1.328843 ±     0.000000 A              
+    bond/C3_c1.H1_c                  K =  3367.381381 ±     0.000001 kjmol/A**2         q0 =     1.085014 ±     0.000000 A              
+    opdist/C3_c1.H1_c.H1_c.C3_c1     K =  1032.171533 ±     0.000001 kjmol/A**2         q0 =     0.000000 ±     0.000000 A              
 
 Refining force constants using a Hessian LSQ cost
 
-    angle/C3_c1.C3_c1.H1_c           K =   298.391799 ±     0.000000 kjmol/rad**2       q0 =   121.689431 ±     0.000000 deg            
-    angle/H1_c.C3_c1.H1_c            K =   182.179244 ±     0.000000 kjmol/rad**2       q0 =   116.567659 ±     0.000000 deg            
-    bond/C3_c1.C3_c1                 K =  5343.285380 ±     0.000000 kjmol/A**2         q0 =     1.328475 ±     0.000000 A              
-    bond/C3_c1.H1_c                  K =  3200.262210 ±     0.000000 kjmol/A**2         q0 =     1.084777 ±     0.000000 A              
-    dihed/H1_c.C3_c1.C3_c1.H1_c      K =    42.626420 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
-    opdist/C3_c1.H1_c.H1_c.C3_c1     K =   101.194865 ±     0.000000 kjmol/A**2         q0 =     0.000000 ±     0.000000 A              
+    angle/C3_c1.C3_c1.H1_c           K =   298.879479 ±     0.000000 kjmol/rad**2       q0 =   121.720911 ±     0.000000 deg            
+    angle/H1_c.C3_c1.H1_c            K =   182.206196 ±     0.000000 kjmol/rad**2       q0 =   116.490457 ±     0.000000 deg            
+    bond/C3_c1.C3_c1                 K =  5343.131398 ±     0.000000 kjmol/A**2         q0 =     1.328843 ±     0.000000 A              
+    bond/C3_c1.H1_c                  K =  3200.387449 ±     0.000000 kjmol/A**2         q0 =     1.085014 ±     0.000000 A              
+    dihed/H1_c.C3_c1.C3_c1.H1_c      K =    42.593187 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
+    opdist/C3_c1.H1_c.H1_c.C3_c1     K =   103.909389 ±     0.000000 kjmol/A**2         q0 =     0.000000 ±     0.000000 A              
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Time:           2013-10-30 18:56:43.773260
+Time:           2013-11-04 10:53:43.022868
 
 
 __/\\\__________________________________________________________________________________________________________/\\\____

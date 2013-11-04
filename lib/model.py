@@ -9,7 +9,7 @@ from quickff.fftable import DataArray, FFTable
 
 __all__ = [
     'Model', 'AIPart', 'EIPart', 'ValencePart',
-    'ZeroPot', 'HarmonicPot', 'CoulombPot', 'TermListPot',
+    'ZeroPot', 'HarmonicPot', 'CoulombPot', 'LennartJonesPot', 'TermListPot',
 ]
 
 
@@ -241,6 +241,19 @@ class ValencePart(BasePart):
         pot = TermListPot(vterms)
         return cls(pot)
 
+    def print_info(self):
+        BasePart.print_info(self)
+        if len(self.pot.terms.keys())<4:
+            print '    %s term icnames:%s %s' %(self.name, ' '*(23-len(self.name)), ' '.join(self.pot.terms.keys()) )
+        else:
+            line = ''
+            for i, icname in enumerate(self.pot.terms.keys()):
+                line += '        %25s' %( icname + ' '*(30-len(icname)) )
+                if (i+1)%4==0:
+                    line += '\n'
+            line.rstrip('\n')
+            print '    %s term icnames:%s \n\n%s\n' %(self.name, ' '*(23-len(self.name)), line)
+
     def determine_dihedral_potentials(self, system, marge2=15*deg, marge3=15*deg, verbose=True):
         '''
             Determine the potential of every dihedral based on the values of
@@ -437,10 +450,10 @@ class ZeroPot(BasePot):
 class HarmonicPot(BasePot):
     def __init__(self, coords0, energy0, grad0, hess0):
         BasePot.__init__(self, 'Harmonic')
-        self.coords0 = coords0
+        self.coords0 = coords0.copy()
         self.energy0 = energy0
-        self.grad0 = grad0
-        self.hess0 = hess0
+        self.grad0 = grad0.copy()
+        self.hess0 = hess0.copy()
         self.natoms = len(coords0)
 
     def calc_energy(self, coords):

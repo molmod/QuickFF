@@ -380,18 +380,18 @@ class System(object):
 
     def print_atom_info(self):
         'Print information about the atoms in the system to the screen'
-        print '    -----------------------------------------'
-        print '      index   symbol   ffatype       charge  '
-        print '    -----------------------------------------'
-        for index, (number, ffatype, charge) \
-        in enumerate(zip(self.numbers, self.ffatypes, self.charges)):
+        print '    -------------------------------------------------------------------------------'
+        print '      index   symbol   ffatype       charge [e]     sigma [A]    epsilon [kJ/mol]  '
+        print '    -------------------------------------------------------------------------------'
+        for index, (number, ffatype, charge, sigma, epsilon) \
+        in enumerate(zip(self.numbers, self.ffatypes, self.charges, self.sigmas, self.epsilons)):
             index_fmt   = str(index)        + ' '*(5 - len(str(index)))
             symbol_fmt  = pt[number].symbol + ' '*(6 - len(pt[number].symbol))
             ffatype_fmt = ffatype           + ' '*(10 - len(ffatype))
-            print '      %s   %s   %s    % 6.3f' % (
-                index_fmt, symbol_fmt, ffatype_fmt, charge
+            print '      %s   %s   %s      % 6.3f        %6.3f          %6.3f' % (
+                index_fmt, symbol_fmt, ffatype_fmt, charge, sigma/angstrom, epsilon/kjmol
             )
-        print '    -----------------------------------------'
+        print '    -------------------------------------------------------------------------------'
 
     def print_ic_info(self):
         '''

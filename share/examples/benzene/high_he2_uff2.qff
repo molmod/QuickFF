@@ -1,4 +1,5 @@
 
+
 ____________/\\\________________________________________________________/\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\______________
 __________/\\\\/\\\\_______________________________________/\\\_________\/\\\///////////__\/\\\///////////______________
 _________/\\\//\////\\\_________________/\\\_______________\/\\\_________\/\\\_____________\/\\\________________________
@@ -20,38 +21,40 @@ _____________________\//////____\/////////___\///_____\////////__\///____\///__\
 
 User:           louis
 Machine info:   Linux molmod91 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC 2013 x86_64
-Time:           2013-10-30 18:56:01.498239
+Time:           2013-11-04 10:53:20.619529
 Python version: 2.7.5+ (default, Sep 19 2013, 13:48:49) [GCC 4.8.1]
 Current Dir:    /home/louis/build/quickff/share/examples/benzene
-Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,0.0 --ei-model=harm gaussian.fchk gaussian.fchk.h5
+Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,1.0 --ei-model=harm --vdw-from=uff --vdw-scales=0.0,0.0,1.0 --vdw-model=harm gaussian.fchk gaussian.fchk.h5
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 System information:
 
-    -----------------------------------------
-      index   symbol   ffatype       charge  
-    -----------------------------------------
-      0       H        H1_c           0.044
-      1       C        C3_c2         -0.044
-      2       C        C3_c2         -0.044
-      3       C        C3_c2         -0.044
-      4       C        C3_c2         -0.044
-      5       C        C3_c2         -0.044
-      6       C        C3_c2         -0.044
-      7       H        H1_c           0.044
-      8       H        H1_c           0.044
-      9       H        H1_c           0.044
-      10      H        H1_c           0.044
-      11      H        H1_c           0.044
-    -----------------------------------------
+    -------------------------------------------------------------------------------
+      index   symbol   ffatype       charge [e]     sigma [A]    epsilon [kJ/mol]  
+    -------------------------------------------------------------------------------
+      0       H        H1_c             0.044         2.571           0.184
+      1       C        C3_c2           -0.044         3.431           0.439
+      2       C        C3_c2           -0.044         3.431           0.439
+      3       C        C3_c2           -0.044         3.431           0.439
+      4       C        C3_c2           -0.044         3.431           0.439
+      5       C        C3_c2           -0.044         3.431           0.439
+      6       C        C3_c2           -0.044         3.431           0.439
+      7       H        H1_c             0.044         2.571           0.184
+      8       H        H1_c             0.044         2.571           0.184
+      9       H        H1_c             0.044         2.571           0.184
+      10      H        H1_c             0.044         2.571           0.184
+      11      H        H1_c             0.044         2.571           0.184
+    -------------------------------------------------------------------------------
 
 Model information:
 
     AI Total project Rot/Trans =  True
     AI Total kind = Harmonic
-    FF Electrostatic scales = 0.00 0.00 0.00
+    FF Electrostatic scales = 0.00 0.00 1.00
     FF Electrostatic kind = Harmonic
+    FF van der Waals scales = 0.00 0.00 1.00
+    FF van der Waals kind = Harmonic
     FF Covalent kind = TermList
 
 Determine dihedral potentials
@@ -70,26 +73,26 @@ Determine the coordinates of the perturbation trajectories
 
 Estimating all pars for bonds, bends and opdists
 
-    angle/C3_c2.C3_c2.C3_c2           K =  1831.576575 ±     0.236874 kjmol/rad**2       q0 =   120.003457 ±     0.002105 deg            
-    angle/C3_c2.C3_c2.H1_c            K =   831.105544 ±     0.303521 kjmol/rad**2       q0 =   119.982869 ±     0.001603 deg            
-    bond/C3_c2.C3_c2                  K =  4356.732826 ±     0.380744 kjmol/A**2         q0 =     1.394656 ±     0.000007 A              
-    bond/C3_c2.H1_c                   K =  3343.746412 ±     0.043222 kjmol/A**2         q0 =     1.084366 ±     0.000004 A              
-    opdist/C3_c2.C3_c2.H1_c.C3_c2     K =  1246.301986 ±     1.435016 kjmol/A**2         q0 =    -0.000000 ±     0.000000 A              
+    angle/C3_c2.C3_c2.C3_c2           K =  1573.760025 ±     0.259123 kjmol/rad**2       q0 =   119.991743 ±     0.002392 deg            
+    angle/C3_c2.C3_c2.H1_c            K =   806.861358 ±     0.302152 kjmol/rad**2       q0 =   119.982636 ±     0.001651 deg            
+    bond/C3_c2.C3_c2                  K =  4232.369265 ±     0.391740 kjmol/A**2         q0 =     1.376778 ±     0.000006 A              
+    bond/C3_c2.H1_c                   K =  3326.699118 ±     0.304499 kjmol/A**2         q0 =     1.087247 ±     0.000005 A              
+    opdist/C3_c2.C3_c2.H1_c.C3_c2     K =  1285.362368 ±     1.435154 kjmol/A**2         q0 =    -0.000007 ±     0.000000 A              
 
 Refining force constants using a Hessian LSQ cost
 
-    angle/C3_c2.C3_c2.C3_c2           K =   492.087093 ±     0.000000 kjmol/rad**2       q0 =   120.003457 ±     0.000000 deg            
-    angle/C3_c2.C3_c2.H1_c            K =   330.789598 ±     0.000000 kjmol/rad**2       q0 =   119.982869 ±     0.000000 deg            
-    bond/C3_c2.C3_c2                  K =  3201.052409 ±     0.000000 kjmol/A**2         q0 =     1.394656 ±     0.000000 A              
-    bond/C3_c2.H1_c                   K =  3310.683461 ±     0.000000 kjmol/A**2         q0 =     1.084366 ±     0.000000 A              
-    dihed/C3_c2.C3_c2.C3_c2.C3_c2     K =    32.087173 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
-    dihed/C3_c2.C3_c2.C3_c2.H1_c      K =    31.964902 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
-    dihed/H1_c.C3_c2.C3_c2.H1_c       K =    12.958198 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
-    opdist/C3_c2.C3_c2.H1_c.C3_c2     K =   275.298755 ±     0.000000 kjmol/A**2         q0 =    -0.000000 ±     0.000000 A              
+    angle/C3_c2.C3_c2.C3_c2           K =   469.075737 ±     0.000000 kjmol/rad**2       q0 =   119.991743 ±     0.000000 deg            
+    angle/C3_c2.C3_c2.H1_c            K =   330.600542 ±     0.000000 kjmol/rad**2       q0 =   119.982636 ±     0.000000 deg            
+    bond/C3_c2.C3_c2                  K =  3199.427294 ±     0.000000 kjmol/A**2         q0 =     1.376778 ±     0.000000 A              
+    bond/C3_c2.H1_c                   K =  3309.198354 ±     0.000000 kjmol/A**2         q0 =     1.087247 ±     0.000000 A              
+    dihed/C3_c2.C3_c2.C3_c2.C3_c2     K =    31.117410 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
+    dihed/C3_c2.C3_c2.C3_c2.H1_c      K =    32.085563 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
+    dihed/H1_c.C3_c2.C3_c2.H1_c       K =    16.557714 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
+    opdist/C3_c2.C3_c2.H1_c.C3_c2     K =   187.237378 ±     0.000000 kjmol/A**2         q0 =    -0.000007 ±     0.000000 A              
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Time:           2013-10-30 18:56:09.641504
+Time:           2013-11-04 10:53:28.995684
 
 
 __/\\\__________________________________________________________________________________________________________/\\\____

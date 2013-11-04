@@ -4,16 +4,16 @@ do
     if [ -d "$subdir" ]
     then
         cd $subdir
-        echo "$subdir/high_0_he"
-        qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=1.0,1.0,1.0 --ei-model=harm gaussian.fchk gaussian.fchk.h5 > high_0_he.qff
-        echo "$subdir/high_1_he"
-        qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,1.0,1.0 --ei-model=harm gaussian.fchk gaussian.fchk.h5 > high_1_he.qff
-        echo "$subdir/high_2_he"
-        qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,1.0 --ei-model=harm gaussian.fchk gaussian.fchk.h5 > high_2_he.qff
-        echo "$subdir/high_3_he"
-        qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,0.0 --ei-model=harm gaussian.fchk gaussian.fchk.h5 > high_3_he.qff
-        echo "$subdir/high_-1_he"
-        qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,0.0 --ei-model=zero gaussian.fchk gaussian.fchk.h5 > high_-1_he.qff
+        rm -v *.qff
+        echo "$subdir/high_he-1_uff-1"
+        qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,0.0  --ei-model=zero \
+                                       --vdw-from=uff --vdw-scales=0.0,0.0,0.0 --vdw-model=zero gaussian.fchk gaussian.fchk.h5 > high_he-1_uff-1.qff
+        echo "$subdir/high_he0_uff-1"
+        qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=1.0,1.0,1.0  --ei-model=harm \
+                                       --vdw-from=uff --vdw-scales=0.0,0.0,0.0 --vdw-model=zero gaussian.fchk gaussian.fchk.h5 > high_he0_uff-1.qff
+        echo "$subdir/high_he2_uff2"
+        qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,1.0  --ei-model=harm \
+                                       --vdw-from=uff --vdw-scales=0.0,0.0,1.0 --vdw-model=harm gaussian.fchk gaussian.fchk.h5 > high_he2_uff2.qff
         rm pars_* system.chk
         cd ..
     fi

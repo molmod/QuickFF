@@ -1,99 +1,0 @@
-
-____________/\\\________________________________________________________/\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\______________
-__________/\\\\/\\\\_______________________________________/\\\_________\/\\\///////////__\/\\\///////////______________
-_________/\\\//\////\\\_________________/\\\_______________\/\\\_________\/\\\_____________\/\\\________________________
-_________/\\\______\//\\\__/\\\____/\\\_\///______/\\\\\\\\_\/\\\\\\\\____\/\\\\\\\\\\\_____\/\\\\\\\\\\\_______________
-_________\//\\\______/\\\__\/\\\___\/\\\__/\\\___/\\\//////__\/\\\////\\\__\/\\\///////______\/\\\///////_______________
-___________\///\\\\/\\\\/___\/\\\___\/\\\_\/\\\__/\\\_________\/\\\\\\\\/___\/\\\_____________\/\\\_____________________
-______________\////\\\//_____\/\\\___\/\\\_\/\\\_\//\\\________\/\\\///\\\___\/\\\_____________\/\\\____________________
-__________________\///\\\\\\__\//\\\\\\\\\__\/\\\__\///\\\\\\\\_\/\\\_\///\\\_\/\\\_____________\/\\\___________________
-_____________________\//////____\/////////___\///_____\////////__\///____\///__\///______________\///___________________
-
-    Welcom to QuickFF 1.0 - a Python package to quickly derive force fields from ab initio input data
-
-                                                Written by
-                    Louis Vanduyfhuys(1)*, Steven Vandenbrande(1) and Toon Verstraelen(1)
-
-(1) Center for Molecular Modeling, Ghent University Belgium.
-* mailto: Louis.Vanduyfhuys@UGent.be
-
-
-User:           louis
-Machine info:   Linux molmod91 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC 2013 x86_64
-Time:           2013-10-30 18:56:10.036677
-Python version: 2.7.5+ (default, Sep 19 2013, 13:48:49) [GCC 4.8.1]
-Current Dir:    /home/louis/build/quickff/share/examples/benzene
-Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=0.0,0.0,0.0 --ei-model=zero gaussian.fchk gaussian.fchk.h5
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-System information:
-
-    -----------------------------------------
-      index   symbol   ffatype       charge  
-    -----------------------------------------
-      0       H        H1_c           0.044
-      1       C        C3_c2         -0.044
-      2       C        C3_c2         -0.044
-      3       C        C3_c2         -0.044
-      4       C        C3_c2         -0.044
-      5       C        C3_c2         -0.044
-      6       C        C3_c2         -0.044
-      7       H        H1_c           0.044
-      8       H        H1_c           0.044
-      9       H        H1_c           0.044
-      10      H        H1_c           0.044
-      11      H        H1_c           0.044
-    -----------------------------------------
-
-Model information:
-
-    AI Total project Rot/Trans =  True
-    AI Total kind = Harmonic
-    FF Electrostatic scales = 0.00 0.00 0.00
-    FF Electrostatic kind = Zero
-    FF Covalent kind = TermList
-
-Determine dihedral potentials
-
-    dihed/C3_c2.C3_c2.C3_c2.C3_c2     0.5*K*[1 - cos(2(psi -   0.0))]
-    dihed/C3_c2.C3_c2.C3_c2.H1_c      0.5*K*[1 - cos(2(psi -   0.0))]
-    dihed/H1_c.C3_c2.C3_c2.H1_c       0.5*K*[1 - cos(2(psi -   0.0))]
-
-Determine the coordinates of the perturbation trajectories
-
-    angle/C3_c2.C3_c2.C3_c2         Processing  1/6    angle/C3_c2.C3_c2.C3_c2         Processing  2/6    angle/C3_c2.C3_c2.C3_c2         Processing  3/6    angle/C3_c2.C3_c2.C3_c2         Processing  4/6    angle/C3_c2.C3_c2.C3_c2         Processing  5/6    angle/C3_c2.C3_c2.C3_c2         Processing  6/6
-    angle/C3_c2.C3_c2.H1_c          Processing  1/12    angle/C3_c2.C3_c2.H1_c          Processing  2/12    angle/C3_c2.C3_c2.H1_c          Processing  3/12    angle/C3_c2.C3_c2.H1_c          Processing  4/12    angle/C3_c2.C3_c2.H1_c          Processing  5/12    angle/C3_c2.C3_c2.H1_c          Processing  6/12    angle/C3_c2.C3_c2.H1_c          Processing  7/12    angle/C3_c2.C3_c2.H1_c          Processing  8/12    angle/C3_c2.C3_c2.H1_c          Processing  9/12    angle/C3_c2.C3_c2.H1_c          Processing 10/12    angle/C3_c2.C3_c2.H1_c          Processing 11/12    angle/C3_c2.C3_c2.H1_c          Processing 12/12
-    bond/C3_c2.C3_c2                Processing  1/6    bond/C3_c2.C3_c2                Processing  2/6    bond/C3_c2.C3_c2                Processing  3/6    bond/C3_c2.C3_c2                Processing  4/6    bond/C3_c2.C3_c2                Processing  5/6    bond/C3_c2.C3_c2                Processing  6/6
-    bond/C3_c2.H1_c                 Processing  1/6    bond/C3_c2.H1_c                 Processing  2/6    bond/C3_c2.H1_c                 Processing  3/6    bond/C3_c2.H1_c                 Processing  4/6    bond/C3_c2.H1_c                 Processing  5/6    bond/C3_c2.H1_c                 Processing  6/6
-    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  1/6    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  2/6    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  3/6    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  4/6    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  5/6    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  6/6
-
-Estimating all pars for bonds, bends and opdists
-
-    angle/C3_c2.C3_c2.C3_c2           K =  1831.493117 ±     0.236827 kjmol/rad**2       q0 =   120.003455 ±     0.002105 deg            
-    angle/C3_c2.C3_c2.H1_c            K =   831.277487 ±     0.303511 kjmol/rad**2       q0 =   119.982878 ±     0.001602 deg            
-    bond/C3_c2.C3_c2                  K =  4356.741150 ±     0.381048 kjmol/A**2         q0 =     1.394644 ±     0.000007 A              
-    bond/C3_c2.H1_c                   K =  3343.770305 ±     0.042626 kjmol/A**2         q0 =     1.084421 ±     0.000004 A              
-    opdist/C3_c2.C3_c2.H1_c.C3_c2     K =  1246.423612 ±     1.435018 kjmol/A**2         q0 =    -0.000000 ±     0.000000 A              
-
-Refining force constants using a Hessian LSQ cost
-
-    angle/C3_c2.C3_c2.C3_c2           K =   492.016091 ±     0.000000 kjmol/rad**2       q0 =   120.003455 ±     0.000000 deg            
-    angle/C3_c2.C3_c2.H1_c            K =   330.844970 ±     0.000000 kjmol/rad**2       q0 =   119.982878 ±     0.000000 deg            
-    bond/C3_c2.C3_c2                  K =  3201.054893 ±     0.000000 kjmol/A**2         q0 =     1.394644 ±     0.000000 A              
-    bond/C3_c2.H1_c                   K =  3310.685014 ±     0.000000 kjmol/A**2         q0 =     1.084421 ±     0.000000 A              
-    dihed/C3_c2.C3_c2.C3_c2.C3_c2     K =    32.083602 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
-    dihed/C3_c2.C3_c2.C3_c2.H1_c      K =    31.976281 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
-    dihed/H1_c.C3_c2.C3_c2.H1_c       K =    12.968220 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
-    opdist/C3_c2.C3_c2.H1_c.C3_c2     K =   275.260260 ±     0.000000 kjmol/A**2         q0 =    -0.000000 ±     0.000000 A              
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Time:           2013-10-30 18:56:18.216386
-
-
-__/\\\__________________________________________________________________________________________________________/\\\____
-  \ \\\                                                                                                         \ \\\
-   \ \\\                        End of file. Thanks for using QuickFF! Come back soon!!                          \ \\\
-____\///__________________________________________________________________________________________________________\///__
-
