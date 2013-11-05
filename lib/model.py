@@ -44,49 +44,55 @@ class Model(object):
         self.vdw = vdw
 
     @classmethod
-    def from_system(cls, system, ei_pot_kind='Harmonic', ei_scales=[1.0,1.0,1.0],
-        vdw_scales=[0.0,0.0,1.0], vdw_pot_kind='Harmonic', ai_project=True):
+    def from_system(cls, system, ai_project=True, icnames=None,
+        ei_scales=[1.0,1.0,1.0], ei_pot_kind='Harmonic',
+        vdw_scales=[0.0,0.0,1.0], vdw_pot_kind='Harmonic'):
         '''
             **Arguments**
 
             system
-                An instance of the System class containing all the
-                information of the system.
+                An instance of the System class containing all the information
+                of the system.
 
             **Optional Arguments**
 
-            ei_pot_kind
-                a string defining the potential kind of the electrostatic
-                interactions. Can be 'Zero', 'Harmonic' or 'Coulomb'. If Coulomb
-                is chosen, the exact Coulombic potential will be used to
-                evaluate EI interactions. If Harmonic is chosen, a second
-                order Taylor expansion is used. Harmonic is a lot faster and
-                should already give accurate results.
+            ai_project
+                If True, project the translational and rotational degrees of
+                freedom out of the hessian.
+            
+            icnames
+                A list of strings specifying which icnames should be included 
+                in the Valence Part. By default, all icnames in the system are 
+                included.
 
             ei_scales
                 a list containing the scales for the 1-2, 1-3 and 1-4
                 contribution to the electrostatic interactions
 
-            vdw_model
-                a string defining the model kind of the van der Waals
-                interactions. Can be Harmonic, Exact or Zero. If Exact
-                is chose, the exact  potential will be used to evaluate
-                van der Waals interactions. If Harmonic is chosen, a second
-                order Taylor expansion is used. Harmonic is a lot faster and
-                should already give accurate results.
+            ei_pot_kind
+                a string defining the potential kind of the electrostatic
+                interactions. Can be 'Coulomb', 'Harmonic' or 'Zero'. If Coulomb
+                is chosen, the exact Coulombic potential will be used to
+                evaluate EI interactions. If Harmonic is chosen, a second order
+                Taylor expansion of the Coulomb potential is used. Harmonic is
+                a lot faster and should already give accurate results.
 
             vdw_scales
                 a list containing the scales for the 1-2, 1-3 and 1-4
                 contribution to the van der Waals interactions
 
-            ai_project
-                If True, project the translational and rotational
-                degrees of freedom out of the hessian.
+            vdw_pot_kind
+                a string defining the potential kind of the van der Waals
+                interactions. Can be 'LJ', 'Harmonic' or 'Zero'. If LJ is chosen
+                the Lennart-Jones potential will be used to evaluate van der 
+                Waals interactions. If Harmonic is chosen, a second order Taylor
+                expansion of the LJ potential is used. Harmonic is a lot faster
+                and should already give accurate results.
         '''
         ai  = AIPart.from_system(system, ai_project)
         ei  = EIPart.from_system(system, ei_scales, ei_pot_kind)
         vdw = VDWPart.from_system(system, vdw_scales, vdw_pot_kind)
-        val = ValencePart.from_system(system)
+        val = ValencePart.from_system(system, icnames=icnames)
         return cls(ai, val, ei, vdw)
 
     def print_info(self):
@@ -208,7 +214,7 @@ class VDWPart(BasePart):
                 grad = exact.calc_gradient(system.ref.coords.copy())
                 hess = exact.calc_hessian(system.ref.coords.copy())
                 pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess)
-            elif pot_kind.lower() in ['lj', 'lennartjones', 'exact']:
+            elif pot_kind.lower() in ['lj', 'lennartjones', 'lennart-jones']:
                 pot = exact
         return cls(pot, scales)
 
@@ -227,11 +233,17 @@ class ValencePart(BasePart):
         BasePart.__init__(self, 'FF Covalent', pot)
 
     @classmethod
-    def from_system(cls, system):
+    def from_system(cls, system, icnames=None):
         vterms = {}
-        for icname, ics in sorted(system.ics.iteritems()):
+        if icnames is None:
+            icnames = system.ics.keys()
+        else:
+            assert hasattr(icnames, __iter__), 'icnames should be an iterable object'
+        for icname in sorted(icnames):
+            assert type(icname)==str, 'icnames should be a list of strings'
+            assert icname in system.ics.keys(), 'icname %s not found in system' %icname
             terms = []
-            for ic in ics:
+            for ic in system.ics[icname]:
                 if icname.startswith('dihed'):
                     #Dihedral potential is determined later based on the geometry
                     terms.append(None)

@@ -14,40 +14,39 @@ def parser():
     parser = OptionParser(usage=usage, description=description)
     parser.add_option(
         '--ei-model', default='Harm',
-        help='Defines the model used for electrostatic interactions. Possible ' +\
-             'choices are: Exact, Harmonic and Zero. Exact implies using the '  +\
-             'exact coulomb potential, Harmonic implies the approximation of '  +\
-             'the electrostatic energy by means of a second order Taylor '      +\
-             'expansion. Zero implies ignoring electrostatic interactions. '    +\
-             '[default=%default]'
+        help='Defines the potential used for the electrostatic interactions. '  +\
+             'Possible choices are: Coulomb, Harmonic and Zero. Coulomb '       +\
+             'implies using the coulomb potential. Harmonic implies '           +\
+             'approximating the coulomb potential by means of a second order '  +\
+             'Taylor expansion. Zero implies ignoring electrostatic '           +\
+             'interactions. [default=%default]'
     )
     parser.add_option(
         '--ei-scales', default='1.0,1.0,1.0', type=str,
-        help='Defines the scaling rule for the electrostatic interactions. '  +\
-             'Three comma-separated floats are required. The first one sets the ' +\
-             'scale for atoms separated by 1 bond, the second for atoms ' +\
-             'separated by 2 bonds etc ... By default, all interactions are '+\
+        help='Defines the scaling rule for the electrostatic interactions. '    +\
+             'Three comma-separated floats are required. The first one sets '   +\
+             'the scale for atoms separated by 1 bond, the second for atoms '   +\
+             'separated by 2 bonds etc ... By default, all interactions are '   +\
              'left unscaled [default=%default]'
     )
     parser.add_option(
         '--ei-scheme', default=None,
-        help='Defines the charge scheme for which the charges will be extracted ' +\
-             'from the Horton-formatted HDF5 file given in fns.'
+        help='Defines the charge scheme for which the charges will be '         +\
+             'extracted from the Horton-formatted HDF5 file given in fns.'
     )
     parser.add_option(
         '--vdw-model', default='Harm',
-        help='Defines the model used for van der Waals interactions. Possible ' +\
-             'choices are: Exact, Harmonic and Zero. Exact implies using the '  +\
-             'exact potential, Harmonic implies the approximation of the '      +\
-             'van der Waals energy by means of a second order Taylor expansion. '+\
-             'Zero implies ignoring electrostatic interactions. '               +\
-             '[default=%default]'
+        help='Defines the potential used for van der Waals interactions. '      +\
+             'Possible choices are: LJ, Harmonic and Zero. LJ implies using '   +\
+             'the Lennart-Jones potential. Harmonic implies approximating the ' +\
+             'LJ potential by means of a second order Taylor expansion. Zero '  +\
+             'implies ignoring electrostatic interactions. [default=%default]'
     )
     parser.add_option(
         '--vdw-scales', default='0.0,0.0,1.0', type=str,
-        help='Defines the scaling rule for the van der Waals interactions. '  +\
-             'Three comma-separated floats are required. The first one sets the ' +\
-             'scale for atoms separated by 1 bond, the second for atoms ' +\
+        help='Defines the scaling rule for the van der Waals interactions. '    +\
+             'Three comma-separated floats are required. The first one sets '   +\
+             'the scale for atoms separated by 1 bond, the second for atoms '   +\
              'separated by 2 bonds etc ... [default=%default]'
     )
     parser.add_option(
@@ -66,12 +65,22 @@ def parser():
              'atom types defined in the input files fns. [default=%default]'
     )
     parser.add_option(
+        '--icnames', default='all',
+        help='A comma-separated list of strings specifying which icnames '      +\
+             'should be included in the Valence Part. By default, all icnames ' +\
+             'in the system are included.'
+    )
+    parser.add_option(
         '--suffix', default='',
         help = "Suffix that will be added to all output files. [default='']"
     )
     options, fns = parser.parse_args()
     options.ei_scales = [float(x) for x in options.ei_scales.split(',')]
     options.vdw_scales = [float(x) for x in options.vdw_scales.split(',')]
+    if options.icnames.lower() == 'all':
+        options.icnames = None
+    else:
+        options.icnames = [icname for icname in option.icnames.split(',')]
     return fns, options
 
 def main():
@@ -90,8 +99,8 @@ def main():
             raise ValueError('Unsupported value for vdw_from, recieved %s' %options.vdw_from)
     system.determine_ics_from_topology()
     model = Model.from_system(
-        system,
-        ei_scales=options.ei_scales  , ei_pot_kind=options.ei_model  ,
+        system, icnames=options.icnames,
+        ei_scales=options.ei_scales, ei_pot_kind=options.ei_model,
         vdw_scales=options.vdw_scales, vdw_pot_kind=options.vdw_model,
     )
     program = Program(system, model)
