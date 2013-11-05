@@ -80,7 +80,7 @@ def parser():
     if options.icnames.lower() == 'all':
         options.icnames = None
     else:
-        options.icnames = [icname for icname in option.icnames.split(',')]
+        options.icnames = [icname for icname in options.icnames.split(',')]
     return fns, options
 
 def main():
