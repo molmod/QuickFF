@@ -1,101 +1,0 @@
-
-____________/\\\________________________________________________________/\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\______________
-__________/\\\\/\\\\_______________________________________/\\\_________\/\\\///////////__\/\\\///////////______________
-_________/\\\//\////\\\_________________/\\\_______________\/\\\_________\/\\\_____________\/\\\________________________
-_________/\\\______\//\\\__/\\\____/\\\_\///______/\\\\\\\\_\/\\\\\\\\____\/\\\\\\\\\\\_____\/\\\\\\\\\\\_______________
-_________\//\\\______/\\\__\/\\\___\/\\\__/\\\___/\\\//////__\/\\\////\\\__\/\\\///////______\/\\\///////_______________
-___________\///\\\\/\\\\/___\/\\\___\/\\\_\/\\\__/\\\_________\/\\\\\\\\/___\/\\\_____________\/\\\_____________________
-______________\////\\\//_____\/\\\___\/\\\_\/\\\_\//\\\________\/\\\///\\\___\/\\\_____________\/\\\____________________
-__________________\///\\\\\\__\//\\\\\\\\\__\/\\\__\///\\\\\\\\_\/\\\_\///\\\_\/\\\_____________\/\\\___________________
-_____________________\//////____\/////////___\///_____\////////__\///____\///__\///______________\///___________________
-
-    Welcom to QuickFF 1.0 - a Python package to quickly derive force fields from ab initio input data
-
-                                                Written by
-                    Louis Vanduyfhuys(1)*, Steven Vandenbrande(1) and Toon Verstraelen(1)
-
-(1) Center for Molecular Modeling, Ghent University Belgium.
-* mailto: Louis.Vanduyfhuys@UGent.be
-
-
-User:           louis
-Machine info:   Linux molmod91 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC 2013 x86_64
-Time:           2013-11-04 10:53:11.891917
-Python version: 2.7.5+ (default, Sep 19 2013, 13:48:49) [GCC 4.8.1]
-Current Dir:    /home/louis/build/quickff/share/examples/benzene
-Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=1.0,1.0,1.0 --ei-model=harm --vdw-from=uff --vdw-scales=0.0,0.0,0.0 --vdw-model=zero gaussian.fchk gaussian.fchk.h5
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-System information:
-
-    -------------------------------------------------------------------------------
-      index   symbol   ffatype       charge [e]     sigma [A]    epsilon [kJ/mol]  
-    -------------------------------------------------------------------------------
-      0       H        H1_c             0.044         0.000           0.000
-      1       C        C3_c2           -0.044         0.000           0.000
-      2       C        C3_c2           -0.044         0.000           0.000
-      3       C        C3_c2           -0.044         0.000           0.000
-      4       C        C3_c2           -0.044         0.000           0.000
-      5       C        C3_c2           -0.044         0.000           0.000
-      6       C        C3_c2           -0.044         0.000           0.000
-      7       H        H1_c             0.044         0.000           0.000
-      8       H        H1_c             0.044         0.000           0.000
-      9       H        H1_c             0.044         0.000           0.000
-      10      H        H1_c             0.044         0.000           0.000
-      11      H        H1_c             0.044         0.000           0.000
-    -------------------------------------------------------------------------------
-
-Model information:
-
-    AI Total project Rot/Trans =  True
-    AI Total kind = Harmonic
-    FF Electrostatic scales = 1.00 1.00 1.00
-    FF Electrostatic kind = Harmonic
-    FF van der Waals scales = 0.00 0.00 0.00
-    FF van der Waals kind = Zero
-    FF Covalent kind = TermList
-
-Determine dihedral potentials
-
-    dihed/C3_c2.C3_c2.C3_c2.C3_c2     0.5*K*[1 - cos(2(psi -   0.0))]
-    dihed/C3_c2.C3_c2.C3_c2.H1_c      0.5*K*[1 - cos(2(psi -   0.0))]
-    dihed/H1_c.C3_c2.C3_c2.H1_c       0.5*K*[1 - cos(2(psi -   0.0))]
-
-Determine the coordinates of the perturbation trajectories
-
-    angle/C3_c2.C3_c2.C3_c2         Processing  1/6    angle/C3_c2.C3_c2.C3_c2         Processing  2/6    angle/C3_c2.C3_c2.C3_c2         Processing  3/6    angle/C3_c2.C3_c2.C3_c2         Processing  4/6    angle/C3_c2.C3_c2.C3_c2         Processing  5/6    angle/C3_c2.C3_c2.C3_c2         Processing  6/6
-    angle/C3_c2.C3_c2.H1_c          Processing  1/12    angle/C3_c2.C3_c2.H1_c          Processing  2/12    angle/C3_c2.C3_c2.H1_c          Processing  3/12    angle/C3_c2.C3_c2.H1_c          Processing  4/12    angle/C3_c2.C3_c2.H1_c          Processing  5/12    angle/C3_c2.C3_c2.H1_c          Processing  6/12    angle/C3_c2.C3_c2.H1_c          Processing  7/12    angle/C3_c2.C3_c2.H1_c          Processing  8/12    angle/C3_c2.C3_c2.H1_c          Processing  9/12    angle/C3_c2.C3_c2.H1_c          Processing 10/12    angle/C3_c2.C3_c2.H1_c          Processing 11/12    angle/C3_c2.C3_c2.H1_c          Processing 12/12
-    bond/C3_c2.C3_c2                Processing  1/6    bond/C3_c2.C3_c2                Processing  2/6    bond/C3_c2.C3_c2                Processing  3/6    bond/C3_c2.C3_c2                Processing  4/6    bond/C3_c2.C3_c2                Processing  5/6    bond/C3_c2.C3_c2                Processing  6/6
-    bond/C3_c2.H1_c                 Processing  1/6    bond/C3_c2.H1_c                 Processing  2/6    bond/C3_c2.H1_c                 Processing  3/6    bond/C3_c2.H1_c                 Processing  4/6    bond/C3_c2.H1_c                 Processing  5/6    bond/C3_c2.H1_c                 Processing  6/6
-    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  1/6    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  2/6    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  3/6    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  4/6    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  5/6    opdist/C3_c2.C3_c2.H1_c.C3_c2   Processing  6/6
-
-Estimating all pars for bonds, bends and opdists
-
-    angle/C3_c2.C3_c2.C3_c2           K =  1830.046147 ±     0.229904 kjmol/rad**2       q0 =   120.003436 ±     0.002110 deg            
-    angle/C3_c2.C3_c2.H1_c            K =   832.975851 ±     0.303653 kjmol/rad**2       q0 =   119.982944 ±     0.001593 deg            
-    bond/C3_c2.C3_c2                  K =  4354.861539 ±     0.381037 kjmol/A**2         q0 =     1.394183 ±     0.000007 A              
-    bond/C3_c2.H1_c                   K =  3348.708995 ±     0.043989 kjmol/A**2         q0 =     1.085389 ±     0.000004 A              
-    opdist/C3_c2.C3_c2.H1_c.C3_c2     K =  1246.214931 ±     1.435071 kjmol/A**2         q0 =    -0.000001 ±     0.000000 A              
-
-Refining force constants using a Hessian LSQ cost
-
-    angle/C3_c2.C3_c2.C3_c2           K =   491.443185 ±     0.000000 kjmol/rad**2       q0 =   120.003436 ±     0.000000 deg            
-    angle/C3_c2.C3_c2.H1_c            K =   331.207921 ±     0.000000 kjmol/rad**2       q0 =   119.982944 ±     0.000000 deg            
-    bond/C3_c2.C3_c2                  K =  3199.331247 ±     0.000000 kjmol/A**2         q0 =     1.394183 ±     0.000000 A              
-    bond/C3_c2.H1_c                   K =  3315.125018 ±     0.000000 kjmol/A**2         q0 =     1.085389 ±     0.000000 A              
-    dihed/C3_c2.C3_c2.C3_c2.C3_c2     K =    32.071997 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
-    dihed/C3_c2.C3_c2.C3_c2.H1_c      K =    32.015900 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
-    dihed/H1_c.C3_c2.C3_c2.H1_c       K =    13.093121 ±     0.000000 kjmol              q0 =     0.000000 ±     0.000000 deg            
-    opdist/C3_c2.C3_c2.H1_c.C3_c2     K =   274.025309 ±     0.000000 kjmol/A**2         q0 =    -0.000001 ±     0.000000 A              
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Time:           2013-11-04 10:53:20.132335
-
-
-__/\\\__________________________________________________________________________________________________________/\\\____
-  \ \\\                                                                                                         \ \\\
-   \ \\\                        End of file. Thanks for using QuickFF! Come back soon!!                          \ \\\
-____\///__________________________________________________________________________________________________________\///__
-

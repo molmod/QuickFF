@@ -1,121 +1,0 @@
-
-____________/\\\________________________________________________________/\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\______________
-__________/\\\\/\\\\_______________________________________/\\\_________\/\\\///////////__\/\\\///////////______________
-_________/\\\//\////\\\_________________/\\\_______________\/\\\_________\/\\\_____________\/\\\________________________
-_________/\\\______\//\\\__/\\\____/\\\_\///______/\\\\\\\\_\/\\\\\\\\____\/\\\\\\\\\\\_____\/\\\\\\\\\\\_______________
-_________\//\\\______/\\\__\/\\\___\/\\\__/\\\___/\\\//////__\/\\\////\\\__\/\\\///////______\/\\\///////_______________
-___________\///\\\\/\\\\/___\/\\\___\/\\\_\/\\\__/\\\_________\/\\\\\\\\/___\/\\\_____________\/\\\_____________________
-______________\////\\\//_____\/\\\___\/\\\_\/\\\_\//\\\________\/\\\///\\\___\/\\\_____________\/\\\____________________
-__________________\///\\\\\\__\//\\\\\\\\\__\/\\\__\///\\\\\\\\_\/\\\_\///\\\_\/\\\_____________\/\\\___________________
-_____________________\//////____\/////////___\///_____\////////__\///____\///__\///______________\///___________________
-
-    Welcom to QuickFF 1.0 - a Python package to quickly derive force fields from ab initio input data
-
-                                                Written by
-                    Louis Vanduyfhuys(1)*, Steven Vandenbrande(1) and Toon Verstraelen(1)
-
-(1) Center for Molecular Modeling, Ghent University Belgium.
-* mailto: Louis.Vanduyfhuys@UGent.be
-
-
-User:           louis
-Machine info:   Linux molmod91 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC 2013 x86_64
-Time:           2013-11-04 10:53:33.543691
-Python version: 2.7.5+ (default, Sep 19 2013, 13:48:49) [GCC 4.8.1]
-Current Dir:    /home/louis/build/quickff/share/examples/ethanol
-Command line:   /home/louis/bin/qff-est.py --atypes-level=high --ei-scheme=he --ei-scales=1.0,1.0,1.0 --ei-model=harm --vdw-from=uff --vdw-scales=0.0,0.0,0.0 --vdw-model=zero gaussian.fchk gaussian.fchk.h5
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-System information:
-
-    -------------------------------------------------------------------------------
-      index   symbol   ffatype       charge [e]     sigma [A]    epsilon [kJ/mol]  
-    -------------------------------------------------------------------------------
-      0       C        C4_c1           -0.259         0.000           0.000
-      1       C        C4_c1_o1         0.292         0.000           0.000
-      2       H        H1_c             0.031         0.000           0.000
-      3       H        H1_c             0.031         0.000           0.000
-      4       H        H1_c             0.031         0.000           0.000
-      5       H        H1_c             0.031         0.000           0.000
-      6       O        O2_ch           -0.521         0.000           0.000
-      7       H        H1_c             0.031         0.000           0.000
-      8       H        H1_o             0.334         0.000           0.000
-    -------------------------------------------------------------------------------
-
-Model information:
-
-    AI Total project Rot/Trans =  True
-    AI Total kind = Harmonic
-    FF Electrostatic scales = 1.00 1.00 1.00
-    FF Electrostatic kind = Harmonic
-    FF van der Waals scales = 0.00 0.00 0.00
-    FF van der Waals kind = Zero
-    FF Covalent kind = TermList
-
-Determine dihedral potentials
-
-    dihed/C4_c1.C4_c1_o1.O2_ch.H1_o     0.5*K*[1 - cos(3(psi -   1.0))]
-    dihed/H1_c.C4_c1.C4_c1_o1.H1_c      0.5*K*[1 - cos(3(psi -   1.0))]
-    dihed/H1_c.C4_c1.C4_c1_o1.O2_ch     0.5*K*[1 - cos(3(psi -   1.0))]
-    dihed/H1_c.C4_c1_o1.O2_ch.H1_o      0.5*K*[1 - cos(3(psi -   1.0))]
-
-Determine the coordinates of the perturbation trajectories
-
-    angle/C4_c1.C4_c1_o1.H1_c         Processing  1/2    angle/C4_c1.C4_c1_o1.H1_c         Processing  2/2
-    angle/C4_c1.C4_c1_o1.O2_ch        Processing  1/1
-    angle/C4_c1_o1.C4_c1.H1_c         Processing  1/3    angle/C4_c1_o1.C4_c1.H1_c         Processing  2/3    angle/C4_c1_o1.C4_c1.H1_c         Processing  3/3
-    angle/C4_c1_o1.O2_ch.H1_o         Processing  1/1
-    angle/H1_c.C4_c1.H1_c             Processing  1/3    angle/H1_c.C4_c1.H1_c             Processing  2/3    angle/H1_c.C4_c1.H1_c             Processing  3/3
-    angle/H1_c.C4_c1_o1.H1_c          Processing  1/1
-    angle/H1_c.C4_c1_o1.O2_ch         Processing  1/2    angle/H1_c.C4_c1_o1.O2_ch         Processing  2/2
-    bond/C4_c1.C4_c1_o1               Processing  1/1
-    bond/C4_c1.H1_c                   Processing  1/3    bond/C4_c1.H1_c                   Processing  2/3    bond/C4_c1.H1_c                   Processing  3/3
-    bond/C4_c1_o1.H1_c                Processing  1/2    bond/C4_c1_o1.H1_c                Processing  2/2
-    bond/C4_c1_o1.O2_ch               Processing  1/1
-    bond/H1_o.O2_ch                   Processing  1/1
-
-Estimating all pars for bonds, bends and opdists
-
-    angle/C4_c1.C4_c1_o1.H1_c           K =   679.494085 ±     0.000034 kjmol/rad**2       q0 =   111.792175 ±     0.000000 deg            
-    angle/C4_c1.C4_c1_o1.O2_ch          K =  1563.406303 ±     0.000000 kjmol/rad**2       q0 =   104.078048 ±     0.000000 deg            
-    angle/C4_c1_o1.C4_c1.H1_c           K =   644.264786 ±     7.942579 kjmol/rad**2       q0 =   109.833886 ±     0.211159 deg            
-    angle/C4_c1_o1.O2_ch.H1_o           K =   499.032306 ±     0.000000 kjmol/rad**2       q0 =   102.341107 ±     0.000000 deg            
-    angle/H1_c.C4_c1.H1_c               K =   503.785899 ±     6.355460 kjmol/rad**2       q0 =   109.237365 ±     0.378422 deg            
-    angle/H1_c.C4_c1_o1.H1_c            K =   480.427217 ±     0.000000 kjmol/rad**2       q0 =   107.839191 ±     0.000000 deg            
-    angle/H1_c.C4_c1_o1.O2_ch           K =   739.564995 ±     0.000016 kjmol/rad**2       q0 =   111.725740 ±     0.000001 deg            
-    bond/C4_c1.C4_c1_o1                 K =  2742.696532 ±     0.000000 kjmol/A**2         q0 =     1.517871 ±     0.000000 A              
-    bond/C4_c1.H1_c                     K =  3162.521430 ±     8.638339 kjmol/A**2         q0 =     1.093921 ±     0.000963 A              
-    bond/C4_c1_o1.H1_c                  K =  2954.645456 ±     0.000135 kjmol/A**2         q0 =     1.095731 ±     0.000000 A              
-    bond/C4_c1_o1.O2_ch                 K =  2980.148761 ±     0.000000 kjmol/A**2         q0 =     1.442398 ±     0.000000 A              
-    bond/H1_o.O2_ch                     K =  5588.263777 ±     0.000000 kjmol/A**2         q0 =     1.004127 ±     0.000000 A              
-
-Refining force constants using a Hessian LSQ cost
-
-    angle/C4_c1.C4_c1_o1.H1_c           K =   345.267406 ±     0.000000 kjmol/rad**2       q0 =   111.792175 ±     0.000000 deg            
-    angle/C4_c1.C4_c1_o1.O2_ch          K =   527.157390 ±     0.000000 kjmol/rad**2       q0 =   104.078048 ±     0.000000 deg            
-    angle/C4_c1_o1.C4_c1.H1_c           K =   343.987179 ±     0.000000 kjmol/rad**2       q0 =   109.833886 ±     0.000000 deg            
-    angle/C4_c1_o1.O2_ch.H1_o           K =   381.261900 ±     0.000000 kjmol/rad**2       q0 =   102.341107 ±     0.000000 deg            
-    angle/H1_c.C4_c1.H1_c               K =   246.915160 ±     0.000000 kjmol/rad**2       q0 =   109.237365 ±     0.000000 deg            
-    angle/H1_c.C4_c1_o1.H1_c            K =   241.767827 ±     0.000000 kjmol/rad**2       q0 =   107.839191 ±     0.000000 deg            
-    angle/H1_c.C4_c1_o1.O2_ch           K =   414.167307 ±     0.000000 kjmol/rad**2       q0 =   111.725740 ±     0.000000 deg            
-    bond/C4_c1.C4_c1_o1                 K =  2079.855678 ±     0.000000 kjmol/A**2         q0 =     1.517871 ±     0.000000 A              
-    bond/C4_c1.H1_c                     K =  2992.227263 ±     0.000000 kjmol/A**2         q0 =     1.093921 ±     0.000000 A              
-    bond/C4_c1_o1.H1_c                  K =  2824.895933 ±     0.000000 kjmol/A**2         q0 =     1.095731 ±     0.000000 A              
-    bond/C4_c1_o1.O2_ch                 K =  2249.444765 ±     0.000000 kjmol/A**2         q0 =     1.442398 ±     0.000000 A              
-    bond/H1_o.O2_ch                     K =  5520.299508 ±     0.000000 kjmol/A**2         q0 =     1.004127 ±     0.000000 A              
-    dihed/C4_c1.C4_c1_o1.O2_ch.H1_o     K =    -0.000000 ±     0.000000 kjmol              q0 =    60.000000 ±     0.000000 deg            
-    dihed/H1_c.C4_c1.C4_c1_o1.H1_c      K =    -0.000000 ±     0.000000 kjmol              q0 =    60.000000 ±     0.000000 deg            
-    dihed/H1_c.C4_c1.C4_c1_o1.O2_ch     K =    11.774944 ±     0.000000 kjmol              q0 =    60.000000 ±     0.000000 deg            
-    dihed/H1_c.C4_c1_o1.O2_ch.H1_o      K =     5.903346 ±     0.000000 kjmol              q0 =    60.000000 ±     0.000000 deg            
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Time:           2013-11-04 10:53:37.288191
-
-
-__/\\\__________________________________________________________________________________________________________/\\\____
-  \ \\\                                                                                                         \ \\\
-   \ \\\                        End of file. Thanks for using QuickFF! Come back soon!!                          \ \\\
-____\///__________________________________________________________________________________________________________\///__
-
