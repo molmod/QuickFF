@@ -238,7 +238,7 @@ class ValencePart(BasePart):
         if icnames is None:
             icnames = system.ics.keys()
         else:
-            assert hasattr(icnames, __iter__), 'icnames should be an iterable object'
+            assert hasattr(icnames, '__iter__'), 'icnames should be an iterable object'
         for icname in sorted(icnames):
             assert type(icname)==str, 'icnames should be a list of strings'
             assert icname in system.ics.keys(), 'icname %s not found in system' %icname
