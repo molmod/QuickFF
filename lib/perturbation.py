@@ -71,29 +71,39 @@ class BasePertTheory(object):
 
     def plot(self, ic, trajectory, filename, eunit='kjmol'):
         import matplotlib.pyplot as pp
-        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei')]
-        qs, tot, ei = self.analyze(trajectory, evaluators)
+        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw')]
+        qs, tot, ei, vdw = self.analyze(trajectory, evaluators)
         pars = fitpar(qs, tot-ei, rcond=1e-6)
         pp.clf()
         pp.plot(
             qs/parse_unit(ic.qunit),
             tot/parse_unit(eunit),
-            'k--', linewidth=2, label='AI total'
+            'k--', linewidth=4, label='AI total'
         )
         pp.plot(
             qs/parse_unit(ic.qunit),
             ei/parse_unit(eunit),
-            'b--', linewidth=1, label='FF electrostatic'
+            'b--', linewidth=2, label='FF electrostatic'
+        )
+        pp.plot(
+            qs/parse_unit(ic.qunit),
+            vdw/parse_unit(eunit),
+            'g--', linewidth=2, label='FF van der Waals'
         )
         pp.plot(
             qs/parse_unit(ic.qunit),
             (pars[0]*qs**2+pars[1]*qs+pars[2])/parse_unit(eunit),
-            'b-', linewidth=1, label='FF covalent fitted'
+            'r-', linewidth=2, label='FF covalent fitted'
         )
-        pp.title(ic.name)
+        pp.title('%s:  k = %4.0f %s  q0 = %7.3f %s' % (
+            ic.name, 
+            2*pars[0]/parse_unit(ic.kunit), ic.kunit,
+            -pars[1]/(2*pars[0])/parse_unit(ic.qunit), ic.qunit
+        ))
         pp.xlabel('%s [%s]' % (ic.name.split('/')[0], ic.qunit), fontsize=16)
         pp.ylabel('Energy [%s]' %eunit, fontsize=16)
         pp.legend(loc='best', fontsize=16)
+        pp.grid()
         fig = pp.gcf()
         fig.set_size_inches([8, 8])
         pp.savefig(filename)

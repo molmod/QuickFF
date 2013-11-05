@@ -96,7 +96,7 @@ class Program(object):
                 continue
             for i_ics, ic in enumerate(ics):
                 if verbose:
-                    sys.stdout.write('\r    %s Processing %2i/%i' %(
+                    sys.stdout.write('\r    %s Generating %2i/%i' %(
                         icname+' '*(maxlength-len(icname)), i_ics+1, len(ics)
                     ))
                     sys.stdout.flush()
@@ -175,13 +175,61 @@ class Program(object):
         print footer
         return fftab
 
-    def plot_pt(self, icname):
+    def plot_pt(self, icname, verbose=True):
         '''
             Generate and plot the perturbation trajectories for all ics with a
             name compatible with icname.
         '''
+        #Logging
+        if verbose:
+            print header
+            print sysinfo()
+            print '~'*120+'\n'
+            print 'System information:\n'
+            self.system.print_atom_info()
+            print '\nModel information:\n'
+            self.model.print_info()
+            print '\nDetermine the coordinates of the perturbation trajectories\n'
+        #Reading/generating trajectories
+        trajectories = {}
+        if self.fns_traj is not None:
+            if os.path.isfile(self.fns_traj):
+                with open(self.fns_traj,'r') as f:
+                    trajectories = cPickle.load(f)
+        for i, ic in enumerate(self.system.ics[icname]):
+            if ic.name in trajectories.keys():
+                #already read
+                if verbose:
+                    print '    %s Read %2i/%i from %s' %(
+                        icname, i+1, len(self.system.ics[icname]), self.fns_traj
+                    )
+            else:
+                #generating
+                if verbose:
+                    sys.stdout.write('    %s Generating %2i/%i' %(
+                        icname, i+1, len(self.system.ics[icname])
+                    ))
+                    sys.stdout.flush()
+                try:
+                    trajectories[ic.name] = self.pert_theory.generate(ic, steps=51)
+                    print ''
+                except KeyboardInterrupt:
+                    if verbose:
+                        sys.stdout.write(' INTERRUPTED\n')
+                        sys.stdout.flush()
+        #Writing trajectories
+        if self.fns_traj is not None:
+            with open(self.fns_traj,'w') as f:
+                cPickle.dump(trajectories, f)
+        #Plotting/writing output
         for ic in self.system.ics[icname]:
-            name = ic.name.replace('/', '-')
-            trajectory = self.pert_theory.generate(ic, steps=51)
-            self.pert_theory.plot(ic, trajectory, 'energies-'+name+'.pdf')
-            self.pert_theory.write(trajectory, 'trajectory-'+name+'.xyz')
+            if ic.name in trajectories.keys():
+                name = ic.name.replace('/', '-')
+                self.pert_theory.plot(ic, trajectories[ic.name], 'energies-'+name+'.pdf')
+                self.pert_theory.write(trajectories[ic.name], 'trajectory-'+name+'.xyz')
+        #Logging
+        if verbose:
+            print ''
+            print '\n'+'~'*120+'\n'
+            print 'Time:           ' + datetime.datetime.now().isoformat().replace('T', ' ') + '\n'
+            print footer
