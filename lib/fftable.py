@@ -259,4 +259,5 @@ class FFTable(object):
                 atypes[0], atypes[1], atypes[2], atypes[3],
                 k/(kjmol/angstrom**2), q0/angstrom
             )
+        print >> f, ''
         f.close()

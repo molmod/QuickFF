@@ -469,11 +469,11 @@ class System(object):
         print >> f, '#  - LJ:    4.0*EPSILON*((SIGMA/r)^12 - (SIGMA/r)^6)'
         print >> f, '#  - PAULI: A*exp(-B*r)'
         print >> f, ''
-        print >> f, '%s:UNIT SIGMA angstrom' %pot_kind.upper()
-        print >> f, '%s:UNIT EPSILON kjmol'%pot_kind.upper()
-        print >> f, '%s:SCALE 1 %4.2f' %(pot_kind.upper(), scales[0])
-        print >> f, '%s:SCALE 2 %4.2f' %(pot_kind.upper(), scales[1])
-        print >> f, '%s:SCALE 3 %4.2f' %(pot_kind.upper(), scales[2])
+        print >> f, 'LJ:UNIT SIGMA angstrom'
+        print >> f, 'LJ:UNIT EPSILON kjmol'
+        print >> f, 'LJ:SCALE 1 %4.2f' % scales[0]
+        print >> f, 'LJ:SCALE 2 %4.2f' % scales[1]
+        print >> f, 'LJ:SCALE 3 %4.2f' % scales[2]
         print >> f, ''
         print >> f, '# -------------------------------------------'
         print >> f, '# KEY    ffatype  SIGMA         EPSILON'
@@ -481,6 +481,6 @@ class System(object):
         added = []
         for atype, sigma, epsilon in zip(self.ffatypes, self.sigmas, self.epsilons):
             if atype not in added:
-                print >> f, '%s:PARS %8s % .10f % .10f' %(pot_kind.upper(), atype, sigma/angstrom, epsilon/kjmol)
+                print >> f, 'LJ:PARS %8s % .10f % .10f' %(atype, sigma/angstrom, epsilon/kjmol)
                 added.append(atype)
         f.close()
