@@ -66,6 +66,26 @@ def parser():
              'atom types based on atom index. NONE will not guess but use the ' +\
              'atom types defined in the input files fns. [default=%default]'
     )
+    parser.add_option(
+        '--nb-exclusion', default=None,
+        help='A Regular Expression to match atom types that are to be excluded '+\
+             'in the non-bonded interactions [default=%default].'
+    )
+    parser.add_option(
+        '--start', default=None, type=float,
+        help='Defines the smallest value (in atomic untis) of the perturbed '
+             'ic to generate the perturbation trajectory.'
+    )
+    parser.add_option(
+        '--end', default=None, type=float,
+        help='Defines the highest value (in atomic untis) of the perturbed '
+             'ic to generate the perturbation trajectory.'
+    )
+    parser.add_option(
+        '--steps', default=51, type=int,
+        help='Defines the number of steps to generate the perturbation '
+             'trajectory. [default=%default]'
+    )
     options, args = parser.parse_args()
     options.ei_scales = [float(x) for x in options.ei_scales.split(',')]
     options.vdw_scales = [float(x) for x in options.vdw_scales.split(',')]
@@ -94,7 +114,7 @@ def main():
         vdw_scales=options.vdw_scales, vdw_pot_kind=options.vdw_model,
     )
     program = Program(system, model, fns_traj='trajectories.pps')
-    program.plot_pt(icname)
+    program.plot_pt(icname, start=options.start, end=options.end, steps=options.steps)
 
 if __name__=='__main__':
     main()

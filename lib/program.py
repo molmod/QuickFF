@@ -175,7 +175,7 @@ class Program(object):
         print footer
         return fftab
 
-    def plot_pt(self, icname, verbose=True):
+    def plot_pt(self, icname, start=None, end=None, steps=51, verbose=True):
         '''
             Generate and plot the perturbation trajectories for all ics with a
             name compatible with icname.
@@ -211,7 +211,7 @@ class Program(object):
                     ))
                     sys.stdout.flush()
                 try:
-                    trajectories[ic.name] = self.pert_theory.generate(ic, steps=51)
+                    trajectories[ic.name] = self.pert_theory.generate(ic, start=start, end=end, steps=51)
                     print ''
                 except KeyboardInterrupt:
                     if verbose:
