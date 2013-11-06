@@ -2,7 +2,7 @@ from quickff.fftable import DataArray, FFTable
 from quickff.perturbation import RelaxedGeoPertTheory
 from quickff.cost import HessianFCCost
 
-import cPickle, os, sys, getpass, datetime
+import cPickle, os, sys, getpass, datetime, numpy, scipy
 
 __all__ = ['Program']
 
@@ -38,6 +38,8 @@ def sysinfo():
     info += 'Machine info:   ' + ' '.join(os.uname()) + '\n'
     info += 'Time:           ' + datetime.datetime.now().isoformat().replace('T', ' ') + '\n'
     info += 'Python version: ' + sys.version.replace('\n', '') + '\n'
+    info += 'Numpy version:  ' + numpy.__version__ + '\n'
+    info += 'Scipy version:  ' + scipy.__version__ + '\n'
     info += 'Current Dir:    ' + os.getcwd() + '\n'
     info += 'Command line:   ' + ' '.join(sys.argv) + '\n'
     return info

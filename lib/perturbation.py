@@ -73,40 +73,44 @@ class BasePertTheory(object):
         import matplotlib.pyplot as pp
         evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw')]
         qs, tot, ei, vdw = self.analyze(trajectory, evaluators)
-        pars = fitpar(qs, tot-ei, rcond=1e-6)
-        pp.clf()
-        pp.plot(
-            qs/parse_unit(ic.qunit),
-            tot/parse_unit(eunit),
-            'k--', linewidth=4, label='AI total'
+        label = {}
+        for (name, obs) in zip(['ai', 'ei', 'vdw', 'cov'], [tot, ei, vdw, tot-ei-vdw]):
+            pars = fitpar(qs, obs, rcond=1e-6)
+            k = 2*pars[0]
+            if k != 0.0:
+                q0 = -0.5*pars[1]/pars[0]
+                label[name] = '(K=%.0f q0=%.3f)' %(
+                    k/parse_unit(ic.kunit),
+                    q0/parse_unit(ic.qunit)
+                )
+            else:
+                label[name] = '(K=0.0 q0=None)'
+            if name=='cov':
+                cov = (pars[0]*qs**2+pars[1]*qs+pars[2])
+        fig, ax = pp.subplots()
+        ax.plot(
+            qs/parse_unit(ic.qunit), tot/parse_unit(eunit),
+            'k--', linewidth=4, label='AI total %s' %label['ai']
         )
-        pp.plot(
-            qs/parse_unit(ic.qunit),
-            ei/parse_unit(eunit),
-            'b--', linewidth=2, label='FF electrostatic'
+        ax.plot(
+            qs/parse_unit(ic.qunit), ei/parse_unit(eunit),
+            'b--', linewidth=2, label='FF elec  %s' %label['ei']
         )
-        pp.plot(
-            qs/parse_unit(ic.qunit),
-            vdw/parse_unit(eunit),
-            'g--', linewidth=2, label='FF van der Waals'
+        ax.plot(
+            qs/parse_unit(ic.qunit), vdw/parse_unit(eunit),
+            'g--', linewidth=2, label='FF vdW   %s' %label['vdw']
         )
-        pp.plot(
-            qs/parse_unit(ic.qunit),
-            (pars[0]*qs**2+pars[1]*qs+pars[2])/parse_unit(eunit),
-            'r-', linewidth=2, label='FF covalent fitted'
+        ax.plot(
+            qs/parse_unit(ic.qunit), cov/parse_unit(eunit),
+            'r-', linewidth=2, label='FF cov   %s' %label['cov']
         )
-        pp.title('%s:  k = %4.0f %s  q0 = %7.3f %s' % (
-            ic.name, 
-            2*pars[0]/parse_unit(ic.kunit), ic.kunit,
-            -pars[1]/(2*pars[0])/parse_unit(ic.qunit), ic.qunit
-        ))
-        pp.xlabel('%s [%s]' % (ic.name.split('/')[0], ic.qunit), fontsize=16)
-        pp.ylabel('Energy [%s]' %eunit, fontsize=16)
-        pp.legend(loc='best', fontsize=16)
-        pp.grid()
-        fig = pp.gcf()
+        ax.set_title(ic.name)
+        ax.set_xlabel('%s [%s]' % (ic.name.split('/')[0], ic.qunit), fontsize=16)
+        ax.set_ylabel('Energy [%s]' %eunit, fontsize=16)
+        ax.grid()
+        ax.legend(loc='best', fontsize=16)
         fig.set_size_inches([8, 8])
-        pp.savefig(filename)
+        fig.savefig(filename)
 
     def estimate(self, ic, trajectory):
         evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw')]
