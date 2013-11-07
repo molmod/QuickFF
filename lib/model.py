@@ -255,16 +255,16 @@ class ValencePart(BasePart):
 
     def print_info(self):
         BasePart.print_info(self)
-        if len(self.pot.terms.keys())<4:
-            print '    %s term icnames:%s %s' %(self.name, ' '*(23-len(self.name)), ' '.join(self.pot.terms.keys()) )
-        else:
-            line = ''
-            for i, icname in enumerate(self.pot.terms.keys()):
-                line += '        %25s' %( icname + ' '*(30-len(icname)) )
-                if (i+1)%4==0:
-                    line += '\n'
-            line.rstrip('\n')
-            print '    %s term icnames:%s \n\n%s\n' %(self.name, ' '*(23-len(self.name)), line)
+        maxlength = max([len(icname) for icname in self.pot.terms.keys()]) + 4
+        lines = '    '
+        for i, icname in enumerate(sorted(self.pot.terms.keys())):
+            lines += '    %s' %( icname + ' '*(maxlength-len(icname)) )
+            if (i+1)%4==0:
+                lines += '\n    '
+        lines.rstrip('\n    ')
+        print '    %s term icnames:' %self.name
+        print ''
+        print lines
 
     def determine_dihedral_potentials(self, system, marge2=15*deg, marge3=15*deg, verbose=True):
         '''
