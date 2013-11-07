@@ -255,7 +255,7 @@ class ValencePart(BasePart):
 
     def print_info(self):
         BasePart.print_info(self)
-        maxlength = max([len(icname) for icname in self.pot.terms.keys()]) + 4
+        maxlength = min(max([len(icname) for icname in self.pot.terms.keys()]) + 4, 35)
         lines = '    '
         for i, icname in enumerate(sorted(self.pot.terms.keys())):
             lines += '    %s' %( icname + ' '*(maxlength-len(icname)) )
