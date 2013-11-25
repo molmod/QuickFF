@@ -147,7 +147,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
                     V  = Vt.T[:, :rank]
                     Vo = Vt.T[:, rank:]
                     strain += np.dot(V, np.dot(S2, V.T)) \
-                            + np.dot(Vo, Vo.T)/ndofs
+                            + np.dot(Vo, Vo.T)/(100*ndofs)
                 else:
                     #if the gradient of the current ic is zero in equilibrium,
                     #use the second order contribution to the Taylor expansion

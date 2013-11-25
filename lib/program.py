@@ -213,7 +213,7 @@ class Program(object):
                     ))
                     sys.stdout.flush()
                 try:
-                    trajectories[ic.name] = self.pert_theory.generate(ic, start=start, end=end, steps=51)
+                    trajectories[ic.name] = self.pert_theory.generate(ic, start=start, end=end, steps=steps)
                     print ''
                 except KeyboardInterrupt:
                     if verbose:
