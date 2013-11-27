@@ -6,6 +6,7 @@ from quickff.system import System
 from quickff.model import Model
 from quickff.program import Program
 from quickff.fftable import FFTable
+from quickff.paracontext import *
 
 def parser():
     usage = "%prog [options] fns"
@@ -74,6 +75,13 @@ def parser():
         '--suffix', default='',
         help = "Suffix that will be added to all output files. [default='']"
     )
+    parser.add_option(
+        '--scoop', default='False',
+        help = 'Use scoop distribute tasks over workers. Note that the main ' +\
+               'program has to be started with -m scoop for this to work, e.g. ' +\
+               'python -m scoop -n4 ~/bin/qff-est.py --scoop=True ...' +\
+               '[default=False]'
+    )
     options, fns = parser.parse_args()
     options.ei_scales = [float(x) for x in options.ei_scales.split(',')]
     options.vdw_scales = [float(x) for x in options.vdw_scales.split(',')]
@@ -120,6 +128,12 @@ def main():
             options.vdw_scales, options.vdw_model, mode='a'
         )
     system.dump('system%s.chk' % options.suffix)
+
+#Use scoop if requested. This has to be outside of __main__ to set the
+#context for all workers
+fns, options = parser()
+if options.scoop=='True': 
+    paracontext.use_scoop()
 
 if __name__=='__main__':
     main()
