@@ -72,6 +72,10 @@ def parser():
              'in the system are included.'
     )
     parser.add_option(
+        '--no-opdists', dest='do_opdists', default=True, action='store_false',
+        help='Do not include out-of-plane distance terms in covalent force field.'
+    )
+    parser.add_option(
         '--suffix', default='',
         help = "Suffix that will be added to all output files. [default='']"
     )
@@ -107,7 +111,7 @@ def main():
             raise ValueError('Unsupported value for vdw_from, recieved %s' %options.vdw_from)
     system.determine_ics_from_topology()
     model = Model.from_system(
-        system, icnames=options.icnames,
+        system, icnames=options.icnames, do_opdists=options.do_opdists,
         ei_scales=options.ei_scales, ei_pot_kind=options.ei_model,
         vdw_scales=options.vdw_scales, vdw_pot_kind=options.vdw_model,
     )

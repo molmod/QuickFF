@@ -44,7 +44,7 @@ class Model(object):
         self.vdw = vdw
 
     @classmethod
-    def from_system(cls, system, ai_project=True, icnames=None,
+    def from_system(cls, system, ai_project=True, icnames=None, do_opdists=True,
         ei_scales=[1.0,1.0,1.0], ei_pot_kind='Harmonic',
         vdw_scales=[0.0,0.0,1.0], vdw_pot_kind='Harmonic'):
         '''
@@ -64,6 +64,9 @@ class Model(object):
                 A list of strings specifying which icnames should be included 
                 in the Valence Part. By default, all icnames in the system are 
                 included.
+            
+            do_opdists
+                Include out-of-plane distance terms in covalent force field.
 
             ei_scales
                 a list containing the scales for the 1-2, 1-3 and 1-4
@@ -92,7 +95,7 @@ class Model(object):
         ai  = AIPart.from_system(system, ai_project)
         ei  = EIPart.from_system(system, ei_scales, ei_pot_kind)
         vdw = VDWPart.from_system(system, vdw_scales, vdw_pot_kind)
-        val = ValencePart.from_system(system, icnames=icnames)
+        val = ValencePart.from_system(system, icnames=icnames, do_opdists=do_opdists)
         return cls(ai, val, ei, vdw)
 
     def print_info(self):
@@ -233,10 +236,13 @@ class ValencePart(BasePart):
         BasePart.__init__(self, 'FF Covalent', pot)
 
     @classmethod
-    def from_system(cls, system, icnames=None):
+    def from_system(cls, system, icnames=None, do_opdists=True):
         vterms = {}
         if icnames is None:
-            icnames = system.ics.keys()
+            if do_opdists:
+                icnames = system.ics.keys()
+            else:
+                icnames = [icname for icname in system.ics.keys() if not icname.startswith('opdist')]
         else:
             assert hasattr(icnames, '__iter__'), 'icnames should be an iterable object'
         for icname in sorted(icnames):
