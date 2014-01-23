@@ -57,23 +57,22 @@ def parser():
     )
     parser.add_option(
         '--atypes-level', default=None,
-        help='Assign atom types according to level ATYPES_LEVEL. LOW will '     +\
-             'assign atom types based only on atom number. MEDIUM will assign ' +\
+        help='Assign atom types according to level ATYPES_LEVEL. Low will '     +\
+             'assign atom types based only on atom number. Medium will assign ' +\
              'atom types based on atom number and the number of neighbors. '    +\
-             'HIGH will assign atom types based on atom number, number of '     +\
-             'neighbors and the nature of the neighbors. HIGHEST will assign '  +\
-             'atom types based on atom index. NONE will not guess but use the ' +\
+             'High will assign atom types based on atom number, number of '     +\
+             'neighbors and the nature of the neighbors. Highest will assign '  +\
+             'atom types based on atom index. None will not guess but use the ' +\
              'atom types defined in the input files fns. [default=%default]'
     )
     parser.add_option(
-        '--icnames', default='all',
-        help='A comma-separated list of strings specifying which icnames '      +\
-             'should be included in the Valence Part. By default, all icnames ' +\
-             'in the system are included.'
-    )
-    parser.add_option(
-        '--no-opdists', dest='do_opdists', default=True, action='store_false',
-        help='Do not include out-of-plane distance terms in covalent force field.'
+        '--ic-ids', default='all',
+        help="A comma-separated list of identifiers specifying which icnames "  +\
+             "should be included in the Valence Part. Each identifier can "     +\
+             "be a specific IC name such as 'bond/C3_cc.H1_c' or can be one "   +\
+             "of the following strings: 'bonds', 'angles', 'diheds', "          +\
+             "'opdists' or 'all', in which case all bonds, angles, ... "        +\
+             "will be included. [default=%default]"
     )
     parser.add_option(
         '--suffix', default='',
@@ -89,10 +88,7 @@ def parser():
     options, fns = parser.parse_args()
     options.ei_scales = [float(x) for x in options.ei_scales.split(',')]
     options.vdw_scales = [float(x) for x in options.vdw_scales.split(',')]
-    if options.icnames.lower() == 'all':
-        options.icnames = None
-    else:
-        options.icnames = [icname for icname in options.icnames.split(',')]
+    options.ic_ids = options.ic_ids.split(',')
     return fns, options
 
 def main():
@@ -111,7 +107,7 @@ def main():
             raise ValueError('Unsupported value for vdw_from, recieved %s' %options.vdw_from)
     system.determine_ics_from_topology()
     model = Model.from_system(
-        system, icnames=options.icnames, do_opdists=options.do_opdists,
+        system, ic_ids=options.ic_ids,
         ei_scales=options.ei_scales, ei_pot_kind=options.ei_model,
         vdw_scales=options.vdw_scales, vdw_pot_kind=options.vdw_model,
     )

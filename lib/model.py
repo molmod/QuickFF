@@ -44,7 +44,7 @@ class Model(object):
         self.vdw = vdw
 
     @classmethod
-    def from_system(cls, system, ai_project=True, icnames=None, do_opdists=True,
+    def from_system(cls, system, ai_project=True, ic_ids=['all'],
         ei_scales=[1.0,1.0,1.0], ei_pot_kind='Harmonic',
         vdw_scales=[0.0,0.0,1.0], vdw_pot_kind='Harmonic'):
         '''
@@ -60,13 +60,11 @@ class Model(object):
                 If True, project the translational and rotational degrees of
                 freedom out of the hessian.
             
-            icnames
-                A list of strings specifying which icnames should be included 
-                in the Valence Part. By default, all icnames in the system are 
-                included.
-            
-            do_opdists
-                Include out-of-plane distance terms in covalent force field.
+            ic_ids
+                A list of identifiers specifying which icnames should be
+                included in the Valence Part. Each identifier can be a specific
+                IC name such as 'bond/C3_cc.H1_c' or can be one of the following
+                strings: 'bonds', 'angles', 'diheds', 'opdists' or 'all'.
 
             ei_scales
                 a list containing the scales for the 1-2, 1-3 and 1-4
@@ -95,7 +93,7 @@ class Model(object):
         ai  = AIPart.from_system(system, ai_project)
         ei  = EIPart.from_system(system, ei_scales, ei_pot_kind)
         vdw = VDWPart.from_system(system, vdw_scales, vdw_pot_kind)
-        val = ValencePart.from_system(system, icnames=icnames, do_opdists=do_opdists)
+        val = ValencePart.from_system(system, ic_ids=ic_ids)
         return cls(ai, val, ei, vdw)
 
     def print_info(self):
@@ -236,15 +234,37 @@ class ValencePart(BasePart):
         BasePart.__init__(self, 'FF Covalent', pot)
 
     @classmethod
-    def from_system(cls, system, icnames=None, do_opdists=True):
+    def from_system(cls, system, ic_ids=['all']):
+        #Determine the icnames that are to be included in the valence model
+        icnames = []
+        for identifier in ic_ids:
+            found = False
+            if identifier.lower() in ['bonds', 'dists', 'lengths', 'all']:
+                found = True
+                for icname in system.ics.keys():
+                    if icname.startswith('bond'):
+                        icnames.append(icname)
+            if identifier.lower() in ['bends', 'angles', 'all']:
+                found = True
+                for icname in system.ics.keys():
+                    if icname.startswith('angle'):
+                        icnames.append(icname)
+            if identifier.lower() in ['diheds', 'dihedrals', 'all']:
+                found = True
+                for icname in system.ics.keys():
+                    if icname.startswith('dihed'):
+                        icnames.append(icname)
+            if identifier.lower() in ['opdists', 'oopdists', 'all']:
+                found = True
+                for icname in system.ics.keys():
+                    if icname.startswith('opdist'):
+                        icnames.append(icname)
+            if not found and identifier in system.ics.keys():
+                icnames.append(identifier)
+            elif not found:
+                raise ValueError('Invalid IC identifier %s' %identifier)
+        #Construct the valence model
         vterms = {}
-        if icnames is None:
-            if do_opdists:
-                icnames = system.ics.keys()
-            else:
-                icnames = [icname for icname in system.ics.keys() if not icname.startswith('opdist')]
-        else:
-            assert hasattr(icnames, '__iter__'), 'icnames should be an iterable object'
         for icname in sorted(icnames):
             assert type(icname)==str, 'icnames should be a list of strings'
             assert icname in system.ics.keys(), 'icname %s not found in system' %icname
