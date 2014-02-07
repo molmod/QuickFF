@@ -201,10 +201,6 @@ class RelaxedGeoPertTheory(BasePertTheory):
             return 0.5*np.dot(dx.T, np.dot(S, dx))
         #Guess delta_x first time
         guess = np.zeros(ndofs, float)
-        #if ic.name.startswith('opdist'):
-        #    guess = np.random.normal(loc=0.0, scale=0.01, size=ndofs)
-        #else:
-        #    guess = np.random.normal(loc=0.0, scale=0.000001, size=ndofs)
         for iq, q in enumerate(qarray):
             #Only use if the minimum is located in 180*deg
             if ic.name.startswith('angle') and q == 180*deg and q0 == 180*deg:

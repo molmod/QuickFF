@@ -95,18 +95,16 @@ class Program(object):
         trajectories = {}
         all_ics = []
         for icname in sorted(self.model.val.pot.terms.keys()):
-            ics = self.system.ics[icname]
             if skip_dihedrals and icname.startswith('dihed'):
                 continue
-            for i_ics, ic in enumerate(ics):
+            ics = self.system.ics[icname]
+            for ic in ics:
                 all_ics.append(ic)
             if verbose:
-                sys.stdout.write('\r    %s will generate %i trajectories' %(
+                print '    %s will generate %i trajectories' %(
                     icname+' '*(maxlength-len(icname)), len(ics)
-                ))
-                sys.stdout.flush()
-                print ''
-        results = paracontext.map( self.pert_theory.generate, all_ics)
+                )
+        results = paracontext.map(self.pert_theory.generate, all_ics)
         for i in xrange(len(all_ics)):
             trajectories[all_ics[i].name] = results[i]
         #Check if we need to write the generated trajectories to a file
