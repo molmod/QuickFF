@@ -88,10 +88,10 @@ def parser():
         help = "Suffix that will be added to all output files. [default='']"
     )
     parser.add_option(
-        '--scoop', default='False',
+        '--scoop', default=False, action='store_true',
         help = 'Use scoop distribute tasks over workers. Note that the main ' +\
                'program has to be started with -m scoop for this to work, e.g. ' +\
-               'python -m scoop -n4 ~/bin/qff-est.py --scoop=True ...' +\
+               'python -m scoop -n4 ~/bin/qff-est.py --scoop ...' +\
                '[default=False]'
     )
     options, fns = parser.parse_args()
@@ -141,7 +141,7 @@ def main():
 #Use scoop if requested. This has to be outside of __main__ to set the
 #context for all workers
 fns, options = parser()
-if options.scoop=='True': 
+if options.scoop: 
     paracontext.use_scoop()
 
 if __name__=='__main__':
