@@ -7,7 +7,7 @@ from common import get_system, get_scaled_pairs
 
 def run_taylor(molecule, pot):
     tolE_abs = 5e-2
-    system = get_system(molecule)
+    system = get_system(molecule, ei_path='/wpart/he')
     scaled_pairs = get_scaled_pairs(system)
     coords0 = system.ref.coords
     if pot.lower() in ['coulomb', 'ei', 'electrostatic']:

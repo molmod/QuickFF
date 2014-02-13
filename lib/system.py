@@ -110,7 +110,7 @@ class System(object):
     natoms = property(_get_natoms)
 
     @classmethod
-    def from_files(cls, fns, ei_scheme=None):
+    def from_files(cls, fns, ei_path=None, vdw_path=None):
         '''
            A method to construct a System instance from input files. If
            the input files do not contain the topology, it is estimated
@@ -129,9 +129,15 @@ class System(object):
 
            **Optional Arguments:**
 
-           ei_scheme
-                A string defining the charge scheme for which the charges
-                will be extracted from the HDF5 file given in fns.
+           ei_path
+                A string defining the path in the HDF5 file which contains a 
+                dataset `EI_PATH/charges` from which the atomic charges will be
+                extracted.
+           
+           vdw_path
+                A string defining the path in the HDF5 file which contains 2 
+                datasets, `VDW_PATH/epsilons` and `VDW_PATH/sigmas` from which the
+                atomic vdW parameters will be extracted.
         '''
         #initialise
         numbers = None
@@ -187,18 +193,22 @@ class System(object):
                 bends = np.array(psf.bends)
                 diheds = np.array(psf.dihedrals)
                 nlist = psf.get_molecular_graph().neighbors
-            elif extension in ['txt']:
-                from hipart.io import load_atom_scalars
-                charges = load_atom_scalars(fn)
             elif extension in ['h5']:
-                assert ei_scheme is not None, 'The ei-scheme must be specified when using HDF5 files.'
                 import h5py
                 f = h5py.File(fn, 'r')
-                charges = f['wpart/%s/charges' % ei_scheme][:]        
+                if ei_path is None and vdw_path is None:
+                    print '\nWARNING: a HDF5 file was given but both ei_path and'  +\
+                          'vdw_path are None, HDF5 file is ignored.\n'
+                if ei_path is not None:
+                    charges = f['%s/charges' % ei_path][:]
+                if vdw_path is not None:
+                    epsilons = f['%s/epsilons' % vdw_path][:]
+                    sigmas = f['%s/sigmas' % vdw_path][:]
+            else:
+                raise IOError('Unsupported file format for %s' %fn)
         return cls(numbers, ref, ffatypes=ffatypes, charges=charges, 
                     sigmas=sigmas, epsilons=epsilons, bonds=bonds, bends=bends,
                     diheds=diheds, opdists=opdists, nlist=nlist)
-
 
     def read_uff_vdw(self):
         '''
@@ -236,7 +246,6 @@ class System(object):
             if self.nlist is None:
                 self.nlist = graph.neighbors
 
-
     def guess_ffatypes(self, level):
         '''
            A method to guess atom types. This will overwrite ffatypes
@@ -252,6 +261,8 @@ class System(object):
                     * high:    based on atomic number, number of neighbors and atomic number of neighbors
                     * highest: based on index in the molecule
         '''
+        if self.ffatypes is not None:
+            raise ValueError('Atom types are already defined in the system.')
         if level == 'low':
             atypes = np.array([pt[number].symbol for number in self.numbers])
         elif level == 'medium':

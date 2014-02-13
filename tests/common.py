@@ -4,25 +4,19 @@ import numpy as np, os
 from quickff.system import System
 from quickff.context import context
 
-__all__ = [
-    'get_system', 'get_water', 'get_ethanol', 'translate_rule',
-    'get_scaled_pairs', 'read_qff_out',
-]
+__all__ = ['get_water', 'get_ethanol', 'translate_rule', 'get_scaled_pairs']
 
-def get_system(molecule, atypes_level='high', ei_scheme='he', vdw_from='uff', verbose=False):
+def get_system(molecule, atypes_level='high', ei_path=None):
     moldir = context.get_fn('examples/%s' %molecule)
-    system = System.from_files(
-        [os.path.join(moldir, 'gaussian.fchk'), os.path.join(moldir, 'gaussian.fchk.h5')],
-        ei_scheme=ei_scheme
-    )
-    system.guess_ffatypes(atypes_level)
-    if vdw_from.lower() in ['uff']:
-        system.read_uff_vdw()
+    if ei_scheme is not None:
+        system = System.from_files(
+            [os.path.join(moldir, 'gaussian.fchk'), os.path.join(moldir, 'gaussian_wpart.h5')],
+            ei_path=ei_path
+        )
     else:
-        raise ValueError('Invalid value for vdw_from: %s' %vdw_from)
+        system = System.from_files([os.path.join(moldir, 'gaussian.fchk')])
+    system.guess_ffatypes(atypes_level)
     system.determine_ics_from_topology()
-    if verbose:
-        system.print_atom_info()
     return system
 
 def get_water():
@@ -83,29 +77,3 @@ def get_scaled_pairs(system):
     for dihed in system.diheds:
         scaled_pairs[2].append([dihed[0], dihed[3]])
     return scaled_pairs
-    
-def read_qff_out(fn):
-    ffs = {'pt': {}, 'refined': {}}
-    f = open(fn, 'r')
-    section = 'skip'
-    for line in f.readlines():
-        words = line.split()
-        if len(words)==0:
-            continue
-        if line.startswith('Estimating all pars'):
-            section = 'pt'
-            continue
-        elif line.startswith('Refining force constants'):
-            section = 'refined'
-            continue
-        elif line.startswith('~~~~~~~~~~~~~~~~~~~~~~~~'):
-            section = 'skip'
-        if section != 'skip':
-            icname = words[0]
-            k = float(words[3])*parse_unit(words[6])
-            q0 = None
-            if len(words)>7:
-                q0 = float(words[9])*parse_unit(words[12])
-            ffs[section][icname] = [k, q0]
-    f.close()
-    return ffs

@@ -32,9 +32,10 @@ def parser():
              'left unscaled [default=%default]'
     )
     parser.add_option(
-        '--ei-scheme', default=None,
-        help='Defines the charge scheme for which the charges will be '         +\
-             'extracted from the Horton-formatted HDF5 file given in fns.'
+        '--ei-path', default=None,
+        help='Defines the path in the HDF5 file which contains a dataset '      +\
+             '`EI_PATH/charges` from which the atomic charges will be '         +\
+             'extracted.'
     )
     parser.add_option(
         '--vdw-model', default='Harm',
@@ -52,9 +53,17 @@ def parser():
              'separated by 2 bonds etc ... [default=%default]'
     )
     parser.add_option(
-        '--vdw-from', default='uff',
-        help='Defines from which force field to extract vdW parameters. '       +\
-             'Currently only UFF is supported. [default=%default]'
+        '--vdw-path', default=None,
+        help='Defines the path in the HDF5 file which contains 2 dataset: '     +\
+             '`EI_PATH/epsilons` and `EI_PATH/sigmas` from which the atomic '   +\
+             'vdW parameters will be extracted.'
+    )
+    parser.add_option(
+        '--vdw-from', default=None,
+        help='Defines from which force field to extract vdW parameters. If '    +\
+             'this value is anythin else then None, the values extracted from ' +\
+             'a HDF5 file will be overwritten. Currently only UFF is supported '+\
+             '[default=%default]'
     )
     parser.add_option(
         '--atypes-level', default=None,
@@ -97,17 +106,17 @@ def main():
     #Parse args
     icname, fns, options = parser()
     #Setup system, model and program
-    system = System.from_files(fns, ei_scheme=options.ei_scheme)
+    system = System.from_files(
+        fns, ei_path=options.ei_path, vdw_path=options.vdw_path
+    )
     if options.atypes_level is not None:
         system.guess_ffatypes(options.atypes_level)
-    else:
-        system.average_charges_ffatypes()
+    system.determine_ics_from_topology()
     if options.vdw_model.lower() != 'zero':
         if options.vdw_from.lower() == 'uff':
             system.read_uff_vdw()
-        else:
+        elif optins.vdw_from.lower is not None:
             raise ValueError('Unsupported value for vdw_from, recieved %s' %options.vdw_from)
-    system.determine_ics_from_topology()
     model = Model.from_system(
         system,
         ei_scales=options.ei_scales, ei_pot_kind=options.ei_model,
