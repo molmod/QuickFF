@@ -8,18 +8,20 @@ from quickff.terms import HarmonicTerm, CosineTerm
 from quickff.fftable import DataArray, FFTable
 
 __all__ = [
-    'Model', 'AIPart', 'EIPart', 'ValencePart',
-    'ZeroPot', 'HarmonicPot', 'CoulombPot', 'LennartJonesPot', 'TermListPot',
+    'Model', 'AIPart', 'EIPart', 'ValencePart', 'ZeroPot', 'HarmonicPot',
+    'CoulombPot', 'LennardJonesPot', 'TermListPot',
 ]
 
 
 class Model(object):
+    '''
+       A class defining the ab initio total energy of the system,
+       the force field electrostatic contribution and the
+       force field valence contribution.
+    '''
+    
     def __init__(self, ai, val, ei, vdw):
         '''
-           A class defining the ab initio total energy of the system,
-           the force field electrostatic contribution and the
-           force field valence contribution.
-
            **Arguments**
 
            ai
@@ -85,7 +87,7 @@ class Model(object):
             vdw_pot_kind
                 a string defining the potential kind of the van der Waals
                 interactions. Can be 'LJ', 'Harmonic' or 'Zero'. If LJ is chosen
-                the Lennart-Jones potential will be used to evaluate van der 
+                the Lennard-Jones potential will be used to evaluate van der 
                 Waals interactions. If Harmonic is chosen, a second order Taylor
                 expansion of the LJ potential is used. Harmonic is a lot faster
                 and should already give accurate results.
@@ -97,6 +99,9 @@ class Model(object):
         return cls(ai, val, ei, vdw)
 
     def print_info(self):
+        '''
+            Print some basic information about the model.
+        '''
         self.ai.print_info()
         self.ei.print_info()
         self.vdw.print_info()
@@ -210,12 +215,12 @@ class VDWPart(BasePart):
             for dihed in system.diheds:
                 scaled_pairs[2].append([dihed[0], dihed[3]])
             #Construct the potential
-            exact = LennartJonesPot(system.sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
+            exact = LennardJonesPot(system.sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
             if pot_kind.lower() in ['harm', 'harmonic']:
                 grad = exact.calc_gradient(system.ref.coords.copy())
                 hess = exact.calc_hessian(system.ref.coords.copy())
                 pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess)
-            elif pot_kind.lower() in ['lj', 'lennartjones', 'lennart-jones']:
+            elif pot_kind.lower() in ['lj', 'lennardjones', 'lennard-jones']:
                 pot = exact
         return cls(pot, scales)
 
@@ -444,8 +449,8 @@ class ValencePart(BasePart):
     def get_fcs(self):
         '''
             A method to return the force constants of the valence terms. The
-            ordering of fcs in the input argument should be the same as the
-            ordering of sorted(system.ics.keys()).
+            ordering of fcs in the output will be the same as the ordering of
+            sorted(system.ics.keys()).
         '''
         fcs = np.zeros(self.nterms, float)
         for i, icname in enumerate(sorted(self.pot.terms.keys())):
@@ -458,6 +463,9 @@ class ValencePart(BasePart):
 
 
 class BasePot(object):
+    '''
+        A base class for defining potentials
+    '''
     def __init__(self, kind):
         self.kind = kind
 
@@ -472,6 +480,10 @@ class BasePot(object):
 
 
 class ZeroPot(BasePot):
+    '''
+        A class defining a zero-valued potential to describe any part of the AI
+        or FF energy.
+    '''
     def __init__(self):
         BasePot.__init__(self, 'Zero')
 
@@ -486,6 +498,10 @@ class ZeroPot(BasePot):
 
 
 class HarmonicPot(BasePot):
+    '''
+        A class defining a harmonic potential to describe any part of the AI or
+        FF energy.
+    '''
     def __init__(self, coords0, energy0, grad0, hess0):
         BasePot.__init__(self, 'Harmonic')
         self.coords0 = coords0.copy()
@@ -510,6 +526,10 @@ class HarmonicPot(BasePot):
 
 
 class CoulombPot(BasePot):
+    '''
+        A class defining the Coulomb potential between point charges to describe
+        the FF electrostatic energy.
+    '''
     def __init__(self, charges, scales, scaled_pairs, coords0=None):
         BasePot.__init__(self, 'Coulomb')
         self.charges = charges
@@ -567,7 +587,11 @@ class CoulombPot(BasePot):
 
 
 
-class LennartJonesPot(BasePot):
+class LennardJonesPot(BasePot):
+    '''
+        A class defining the Lennard-Jones potential between atom pairs to 
+        describe the FF van der Waals energy.
+    '''
     def __init__(self, sigmas, epsilons, scales, scaled_pairs, coords0=None):
         BasePot.__init__(self, 'LennartJones')
         self.sigmas = sigmas
@@ -635,8 +659,8 @@ class LennartJonesPot(BasePot):
 
 class TermListPot(BasePot):
     '''
-        A potential specified by a list of terms to describe the FF valence
-        energy.
+        A class for a potential defined as the sum of multiple terms to describe 
+        the FF valence energy.
     '''
     def __init__(self, terms):
         BasePot.__init__(self, 'TermList')

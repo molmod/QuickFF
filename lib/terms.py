@@ -3,7 +3,9 @@ import numpy as np
 __all__ = ['BaseTerm', 'HarmonicTerm', 'CosineTerm']
 
 class BaseTerm(object):
-    'An abstract class for valence force field terms'
+    '''
+        An abstract class for valence force field terms
+    '''
     def __init__(self, ic, coords, k, q0, A):
         self.ic = ic
         self.coords = coords

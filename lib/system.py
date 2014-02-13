@@ -17,32 +17,40 @@ from quickff.uff import get_uff_sigmas_epsilons
 __all__ = ['System']
 
 class System(object):
-    "A class for storing all system properties"
-    def __init__(self, numbers, ffatypes, charges, sigmas, epsilons, ref, bonds, bends, diheds,
-                 opdists, nlist):
+    '''
+        A class for storing all system properties such as atom numbers, force
+        field atom types, charges, vdW parameters, bonds, bends, dihedrals,
+        out-of-plane patterns, neighborlists and the ab initio reference data.
+    '''    
+    def __init__(self, numbers, ref, ffatypes=None, charges=None, sigmas=None, 
+                    epsilons=None, bonds=None, bends=None, diheds=None, 
+                    opdists=None, nlist=None):
         '''
            **Arguments:**
 
            numbers
                 A numpy array (N) with atomic numbers.
-
-           ffatypes
-                A numpy array (N) with force field atom types of a string
-                specifying how to guess the atom types [high, medium or low].
-
-           charges
-                A numpy array (N) with atomic charges. The default charges
-                are all zero.
-
-           sigmas
-                A numpy array (N) with vdw sigma values.
-
-           epsilons
-                A numpy array (N) with vdw epsilons values.
-
+           
            ref
                 An instance of ReferenceData containing the reference data
                 from which the force field will be estimated.
+
+           **Optional Arguments**
+           
+           ffatypes
+                A numpy array (N) with force field atom types.
+
+           charges
+                A numpy array (N) with atomic charges. By default, all charges
+                are zero.
+
+           sigmas
+                A numpy array (N) with vdw sigma values. By default, all sigmas
+                are zero.
+
+           epsilons
+                A numpy array (N) with vdw epsilons values. By default, all
+                epsilons are zero.
 
            bonds
                 A numpy array (B,2) with atom indexes (counting starts from
@@ -51,20 +59,24 @@ class System(object):
 
            bends
                 A numpy array (A,3) with atom indexes (counting starts from
-                zero) to define topological bend patterns.
+                zero) to define topological bend patterns. If no bends are
+                given, they are derived from the bonds.
 
            diheds
                 A numpy array (D,4) with atom indexes (counting starts from
-                zero) to define topological dihedrall patterns.
+                zero) to define topological dihedrall patterns. If no dihedrals
+                are given, they are derived from the bonds.
 
            opdists
                 A numpy array (O,4) with atom indexes (counting starts from
                 zero) to define topological out of plane patterns. The first
                 three atoms define the plane, while the last atom defines
-                the center atom.
+                the center atom. If no opdists are given, they are derived
+                from the bonds.
 
            nlist
-                A dictionnairy containing the neighbors for every atom.
+                A dictionnairy containing the neighbors for every atom. If nlist
+                is not given, it is derived from the bonds.
         '''
         self.numbers = numbers
         self.ffatypes = ffatypes
@@ -77,9 +89,19 @@ class System(object):
         self.opdists = opdists
         self.nlist = nlist
         self.ref = ref
-        self.ref.check()
-        self.check_topology()
         self.ics = {}
+        #Set attributes to zero if they are not defined
+        if self.charges is None:
+            self.charges = np.zeros(self.natoms, float)
+        if self.sigmas is None:
+            self.sigmas = np.zeros(self.natoms, float)
+        if self.epsilons is None:
+            self.epsilons = np.zeros(self.natoms, float)
+        #perfrom some checks
+        self.ref._check(natoms=self.natoms)
+        self._check_topology()
+        if self.ffatypes is not None:
+            self._average_charges_ffatypes()
 
     def _get_natoms(self):
         'Get the number of atoms in the system'
@@ -172,28 +194,23 @@ class System(object):
                 assert ei_scheme is not None, 'The ei-scheme must be specified when using HDF5 files.'
                 import h5py
                 f = h5py.File(fn, 'r')
-                charges = f['wpart/%s/charges' % ei_scheme][:]
-        #Set attributes to zero if they are not defined
-        if charges is None:
-            charges = np.zeros(len(numbers), float)
-        if sigmas is None:
-            sigmas = np.zeros(len(numbers), float)
-        if epsilons is None:
-            epsilons = np.zeros(len(numbers), float)
-        return cls(numbers, ffatypes, charges, sigmas, epsilons, ref,
-                   bonds, bends, diheds, opdists, nlist)
+                charges = f['wpart/%s/charges' % ei_scheme][:]        
+        return cls(numbers, ref, ffatypes=ffatypes, charges=charges, 
+                    sigmas=sigmas, epsilons=epsilons, bonds=bonds, bends=bends,
+                    diheds=diheds, opdists=opdists, nlist=nlist)
+
 
     def read_uff_vdw(self):
         '''
             Read Lennart-Jones vdW parameters from the UFF force field.
         '''
-        print ''
         self.sigmas, self.epsilons = get_uff_sigmas_epsilons(self.numbers)
 
-    def check_topology(self):
+    def _check_topology(self):
         '''
-           Check wether all topology information (bonds, bends, diheds
-           and nlist) is present and complete if necessary.
+           Check wether all topology information (bonds, bends, dihedrals,
+           out-of-plane patterns and neighborlist) is present and complete if 
+           necessary.
         '''
         assert self.numbers is not None
         if self.bonds is None:
@@ -229,11 +246,11 @@ class System(object):
 
            level
                 A string used for guessing atom types:
-                    low     - based on atomic number
-                    medium  - based on atomic number and number of neighbors
-                    high    - based on atomic number, number of neighbors and
-                              atomic number of neighbors
-                    highest - based on index in the molecule
+                    
+                    * low:     based on atomic number
+                    * medium:  based on atomic number and number of neighbors
+                    * high:    based on atomic number, number of neighbors and atomic number of neighbors
+                    * highest: based on index in the molecule
         '''
         if level == 'low':
             atypes = np.array([pt[number].symbol for number in self.numbers])
@@ -272,10 +289,10 @@ class System(object):
         else:
             raise ValueError('Invalid level, recieved %s' % level)
         self.ffatypes = np.array(atypes)
-        self.average_charges_ffatypes()
+        self._average_charges_ffatypes()
 
-    def average_charges_ffatypes(self):
-        'Average the atomic charges over the force field atom types'
+    def _average_charges_ffatypes(self):
+        'Take the average of the atomic charges over the force field atom types'
         charges = {}
         for atype, charge in zip(self.ffatypes, self.charges):
             if atype not in charges:
@@ -288,7 +305,7 @@ class System(object):
     def determine_ics_from_topology(self):
         '''
             Method to generate IC instances corresponding to all ics
-            present in the bonds, bends and dihedrals attributes.
+            present in the bonds, bends, dihedrals and opdists attributes.
         '''
         self.ics = {}
         def sort_ffatypes(ffatypes, kind=''):
@@ -379,7 +396,9 @@ class System(object):
                 self.ics[name] = [ic]
 
     def print_atom_info(self):
-        'Print information about the atoms in the system to the screen'
+        '''
+            Print information about the atoms in the system to the screen
+        '''
         print '    -------------------------------------------------------------------------------'
         print '      index   symbol   ffatype       charge [e]     sigma [A]    epsilon [kJ/mol]  '
         print '    -------------------------------------------------------------------------------'
@@ -409,7 +428,9 @@ class System(object):
         print '    -----------------------------------------------------'
 
     def dump(self, fn):
-        'Dump system to a MolMod checkpoint file.'
+        '''
+            Dump system to a MolMod checkpoint file.
+        '''
         sample = {}
         sample['numbers']   = self.numbers
         sample['charges']   = self.charges
@@ -425,7 +446,9 @@ class System(object):
         dump_chk(fn, sample)
 
     def dump_charges_yaff(self, fn, scales, mode='w'):
-        'Write or append charges to a file in Yaff format.'
+        '''
+            Write or append charges to a file in Yaff format.
+        '''
         f = open(fn, mode)
         print >> f, ''
         print >> f, '# Fixed charges'
@@ -460,7 +483,9 @@ class System(object):
         f.close()
 
     def dump_vdw_yaff(self, fn, scales, pot_kind, mode='w'):
-        'Write or append van der Waals parameters to a file in Yaff format.'
+        '''
+            Write or append van der Waals parameters to a file in Yaff format.
+        '''
         f = open(fn, mode)
         print >> f, '# van der Waals'
         print >> f, '#=============='

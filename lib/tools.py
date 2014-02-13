@@ -11,6 +11,11 @@ def global_translation(coords):
     '''
         A function to generate vectors that represent global translations
         of a system.
+        
+        **Arguments**
+        
+        coords
+            a (N,3) numpy array describing the system that has to be translated
     '''
     Natoms = len(coords)
     ones = np.ones(Natoms, float)
@@ -26,6 +31,11 @@ def global_rotation(coords):
         A function to generate vectors that represent global translations
         of a system. Rx is a matrix of rotatino around the x-axis minus
         the identity matrix. VRx is a vector of rotation around x-axis.
+        
+        **Arguments**
+        
+        coords
+            a (N,3) numpy array describing the system that has to be translated
     '''
     Natoms = len(coords)
     com = coords.sum(axis=0)/coords.shape[0]
@@ -55,7 +65,17 @@ def global_rotation(coords):
 
 
 def calc_angles(v, refs):
-    'Function to calculate the angles between v and each of the refs'
+    '''
+        Function to calculate the angles between v and each of the refs
+    
+        **Arguments**
+        
+        v
+            a (D) numpy array defining a D-dimensional vector
+        
+        ref
+            a (N, D) numpy array containing N D-dimensional vectors
+    '''
     angles = []
     for ref in refs:
         cangle = np.dot(ref, v)/(np.linalg.norm(ref)*np.linalg.norm(v))
@@ -68,7 +88,14 @@ def calc_angles(v, refs):
 
 
 def statistics(data):
-    'Function to calculate mean, standard deviation and dimension of data'
+    '''
+        Function to calculate mean, standard deviation and dimension of data
+    
+        **Arguments**
+        
+        data
+            a (N) numpy array containing the statistical input data
+    '''
     if data is None:
         return None, None, None
     else:
@@ -85,11 +112,19 @@ def statistics(data):
 
 def fitpar(xs, ys, rcond=1e-3):
     '''
-        Fit a parabola to xs and ys:
+        Fit a parabola to the samples (xs, ys):
 
             ys[:] = a*xs[:]^2 + b*xs[:] + c
 
-        Returns a, b and c.
+        Returns the parabola parameters a, b and c.
+        
+        **Arguments**
+        
+        xs
+            a (N) numpy array containing the x values of the samples
+        
+        ys
+            a (N) numpy array containing the x values of the samples
     '''
     assert len(xs)==len(ys)
     D = np.ones([len(xs), 3], float)
@@ -104,6 +139,14 @@ def matrix_squared_sum(A, B):
         Calculate the sum of the product of all matrix elements
 
             sum(Aij*Bij, i, j)
+        
+        **Arguments**
+        
+        A
+            a (M,N) numpy array
+        
+        B
+            a (M,N) numpy array
     '''
     tmp = np.dot(A.T, B)
     dim = len(tmp)
@@ -113,7 +156,15 @@ def find_opdist_patterns(graph):
     '''
         Find patterns of 4 atoms where 3 border atoms are bonded to the same
         central atom. The central atom cannot have any other neighbor except
-        for these 3 border atoms.
+        for these 3 border atoms. Returns a list of 4-tuples in which the first
+        three atoms are the border atoms and the last atom is the central atom.
+        
+        **Arguments**
+        
+        graph
+            An instance of the MolecularGraph class from the MolMod package. 
+            More info on this class can be found in the 
+            `MolMod documentation <http://molmod.github.io/molmod/reference/basic.html#molmod-molecular-graphs-molecular-graphs>`_.
     '''
     opdists = []
     for atom in xrange(len(graph.numbers)):

@@ -4,7 +4,10 @@ from scipy.optimize import minimize
 
 import numpy as np
 
-__all__ = ['HessianFCCost']
+__all__ = [
+    'HessianFCCost', 'FixedValueConstraint', 'LowerLimitConstraint',
+    'UpperLimitConstraint'
+]
 
 class HessianFCCost(object):
     '''
@@ -27,14 +30,15 @@ class HessianFCCost(object):
     '''
     def __init__(self, system, model):
         '''
-            **Arguments*
+            **Arguments**
 
             system
                 An instance of the System class containing all system info
 
             model
-                An instance of the Model class defining the total energy,
-                the electrostatic contribution and the valence terms.
+                An instance of the Model class defining the total ab initio 
+                energy, the electrostatic contribution, the van der Waals 
+                contribution and the valence terms.
         '''
         self.system = system
         self.model = model
@@ -80,7 +84,15 @@ class HessianFCCost(object):
         return tuple(constraints)
 
     def fun(self, k, do_grad=False):
-        'Calculate the actual cost'
+        '''
+            Calculate the actual cost
+        
+            **Optional Arguments**
+            
+            do_grad
+                also calculate and return the analytical gradient of the cost
+                function towards the parameters
+        '''
         chi2 = 0.5*np.dot(k.T, np.dot(self._A, k)) \
              - np.dot(self._B.T, k) + 0.5*self._C
         if do_grad:

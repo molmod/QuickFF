@@ -36,7 +36,7 @@ def parser():
              'extracted from the Horton-formatted HDF5 file given in fns.'
     )
     parser.add_option(
-        '--vdw-model', default='Harm',
+        '--vdw-model', default='Zero',
         help='Defines the potential used for van der Waals interactions. '      +\
              'Possible choices are: LJ, Harmonic and Zero. LJ implies using '   +\
              'the Lennart-Jones potential. Harmonic implies approximating the ' +\
@@ -98,8 +98,6 @@ def main():
     system = System.from_files(fns, ei_scheme=options.ei_scheme)
     if options.atypes_level is not None:
         system.guess_ffatypes(options.atypes_level)
-    else:
-        system.average_charges_ffatypes()
     if options.vdw_model.lower() != 'zero':
         if options.vdw_from.lower() == 'uff':
             system.read_uff_vdw()

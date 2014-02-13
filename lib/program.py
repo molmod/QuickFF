@@ -46,10 +46,11 @@ def sysinfo():
     return info
 
 class Program(object):
+    '''
+        The central class to manage the entire program.
+    '''    
     def __init__(self, system, model, fns_traj=None):
         '''
-            The central class to manage the entire program.
-
             **Arguments**
 
             system
@@ -63,8 +64,9 @@ class Program(object):
             **Optional Arguments**
 
             fns_traj
-                A file name to store the perturbation trajectories to. The
-                trajectories are stored after Pickling.
+                A file name to store the perturbation trajectories to or to
+                read the trajectories from if the file exists. The trajectories
+                are stored/read after Pickling.
         '''
         self.system = system
         self.model = model
@@ -118,6 +120,12 @@ class Program(object):
             Second Step of force field development: calculate harmonic force field
             parameters for every internal coordinate separately from perturbation
             trajectories.
+            
+            **Arguments**
+            
+            trajectories
+                A dictionairy containing numpy arrays representing perturbation 
+                trajectories for each icname.
 
             **Optional Arguments**
 
@@ -159,6 +167,12 @@ class Program(object):
         return fftab
 
     def run(self):
+        '''
+            Run all steps of the QuickFF methodology to derive a covalent
+            force field. This method returns an instance of the class
+            :class:`quickff.fftable.FFTable`, which contains all force field
+            parameters.
+        '''
         print header
         print sysinfo()
         print '~'*120+'\n'
@@ -181,8 +195,15 @@ class Program(object):
 
     def plot_pt(self, icname, start=None, end=None, steps=51, verbose=True):
         '''
-            Generate and plot the perturbation trajectories for all ics with a
-            name compatible with icname.
+            Generate the perturbation trajectories and plot the energy
+            contributions along the trajectory for all ics with a name 
+            compatible with icname.
+            
+            **Arguments**
+            
+            icname
+                A string describing for which ics the perturbation trajectories
+                should be generated.
         '''
         #Logging
         if verbose:

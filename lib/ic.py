@@ -10,6 +10,31 @@ class IC(object):
         cartesian coordinates.
     '''
     def __init__(self, name, indexes, icf, qunit='au', kunit='kjmol/au**2'):
+        '''
+            **Arguments**
+            
+            name
+                a string defining a unique name for the ic
+            
+            indexes
+                a list of indices refering to the relevant atoms of the system
+            
+            icf
+                a method from the `molmod.ic <http://molmod.github.io/molmod/reference/algo.html#module-molmod.ic>`_
+                module to calculate the value, gradient and hessian of the ic                
+            
+            **Optional Arguments**
+            
+            qunit
+                a string describing the conversion of the unit of the ic value.
+                More info regarding possible strings can be found in the 
+                `MolMod documentation <http://molmod.github.io/molmod/reference/const.html#module-molmod.units>`_.
+            
+            kunit
+                a string describing the conversion of the unit of the force 
+                constant. More info regarding possible strings can be found in 
+                the `MolMod documentation <http://molmod.github.io/molmod/reference/const.html#module-molmod.units>`_.
+        '''
         self.name = name
         self.indexes = indexes
         self.icf = icf
@@ -17,12 +42,28 @@ class IC(object):
         self.kunit = kunit
 
     def value(self, coords):
-        'Calculate the value of the internal coordinate'
+        '''
+            Calculate the value of the internal coordinate
+        
+            **Arguments**
+            
+            coords
+                a (N,3) numpy array containing the cartesian coordinates
+                of all atoms.
+        '''
         _rs = coords[self.indexes]
         return self.icf(_rs, deriv=0)[0]
 
     def grad(self, coords):
-        'Calculate the first order derivative of the internal coordinate'
+        '''
+            Calculate the first order derivative of the internal coordinate
+        
+            **Arguments**
+            
+            coords
+                a (N,3) numpy array containing the cartesian coordinates
+                of all atoms.
+        '''
         _rs = coords[self.indexes]
         _q_deriv = self.icf(_rs, deriv=1)[1]
         grad = np.zeros(coords.shape, float)
@@ -31,7 +72,15 @@ class IC(object):
         return grad
 
     def hess(self, coords):
-        'Calculate the second order derivative of the internal coordinate'
+        '''
+            Calculate the second order derivative of the internal coordinate
+        
+            **Arguments**
+            
+            coords
+                a (N,3) numpy array containing the cartesian coordinates
+                of all atoms.
+        '''
         Natoms = len(coords)
         _rs = coords[self.indexes]
         _q_hess = self.icf(_rs, deriv=2)[2]
