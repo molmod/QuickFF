@@ -76,14 +76,14 @@ def test_coulomb_hessian_ethanol():
 
 def test_lj_gradient_ethanol():
     coords, numbers, fcharges, sigmas, epsilons = get_ethanol()
-    pot = LennartJonesPot(sigmas, epsilons, [1.0, 1.0, 1.0],  [[], [], []])
+    pot = LennardJonesPot(sigmas, epsilons, [1.0, 1.0, 1.0],  [[], [], []])
     fun = get_gradient_check(pot)
     dxs = np.random.normal(0.0, 1e-4, [100, 3*len(numbers)])
     check_delta(fun, coords.ravel(), dxs)
 
 def test_lj_hessian_ethanol():
     coords, numbers, fcharges, sigmas, epsilons = get_ethanol()
-    pot = LennartJonesPot(sigmas, epsilons, [1.0, 1.0, 1.0],  [[], [], []])
+    pot = LennardJonesPot(sigmas, epsilons, [1.0, 1.0, 1.0],  [[], [], []])
     fun = get_hessian_check(pot)
     dxs = np.random.normal(0.0, 1e-4, [100, 3*len(numbers)])
     check_delta(fun, coords.ravel(), dxs)

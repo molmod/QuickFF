@@ -39,7 +39,7 @@ class DataArray(object):
         if self.num == 0:
             return ''
         else:
-            s = u'%12.6f \u00B1 %12.6f ' % (
+            s = u'%9.3f \u00B1 %9.3f ' % (
                 self.mean/parse_unit(self.unit),
                 self.std/parse_unit(self.unit)) + \
                 self.unit + ' '*(15-len(self.unit)

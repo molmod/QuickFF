@@ -12,8 +12,9 @@ def run_taylor(molecule, pot):
     coords0 = system.ref.coords
     if pot.lower() in ['coulomb', 'ei', 'electrostatic']:
         exact = CoulombPot(system.charges, [1.0, 1.0, 1.0], scaled_pairs, coords0=coords0)
-    elif pot.lower() in ['lennartjones', 'lj', 'vdw', 'vanderwaals']:
-        exact = LennartJonesPot(system.sigmas, system.epsilons, [0.0,0.0,1.0], scaled_pairs, coords0=coords0)
+    elif pot.lower() in ['lennardjones', 'lj', 'vdw', 'vanderwaals']:
+        system.read_uff_vdw()
+        exact = LennardJonesPot(system.sigmas, system.epsilons, [0.0,0.0,1.0], scaled_pairs, coords0=coords0)
     else:
         raise ValueError('Invalic potential specification: %s' %pot)
     harm = HarmonicPot(coords0, 0.0, exact.calc_gradient(coords0), exact.calc_hessian(coords0))

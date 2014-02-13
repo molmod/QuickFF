@@ -7,8 +7,8 @@ from quickff.context import context
 __all__ = ['get_water', 'get_ethanol', 'translate_rule', 'get_scaled_pairs']
 
 def get_system(molecule, atypes_level='high', ei_path=None):
-    moldir = context.get_fn('examples/%s' %molecule)
-    if ei_scheme is not None:
+    moldir = context.get_fn('systems/%s' %molecule)
+    if ei_path is not None:
         system = System.from_files(
             [os.path.join(moldir, 'gaussian.fchk'), os.path.join(moldir, 'gaussian_wpart.h5')],
             ei_path=ei_path

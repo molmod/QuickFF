@@ -55,11 +55,11 @@ def parser():
     parser.add_option(
         '--vdw-path', default=None,
         help='Defines the path in the HDF5 file which contains 2 dataset: '     +\
-             '`EI_PATH/epsilons` and `EI_PATH/sigmas` from which the atomic '   +\
+             '`VDW_PATH/epsilons` and `VDW_PATH/sigmas` from which the atomic ' +\
              'vdW parameters will be extracted.'
     )
     parser.add_option(
-        '--vdw-from', default=None,
+        '--vdw-from', default='none',
         help='Defines from which force field to extract vdW parameters. If '    +\
              'this value is anythin else then None, the values extracted from ' +\
              'a HDF5 file will be overwritten. Currently only UFF is supported '+\
@@ -115,7 +115,7 @@ def main():
     if options.vdw_model.lower() != 'zero':
         if options.vdw_from.lower() == 'uff':
             system.read_uff_vdw()
-        elif optins.vdw_from.lower is not None:
+        elif options.vdw_from.lower() != 'none':
             raise ValueError('Unsupported value for vdw_from, recieved %s' %options.vdw_from)
     model = Model.from_system(
         system,
