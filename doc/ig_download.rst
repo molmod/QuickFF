@@ -30,7 +30,7 @@ official git URL for QuickFF is http://github.com/molmod/QuickFF . To `clone`
 the QuickFF repository, go to your favorite directory for source code, e.g. 
 ``~/build``, and execute the following commands::
 
-    git clone git://github.com/molmod/QuickFF/quickff.git
+    git clone git://github.com/molmod/QuickFF.git
     cd quickff
 
 The source code can be updated with the latest patches with the following
