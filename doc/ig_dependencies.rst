@@ -27,18 +27,16 @@ The following software must be installed:
 * matplotlib >= 1.0.0: http://matplotlib.sourceforge.net/
 
 To run the python tests, it is necessary to install the `Nose 
-<https://nose.readthedocs.org/en/latest/>`_ package, and to build the 
-documentation of this website yourself, the `Spinx <http://sphinx-doc.org/>`_ 
-package needs to be installed. Most Linux distributions can install this 
-software with just a single terminal command.
+<https://nose.readthedocs.org/en/latest/>`_ package. Most Linux distributions 
+can install this software with just a single terminal command.
 
 * Ubuntu 12.4 and later::
 
-    sudo apt-get install python-numpy python-h5py python-matplotlib python-nose python-sphinx
+    sudo apt-get install python-numpy python-h5py python-matplotlib python-nose
 
 * Fedora 17 and later::
 
-    sudo yum install numpy h5py python-matplotlib python-nose sphinx
+    sudo yum install numpy h5py python-matplotlib python-nose
 
 Finally, to be able to run QuickFF in parallel on multiple cores, the Python
 package `Scoop <https://code.google.com/p/scoop/>`_ needs to be installed. To
