@@ -36,8 +36,8 @@ class HessianFCCost(object):
                 An instance of the System class containing all system info
 
             model
-                An instance of the Model class defining the total ab initio 
-                energy, the electrostatic contribution, the van der Waals 
+                An instance of the Model class defining the total ab initio
+                energy, the electrostatic contribution, the van der Waals
                 contribution and the valence terms.
         '''
         self.system = system
@@ -86,9 +86,9 @@ class HessianFCCost(object):
     def fun(self, k, do_grad=False):
         '''
             Calculate the actual cost
-        
+
             **Optional Arguments**
-            
+
             do_grad
                 also calculate and return the analytical gradient of the cost
                 function towards the parameters

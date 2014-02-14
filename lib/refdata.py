@@ -11,15 +11,15 @@ class ReferenceData(object):
     def __init__(self, coords=None, grad=None, hess=None):
         '''
         **Optional Arguments**
-        
+
         coords
             A (N,3) numpy array containing the cartesian coordinates of all
             atoms in equilibrium.
-        
+
         grad
             A (N,3) numpy array containing the cartesian gradient of all
             atoms in equilibrium. Ideally, all elements of grad are zero.
-        
+
         hess
             A (N,3,N,3) numpy array containing the cartesian Hessian in
             equilibrium.
@@ -41,7 +41,7 @@ class ReferenceData(object):
     def update(self, coords=None, grad=None, hess=None):
         '''
             Method to update one or more of the attributes. The meaning of the
-            optional arguments is the same as with the constructor 
+            optional arguments is the same as with the constructor
             :meth:`quickff.refdata.ReferenceData`
         '''
         if coords is not None:

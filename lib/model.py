@@ -19,7 +19,7 @@ class Model(object):
        the force field electrostatic contribution and the
        force field valence contribution.
     '''
-    
+
     def __init__(self, ai, val, ei, vdw):
         '''
            **Arguments**
@@ -61,7 +61,7 @@ class Model(object):
             ai_project
                 If True, project the translational and rotational degrees of
                 freedom out of the hessian.
-            
+
             ic_ids
                 A list of identifiers specifying which icnames should be
                 included in the Valence Part. Each identifier can be a specific
@@ -87,7 +87,7 @@ class Model(object):
             vdw_pot_kind
                 a string defining the potential kind of the van der Waals
                 interactions. Can be 'LJ', 'Harmonic' or 'Zero'. If LJ is chosen
-                the Lennard-Jones potential will be used to evaluate van der 
+                the Lennard-Jones potential will be used to evaluate van der
                 Waals interactions. If Harmonic is chosen, a second order Taylor
                 expansion of the LJ potential is used. Harmonic is a lot faster
                 and should already give accurate results.
@@ -589,7 +589,7 @@ class CoulombPot(BasePot):
 
 class LennardJonesPot(BasePot):
     '''
-        A class defining the Lennard-Jones potential between atom pairs to 
+        A class defining the Lennard-Jones potential between atom pairs to
         describe the FF van der Waals energy.
     '''
     def __init__(self, sigmas, epsilons, scales, scaled_pairs, coords0=None):
@@ -659,7 +659,7 @@ class LennardJonesPot(BasePot):
 
 class TermListPot(BasePot):
     '''
-        A class for a potential defined as the sum of multiple terms to describe 
+        A class for a potential defined as the sum of multiple terms to describe
         the FF valence energy.
     '''
     def __init__(self, terms):

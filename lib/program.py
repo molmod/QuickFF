@@ -48,7 +48,7 @@ def sysinfo():
 class Program(object):
     '''
         The central class to manage the entire program.
-    '''    
+    '''
     def __init__(self, system, model, fns_traj=None):
         '''
             **Arguments**
@@ -120,11 +120,11 @@ class Program(object):
             Second Step of force field development: calculate harmonic force field
             parameters for every internal coordinate separately from perturbation
             trajectories.
-            
+
             **Arguments**
-            
+
             trajectories
-                A dictionairy containing numpy arrays representing perturbation 
+                A dictionairy containing numpy arrays representing perturbation
                 trajectories for each icname.
 
             **Optional Arguments**
@@ -196,11 +196,11 @@ class Program(object):
     def plot_pt(self, icname, start=None, end=None, steps=51, verbose=True):
         '''
             Generate the perturbation trajectories and plot the energy
-            contributions along the trajectory for all ics with a name 
+            contributions along the trajectory for all ics with a name
             compatible with icname.
-            
+
             **Arguments**
-            
+
             icname
                 A string describing for which ics the perturbation trajectories
                 should be generated.

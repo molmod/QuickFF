@@ -141,7 +141,7 @@ def main():
 #Use scoop if requested. This has to be outside of __main__ to set the
 #context for all workers
 fns, options = parser()
-if options.scoop: 
+if options.scoop:
     paracontext.use_scoop()
 
 if __name__=='__main__':

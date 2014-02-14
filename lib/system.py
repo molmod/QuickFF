@@ -21,22 +21,22 @@ class System(object):
         A class for storing all system properties such as atom numbers, force
         field atom types, charges, vdW parameters, bonds, bends, dihedrals,
         out-of-plane patterns, neighborlists and the ab initio reference data.
-    '''    
-    def __init__(self, numbers, ref, ffatypes=None, charges=None, sigmas=None, 
-                    epsilons=None, bonds=None, bends=None, diheds=None, 
+    '''
+    def __init__(self, numbers, ref, ffatypes=None, charges=None, sigmas=None,
+                    epsilons=None, bonds=None, bends=None, diheds=None,
                     opdists=None, nlist=None):
         '''
            **Arguments:**
 
            numbers
                 A numpy array (N) with atomic numbers.
-           
+
            ref
                 An instance of ReferenceData containing the reference data
                 from which the force field will be estimated.
 
            **Optional Arguments**
-           
+
            ffatypes
                 A numpy array (N) with force field atom types.
 
@@ -130,12 +130,12 @@ class System(object):
            **Optional Arguments:**
 
            ei_path
-                A string defining the path in the HDF5 file which contains a 
+                A string defining the path in the HDF5 file which contains a
                 dataset `EI_PATH/charges` from which the atomic charges will be
                 extracted.
-           
+
            vdw_path
-                A string defining the path in the HDF5 file which contains 2 
+                A string defining the path in the HDF5 file which contains 2
                 datasets, `VDW_PATH/epsilons` and `VDW_PATH/sigmas` from which the
                 atomic vdW parameters will be extracted.
         '''
@@ -206,7 +206,7 @@ class System(object):
                     sigmas = f['%s/sigmas' % vdw_path][:]
             else:
                 raise IOError('Unsupported file format for %s' %fn)
-        return cls(numbers, ref, ffatypes=ffatypes, charges=charges, 
+        return cls(numbers, ref, ffatypes=ffatypes, charges=charges,
                     sigmas=sigmas, epsilons=epsilons, bonds=bonds, bends=bends,
                     diheds=diheds, opdists=opdists, nlist=nlist)
 
@@ -219,7 +219,7 @@ class System(object):
     def _check_topology(self):
         '''
            Check wether all topology information (bonds, bends, dihedrals,
-           out-of-plane patterns and neighborlist) is present and complete if 
+           out-of-plane patterns and neighborlist) is present and complete if
            necessary.
         '''
         assert self.numbers is not None
@@ -255,7 +255,7 @@ class System(object):
 
            level
                 A string used for guessing atom types:
-                    
+
                     * low:     based on atomic number
                     * medium:  based on atomic number and number of neighbors
                     * high:    based on atomic number, number of neighbors and atomic number of neighbors

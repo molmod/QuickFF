@@ -13,7 +13,7 @@ __all__ = ['BasePertTheory', 'RelaxedGeoPertTheory']
 
 class BasePertTheory(object):
     '''
-       Base class to generate and analyze the perturbation trajectories of an 
+       Base class to generate and analyze the perturbation trajectories of an
        ic.
     '''
     def __init__(self, system, model):
@@ -38,15 +38,15 @@ class BasePertTheory(object):
     def analyze(self, trajectory, evaluators):
         '''
             A method to analyze the perturbation trajectory, i.e. apply all
-            evaluators to the trajectory and return an array of values along 
+            evaluators to the trajectory and return an array of values along
             the trajectory for each evaluator given.
-            
+
             **Arguments**
-            
+
             trajectory
                 A (F, N, 3) numpy array defining the perturbation trajectory.
                 It contains F frames of (N,3)-dimensional geometry arrays.
-            
+
             evaluators
                 A list of evaluators that is to be applied to the trajectory.
         '''
@@ -60,13 +60,13 @@ class BasePertTheory(object):
     def write(self, trajectory, filename):
         '''
             Method to write the given trajectory to a file
-            
+
             **Arguments**
-            
+
             trajectory
                 a (F,N,3) numpy array defining the perturbation trajectory.
                 It contains F frames of (N,3)-dimensional geometry arrays.
-            
+
             filename
                 a string defining the name of the output file
         '''
@@ -81,26 +81,26 @@ class BasePertTheory(object):
         '''
             Method to plot the energy contributions along a perturbation
             trajectory associated to a given ic.
-            
+
             **Arguments**
-            
+
             ic
                 an instance of the class :class:`quickff.ic.IC` defining for
                 which ic the plot will be made.
-            
+
             trajectory
                 a (F,N,3) numpy array defining the perturbation trajectory
-                associated to the given ic. It contains F frames of 
+                associated to the given ic. It contains F frames of
                 (N,3)-dimensional geometry arrays.
-            
+
             filename
                 a string defining the name of the figure
-            
+
             **Optional Arguments**
-            
+
             eunit
-                a string describing the conversion of the unit of energy. More 
-                info regarding possible strings can be found in the 
+                a string describing the conversion of the unit of energy. More
+                info regarding possible strings can be found in the
                 `MolMod documentation <http://molmod.github.io/molmod/reference/const.html#module-molmod.units>`_.
         '''
         import matplotlib.pyplot as pp
@@ -148,18 +148,18 @@ class BasePertTheory(object):
     def estimate(self, ic, trajectory):
         '''
             Method to estimate the FF parameters for the given ic from the given
-            perturbation trajectory by fitting a harmonic potential to the 
+            perturbation trajectory by fitting a harmonic potential to the
             covalent energy along the trajectory.
-            
+
             **Arguments**
-            
+
             ic
                 an instance of the class :class:`quickff.ic.IC` defining for
                 which ic the FF parameters will be estimated
-            
+
             trajectory
                 a (F,N,3) numpy array defining the perturbation trajectory
-                associated to the given ic. It contains F frames of 
+                associated to the given ic. It contains F frames of
                 (N,3)-dimensional geometry arrays.
         '''
         evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw')]
@@ -170,10 +170,10 @@ class BasePertTheory(object):
 
 class RelaxedGeoPertTheory(BasePertTheory):
     '''
-        Class for generating relaxed perturbation trajectories. These 
-        trajectories are constructed as an array of geometries that are 
-        perturbed in the direction of a given ic and relaxed in all other 
-        directions. The relaxation is implemented as the minimization of the 
+        Class for generating relaxed perturbation trajectories. These
+        trajectories are constructed as an array of geometries that are
+        perturbed in the direction of a given ic and relaxed in all other
+        directions. The relaxation is implemented as the minimization of the
         strain due to all other ics.
     '''
     def __init__(self, system, model):
@@ -195,9 +195,9 @@ class RelaxedGeoPertTheory(BasePertTheory):
             If sandwiched between a geometry perturbation vector, this
             represents the weighted sum of the deviations of the ics
             from their equilibrium values, except for the ic given in args.
-            
+
             **Arguments**
-            
+
             ic
                 an instance of the class :class:`quickff.ic.IC` defining which
                 ic is to be excluded from the strain cost.
@@ -238,28 +238,28 @@ class RelaxedGeoPertTheory(BasePertTheory):
 
     def generate(self, ic, start=None, end=None, steps=11):
         '''
-            Method to calculate the perturbation trajectory, i.e. the trajectory 
+            Method to calculate the perturbation trajectory, i.e. the trajectory
             that arises when the geometry is perturbed in the direction of ic
             and relaxed in all other directions.
-            
+
             **Arguments**
-            
+
             ic
                 an instance of the class :class:`quickff.ic.IC` that defines
                 for which ic the perturbation trajectory will be calculated.
-            
+
             **Optional Arguments**
-            
+
             start
-                a float defining the lower limit of the perturbation value of 
-                the given ic. If not given, a standard value is choosen 
+                a float defining the lower limit of the perturbation value of
+                the given ic. If not given, a standard value is choosen
                 according to the kind of internal coordinate.
-            
+
             end
                 a float defining the upper limit of the perturbations value of
-                the given ic. If not given, a standard value is choosen 
+                the given ic. If not given, a standard value is choosen
                 according to the kind of internal coordinate.
-            
+
             steps
                 an integer defining the number of steps in the perturbation
                 trajectory. The default value is 11 steps.

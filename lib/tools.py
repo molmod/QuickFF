@@ -11,9 +11,9 @@ def global_translation(coords):
     '''
         A function to generate vectors that represent global translations
         of a system.
-        
+
         **Arguments**
-        
+
         coords
             a (N,3) numpy array describing the system that has to be translated
     '''
@@ -31,9 +31,9 @@ def global_rotation(coords):
         A function to generate vectors that represent global translations
         of a system. Rx is a matrix of rotatino around the x-axis minus
         the identity matrix. VRx is a vector of rotation around x-axis.
-        
+
         **Arguments**
-        
+
         coords
             a (N,3) numpy array describing the system that has to be translated
     '''
@@ -67,12 +67,12 @@ def global_rotation(coords):
 def calc_angles(v, refs):
     '''
         Function to calculate the angles between v and each of the refs
-    
+
         **Arguments**
-        
+
         v
             a (D) numpy array defining a D-dimensional vector
-        
+
         ref
             a (N, D) numpy array containing N D-dimensional vectors
     '''
@@ -90,9 +90,9 @@ def calc_angles(v, refs):
 def statistics(data):
     '''
         Function to calculate mean, standard deviation and dimension of data
-    
+
         **Arguments**
-        
+
         data
             a (N) numpy array containing the statistical input data
     '''
@@ -117,12 +117,12 @@ def fitpar(xs, ys, rcond=1e-3):
             ys[:] = a*xs[:]^2 + b*xs[:] + c
 
         Returns the parabola parameters a, b and c.
-        
+
         **Arguments**
-        
+
         xs
             a (N) numpy array containing the x values of the samples
-        
+
         ys
             a (N) numpy array containing the x values of the samples
     '''
@@ -139,12 +139,12 @@ def matrix_squared_sum(A, B):
         Calculate the sum of the product of all matrix elements
 
             sum(Aij*Bij, i, j)
-        
+
         **Arguments**
-        
+
         A
             a (M,N) numpy array
-        
+
         B
             a (M,N) numpy array
     '''
@@ -158,12 +158,12 @@ def find_opdist_patterns(graph):
         central atom. The central atom cannot have any other neighbor except
         for these 3 border atoms. Returns a list of 4-tuples in which the first
         three atoms are the border atoms and the last atom is the central atom.
-        
+
         **Arguments**
-        
+
         graph
-            An instance of the MolecularGraph class from the MolMod package. 
-            More info on this class can be found in the 
+            An instance of the MolecularGraph class from the MolMod package.
+            More info on this class can be found in the
             `MolMod documentation <http://molmod.github.io/molmod/reference/basic.html#molmod-molecular-graphs-molecular-graphs>`_.
     '''
     opdists = []
