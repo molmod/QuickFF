@@ -191,6 +191,33 @@ class Program(object):
             fftab.print_screen()
         return fftab
 
+    def refine_rvs(self, verbose=True):
+        '''
+            Third step of force field development: refine the rest values by
+            revisiting the perturbation trajectories of the first step with the
+            force constants of the second step.
+        '''
+        ff_old = self.model.val.get_fftable()
+        ff = FFTable()
+        for icname in sorted(self.model.val.pot.terms.keys()):
+            if icname.startswith('dihed'):
+                ff.pars[icname] = ff_old.pars[icname]
+            else:
+                ics = self.system.ics[icname]
+                ks  = DataArray(unit=ics[0].kunit)
+                q0s = DataArray(unit=ics[0].qunit)
+                for ic in ics:
+                    k, q0 = self.pert_theory.refineq(
+                        ic, self.trajectories[ic.name], ff_old[icname],
+                    )
+                    ks.append(k)
+                    q0s.append(q0)
+                ff.add(icname, ks, q0s)
+        self.model.val.update_fftable(ff)
+        if verbose:
+            ff.print_screen()
+        return ff
+
     def run(self):
         '''
             Run all steps of the QuickFF methodology to derive a covalent
@@ -210,13 +237,15 @@ class Program(object):
         print '\nDetermine the coordinates of the perturbation trajectories\n'
         self.trajectories = self.generate_trajectories()
         print '\nEstimating all pars for bonds, bends and opdists\n'
-        fftab = self.estimate_from_pt(self.trajectories)
+        fftab1 = self.estimate_from_pt(self.trajectories)
         print '\nRefining force constants using a Hessian LSQ cost\n'
-        fftab = self.refine_cost()
+        fftab2 = self.refine_cost()
+        print '\nRefining rest values\n'
+        fftab3 = self.refine_rvs()
         print '\n'+'~'*120+'\n'
         print 'Time:           ' + datetime.datetime.now().isoformat().replace('T', ' ') + '\n'
         print footer
-        return fftab
+        return fftab3
 
     def plot_pt(self, icname, start=None, end=None, steps=51, verbose=True):
         '''

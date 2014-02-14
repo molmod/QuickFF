@@ -464,7 +464,7 @@ class ValencePart(BasePart):
         '''
             A method to update the force constants of the valence terms. The
             ordering of fcs in the input argument should be the same as the
-            ordering of sorted(system.ics.keys()).
+            ordering of sorted(self.pot.terms.keys()).
         '''
         for i, icname in enumerate(sorted(self.pot.terms.keys())):
             for term in self.pot.terms[icname]:
@@ -474,13 +474,35 @@ class ValencePart(BasePart):
         '''
             A method to return the force constants of the valence terms. The
             ordering of fcs in the output will be the same as the ordering of
-            sorted(system.ics.keys()).
+            sorted(self.pot.terms.keys()).
         '''
         fcs = np.zeros(self.nterms, float)
         for i, icname in enumerate(sorted(self.pot.terms.keys())):
             for term in self.pot.terms[icname]:
                 fcs[i] = term.k
         return fcs
+
+    def update_rvs(self, rvs):
+        '''
+            A method to update the rest values of the valence terms. The
+            ordering of rvs in the input argument should be the same as the
+            ordering of sorted(self.pot.terms.keys()).
+        '''
+        for i, icname in enumerate(sorted(self.pot.terms.keys())):
+            for term in self.pot.terms[icname]:
+                term.q0 = rvs[i]
+
+    def get_rvs(self):
+        '''
+            A method to return the rest values of the valence terms. The
+            ordering of rvs in the input argument should be the same as the
+            ordering of sorted(self.pot.terms.keys()).
+        '''
+        rvs = np.zeros(self.nterms, float)
+        for i, icname in enumerate(sorted(self.pot.terms.keys())):
+            for term in self.pot.terms[icname]:
+                rvs[i] = term.q0
+        return rvs
 
 
 #####  Potentials

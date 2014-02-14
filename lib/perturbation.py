@@ -23,7 +23,7 @@
 #
 #--
 
-from molmod.units import angstrom, deg, parse_unit
+from molmod.units import angstrom, deg, kjmol, parse_unit
 from molmod.periodic import periodic as pt
 from molmod.io.xyz import XYZWriter
 
@@ -191,6 +191,40 @@ class BasePertTheory(object):
         qs, tot, ei, vdw = self.analyze(trajectory, evaluators)
         pars = fitpar(qs, tot-ei-vdw, rcond=1e-6)
         return 2*pars[0], -pars[1]/(2*pars[0])
+    
+    def refineq(self, ic, trajectory, old):
+        '''
+            Method to refine the rest values of the covalent terms assuming the
+            force constants are known.
+            
+            **Arguments**
+            
+            ic
+                an instance of the class :class:`quickff.ic.IC` defining for
+                which ic the FF parameters will be estimated
+
+            trajectory
+                a (F,N,3) numpy array defining the perturbation trajectory
+                associated to the given ic. It contains F frames of
+                (N,3)-dimensional geometry arrays.
+            
+            old
+                A 2-typle representing the previous force constant and rest
+                value for the given ic.
+        '''    
+        kold, q0old = old
+        if kold<1.0*kjmol:
+            return kold, q0old
+        else:
+            evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw'), eval_energy('val')]
+            qs, tot, ei, vdw, val = self.analyze(trajectory, evaluators)
+            res = tot - ei - vdw - (val - 0.5*kold*(qs-q0old)**2)
+            pars = fitpar(qs, res, rcond=1e-6)
+            q0new = -0.5*pars[1]/pars[0]
+            knew = 2.0*pars[0]
+            if q0new<0.0:
+                q0new = 0.0
+            return kold, q0new
 
 
 class RelaxedGeoPertTheory(BasePertTheory):
