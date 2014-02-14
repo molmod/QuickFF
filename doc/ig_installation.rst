@@ -11,6 +11,6 @@ After the installation is complete, you can test your installation by running
 the following commands::
 
     cd test
-    nostests
+    nosetests
 
 Once all tests are succesfull, you are ready to use QuickFF.
