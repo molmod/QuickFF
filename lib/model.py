@@ -307,6 +307,15 @@ class ValencePart(BasePart):
         '''
         maxlength = max([len(icname) for icname in system.ics.keys()]) + 2
         deleted_diheds = []
+        def determine_mrv(m, psi):
+            per = 360*deg/m
+            val = psi%per
+            if (val>=0 and val<=per/6.0) or (val>=5*per/6.0 and val<=per):
+                return m, 0.0
+            elif val>=2*per/6.0 and val<=4*per/6.0:
+                return m, per/2.0
+            else:
+                return -1, 0.0
         for icname in sorted(self.pot.terms.keys()):
             if not icname.startswith('dihed'):
                 continue
@@ -318,60 +327,34 @@ class ValencePart(BasePart):
                 psi0 = abs(ic.value(system.ref.coords))
                 n1 = len(system.nlist[ic.indexes[1]])
                 n2 = len(system.nlist[ic.indexes[2]])
-                if psi0 >= 0 and psi0 <= max([marge2, marge3]):
-                    #use m=3 if at least one of the central atoms
-                    #has 4 neighbors
-                    if 4 in [n1, n2]:
-                        ms.append(3)
-                        rvs.append(0.0)
-                    #use m=2 if at least one of the central atoms
-                    #has 3 neighbors
-                    elif 3 in [n1, n2]:
-                        ms.append(2)
-                        rvs.append(0.0)
-                    #use m=1 in all other cases
-                    else:
-                        ms.append(1)
-                        rvs.append(0.0)
-                elif psi0 >= 60*deg-marge3 and psi0 <= 60*deg+marge3:
-                    ms.append(3)
-                    rvs.append(60.0*deg)
-                elif psi0 >= 90*deg-marge2 and psi0 <= 90*deg+marge2:
-                    ms.append(2)
-                    rvs.append(90.0*deg)
-                elif psi0 >= 120*deg-marge3 and psi0 <= 120*deg+marge3:
-                    ms.append(3)
-                    rvs.append(0.0*deg)
-                elif psi0 >= 180*deg-marge2 and psi0 <= 180*deg+marge2:
-                    #use m=3 if at least one of the central atoms
-                    #has 4 neighbors
-                    if 4 in [n1, n2]:
-                        ms.append(3)
-                        rvs.append(60.0*deg)
-                    #use m=2 if at least one of the central atoms
-                    #has 3 neighbors
-                    elif 3 in [n1, n2]:
-                        ms.append(2)
-                        rvs.append(0.0)
-                    #use m=1 in all other cases
-                    else:
-                        ms.append(1)
-                        rvs.append(180.0*deg)
+                if set([n1,n2])==set([4,4]):
+                    m, rv = determine_mrv(3, psi0)
+                elif set([n1,n2])==set([3,4]):
+                    m, rv = determine_mrv(6, psi0)
+                elif set([n1,n2])==set([2,4]):
+                    m, rv = determine_mrv(3, psi0)
+                elif set([n1,n2])==set([3,3]):
+                    m, rv = determine_mrv(2, psi0)
+                elif set([n1,n2])==set([2,3]):
+                    m, rv = determine_mrv(2, psi0)
+                elif set([n1,n2])==set([2,2]):
+                    m, rv = determine_mrv(1, psi0)
                 else:
-                    ms.append(-1)
-                    rvs.append(np.cos(psi0))
+                    m, rv = -1, 0.0
+                ms.append(m)
+                rvs.append(rv)
             m = DataArray(ms, unit='au')
             rv = DataArray(rvs, unit='deg')
             if m.mean == -1 or m.std > 0.0 or rv.std > 0.0:
                 if verbose:
                     print '    %s   WARNING: ' % descr +\
-                          'could not determine clear trent in dihedral angles, ' +\
+                          'could not determine clear trent in dihedral patterns, ' +\
                           'dihedral is ignored in force field !!!'
                 deleted_diheds.append(icname)
             else:
                 if verbose:
                     print '    %s   0.5*K*[1 - cos(%i(psi - %5.1f))]' % (
-                        descr, m.mean, rv.mean
+                        descr, m.mean, rv.mean/deg
                     )
                 for i, ic in enumerate(ics):
                     ic.icf = dihed_angle
@@ -380,7 +363,7 @@ class ValencePart(BasePart):
                         ic, system.ref.coords, 0.0, rv.mean, m.mean
                     )
         for icname in deleted_diheds:
-            del system.ics[icname]
+            #del system.ics[icname]
             del self.pot.terms[icname]
 
     def _get_nterms(self):
