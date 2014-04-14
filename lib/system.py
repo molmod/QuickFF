@@ -47,9 +47,9 @@ class System(object):
         field atom types, charges, vdW parameters, bonds, bends, dihedrals,
         out-of-plane patterns, neighborlists and the ab initio reference data.
     '''
-    def __init__(self, numbers, ref, ffatypes=None, charges=None, sigmas=None,
-                    epsilons=None, bonds=None, bends=None, diheds=None,
-                    opdists=None, nlist=None):
+    def __init__(self, numbers, ref, ffatypes=None, charges=None, ei_sigmas=None,
+                    epsilons=None, vdw_sigmas=None, bonds=None, bends=None, 
+                    diheds=None, opdists=None, nlist=None):
         '''
            **Arguments:**
 
@@ -69,13 +69,17 @@ class System(object):
                 A numpy array (N) with atomic charges. By default, all charges
                 are zero.
 
-           sigmas
-                A numpy array (N) with vdw sigma values. By default, all sigmas
+           ei_sigmas
+                A numpy array (N) with ei sigma values. By default, all sigmas
                 are zero.
 
            epsilons
                 A numpy array (N) with vdw epsilons values. By default, all
                 epsilons are zero.
+           
+           vdw_sigmas
+                A numpy array (N) with vdw sigma values. By default, all sigmas
+                are zero.
 
            bonds
                 A numpy array (B,2) with atom indexes (counting starts from
@@ -106,8 +110,9 @@ class System(object):
         self.numbers = numbers
         self.ffatypes = ffatypes
         self.charges = charges
-        self.sigmas = sigmas
+        self.ei_sigmas = ei_sigmas
         self.epsilons = epsilons
+        self.vdw_sigmas = vdw_sigmas
         self.bonds = bonds
         self.bends = bends
         self.diheds = diheds
@@ -118,10 +123,12 @@ class System(object):
         #Set attributes to zero if they are not defined
         if self.charges is None:
             self.charges = np.zeros(self.natoms, float)
-        if self.sigmas is None:
-            self.sigmas = np.zeros(self.natoms, float)
+        if self.ei_sigmas is None:
+            self.ei_sigmas = np.zeros(self.natoms, float)
         if self.epsilons is None:
             self.epsilons = np.zeros(self.natoms, float)
+        if self.vdw_sigmas is None:
+            self.vdw_sigmas = np.zeros(self.natoms, float)
         #perfrom some checks
         self.ref._check(natoms=self.natoms)
         self._check_topology()
@@ -167,8 +174,9 @@ class System(object):
         #initialise
         numbers = None
         charges = None
-        sigmas = None
+        ei_sigmas = None
         epsilons = None
+        vdw_sigmas = None
         ffatypes = None
         bonds = None
         bends = None
@@ -186,6 +194,12 @@ class System(object):
                         numbers = value
                     elif key in ['charges', 'ac', 'aq']:
                         charges = value
+                    elif key in ['ei_sigmas']:
+                        ei_sigmas = value
+                    elif key in ['vdw_epsilons']:
+                        epsilons = value
+                    elif key in ['vdw_sigmas']:
+                        vdw_sigmas = value
                     elif key in ['ffatypes', 'atypes']:
                         ffatypes = value
                     elif key in ['bonds']:
@@ -226,20 +240,25 @@ class System(object):
                           'vdw_path are None, HDF5 file is ignored.\n'
                 if ei_path is not None:
                     charges = f['%s/charges' % ei_path][:]
+                    if '%s/sigmas' %ei_path in f:
+                        ei_sigmas = f['%s/sigmas' %ei_path][:]
+                    else:
+                        ei_sigmas = np.zeros(charges.shape)
                 if vdw_path is not None:
                     epsilons = f['%s/epsilons' % vdw_path][:]
-                    sigmas = f['%s/sigmas' % vdw_path][:]
+                    vdw_sigmas = f['%s/sigmas' % vdw_path][:]
             else:
                 raise IOError('Unsupported file format for %s' %fn)
         return cls(numbers, ref, ffatypes=ffatypes, charges=charges,
-                    sigmas=sigmas, epsilons=epsilons, bonds=bonds, bends=bends,
+                    ei_sigmas=ei_sigmas, epsilons=epsilons,
+                    vdw_sigmas=vdw_sigmas, bonds=bonds, bends=bends,
                     diheds=diheds, opdists=opdists, nlist=nlist)
 
     def read_uff_vdw(self):
         '''
             Read Lennart-Jones vdW parameters from the UFF force field.
         '''
-        self.sigmas, self.epsilons = get_uff_sigmas_epsilons(self.numbers)
+        self.vdw_sigmas, self.epsilons = get_uff_sigmas_epsilons(self.numbers)
 
     def _check_topology(self):
         '''
@@ -328,15 +347,19 @@ class System(object):
         self._average_charges_ffatypes()
 
     def _average_charges_ffatypes(self):
-        'Take the average of the atomic charges over the force field atom types'
+        'Take the average of the atomic charges and ei_sigmas over the force field atom types'
         charges = {}
-        for atype, charge in zip(self.ffatypes, self.charges):
+        sigmas = {}
+        for atype, charge, sigma in zip(self.ffatypes, self.charges, self.ei_sigmas):
             if atype not in charges:
                 charges[atype] = [charge]
+                sigmas[atype] = [sigma]
             else:
                 charges[atype].append(charge)
+                sigmas[atype].append(sigma)
         for i, atype in enumerate(self.ffatypes):
             self.charges[i] = sum(charges[atype])/len(charges[atype])
+            self.ei_sigmas[i] = sum(sigmas[atype])/len(sigmas[atype])
 
     def determine_ics_from_topology(self):
         '''
@@ -435,18 +458,18 @@ class System(object):
         '''
             Print information about the atoms in the system to the screen
         '''
-        print '    -------------------------------------------------------------------------------'
-        print '      index   symbol   ffatype       charge [e]     sigma [A]    epsilon [kJ/mol]  '
-        print '    -------------------------------------------------------------------------------'
-        for index, (number, ffatype, charge, sigma, epsilon) \
-        in enumerate(zip(self.numbers, self.ffatypes, self.charges, self.sigmas, self.epsilons)):
+        print '    ----------------------------------------------------------------------------------------------'
+        print '      index   symbol   ffatype       charge [e]     ei_sigma [A]  epsilon [kJ/mol]  vdw_sigma [A] '
+        print '    ----------------------------------------------------------------------------------------------'
+        for index, (number, ffatype, charge, ei_sigma, epsilon, vdw_sigma) \
+        in enumerate(zip(self.numbers, self.ffatypes, self.charges, self.ei_sigmas, self.epsilons, self.vdw_sigmas)):
             index_fmt   = str(index)        + ' '*(5 - len(str(index)))
             symbol_fmt  = pt[number].symbol + ' '*(6 - len(pt[number].symbol))
             ffatype_fmt = ffatype           + ' '*(10 - len(ffatype))
-            print '      %s   %s   %s      % 6.3f        %6.3f          %6.3f' % (
-                index_fmt, symbol_fmt, ffatype_fmt, charge, sigma/angstrom, epsilon/kjmol
+            print '      %s   %s   %s      % 6.3f        %6.3f          %6.3f          %6.3f' % (
+                index_fmt, symbol_fmt, ffatype_fmt, charge, ei_sigma/angstrom, epsilon/kjmol, vdw_sigma/angstrom
             )
-        print '    -------------------------------------------------------------------------------'
+        print '    ----------------------------------------------------------------------------------------------'
 
     def print_ic_info(self):
         '''

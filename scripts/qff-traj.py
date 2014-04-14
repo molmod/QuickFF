@@ -39,13 +39,15 @@ def parser():
                   'in the files fns.'
     parser = OptionParser(usage=usage, description=description)
     parser.add_option(
-        '--ei-model', default='Harm',
+        '--ei-model', default='HarmPoint',
         help='Defines the potential used for the electrostatic interactions. '  +\
-             'Possible choices are: Coulomb, Harmonic and Zero. Coulomb '       +\
-             'implies using the coulomb potential. Harmonic implies '           +\
-             'approximating the coulomb potential by means of a second order '  +\
-             'Taylor expansion. Zero implies ignoring electrostatic '           +\
-             'interactions. [default=%default]'
+             'Can be CoulPoint, CoulGauss, HarmPoint, HarmGauss or Zero. If '   +\
+             'CoulPoint/CoulGauss is chosen, the exact Coulombic potential '    +\
+             'between point/gaussian charges will be used to evaluate EI '      +\
+             'interactions. If HarmPoint/HarmGauss is chosen, a second order '  +\
+             'Taylor expansion of the Coulomb potential is used. Harmonic is a '+\
+             'lot faster and should already give accurate results. '            +\
+             '[default=%default]'
     )
     parser.add_option(
         '--ei-scales', default='1.0,1.0,1.0', type=str,
@@ -62,7 +64,7 @@ def parser():
              'extracted.'
     )
     parser.add_option(
-        '--vdw-model', default='Harm',
+        '--vdw-model', default='Zero',
         help='Defines the potential used for van der Waals interactions. '      +\
              'Possible choices are: LJ, Harmonic and Zero. LJ implies using '   +\
              'the Lennart-Jones potential. Harmonic implies approximating the ' +\

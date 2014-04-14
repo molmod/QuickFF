@@ -38,13 +38,15 @@ def parser():
                   'ff parameters a system specified in the files fns.'
     parser = OptionParser(usage=usage, description=description)
     parser.add_option(
-        '--ei-model', default='Harm',
+        '--ei-model', default='HarmPoint',
         help='Defines the potential used for the electrostatic interactions. '  +\
-             'Possible choices are: Coulomb, Harmonic and Zero. Coulomb '       +\
-             'implies using the coulomb potential. Harmonic implies '           +\
-             'approximating the coulomb potential by means of a second order '  +\
-             'Taylor expansion. Zero implies ignoring electrostatic '           +\
-             'interactions. [default=%default]'
+             'Can be CoulPoint, CoulGauss, HarmPoint, HarmGauss or Zero. If '   +\
+             'CoulPoint/CoulGauss is chosen, the exact Coulombic potential '    +\
+             'between point/gaussian charges will be used to evaluate EI '      +\
+             'interactions. If HarmPoint/HarmGauss is chosen, a second order '  +\
+             'Taylor expansion of the Coulomb potential is used. Harmonic is a '+\
+             'lot faster and should already give accurate results. '            +\
+             '[default=%default]'
     )
     parser.add_option(
         '--ei-scales', default='1.0,1.0,1.0', type=str,
@@ -62,11 +64,13 @@ def parser():
     )
     parser.add_option(
         '--vdw-model', default='Zero',
-        help='Defines the potential used for van der Waals interactions. '      +\
-             'Possible choices are: LJ, Harmonic and Zero. LJ implies using '   +\
-             'the Lennart-Jones potential. Harmonic implies approximating the ' +\
-             'LJ potential by means of a second order Taylor expansion. Zero '  +\
-             'implies ignoring electrostatic interactions. [default=%default]'
+        help='Defines the potential used for van der Waals interactions. Can '  +\
+             'be LJ, MM3, HarmLJ, HarmMM3 or Zero. If LJ/MM3 is chosen, the '   +\
+             'exact Lennard-Jones/MM3-Buckingham potential will be used to '    +\
+             'evaluate van der Waals interactions. If HarmLJ/HarmMM3 is '       +\
+             'chosen, a second order Taylor expansion of the LJ/MM3 potential ' +\
+             'is used. Harmonic is a lot faster and should already give '       +\
+             'accurate results. [default=%default]'
     )
     parser.add_option(
         '--vdw-scales', default='0.0,0.0,1.0', type=str,

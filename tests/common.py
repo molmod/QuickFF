@@ -27,7 +27,8 @@ def get_water():
     ])*angstrom
     numbers = np.array([1,8,1])
     fcharges = np.array([0.5, -1, 0.5]) #'formal' charges
-    return coords, numbers, fcharges
+    fei_sigmas = np.array([0.7, 1.1, 0.7])*angstrom #'formal' sigmas
+    return coords, numbers, fcharges, fei_sigmas
 
 def get_ethanol():
     coords = np.array([
@@ -42,10 +43,11 @@ def get_ethanol():
         [-1.917880,  0.080549,  0.000000],
     ])*angstrom
     numbers = np.array([6, 6, 1, 1, 1, 1, 8, 1, 1])
-    fcharges = np.array([-0.3, 0.3, 0.1, 0.1, 0.1, 0.1, -1.0, 0.1, 0.5])                #'formal' charges
-    sigmas = np.array([3.431,3.431,2.571,2.571,2.571,2.571,3.118,2.571,2.571])*angstrom #UFF
+    fcharges = np.array([-0.3, 0.3, 0.1, 0.1, 0.1, 0.1, -1.0, 0.1, 0.5]) #'formal' charges
+    fei_sigmas = np.array([1.1, 1.1, 0.7, 0.7, 0.7, 0.7, 1.1, 0.7, 0.7])*angstrom #'formal' ei_sigmas
     epsilons = np.array([0.439,0.439,0.184,0.184,0.184,0.184,0.251,0.184,0.184])*kjmol  #UFF
-    return coords, numbers, fcharges, sigmas, epsilons
+    vdw_sigmas = np.array([3.431,3.431,2.571,2.571,2.571,2.571,3.118,2.571,2.571])*angstrom #UFF
+    return coords, numbers, fcharges, fei_sigmas, epsilons, vdw_sigmas
 
 def translate_rule(rule):
     if rule==-1:

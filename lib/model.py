@@ -26,7 +26,7 @@
 from molmod.units import deg
 from molmod.ic import bond_length, dihed_angle
 
-import numpy as np
+import numpy as np, math
 
 from quickff.ic import IC
 from quickff.terms import HarmonicTerm, CosineTerm
@@ -34,7 +34,8 @@ from quickff.fftable import DataArray, FFTable
 
 __all__ = [
     'Model', 'AIPart', 'EIPart', 'ValencePart', 'ZeroPot', 'HarmonicPot',
-    'CoulombPot', 'LennardJonesPot', 'TermListPot',
+    'CoulPointPot', 'CoulGaussPot', 'LennardJonesPot', 'MM3BuckinghamPot',
+    'TermListPot',
 ]
 
 
@@ -99,11 +100,13 @@ class Model(object):
 
             ei_pot_kind
                 a string defining the potential kind of the electrostatic
-                interactions. Can be 'Coulomb', 'Harmonic' or 'Zero'. If Coulomb
-                is chosen, the exact Coulombic potential will be used to
-                evaluate EI interactions. If Harmonic is chosen, a second order
-                Taylor expansion of the Coulomb potential is used. Harmonic is
-                a lot faster and should already give accurate results.
+                interactions. Can be 'CoulPoint', 'CoulGauss', 'HarmPoint'
+                'HarmGauss' or 'Zero'. If 'CoulPoint'/'CoulGauss' is chosen, 
+                the exact Coulombic potential between point/gaussian charges 
+                will be used to evaluate EI interactions. If 
+                'HarmPoint'/'HarmGauss' is chosen, a second order Taylor 
+                expansion of the Coulomb potential is used. Harmonic is a lot 
+                faster and should already give accurate results.
 
             vdw_scales
                 a list containing the scales for the 1-2, 1-3 and 1-4
@@ -111,11 +114,12 @@ class Model(object):
 
             vdw_pot_kind
                 a string defining the potential kind of the van der Waals
-                interactions. Can be 'LJ', 'Harmonic' or 'Zero'. If LJ is chosen
-                the Lennard-Jones potential will be used to evaluate van der
-                Waals interactions. If Harmonic is chosen, a second order Taylor
-                expansion of the LJ potential is used. Harmonic is a lot faster
-                and should already give accurate results.
+                interactions. Can be 'LJ', 'MM3', 'HarmLJ', 'HarmMM3' or 'Zero'.
+                If LJ/MM3 is chosen, the exact Lennard-Jones/MM3-Buckingham 
+                potential will be used to evaluate van der Waals interactions. 
+                If HarmLJ/HarmMM3 is chosen, a second order Taylor expansion of 
+                the LJ/MM3 potential is used. Harmonic is a lot faster and 
+                should already give accurate results.
         '''
         ai  = AIPart.from_system(system, ai_project)
         ei  = EIPart.from_system(system, ei_scales, ei_pot_kind)
@@ -203,13 +207,20 @@ class EIPart(BasePart):
                 scaled_pairs[1].append([bend[0], bend[2]])
             for dihed in system.diheds:
                 scaled_pairs[2].append([dihed[0], dihed[3]])
-            #Construct the potential
-            exact = CoulombPot(system.charges.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
-            if pot_kind.lower() in ['harm', 'harmonic']:
+            #Construct the exact (Coulomb) potential
+            if pot_kind.lower() in ['coulpoint', 'harmpoint']:
+                exact = CoulombPoint(system.charges.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
+            elif pot_kind.lower() in ['coulgauss', 'harmgauss']:
+                exact = CoulombGauss(system.charges.copy(), system.ei_sigmas, scales, scaled_pairs, coords0=system.ref.coords.copy())
+            else:
+                raise ValueError('EI potential kind not supported: %s' %pot_kind)
+            #Approximate potential if necessary
+            if pot_kind.lower() in ['harmpoint', 'harmgauss']:
                 grad = exact.calc_gradient(system.ref.coords.copy())
                 hess = exact.calc_hessian(system.ref.coords.copy())
                 pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess)
-            elif pot_kind.lower() in ['coul', 'coulomb', 'exact']:
+            else:
+                assert pot_kind.lower() in ['coulpoint', 'coulgauss'], 'InternalError: inconsistent pot_kind checks!'
                 pot = exact
         return cls(pot, scales)
 
@@ -230,7 +241,7 @@ class VDWPart(BasePart):
     def from_system(cls, system, scales, pot_kind):
         if pot_kind.lower() == 'zero':
             pot = ZeroPot()
-        elif pot_kind.lower() in ['exact', 'harmonic', 'harm']:
+        else:
             #Generate list of atom pairs subject ot VDW-scaling according to scales
             scaled_pairs = [[],[],[]]
             for bond in system.bonds:
@@ -239,13 +250,18 @@ class VDWPart(BasePart):
                 scaled_pairs[1].append([bend[0], bend[2]])
             for dihed in system.diheds:
                 scaled_pairs[2].append([dihed[0], dihed[3]])
-            #Construct the potential
-            exact = LennardJonesPot(system.sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
-            if pot_kind.lower() in ['harm', 'harmonic']:
+            #Construct the exact potential
+            if pot_kind.lower() in ['lj', 'harmlj']:
+                exact = LennardJonesPot(system.vdw_sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
+            elif pot_kind.lower() in ['buck', 'harmbuck']:
+                exact = MM3BuckinghamPot(system.vdw_sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
+            #Approximate potential if necessary
+            if pot_kind.lower() in ['harmlj', 'harmbuck']:
                 grad = exact.calc_gradient(system.ref.coords.copy())
                 hess = exact.calc_hessian(system.ref.coords.copy())
                 pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess)
-            elif pot_kind.lower() in ['lj', 'lennardjones', 'lennard-jones']:
+            else:
+                assert pot_kind.lower() in ['lj', 'buck'], 'InternalError: inconsistent pot_kind checks!'
                 pot = exact
         return cls(pot, scales)
 
@@ -533,13 +549,13 @@ class HarmonicPot(BasePot):
         return self.hess0
 
 
-class CoulombPot(BasePot):
+class CoulPointPot(BasePot):
     '''
         A class defining the Coulomb potential between point charges to describe
         the FF electrostatic energy.
     '''
     def __init__(self, charges, scales, scaled_pairs, coords0=None):
-        BasePot.__init__(self, 'Coulomb')
+        BasePot.__init__(self, 'CoulPoint')
         self.charges = charges
         self.scales = scales
         self.scaled_pairs = scaled_pairs
@@ -594,6 +610,81 @@ class CoulombPot(BasePot):
         return hess
 
 
+class CoulGaussPot(BasePot):
+    '''
+        A class defining the Coulomb potential between gaussian charges to describe
+        the FF electrostatic energy.
+    '''
+    def __init__(self, charges, sigmas, scales, scaled_pairs, coords0=None):
+        BasePot.__init__(self, 'CoulGaus')
+        self.charges = charges
+        self.sigmas = sigmas
+        self.scales = scales
+        self.scaled_pairs = scaled_pairs
+        self.shift = 0.0
+        if coords0 is not None:
+            self.shift = -self.calc_energy(coords0)
+
+    def _get_scale(self, i, j):
+        if [i, j] in self.scaled_pairs[0] or [j, i] in self.scaled_pairs[0]:
+            return self.scales[0]
+        elif [i, j] in self.scaled_pairs[1] or [j, i] in self.scaled_pairs[1]:
+            return self.scales[1]
+        elif [i, j] in self.scaled_pairs[2] or [j, i] in self.scaled_pairs[2]:
+            return self.scales[2]
+        else:
+            return 1.0
+
+    def calc_energy(self, coords):
+        energy = self.shift
+        for i, qi in enumerate(self.charges):
+            for j, qj in enumerate(self.charges):
+                if j >= i: break
+                scale = self._get_scale(i, j)
+                if scale==0.0: continue
+                bond = IC('_internal_ei_bond', [i, j], bond_length)
+                r = bond.value(coords)
+                sigma = np.sqrt(self.sigmas[i]**2+self.sigmas[j]**2)
+                energy += scale*qi*qj/r*math.erf(r/np.sqrt(2)/sigma)
+        return energy
+
+    def calc_gradient(self, coords):
+        grad = np.zeros(3*len(self.charges), float)
+        for i, qi in enumerate(self.charges):
+            for j, qj in enumerate(self.charges):
+                if j >= i: break
+                scale = self._get_scale(i, j)
+                if scale==0.0: continue
+                bond = IC('_internal_ei_bond', [i, j], bond_length)
+                r = bond.value(coords)
+                sigma = np.sqrt(self.sigmas[i]**2+self.sigmas[j]**2)
+                #intermediate results
+                erf = math.erf(r/np.sqrt(2)/sigma)
+                exp = np.exp(-(r/sigma)**2/2.0)/np.sqrt(2*np.pi) 
+                #update grad
+                grad += scale*qi*qj/r*(-erf/r + 2.0*exp/sigma)*bond.grad(coords)
+        return grad
+
+    def calc_hessian(self, coords):
+        hess = np.zeros([3*len(self.charges), 3*len(self.charges)], float)
+        for i, qi in enumerate(self.charges):
+            for j, qj in enumerate(self.charges):
+                if j >= i: break
+                scale = self._get_scale(i, j)
+                if scale==0.0: continue
+                bond = IC('_internal_ei_bond', [i, j], bond_length)
+                r = bond.value(coords)
+                qgrad = bond.grad(coords)
+                sigma = np.sqrt(self.sigmas[i]**2+self.sigmas[j]**2)
+                #intermediate results
+                erf = math.erf(r/np.sqrt(2)/sigma)
+                exp = np.exp(-(r/sigma)**2/2.0)/np.sqrt(2*np.pi)
+                dVdr = (-erf/r + 2.0/sigma*exp)/r
+                d2Vdr2 = (erf/r - 2*exp/sigma)/r**2 - exp/sigma**3
+                #update hessian
+                hess += scale*qi*qj*(2*d2Vdr2*np.outer(qgrad, qgrad) + dVdr*bond.hess(coords))
+        return hess
+
 
 class LennardJonesPot(BasePot):
     '''
@@ -629,7 +720,7 @@ class LennardJonesPot(BasePot):
                 if scale==0.0: continue
                 sigma = 0.5*(si+sj)
                 epsilon = np.sqrt(ei*ej)
-                bond = IC('_internal_ei_bond', [i, j], bond_length)
+                bond = IC('_internal_vdw_bond', [i, j], bond_length)
                 x = (sigma/bond.value(coords))
                 energy += 4.0*epsilon*(x**12-x**6)*scale
         return energy
@@ -643,7 +734,7 @@ class LennardJonesPot(BasePot):
                 if scale==0.0: continue
                 sigma = 0.5*(si+sj)
                 epsilon = np.sqrt(ei*ej)
-                bond = IC('_internal_ei_bond', [i, j], bond_length)
+                bond = IC('_internal_vdw_bond', [i, j], bond_length)
                 x = (sigma/bond.value(coords))
                 grad -= 24.0*epsilon/sigma*(2.0*x**13-x**7)*bond.grad(coords)*scale
         return grad
@@ -657,11 +748,82 @@ class LennardJonesPot(BasePot):
                 if scale==0.0: continue
                 sigma = 0.5*(si+sj)
                 epsilon = np.sqrt(ei*ej)
-                bond = IC('_internal_ei_bond', [i, j], bond_length)
+                bond = IC('_internal_vdw_bond', [i, j], bond_length)
                 x = (sigma/bond.value(coords))
                 qgrad = bond.grad(coords)
                 hess += 24.0*epsilon/sigma**2*(26*x**14-7*x**8)*np.outer(qgrad, qgrad)*scale
                 hess -= 24.0*epsilon/sigma*(2*x**13-x**7)*bond.hess(coords)*scale
+        return hess
+
+
+class MM3BuckinghamPot(BasePot):
+    '''
+        A class defining the MM3-Buckingham potential between atom pairs to
+        describe the FF van der Waals energy.
+    '''
+    def __init__(self, sigmas, epsilons, scales, scaled_pairs, coords0=None):
+        BasePot.__init__(self, 'MM3Buck')
+        self.sigmas = sigmas
+        self.epsilons = epsilons
+        self.scales = scales
+        self.scaled_pairs = scaled_pairs
+        self.shift = 0.0
+        if coords0 is not None:
+            self.shift = -self.calc_energy(coords0)
+
+    def _get_scale(self, i, j):
+        if [i, j] in self.scaled_pairs[0] or [j, i] in self.scaled_pairs[0]:
+            return self.scales[0]
+        elif [i, j] in self.scaled_pairs[1] or [j, i] in self.scaled_pairs[1]:
+            return self.scales[1]
+        elif [i, j] in self.scaled_pairs[2] or [j, i] in self.scaled_pairs[2]:
+            return self.scales[2]
+        else:
+            return 1.0
+
+    def calc_energy(self, coords):
+        energy = self.shift
+        for i, (si, ei) in enumerate(zip(self.sigmas, self.epsilons)):
+            for j, (sj, ej) in enumerate(zip(self.sigmas, self.epsilons)):
+                if j >= i: break
+                scale = self._get_scale(i, j)
+                if scale==0.0: continue
+                sigma = 0.5*(si+sj)
+                epsilon = np.sqrt(ei*ej)
+                bond = IC('_internal_vdw_bond', [i, j], bond_length)
+                x = (bond.value(coords)/sigma)
+                energy += scale*epsilon*(1.84e5*np.exp(-12.0*x) - 2.25/x**6)
+        return energy
+
+    def calc_gradient(self, coords):
+        grad = np.zeros(3*len(coords), float)
+        for i, (si, ei) in enumerate(zip(self.sigmas, self.epsilons)):
+            for j, (sj, ej) in enumerate(zip(self.sigmas, self.epsilons)):
+                if j >= i: break
+                scale = self._get_scale(i, j)
+                if scale==0.0: continue
+                sigma = 0.5*(si+sj)
+                epsilon = np.sqrt(ei*ej)
+                bond = IC('_internal_vdw_bond', [i, j], bond_length)
+                x = (bond.value(coords)/sigma)
+                grad += scale*epsilon/sigma*(-2.208e6*np.exp(-12.0*x) + 13.5/x**7)*bond.grad(coords)
+        return grad
+
+    def calc_hessian(self, coords):
+        hess = np.zeros([3*len(coords), 3*len(coords)], float)
+        for i, (si, ei) in enumerate(zip(self.sigmas, self.epsilons)):
+            for j, (sj, ej) in enumerate(zip(self.sigmas, self.epsilons)):
+                if j >= i: break
+                scale = self._get_scale(i, j)
+                if scale==0.0: continue
+                sigma = 0.5*(si+sj)
+                epsilon = np.sqrt(ei*ej)
+                bond = IC('_internal_vdw_bond', [i, j], bond_length)
+                x = (bond.value(coords)/sigma)
+                qgrad = bond.grad(coords)
+                dVdr = -2.208e6*np.exp(-12.0*x) + 13.5/x**7
+                d2Vdr2 = 2.6496e7*np.exp(-12.0*x)-94.5/x**8
+                hess += scale*epsilon/sigma*(d2Vdr2/sigma*np.outer(qgrad, qgrad) + dVdr*bond.hess(coords))
         return hess
 
 

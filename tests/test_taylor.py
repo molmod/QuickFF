@@ -10,11 +10,17 @@ def run_taylor(molecule, pot):
     system = get_system(molecule, ei_path='/wpart/he')
     scaled_pairs = get_scaled_pairs(system)
     coords0 = system.ref.coords
-    if pot.lower() in ['coulomb', 'ei', 'electrostatic']:
-        exact = CoulombPot(system.charges, [1.0, 1.0, 1.0], scaled_pairs, coords0=coords0)
-    elif pot.lower() in ['lennardjones', 'lj', 'vdw', 'vanderwaals']:
+    if pot.lower() in ['coulpoint']:
+        exact = CoulPointPot(system.charges, [1.0, 1.0, 1.0], scaled_pairs, coords0=coords0)
+    elif pot.lower() in ['coulgauss']:
         system.read_uff_vdw()
-        exact = LennardJonesPot(system.sigmas, system.epsilons, [0.0,0.0,1.0], scaled_pairs, coords0=coords0)
+        exact = CoulGaussPot(system.charges, system.vdw_sigmas, [1.0, 1.0, 1.0], scaled_pairs, coords0=coords0)
+    elif pot.lower() in ['lj']:
+        system.read_uff_vdw()
+        exact = LennardJonesPot(system.vdw_sigmas, system.epsilons, [0.0,0.0,1.0], scaled_pairs, coords0=coords0)
+    elif pot.lower() in ['mm3']:
+        system.read_uff_vdw()
+        exact = MM3BuckinghamPot(system.vdw_sigmas, system.epsilons, [0.0,0.0,1.0], scaled_pairs, coords0=coords0)
     else:
         raise ValueError('Invalic potential specification: %s' %pot)
     harm = HarmonicPot(coords0, 0.0, exact.calc_gradient(coords0), exact.calc_hessian(coords0))
@@ -50,11 +56,20 @@ def run_taylor(molecule, pot):
         assert abs(exactEs[i]-harmEs[i])<tolE_abs*stdE
 
 
-def test_ei_water():
-    run_taylor('water', 'ei')
+def test_taylor_ei_point_water():
+    run_taylor('water', 'coulpoint')
 
-def test_ei_ethanol():
-    run_taylor('ethanol', 'ei')
+def test_taylor_ei_gauss_water():
+    run_taylor('water', 'coulgauss')
 
-def test_lj_ethanol():
+def test_taylor_ei_point_ethanol():
+    run_taylor('ethanol', 'coulpoint')
+
+def test_taylor_ei_gauss_ethanol():
+    run_taylor('ethanol', 'coulgauss')
+
+def test_taylor_lj_ethanol():
     run_taylor('ethanol', 'lj')
+
+def test_taylor_mm3_ethanol():
+    run_taylor('ethanol', 'mm3')
