@@ -196,7 +196,7 @@ class System(object):
                         charges = value
                     elif key in ['ei_sigmas']:
                         ei_sigmas = value
-                    elif key in ['vdw_epsilons']:
+                    elif key in ['epsilons']:
                         epsilons = value
                     elif key in ['vdw_sigmas']:
                         vdw_sigmas = value
