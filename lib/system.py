@@ -47,8 +47,8 @@ class System(object):
         field atom types, charges, vdW parameters, bonds, bends, dihedrals,
         out-of-plane patterns, neighborlists and the ab initio reference data.
     '''
-    def __init__(self, numbers, ref, ffatypes=None, charges=None, ei_sigmas=None,
-                    epsilons=None, vdw_sigmas=None, bonds=None, bends=None, 
+    def __init__(self, numbers, ref, ffatypes=None, charges=None, radii=None,
+                    epsilons=None, sigmas=None, bonds=None, bends=None, 
                     diheds=None, opdists=None, nlist=None):
         '''
            **Arguments:**
@@ -69,15 +69,15 @@ class System(object):
                 A numpy array (N) with atomic charges. By default, all charges
                 are zero.
 
-           ei_sigmas
-                A numpy array (N) with ei sigma values. By default, all sigmas
-                are zero.
+           radii
+                A numpy array (N) with atomic radii determining the width of the
+                charge distribution. By default, all radii are zero.
 
            epsilons
                 A numpy array (N) with vdw epsilons values. By default, all
                 epsilons are zero.
            
-           vdw_sigmas
+           sigmas
                 A numpy array (N) with vdw sigma values. By default, all sigmas
                 are zero.
 
@@ -110,9 +110,9 @@ class System(object):
         self.numbers = numbers
         self.ffatypes = ffatypes
         self.charges = charges
-        self.ei_sigmas = ei_sigmas
+        self.radii = radii
         self.epsilons = epsilons
-        self.vdw_sigmas = vdw_sigmas
+        self.sigmas = sigmas
         self.bonds = bonds
         self.bends = bends
         self.diheds = diheds
@@ -123,12 +123,12 @@ class System(object):
         #Set attributes to zero if they are not defined
         if self.charges is None:
             self.charges = np.zeros(self.natoms, float)
-        if self.ei_sigmas is None:
-            self.ei_sigmas = np.zeros(self.natoms, float)
+        if self.radii is None:
+            self.radii = np.zeros(self.natoms, float)
         if self.epsilons is None:
             self.epsilons = np.zeros(self.natoms, float)
-        if self.vdw_sigmas is None:
-            self.vdw_sigmas = np.zeros(self.natoms, float)
+        if self.sigmas is None:
+            self.sigmas = np.zeros(self.natoms, float)
         #perfrom some checks
         self.ref._check(natoms=self.natoms)
         self._check_topology()
@@ -174,9 +174,9 @@ class System(object):
         #initialise
         numbers = None
         charges = None
-        ei_sigmas = None
+        radii = None
         epsilons = None
-        vdw_sigmas = None
+        sigmas = None
         ffatypes = None
         bonds = None
         bends = None
@@ -194,12 +194,12 @@ class System(object):
                         numbers = value
                     elif key in ['charges', 'ac', 'aq']:
                         charges = value
-                    elif key in ['ei_sigmas']:
-                        ei_sigmas = value
+                    elif key in ['radii']:
+                        radii = value
                     elif key in ['epsilons']:
                         epsilons = value
-                    elif key in ['vdw_sigmas']:
-                        vdw_sigmas = value
+                    elif key in ['sigmas']:
+                        sigmas = value
                     elif key in ['ffatypes', 'atypes']:
                         ffatypes = value
                     elif key in ['bonds']:
@@ -250,15 +250,14 @@ class System(object):
             else:
                 raise IOError('Unsupported file format for %s' %fn)
         return cls(numbers, ref, ffatypes=ffatypes, charges=charges,
-                    ei_sigmas=ei_sigmas, epsilons=epsilons,
-                    vdw_sigmas=vdw_sigmas, bonds=bonds, bends=bends,
-                    diheds=diheds, opdists=opdists, nlist=nlist)
+                   radii=radii, epsilons=epsilons, sigmas=sigmas, bonds=bonds, 
+                   bends=bends, diheds=diheds, opdists=opdists, nlist=nlist)
 
     def read_uff_vdw(self):
         '''
             Read Lennart-Jones vdW parameters from the UFF force field.
         '''
-        self.vdw_sigmas, self.epsilons = get_uff_sigmas_epsilons(self.numbers)
+        self.sigmas, self.epsilons = get_uff_sigmas_epsilons(self.numbers)
 
     def _check_topology(self):
         '''
@@ -347,19 +346,19 @@ class System(object):
         self._average_charges_ffatypes()
 
     def _average_charges_ffatypes(self):
-        'Take the average of the atomic charges and ei_sigmas over the force field atom types'
+        'Take the average of the atomic charges and radii over the force field atom types'
         charges = {}
-        sigmas = {}
-        for atype, charge, sigma in zip(self.ffatypes, self.charges, self.ei_sigmas):
+        radii = {}
+        for atype, charge, radius in zip(self.ffatypes, self.charges, self.radii):
             if atype not in charges:
                 charges[atype] = [charge]
-                sigmas[atype] = [sigma]
+                radii[atype] = [radius]
             else:
                 charges[atype].append(charge)
-                sigmas[atype].append(sigma)
+                radii[atype].append(radius)
         for i, atype in enumerate(self.ffatypes):
             self.charges[i] = sum(charges[atype])/len(charges[atype])
-            self.ei_sigmas[i] = sum(sigmas[atype])/len(sigmas[atype])
+            self.radii[i] = sum(radii[atype])/len(radii[atype])
 
     def determine_ics_from_topology(self):
         '''
@@ -459,15 +458,15 @@ class System(object):
             Print information about the atoms in the system to the screen
         '''
         print '    ----------------------------------------------------------------------------------------------'
-        print '      index   symbol   ffatype       charge [e]     ei_sigma [A]  epsilon [kJ/mol]  vdw_sigma [A] '
+        print '      index   symbol   ffatype       charge [e]     radius [A]    epsilon [kJ/mol]    sigma [A]   '
         print '    ----------------------------------------------------------------------------------------------'
-        for index, (number, ffatype, charge, ei_sigma, epsilon, vdw_sigma) \
-        in enumerate(zip(self.numbers, self.ffatypes, self.charges, self.ei_sigmas, self.epsilons, self.vdw_sigmas)):
+        for index, (number, ffatype, charge, radius, epsilon, sigma) \
+        in enumerate(zip(self.numbers, self.ffatypes, self.charges, self.radii, self.epsilons, self.sigmas)):
             index_fmt   = str(index)        + ' '*(5 - len(str(index)))
             symbol_fmt  = pt[number].symbol + ' '*(6 - len(pt[number].symbol))
             ffatype_fmt = ffatype           + ' '*(10 - len(ffatype))
             print '      %s   %s   %s      % 6.3f        %6.3f          %6.3f          %6.3f' % (
-                index_fmt, symbol_fmt, ffatype_fmt, charge, ei_sigma/angstrom, epsilon/kjmol, vdw_sigma/angstrom
+                index_fmt, symbol_fmt, ffatype_fmt, charge, radius/angstrom, epsilon/kjmol, sigma/angstrom
             )
         print '    ----------------------------------------------------------------------------------------------'
 
@@ -493,6 +492,9 @@ class System(object):
         sample = {}
         sample['numbers']   = self.numbers
         sample['charges']   = self.charges
+        sample['radii']     = self.radii
+        sample['epsilons']  = self.epsilons
+        sample['sigmas']    = self.sigmas 
         sample['ffatypes']  = self.ffatypes
         sample['masses']    = np.array([pt[Z].mass for Z in self.numbers])
         sample['bonds']     = self.bonds
@@ -535,9 +537,9 @@ class System(object):
         print >> f, '# KEY        label  Q_0A              R_A'
         print >> f, '# ----------------------------------------------------'
         added = []
-        for atype, q in zip(self.ffatypes, self.charges):
+        for atype, q, radius in zip(self.ffatypes, self.charges, self.radii):
             if atype not in added:
-                print >> f, 'FIXQ:ATOM %8s % .10f  0.0000000000e+00' % (atype, q)
+                print >> f, 'FIXQ:ATOM %8s % 13.10f  %12.10f' % (atype, q, radius/angstrom)
                 added.append(atype)
         f.close()
 
@@ -563,8 +565,9 @@ class System(object):
         print >> f, '# KEY    ffatype  SIGMA         EPSILON'
         print >> f, '# -------------------------------------------'
         added = []
+        pot_kind_id = {'MM3': 'MM3', 'HarmMM3': 'MM3', 'LJ': 'LJ', 'HarmLJ': 'LJ'}
         for atype, sigma, epsilon in zip(self.ffatypes, self.sigmas, self.epsilons):
             if atype not in added:
-                print >> f, 'LJ:PARS %8s % .10f % .10f' %(atype, sigma/angstrom, epsilon/kjmol)
+                print >> f, '%s:PARS %8s % .10f % .10f' %(pot_kind_id[pot_kind], atype, sigma/angstrom, epsilon/kjmol)
                 added.append(atype)
         f.close()

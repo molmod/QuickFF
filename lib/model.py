@@ -211,7 +211,7 @@ class EIPart(BasePart):
             if pot_kind.lower() in ['coulpoint', 'harmpoint']:
                 exact = CoulPointPot(system.charges.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
             elif pot_kind.lower() in ['coulgauss', 'harmgauss']:
-                exact = CoulGaussPot(system.charges.copy(), system.ei_sigmas, scales, scaled_pairs, coords0=system.ref.coords.copy())
+                exact = CoulGaussPot(system.charges.copy(), system.radii.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
             else:
                 raise ValueError('EI potential kind not supported: %s' %pot_kind)
             #Approximate potential if necessary
@@ -252,9 +252,9 @@ class VDWPart(BasePart):
                 scaled_pairs[2].append([dihed[0], dihed[3]])
             #Construct the exact potential
             if pot_kind.lower() in ['lj', 'harmlj']:
-                exact = LennardJonesPot(system.vdw_sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
+                exact = LennardJonesPot(system.sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
             elif pot_kind.lower() in ['mm3', 'harmmm3']:
-                exact = MM3BuckinghamPot(system.vdw_sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
+                exact = MM3BuckinghamPot(system.sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
             #Approximate potential if necessary
             if pot_kind.lower() in ['harmlj', 'harmmm3']:
                 grad = exact.calc_gradient(system.ref.coords.copy())
@@ -667,7 +667,7 @@ class CoulGaussPot(BasePot):
                 bond = IC('_internal_ei_bond', [i, j], bond_length)
                 r = bond.value(coords)
                 sigma = np.sqrt(self.sigmas[i]**2+self.sigmas[j]**2)
-                energy += scale*qi*qj/r*math.erf(r/np.sqrt(2)/sigma)
+                energy += scale*qi*qj/r*math.erf(r/sigma)
         return energy
 
     def calc_gradient(self, coords):
@@ -681,8 +681,8 @@ class CoulGaussPot(BasePot):
                 r = bond.value(coords)
                 sigma = np.sqrt(self.sigmas[i]**2+self.sigmas[j]**2)
                 #intermediate results
-                erf = math.erf(r/np.sqrt(2)/sigma)
-                exp = np.exp(-(r/sigma)**2/2.0)/np.sqrt(2*np.pi) 
+                erf = math.erf(r/sigma)
+                exp = np.exp(-(r/sigma)**2)/np.sqrt(np.pi) 
                 #update grad
                 grad += scale*qi*qj/r*(-erf/r + 2.0*exp/sigma)*bond.grad(coords)
         return grad
@@ -699,10 +699,10 @@ class CoulGaussPot(BasePot):
                 qgrad = bond.grad(coords)
                 sigma = np.sqrt(self.sigmas[i]**2+self.sigmas[j]**2)
                 #intermediate results
-                erf = math.erf(r/np.sqrt(2)/sigma)
-                exp = np.exp(-(r/sigma)**2/2.0)/np.sqrt(2*np.pi)
+                erf = math.erf(r/sigma)
+                exp = np.exp(-(r/sigma)**2)/np.sqrt(np.pi)
                 dVdr = (-erf/r + 2.0/sigma*exp)/r
-                d2Vdr2 = (erf/r - 2*exp/sigma)/r**2 - exp/sigma**3
+                d2Vdr2 = (erf/r - 2*exp/sigma)/r**2 - 2*exp/sigma**3
                 #update hessian
                 hess += scale*qi*qj*(2*d2Vdr2*np.outer(qgrad, qgrad) + dVdr*bond.hess(coords))
         return hess
