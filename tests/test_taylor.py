@@ -14,13 +14,13 @@ def run_taylor(molecule, pot):
         exact = CoulPointPot(system.charges, [1.0, 1.0, 1.0], scaled_pairs, coords0=coords0)
     elif pot.lower() in ['coulgauss']:
         system.read_uff_vdw()
-        exact = CoulGaussPot(system.charges, system.vdw_sigmas, [1.0, 1.0, 1.0], scaled_pairs, coords0=coords0)
+        exact = CoulGaussPot(system.charges, 0.5*system.sigmas/2**(1.0/6.0), [1.0, 1.0, 1.0], scaled_pairs, coords0=coords0)
     elif pot.lower() in ['lj']:
         system.read_uff_vdw()
-        exact = LennardJonesPot(system.vdw_sigmas, system.epsilons, [0.0,0.0,1.0], scaled_pairs, coords0=coords0)
+        exact = LennardJonesPot(system.sigmas, system.epsilons, [0.0,0.0,1.0], scaled_pairs, coords0=coords0)
     elif pot.lower() in ['mm3']:
         system.read_uff_vdw()
-        exact = MM3BuckinghamPot(system.vdw_sigmas, system.epsilons, [0.0,0.0,1.0], scaled_pairs, coords0=coords0)
+        exact = MM3BuckinghamPot(system.sigmas, system.epsilons, [0.0,0.0,1.0], scaled_pairs, coords0=coords0)
     else:
         raise ValueError('Invalic potential specification: %s' %pot)
     harm = HarmonicPot(coords0, 0.0, exact.calc_gradient(coords0), exact.calc_hessian(coords0))
