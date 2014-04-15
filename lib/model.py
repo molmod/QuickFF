@@ -209,16 +209,16 @@ class EIPart(BasePart):
                 scaled_pairs[2].append([dihed[0], dihed[3]])
             #Construct the exact (Coulomb) potential
             if pot_kind.lower() in ['coulpoint', 'harmpoint']:
-                exact = CoulombPoint(system.charges.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
+                exact = CoulPointPot(system.charges.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
             elif pot_kind.lower() in ['coulgauss', 'harmgauss']:
-                exact = CoulombGauss(system.charges.copy(), system.ei_sigmas, scales, scaled_pairs, coords0=system.ref.coords.copy())
+                exact = CoulGaussPot(system.charges.copy(), system.ei_sigmas, scales, scaled_pairs, coords0=system.ref.coords.copy())
             else:
                 raise ValueError('EI potential kind not supported: %s' %pot_kind)
             #Approximate potential if necessary
             if pot_kind.lower() in ['harmpoint', 'harmgauss']:
                 grad = exact.calc_gradient(system.ref.coords.copy())
                 hess = exact.calc_hessian(system.ref.coords.copy())
-                pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess)
+                pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess, kind=pot_kind)
             else:
                 assert pot_kind.lower() in ['coulpoint', 'coulgauss'], 'InternalError: inconsistent pot_kind checks!'
                 pot = exact
@@ -253,15 +253,15 @@ class VDWPart(BasePart):
             #Construct the exact potential
             if pot_kind.lower() in ['lj', 'harmlj']:
                 exact = LennardJonesPot(system.vdw_sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
-            elif pot_kind.lower() in ['buck', 'harmbuck']:
+            elif pot_kind.lower() in ['mm3', 'harmmm3']:
                 exact = MM3BuckinghamPot(system.vdw_sigmas.copy(), system.epsilons.copy(), scales, scaled_pairs, coords0=system.ref.coords.copy())
             #Approximate potential if necessary
-            if pot_kind.lower() in ['harmlj', 'harmbuck']:
+            if pot_kind.lower() in ['harmlj', 'harmmm3']:
                 grad = exact.calc_gradient(system.ref.coords.copy())
                 hess = exact.calc_hessian(system.ref.coords.copy())
-                pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess)
+                pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess, kind=pot_kind)
             else:
-                assert pot_kind.lower() in ['lj', 'buck'], 'InternalError: inconsistent pot_kind checks!'
+                assert pot_kind.lower() in ['lj', 'mm3'], 'InternalError: inconsistent pot_kind checks!'
                 pot = exact
         return cls(pot, scales)
 
@@ -526,8 +526,8 @@ class HarmonicPot(BasePot):
         A class defining a harmonic potential to describe any part of the AI or
         FF energy.
     '''
-    def __init__(self, coords0, energy0, grad0, hess0):
-        BasePot.__init__(self, 'Harmonic')
+    def __init__(self, coords0, energy0, grad0, hess0, kind='Harmonic'):
+        BasePot.__init__(self, kind)
         self.coords0 = coords0.copy()
         self.energy0 = energy0
         self.grad0 = grad0.copy()
@@ -616,7 +616,7 @@ class CoulGaussPot(BasePot):
         the FF electrostatic energy.
     '''
     def __init__(self, charges, sigmas, scales, scaled_pairs, coords0=None):
-        BasePot.__init__(self, 'CoulGaus')
+        BasePot.__init__(self, 'CoulGauss')
         self.charges = charges
         self.sigmas = sigmas
         self.scales = scales
@@ -762,7 +762,7 @@ class MM3BuckinghamPot(BasePot):
         describe the FF van der Waals energy.
     '''
     def __init__(self, sigmas, epsilons, scales, scaled_pairs, coords0=None):
-        BasePot.__init__(self, 'MM3Buck')
+        BasePot.__init__(self, 'MM3Buckingham')
         self.sigmas = sigmas
         self.epsilons = epsilons
         self.scales = scales
