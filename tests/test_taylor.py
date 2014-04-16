@@ -23,7 +23,7 @@ def run_taylor(molecule, pot):
         exact = MM3BuckinghamPot(system.sigmas, system.epsilons, [0.0,0.0,1.0], scaled_pairs, coords0=coords0)
     else:
         raise ValueError('Invalic potential specification: %s' %pot)
-    harm = HarmonicPot(coords0, 0.0, exact.calc_gradient(coords0), exact.calc_hessian(coords0))
+    harm = HarmonicPot(exact.kind, coords0, 0.0, exact.calc_gradient(coords0), exact.calc_hessian(coords0))
     dxs = np.random.normal(0.0, 5e-3*angstrom, [100, 3*len(coords0)])
     exactEs = np.zeros(dxs.shape[0], float)
     harmEs = np.zeros(dxs.shape[0], float)

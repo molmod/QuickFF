@@ -128,9 +128,7 @@ def parser():
     options.ic_ids = options.ic_ids.split(',')
     return fns, options
 
-def main():
-    #Parse args
-    fns, options = parser()
+def main(fns, options):
     #Setup system, model and program
     system = System.from_files(
         fns, ei_path=options.ei_path, vdw_path=options.vdw_path
@@ -156,21 +154,20 @@ def main():
     ff.dump_yaff('pars_yaff%s.txt' % options.suffix, mode='w')
     if options.ei_model.lower() != 'zero':
         system.dump_charges_yaff(
-            'pars_yaff%s.txt' % options.suffix,
-            options.ei_scales, mode='a'
+            'pars_yaff%s.txt' % options.suffix, model.ei, mode='a'
         )
     if options.vdw_model.lower() != 'zero':
         system.dump_vdw_yaff(
-            'pars_yaff%s.txt' % options.suffix,
-            options.vdw_scales, options.vdw_model, mode='a'
+            'pars_yaff%s.txt' % options.suffix, model.vdw, mode='a'
         )
     system.dump('system%s.chk' % options.suffix)
 
 #Use scoop if requested. This has to be outside of __main__ to set the
 #context for all workers
+#Parse args
 fns, options = parser()
 if options.scoop:
     paracontext.use_scoop()
 
 if __name__=='__main__':
-    main()
+    main(fns, options)

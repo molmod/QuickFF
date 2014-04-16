@@ -176,7 +176,7 @@ class AIPart(BasePart):
         else:
             hess = system.ref.hess.copy()
         pot = HarmonicPot(
-            system.ref.coords.copy(), 0.0,
+            'AbInitio', system.ref.coords.copy(), 0.0,
             system.ref.grad.copy(), hess
         )
         return cls(pot, project)
@@ -218,7 +218,7 @@ class EIPart(BasePart):
             if pot_kind.lower() in ['harmpoint', 'harmgauss']:
                 grad = exact.calc_gradient(system.ref.coords.copy())
                 hess = exact.calc_hessian(system.ref.coords.copy())
-                pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess, kind=pot_kind)
+                pot = HarmonicPot(exact.kind, system.ref.coords.copy(), 0.0, grad, hess)
             else:
                 assert pot_kind.lower() in ['coulpoint', 'coulgauss'], 'InternalError: inconsistent pot_kind checks!'
                 pot = exact
@@ -259,7 +259,7 @@ class VDWPart(BasePart):
             if pot_kind.lower() in ['harmlj', 'harmmm3']:
                 grad = exact.calc_gradient(system.ref.coords.copy())
                 hess = exact.calc_hessian(system.ref.coords.copy())
-                pot = HarmonicPot(system.ref.coords.copy(), 0.0, grad, hess, kind=pot_kind)
+                pot = HarmonicPot(exact.kind, system.ref.coords.copy(), 0.0, grad, hess)
             else:
                 assert pot_kind.lower() in ['lj', 'mm3'], 'InternalError: inconsistent pot_kind checks!'
                 pot = exact
@@ -526,8 +526,8 @@ class HarmonicPot(BasePot):
         A class defining a harmonic potential to describe any part of the AI or
         FF energy.
     '''
-    def __init__(self, coords0, energy0, grad0, hess0, kind='Harmonic'):
-        BasePot.__init__(self, kind)
+    def __init__(self, kind, coords0, energy0, grad0, hess0):
+        BasePot.__init__(self, '%s (Harmonic)' %kind)
         self.coords0 = coords0.copy()
         self.energy0 = energy0
         self.grad0 = grad0.copy()
@@ -555,7 +555,7 @@ class CoulPointPot(BasePot):
         the FF electrostatic energy.
     '''
     def __init__(self, charges, scales, scaled_pairs, coords0=None):
-        BasePot.__init__(self, 'CoulPoint')
+        BasePot.__init__(self, 'CoulombPoint')
         self.charges = charges
         self.scales = scales
         self.scaled_pairs = scaled_pairs
@@ -616,7 +616,7 @@ class CoulGaussPot(BasePot):
         the FF electrostatic energy.
     '''
     def __init__(self, charges, sigmas, scales, scaled_pairs, coords0=None):
-        BasePot.__init__(self, 'CoulGauss')
+        BasePot.__init__(self, 'CoulombGaussian')
         self.charges = charges
         self.sigmas = sigmas
         self.scales = scales

@@ -60,7 +60,7 @@ def test_coulgauss_hessian_water():
 def test_harmpoint_gradient_water():
     coords, numbers, fcharges, fradii = get_water()
     coul = CoulPointPot(fcharges, [1.0, 1.0, 1.0],  [[], [], []])
-    pot = HarmonicPot(coords, coul.calc_energy(coords), coul.calc_gradient(coords), coul.calc_hessian(coords))
+    pot = HarmonicPot(coul.kind, coords, coul.calc_energy(coords), coul.calc_gradient(coords), coul.calc_hessian(coords))
     fun = get_gradient_check(pot)
     dxs = np.random.normal(0.0, 1e-4, [100, 3*len(numbers)])
     check_delta(fun, coords.ravel(), dxs)
@@ -68,7 +68,7 @@ def test_harmpoint_gradient_water():
 def test_harmpoint_hessian_water():
     coords, numbers, fcharges, fradii = get_water()
     coul = CoulPointPot(fcharges, [1.0, 1.0, 1.0],  [[], [], []])
-    pot = HarmonicPot(coords, coul.calc_energy(coords), coul.calc_gradient(coords), coul.calc_hessian(coords))
+    pot = HarmonicPot(coul.kind, coords, coul.calc_energy(coords), coul.calc_gradient(coords), coul.calc_hessian(coords))
     fun = get_hessian_check(pot)
     dxs = np.random.normal(0.0, 1e-4, [100, 3*len(numbers)])
     check_delta(fun, coords.ravel(), dxs)
@@ -133,7 +133,7 @@ def test_mm3_hessian_ethanol():
 def test_harmpoint_gradient_ethanol():
     coords, numbers, fcharges, fradii, epsilons, sigmas = get_ethanol()
     coul = CoulPointPot(fcharges, [1.0, 1.0, 1.0],  [[], [], []])
-    pot = HarmonicPot(coords, coul.calc_energy(coords), coul.calc_gradient(coords), coul.calc_hessian(coords))
+    pot = HarmonicPot(coul.kind, coords, coul.calc_energy(coords), coul.calc_gradient(coords), coul.calc_hessian(coords))
     fun = get_gradient_check(pot)
     dxs = np.random.normal(0.0, 1e-4, [100, 3*len(numbers)])
     check_delta(fun, coords.ravel(), dxs)
@@ -141,7 +141,7 @@ def test_harmpoint_gradient_ethanol():
 def test_harmpoint_hessian_ethanol():
     coords, numbers, fcharges, fradii, epsilons, sigmas = get_ethanol()
     coul = CoulPointPot(fcharges, [1.0, 1.0, 1.0],  [[], [], []])
-    pot = HarmonicPot(coords, coul.calc_energy(coords), coul.calc_gradient(coords), coul.calc_hessian(coords))
+    pot = HarmonicPot(coul.kind, coords, coul.calc_energy(coords), coul.calc_gradient(coords), coul.calc_hessian(coords))
     fun = get_hessian_check(pot)
     dxs = np.random.normal(0.0, 1e-4, [100, 3*len(numbers)])
     check_delta(fun, coords.ravel(), dxs)
