@@ -116,6 +116,10 @@ def parser():
         help = "Suffix that will be added to all output files. [default='']"
     )
     parser.add_option(
+        '--fn-traj', default=None,
+        help='Load/Save perturbation trajectories to/from cPickled file.'
+    )
+    parser.add_option(
         '--scoop', default=False, action='store_true',
         help = 'Use scoop distribute tasks over workers. Note that the main ' +\
                'program has to be started with -m scoop for this to work, e.g. ' +\
@@ -146,7 +150,7 @@ def main(fns, options):
         ei_scales=options.ei_scales, ei_pot_kind=options.ei_model,
         vdw_scales=options.vdw_scales, vdw_pot_kind=options.vdw_model,
     )
-    program = Program(system, model)
+    program = Program(system, model, fn_traj=options.fn_traj)
     #Run program
     ff = program.run()
     #Make output
