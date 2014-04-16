@@ -74,7 +74,7 @@ class Program(object):
     '''
         The central class to manage the entire program.
     '''
-    def __init__(self, system, model, fns_traj=None):
+    def __init__(self, system, model, fn_traj=None):
         '''
             **Arguments**
 
@@ -88,7 +88,7 @@ class Program(object):
 
             **Optional Arguments**
 
-            fns_traj
+            fn_traj
                 A file name to store the perturbation trajectories to or to
                 read the trajectories from if the file exists. The trajectories
                 are stored/read after Pickling.
@@ -97,7 +97,7 @@ class Program(object):
         self.model = model
         self.pert_theory = RelaxedGeoPertTheory(system, model)
         self.cost = HessianFCCost(system, model)
-        self.fns_traj = fns_traj
+        self.fn_traj = fn_traj
 
     def generate_trajectories(self, skip_dihedrals=True, verbose=True):
         '''
@@ -113,9 +113,9 @@ class Program(object):
         maxlength = max([len(icname) for icname in self.model.val.pot.terms.keys()]) + 2
         #Check if a filename with trajectories is given. If the file exists,
         #read it and return the trajectories
-        if self.fns_traj is not None:
-            if os.path.isfile(self.fns_traj):
-                with open(self.fns_traj,'r') as f:
+        if self.fn_traj is not None:
+            if os.path.isfile(self.fn_traj):
+                with open(self.fn_traj,'r') as f:
                     trajectories = cPickle.load(f)
                 return trajectories
         #Generate trajectories from scratch
@@ -135,8 +135,8 @@ class Program(object):
         for i in xrange(len(all_ics)):
             trajectories[all_ics[i].name] = results[i]
         #Check if we need to write the generated trajectories to a file
-        if self.fns_traj is not None:
-            with open(self.fns_traj,'w') as f:
+        if self.fn_traj is not None:
+            with open(self.fn_traj,'w') as f:
                 cPickle.dump(trajectories,f)
         return trajectories
 
@@ -271,16 +271,16 @@ class Program(object):
             print '\nDetermine the coordinates of the perturbation trajectories\n'
         #Reading/generating trajectories
         trajectories = {}
-        if self.fns_traj is not None:
-            if os.path.isfile(self.fns_traj):
-                with open(self.fns_traj,'r') as f:
+        if self.fn_traj is not None:
+            if os.path.isfile(self.fn_traj):
+                with open(self.fn_traj,'r') as f:
                     trajectories = cPickle.load(f)
         for i, ic in enumerate(self.system.ics[icname]):
             if ic.name in trajectories.keys():
                 #already read
                 if verbose:
                     print '    %s Read %2i/%i from %s' %(
-                        icname, i+1, len(self.system.ics[icname]), self.fns_traj
+                        icname, i+1, len(self.system.ics[icname]), self.fn_traj
                     )
             else:
                 #generating
@@ -297,8 +297,8 @@ class Program(object):
                         sys.stdout.write(' INTERRUPTED\n')
                         sys.stdout.flush()
         #Writing trajectories
-        if self.fns_traj is not None:
-            with open(self.fns_traj,'w') as f:
+        if self.fn_traj is not None:
+            with open(self.fn_traj,'w') as f:
                 cPickle.dump(trajectories, f)
         #Plotting/writing output
         for ic in self.system.ics[icname]:
