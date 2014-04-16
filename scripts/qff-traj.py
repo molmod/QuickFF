@@ -102,11 +102,6 @@ def parser():
              'atom types defined in the input files fns. [default=%default]'
     )
     parser.add_option(
-        '--nb-exclusion', default=None,
-        help='A Regular Expression to match atom types that are to be excluded '+\
-             'in the non-bonded interactions [default=%default].'
-    )
-    parser.add_option(
         '--start', default=None, type=float,
         help='Defines the smallest value (in atomic untis) of the perturbed '
              'ic to generate the perturbation trajectory.'

@@ -240,13 +240,13 @@ class System(object):
                           'vdw_path are None, HDF5 file is ignored.\n'
                 if ei_path is not None:
                     charges = f['%s/charges' % ei_path][:]
-                    if '%s/sigmas' %ei_path in f:
-                        ei_sigmas = f['%s/sigmas' %ei_path][:]
+                    if '%s/radii' %ei_path in f:
+                        radii = f['%s/radii' %ei_path][:]
                     else:
-                        ei_sigmas = np.zeros(charges.shape)
+                        radii = np.zeros(charges.shape)
                 if vdw_path is not None:
                     epsilons = f['%s/epsilons' % vdw_path][:]
-                    vdw_sigmas = f['%s/sigmas' % vdw_path][:]
+                    sigmas = f['%s/sigmas' % vdw_path][:]
             else:
                 raise IOError('Unsupported file format for %s' %fn)
         return cls(numbers, ref, ffatypes=ffatypes, charges=charges,
@@ -506,7 +506,7 @@ class System(object):
         sample['hess']      = self.ref.hess
         dump_chk(fn, sample)
 
-    def dump_charges_yaff(self, fn, scales, mode='w'):
+    def dump_charges_yaff(self, fn, ei, mode='w'):
         '''
             Write or append charges to a file in Yaff format.
         '''
@@ -527,9 +527,9 @@ class System(object):
         print >> f, 'FIXQ:UNIT Q0 e'
         print >> f, 'FIXQ:UNIT P e'
         print >> f, 'FIXQ:UNIT R angstrom'
-        print >> f, 'FIXQ:SCALE 1 %3.1f' % scales[0]
-        print >> f, 'FIXQ:SCALE 2 %3.1f' % scales[1]
-        print >> f, 'FIXQ:SCALE 3 %3.1f' % scales[2]
+        print >> f, 'FIXQ:SCALE 1 %3.1f' % ei.scales[0]
+        print >> f, 'FIXQ:SCALE 2 %3.1f' % ei.scales[1]
+        print >> f, 'FIXQ:SCALE 3 %3.1f' % ei.scales[2]
         print >> f, 'FIXQ:DIELECTRIC 1.0'
         print >> f, ''
         print >> f, '# Atomic parameters'
@@ -543,10 +543,16 @@ class System(object):
                 added.append(atype)
         f.close()
 
-    def dump_vdw_yaff(self, fn, scales, pot_kind, mode='w'):
+    def dump_vdw_yaff(self, fn, vdw, mode='w'):
         '''
             Write or append van der Waals parameters to a file in Yaff format.
         '''
+        if vdw.pot.kind.startswith('MM3Buckingham'):
+            pot_id = 'MM3'
+        elif vdw.pot.kind.startswith('LennartJones'):
+            pot_id = 'LJ'
+        else:
+            raise ValueError('VDWPart in model has unsupported pot_kind: %s' %vdw.kind)
         f = open(fn, mode)
         print >> f, '# van der Waals'
         print >> f, '#=============='
@@ -555,19 +561,18 @@ class System(object):
         print >> f, '#  - LJ:    4.0*EPSILON*((SIGMA/r)^12 - (SIGMA/r)^6)'
         print >> f, '#  - PAULI: A*exp(-B*r)'
         print >> f, ''
-        print >> f, 'LJ:UNIT SIGMA angstrom'
-        print >> f, 'LJ:UNIT EPSILON kjmol'
-        print >> f, 'LJ:SCALE 1 %4.2f' % scales[0]
-        print >> f, 'LJ:SCALE 2 %4.2f' % scales[1]
-        print >> f, 'LJ:SCALE 3 %4.2f' % scales[2]
+        print >> f, '%s:UNIT SIGMA angstrom' %(pot_id)
+        print >> f, '%s:UNIT EPSILON kjmol' %(pot_id)
+        print >> f, '%s:SCALE 1 %4.2f' % (pot_id, vdw.scales[0])
+        print >> f, '%s:SCALE 2 %4.2f' % (pot_id, vdw.scales[1])
+        print >> f, '%s:SCALE 3 %4.2f' % (pot_id, vdw.scales[2])
         print >> f, ''
         print >> f, '# -------------------------------------------'
         print >> f, '# KEY    ffatype  SIGMA         EPSILON'
         print >> f, '# -------------------------------------------'
         added = []
-        pot_kind_id = {'MM3': 'MM3', 'HarmMM3': 'MM3', 'LJ': 'LJ', 'HarmLJ': 'LJ'}
         for atype, sigma, epsilon in zip(self.ffatypes, self.sigmas, self.epsilons):
             if atype not in added:
-                print >> f, '%s:PARS %8s % .10f % .10f' %(pot_kind_id[pot_kind], atype, sigma/angstrom, epsilon/kjmol)
+                print >> f, '%s:PARS %8s % .10f % .10f' %(pot_id, atype, sigma/angstrom, epsilon/kjmol)
                 added.append(atype)
         f.close()
