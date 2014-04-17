@@ -143,7 +143,7 @@ def main():
         ei_scales=options.ei_scales, ei_pot_kind=options.ei_model,
         vdw_scales=options.vdw_scales, vdw_pot_kind=options.vdw_model,
     )
-    program = Program(system, model, fns_traj='trajectories.pps')
+    program = Program(system, model, fn_traj='trajectories.pps')
     program.plot_pt(icname, start=options.start, end=options.end, steps=options.steps)
 
 if __name__=='__main__':
