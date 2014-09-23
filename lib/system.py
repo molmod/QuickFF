@@ -163,13 +163,14 @@ class System(object):
 
            ei_path
                 A string defining the path in the HDF5 file which contains a
-                dataset `EI_PATH/charges` from which the atomic charges will be
+                dataset `EI_PATH/charges` (and `EI_PATH/radii` in case of 
+                Gaussian charges) from which the atomic charges will be
                 extracted.
 
            vdw_path
                 A string defining the path in the HDF5 file which contains 2
-                datasets, `VDW_PATH/epsilons` and `VDW_PATH/sigmas` from which the
-                atomic vdW parameters will be extracted.
+                datasets, `VDW_PATH/epsilons` and `VDW_PATH/sigmas` from which 
+                the atomic vdW parameters will be extracted.
         '''
         #initialise
         numbers = None

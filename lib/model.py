@@ -52,7 +52,7 @@ class Model(object):
 
            ai
                 A model for the ab initio total energy, should be an instance
-                of HarmonicPart
+                of AIPart
 
            val
                 an instance of the ValencePart class containing all details
@@ -60,11 +60,11 @@ class Model(object):
 
            ei
                 A model for the force field electrostatic energy, should be
-                an instance of HarmonicPart or CoulombPart
+                an instance of EIPart
 
            vdw
                 A model for the force field van der Waals energy, should be
-                an instance of HarmonicPart or LennartJonesPart
+                an instance of VDWPart
         '''
         self.ai = ai
         self.val = val
@@ -142,7 +142,7 @@ class Model(object):
 
 class BasePart(object):
     '''
-        A base class for several parts to the AI and/or FF PES
+        A base class for several parts to the AI and FF PES
     '''
     def __init__(self, name, pot):
         self.name = name
@@ -165,12 +165,44 @@ class AIPart(BasePart):
     '''
         A class for describing the Ab initio PES.
     '''
-    def __init__(self, pot, project=None):
+    def __init__(self, pot, project=True):
+        '''
+            **Arguments**
+            
+            pot
+                An instance of HarmonicPot defining the second order Taylor
+                expansion of the ab initio energy.
+            
+            **Optional Arguments**
+            
+            project
+                Boolean specifying wheter or not the translational and 
+                rotational degrees of freedom should be projected out of the
+                ab initio Hessian [default=True].
+        '''
         BasePart.__init__(self, 'AI Total', pot)
         self.project = project
 
     @classmethod
     def from_system(cls, system, project=True):
+        '''
+        Method to construct a AIPart instance from a System instance.
+        
+        **Arguments**
+        
+        system
+            An instance of the System class containing all system information.
+            The attributes system.ref.coords, system.ref.grad and
+            system.ref.hess (or system.ref.phess in case project=True) will be
+            used to construct the Taylor expansion.
+        
+        **Optional Arguments**
+        
+            project
+                Boolean specifying wheter or not the translational and 
+                rotational degrees of freedom should be projected out of the
+                ab initio Hessian [default=True].
+        '''
         if project:
             hess = system.ref.phess.copy()
         else:
@@ -182,6 +214,7 @@ class AIPart(BasePart):
         return cls(pot, project)
 
     def print_info(self):
+        'Method to dump basic information about the ab initio model.'
         print '    %s project Rot/Trans = ' %self.name, self.project
         BasePart.print_info(self)
 
@@ -191,11 +224,41 @@ class EIPart(BasePart):
         A class for describing the electrostatic part to the FF PES.
     '''
     def __init__(self, pot, scales):
+        '''
+            **Arguments**
+            
+            pot
+                An instance of HarmonicPot, CoulPointPot or CoulGaussPot 
+                defining the electrostatic contribution to the force field 
+                energy.
+            
+            scales
+                list of 3 floats specifying the scales of the electrostatic
+                interactions between 1-2, 1-3 and 1-4 atom pairs.
+        '''
          BasePart.__init__(self, 'FF Electrostatic', pot)
          self.scales = scales
 
     @classmethod
     def from_system(cls, system, scales, pot_kind):
+        '''
+            Method to construct a EIPart instance from a System instance. All
+            necessary information will be extraced from the system instance.
+            
+            **Arguments**
+            
+            system
+                An instance of the System class from which charges, radii, 
+                coordinates, ... will be read.
+            
+            scales
+                list of 3 floats specifying the scales of the electrostatic
+                interactions between 1-2, 1-3 and 1-4 atom pairs.
+            
+            pot_kind
+                A string defining the electrostatic potential. Should be one of:
+                Zero, HarmPoint, HarmGauss, CoulPoint or CoulGauss.
+        '''
         if pot_kind.lower() == 'zero':
             pot = ZeroPot()
         else:
@@ -225,6 +288,7 @@ class EIPart(BasePart):
         return cls(pot, scales)
 
     def print_info(self):
+        'Method to dump basic information about the electrostatic part.'
         print '    %s scales = %.2f %.2f %.2f' %(self.name, self.scales[0], self.scales[1], self.scales[2])
         BasePart.print_info(self)
 
@@ -234,11 +298,41 @@ class VDWPart(BasePart):
         A class for describing the van der Waals part to the FF PES.
     '''
     def __init__(self, pot, scales):
+        '''
+            **Arguments**
+            
+            pot
+                An instance of HarmonicPot, LennardJonesPot or MM3BuckinghamPot 
+                defining the van der Waals contribution to the force field 
+                energy.
+            
+            scales
+                list of 3 floats specifying the scales of the van der Waals
+                interactions between 1-2, 1-3 and 1-4 atom pairs.
+        '''
          BasePart.__init__(self, 'FF van der Waals', pot)
          self.scales = scales
 
     @classmethod
     def from_system(cls, system, scales, pot_kind):
+        '''
+            Method to construct a VDWPart instance from a System instance. All
+            necessary information will be extraced from the system instance.
+            
+            **Arguments**
+            
+            system
+                An instance of the System class from which epsilons, sigmas, 
+                coordinates, ... will be read.
+            
+            scales
+                list of 3 floats specifying the scales of the van der Waals
+                interactions between 1-2, 1-3 and 1-4 atom pairs.
+            
+            pot_kind
+                A string defining the van der Waals potential. Should be one of:
+                Zero, HarmLJ, HarmMM3, LJ or MM3.
+        '''
         if pot_kind.lower() == 'zero':
             pot = ZeroPot()
         else:
@@ -266,6 +360,7 @@ class VDWPart(BasePart):
         return cls(pot, scales)
 
     def print_info(self):
+        'Method to dump basic information about the van der Waals part.'
         print '    %s scales = %.2f %.2f %.2f' %(self.name, self.scales[0], self.scales[1], self.scales[2])
         BasePart.print_info(self)
 
@@ -277,10 +372,27 @@ class ValencePart(BasePart):
         constants are refined at fixed values for the rest values.
     '''
     def __init__(self, pot):
+        '''
+            **Arguments**
+            
+            pot
+                An instance of TermListPot defining the covalent contribution 
+                to the force field energy.
+        '''
         BasePart.__init__(self, 'FF Covalent', pot)
 
     @classmethod
     def from_system(cls, system, ic_ids=['all']):
+        '''
+            Method to construct a ValencePart instance from a System instance. 
+            All necessary information will be extraced from the system instance.
+            
+            **Arguments**
+            
+            system
+                An instance of the System class from which internal coordinates
+                will be read.
+        '''
         #Determine the icnames that are to be included in the valence model
         icnames = []
         for identifier in ic_ids:
@@ -326,6 +438,7 @@ class ValencePart(BasePart):
         return cls(pot)
 
     def print_info(self):
+        'Method to dump basic information about the covalent part.'
         BasePart.print_info(self)
         maxlength = min(max([len(icname) for icname in self.pot.terms.keys()]) + 4, 35)
         lines = '    '
@@ -462,9 +575,14 @@ class ValencePart(BasePart):
 
     def update_fcs(self, fcs):
         '''
-            A method to update the force constants of the valence terms. The
-            ordering of fcs in the input argument should be the same as the
-            ordering of sorted(system.ics.keys()).
+            A method to update the force constants of the valence terms. 
+            
+            **Aruments**
+            
+            fcs
+                A numpy array containing the new force constants. The ordering 
+                of fcs in the input argument should be the same as the ordering 
+                of sorted(system.ics.keys()).
         '''
         for i, icname in enumerate(sorted(self.pot.terms.keys())):
             for term in self.pot.terms[icname]:

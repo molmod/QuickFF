@@ -17,6 +17,9 @@ How to cite QuickFF
 
 If you used QuickFF in your research, please refer to QuickFF as follows:
 
+L. Vanduyfhuys, S. Vandenbrande, T. Verstraelen, R. Schmid, M. Waroquier, 
+V. Van Speybroeck, *in preparation*
+
 Installation Guide
 ==================
 

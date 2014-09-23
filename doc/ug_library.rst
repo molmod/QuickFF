@@ -25,7 +25,7 @@ creating an instance of the System class. This can be done by calling the
     #define molecular system
     numbers = np.array([])
     bonds = np.array([])
-    system = System(numbers, ref)
+    system = System(numbers, ref, bonds=bonds)
 
     #guess atom types automatically
     system.guess_ffatypes('high')
@@ -40,7 +40,7 @@ The system can also be defined by reading input files (similarly as with the
     from quickff import *
     
     #read system from input files
-    system = System.from_files(['gaussian.fchk', 'gaussian_wpart.h5'], ei_scheme='he')
+    system = System.from_files(['gaussian.fchk', 'gaussian_wpart.h5'], ei_path='wpart/he')
     
     #guess atom types
     system.guess_ffatypes('high')
