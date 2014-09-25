@@ -236,8 +236,8 @@ class EIPart(BasePart):
                 list of 3 floats specifying the scales of the electrostatic
                 interactions between 1-2, 1-3 and 1-4 atom pairs.
         '''
-         BasePart.__init__(self, 'FF Electrostatic', pot)
-         self.scales = scales
+        BasePart.__init__(self, 'FF Electrostatic', pot)
+        self.scales = scales
 
     @classmethod
     def from_system(cls, system, scales, pot_kind):
@@ -310,8 +310,8 @@ class VDWPart(BasePart):
                 list of 3 floats specifying the scales of the van der Waals
                 interactions between 1-2, 1-3 and 1-4 atom pairs.
         '''
-         BasePart.__init__(self, 'FF van der Waals', pot)
-         self.scales = scales
+        BasePart.__init__(self, 'FF van der Waals', pot)
+        self.scales = scales
 
     @classmethod
     def from_system(cls, system, scales, pot_kind):

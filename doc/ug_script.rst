@@ -69,6 +69,8 @@ determined from the bond patterns. All this is done using the `MolecularGraph`
 class from the MolMod pakcage. If no charges are given, they are automatically
 set to zero.
 
+.. _seclab_ug_atype_estimator:
+
 Automatic estimation of atom types
 ==================================
     
