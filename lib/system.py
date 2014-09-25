@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #QuickFF is a code to quickly derive accurate force fields from ab initio input.
 #Copyright (C) 2012 - 2014 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
-#Steven Vandenbrande <Steven.Vandenbrande@UGent.be>, 
+#Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
 #Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 #(CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
 #stated.
@@ -48,7 +48,7 @@ class System(object):
         out-of-plane patterns, neighborlists and the ab initio reference data.
     '''
     def __init__(self, numbers, ref, ffatypes=None, charges=None, radii=None,
-                    epsilons=None, sigmas=None, bonds=None, bends=None, 
+                    epsilons=None, sigmas=None, bonds=None, bends=None,
                     diheds=None, opdists=None, nlist=None):
         '''
            **Arguments:**
@@ -76,7 +76,7 @@ class System(object):
            epsilons
                 A numpy array (N) with vdw epsilons values. By default, all
                 epsilons are zero.
-           
+
            sigmas
                 A numpy array (N) with vdw sigma values. By default, all sigmas
                 are zero.
@@ -163,13 +163,13 @@ class System(object):
 
            ei_path
                 A string defining the path in the HDF5 file which contains a
-                dataset `EI_PATH/charges` (and `EI_PATH/radii` in case of 
+                dataset `EI_PATH/charges` (and `EI_PATH/radii` in case of
                 Gaussian charges) from which the atomic charges will be
                 extracted.
 
            vdw_path
                 A string defining the path in the HDF5 file which contains 2
-                datasets, `VDW_PATH/epsilons` and `VDW_PATH/sigmas` from which 
+                datasets, `VDW_PATH/epsilons` and `VDW_PATH/sigmas` from which
                 the atomic vdW parameters will be extracted.
         '''
         #initialise
@@ -251,7 +251,7 @@ class System(object):
             else:
                 raise IOError('Unsupported file format for %s' %fn)
         return cls(numbers, ref, ffatypes=ffatypes, charges=charges,
-                   radii=radii, epsilons=epsilons, sigmas=sigmas, bonds=bonds, 
+                   radii=radii, epsilons=epsilons, sigmas=sigmas, bonds=bonds,
                    bends=bends, diheds=diheds, opdists=opdists, nlist=nlist)
 
     def read_uff_vdw(self):
@@ -495,7 +495,7 @@ class System(object):
         sample['charges']   = self.charges
         sample['radii']     = self.radii
         sample['epsilons']  = self.epsilons
-        sample['sigmas']    = self.sigmas 
+        sample['sigmas']    = self.sigmas
         sample['ffatypes']  = self.ffatypes
         sample['masses']    = np.array([pt[Z].mass for Z in self.numbers])
         sample['bonds']     = self.bonds

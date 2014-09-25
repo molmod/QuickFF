@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #QuickFF is a code to quickly derive accurate force fields from ab initio input.
 #Copyright (C) 2012 - 2014 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
-#Steven Vandenbrande <Steven.Vandenbrande@UGent.be>, 
+#Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
 #Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 #(CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
 #stated.
@@ -101,11 +101,11 @@ class Model(object):
             ei_pot_kind
                 a string defining the potential kind of the electrostatic
                 interactions. Can be 'CoulPoint', 'CoulGauss', 'HarmPoint'
-                'HarmGauss' or 'Zero'. If 'CoulPoint'/'CoulGauss' is chosen, 
-                the exact Coulombic potential between point/gaussian charges 
-                will be used to evaluate EI interactions. If 
-                'HarmPoint'/'HarmGauss' is chosen, a second order Taylor 
-                expansion of the Coulomb potential is used. Harmonic is a lot 
+                'HarmGauss' or 'Zero'. If 'CoulPoint'/'CoulGauss' is chosen,
+                the exact Coulombic potential between point/gaussian charges
+                will be used to evaluate EI interactions. If
+                'HarmPoint'/'HarmGauss' is chosen, a second order Taylor
+                expansion of the Coulomb potential is used. Harmonic is a lot
                 faster and should already give accurate results.
 
             vdw_scales
@@ -115,10 +115,10 @@ class Model(object):
             vdw_pot_kind
                 a string defining the potential kind of the van der Waals
                 interactions. Can be 'LJ', 'MM3', 'HarmLJ', 'HarmMM3' or 'Zero'.
-                If LJ/MM3 is chosen, the exact Lennard-Jones/MM3-Buckingham 
-                potential will be used to evaluate van der Waals interactions. 
-                If HarmLJ/HarmMM3 is chosen, a second order Taylor expansion of 
-                the LJ/MM3 potential is used. Harmonic is a lot faster and 
+                If LJ/MM3 is chosen, the exact Lennard-Jones/MM3-Buckingham
+                potential will be used to evaluate van der Waals interactions.
+                If HarmLJ/HarmMM3 is chosen, a second order Taylor expansion of
+                the LJ/MM3 potential is used. Harmonic is a lot faster and
                 should already give accurate results.
         '''
         ai  = AIPart.from_system(system, ai_project)
@@ -168,15 +168,15 @@ class AIPart(BasePart):
     def __init__(self, pot, project=True):
         '''
             **Arguments**
-            
+
             pot
                 An instance of HarmonicPot defining the second order Taylor
                 expansion of the ab initio energy.
-            
+
             **Optional Arguments**
-            
+
             project
-                Boolean specifying wheter or not the translational and 
+                Boolean specifying wheter or not the translational and
                 rotational degrees of freedom should be projected out of the
                 ab initio Hessian [default=True].
         '''
@@ -187,19 +187,19 @@ class AIPart(BasePart):
     def from_system(cls, system, project=True):
         '''
         Method to construct a AIPart instance from a System instance.
-        
+
         **Arguments**
-        
+
         system
             An instance of the System class containing all system information.
             The attributes system.ref.coords, system.ref.grad and
             system.ref.hess (or system.ref.phess in case project=True) will be
             used to construct the Taylor expansion.
-        
+
         **Optional Arguments**
-        
+
             project
-                Boolean specifying wheter or not the translational and 
+                Boolean specifying wheter or not the translational and
                 rotational degrees of freedom should be projected out of the
                 ab initio Hessian [default=True].
         '''
@@ -226,12 +226,12 @@ class EIPart(BasePart):
     def __init__(self, pot, scales):
         '''
             **Arguments**
-            
+
             pot
-                An instance of HarmonicPot, CoulPointPot or CoulGaussPot 
-                defining the electrostatic contribution to the force field 
+                An instance of HarmonicPot, CoulPointPot or CoulGaussPot
+                defining the electrostatic contribution to the force field
                 energy.
-            
+
             scales
                 list of 3 floats specifying the scales of the electrostatic
                 interactions between 1-2, 1-3 and 1-4 atom pairs.
@@ -244,17 +244,17 @@ class EIPart(BasePart):
         '''
             Method to construct a EIPart instance from a System instance. All
             necessary information will be extraced from the system instance.
-            
+
             **Arguments**
-            
+
             system
-                An instance of the System class from which charges, radii, 
+                An instance of the System class from which charges, radii,
                 coordinates, ... will be read.
-            
+
             scales
                 list of 3 floats specifying the scales of the electrostatic
                 interactions between 1-2, 1-3 and 1-4 atom pairs.
-            
+
             pot_kind
                 A string defining the electrostatic potential. Should be one of:
                 Zero, HarmPoint, HarmGauss, CoulPoint or CoulGauss.
@@ -300,12 +300,12 @@ class VDWPart(BasePart):
     def __init__(self, pot, scales):
         '''
             **Arguments**
-            
+
             pot
-                An instance of HarmonicPot, LennardJonesPot or MM3BuckinghamPot 
-                defining the van der Waals contribution to the force field 
+                An instance of HarmonicPot, LennardJonesPot or MM3BuckinghamPot
+                defining the van der Waals contribution to the force field
                 energy.
-            
+
             scales
                 list of 3 floats specifying the scales of the van der Waals
                 interactions between 1-2, 1-3 and 1-4 atom pairs.
@@ -318,17 +318,17 @@ class VDWPart(BasePart):
         '''
             Method to construct a VDWPart instance from a System instance. All
             necessary information will be extraced from the system instance.
-            
+
             **Arguments**
-            
+
             system
-                An instance of the System class from which epsilons, sigmas, 
+                An instance of the System class from which epsilons, sigmas,
                 coordinates, ... will be read.
-            
+
             scales
                 list of 3 floats specifying the scales of the van der Waals
                 interactions between 1-2, 1-3 and 1-4 atom pairs.
-            
+
             pot_kind
                 A string defining the van der Waals potential. Should be one of:
                 Zero, HarmLJ, HarmMM3, LJ or MM3.
@@ -374,9 +374,9 @@ class ValencePart(BasePart):
     def __init__(self, pot):
         '''
             **Arguments**
-            
+
             pot
-                An instance of TermListPot defining the covalent contribution 
+                An instance of TermListPot defining the covalent contribution
                 to the force field energy.
         '''
         BasePart.__init__(self, 'FF Covalent', pot)
@@ -384,11 +384,11 @@ class ValencePart(BasePart):
     @classmethod
     def from_system(cls, system, ic_ids=['all']):
         '''
-            Method to construct a ValencePart instance from a System instance. 
+            Method to construct a ValencePart instance from a System instance.
             All necessary information will be extraced from the system instance.
-            
+
             **Arguments**
-            
+
             system
                 An instance of the System class from which internal coordinates
                 will be read.
@@ -575,13 +575,13 @@ class ValencePart(BasePart):
 
     def update_fcs(self, fcs):
         '''
-            A method to update the force constants of the valence terms. 
-            
+            A method to update the force constants of the valence terms.
+
             **Aruments**
-            
+
             fcs
-                A numpy array containing the new force constants. The ordering 
-                of fcs in the input argument should be the same as the ordering 
+                A numpy array containing the new force constants. The ordering
+                of fcs in the input argument should be the same as the ordering
                 of sorted(system.ics.keys()).
         '''
         for i, icname in enumerate(sorted(self.pot.terms.keys())):
@@ -778,7 +778,7 @@ class CoulGaussPot(BasePot):
                 sigma = np.sqrt(self.sigmas[i]**2+self.sigmas[j]**2)
                 #intermediate results
                 erf = math.erf(r/sigma)
-                exp = np.exp(-(r/sigma)**2)/np.sqrt(np.pi) 
+                exp = np.exp(-(r/sigma)**2)/np.sqrt(np.pi)
                 #update grad
                 grad += scale*qi*qj/r*(-erf/r + 2.0*exp/sigma)*bond.grad(coords)
         return grad
