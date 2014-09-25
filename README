@@ -1,0 +1,11 @@
+QuickFF is a pythonic code to easily derive fully flexible force fields from ab
+initio training data. The intended audience is very broad, one does not require
+much force field experience to generate reliable force fields for molecular
+systems.
+
+More information including an installation guide and user manual can be found at
+http://molmod.github.io/QuickFF/
+
+QuickFF is distributed as open source software under the conditions of the GPL
+license version 3. Read the file COPYING for more details, or visit
+http://www.gnu.org/licenses/
