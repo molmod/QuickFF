@@ -28,10 +28,13 @@ from molmod.periodic import periodic as pt
 from molmod.io.xyz import XYZWriter
 
 from scipy.optimize import minimize
+from scipy.optimize import fsolve
 import numpy as np
 
 from quickff.tools import fitpar
 from quickff.evaluators import *
+from datetime import datetime
+
 
 __all__ = ['BasePertTheory', 'RelaxedGeoPertTheory']
 
@@ -289,6 +292,9 @@ class RelaxedGeoPertTheory(BasePertTheory):
                 an integer defining the number of steps in the perturbation
                 trajectory. The default value is 11 steps.
         '''
+        #selector = 'slsqp'  # Original minimizer
+        #selector = 'fsolve' # New minimizer
+        selector = 'both'   # Do both and compare timings
         ndofs = 3*self.system.natoms
         #initialization
         q0 = ic.value(self.system.ref.coords)
@@ -314,8 +320,22 @@ class RelaxedGeoPertTheory(BasePertTheory):
         S = self.get_strain_matrix(ic)
         def chi(dx):
             return 0.5*np.dot(dx.T, np.dot(S, dx))
+        def dchi(X):
+            func = np.zeros((len(X),))
+            dx = X[:-1]
+            L = X[-1]
+            func[:-1] = np.dot(S, dx) - L*ic.grad(self.system.ref.coords + dx.reshape((-1, 3)))
+            func[-1] = q - ic.value(self.system.ref.coords + dx.reshape((-1, 3)))
+            return func
         #Guess delta_x first time
         guess = np.zeros(ndofs, float)
+        guess2 = np.zeros(ndofs+1, float)
+        if selector == 'both':
+            # Some debugging output, should be deleted...
+            print "="*80
+            print "Setting up perturbation trajectory with %2d steps for ic %s" % (steps, ic.name)
+            print "="*80
+            print "%6s    %8s |  %8s   %7s   %8s |  %8s   %7s   %8s" % ("Step", "q", "q1", "chi1", "time1 [s]", "q2", "chi2", "time2 [s]")
         for iq, q in enumerate(qarray):
             #Only use if the minimum is located in 180*deg
             if ic.name.startswith('angle') and q == 180*deg and q0 == 180*deg:
@@ -328,12 +348,32 @@ class RelaxedGeoPertTheory(BasePertTheory):
                 'fun' : lambda dx: ic.value(self.system.ref.coords + dx.reshape((-1, 3))) - q,
                 'jac' : lambda dx: ic.grad(self.system.ref.coords + dx.reshape((-1, 3))),
             },)
-            result = minimize(
-                chi, guess, method='SLSQP',
-                constraints=constraints,
-                tol=1e-9
-            )
-            trajectory[iq] = result.x.reshape([-1, 3])
-            #Use the result just found as the new guess to ensure continuity
-            guess = result.x
+            time0 = datetime.now()
+            if selector in ['slsqp', 'both']:
+                # Minimize chi directly
+                result = minimize(
+                    chi, guess, method='SLSQP',
+                    constraints=constraints,
+                    tol=1e-9
+                )
+            time1 = datetime.now()
+            # Solve dchi=0 with Lagrange multiplier to take constraint into account
+            if selector in ['fsolve', 'both']: result2 = fsolve(dchi, guess2, xtol=1e-10)
+            if selector == 'both':
+                time2 = datetime.now()
+                q1 = ic.value(self.system.ref.coords + result.x.reshape((-1, 3)))
+                q2 = ic.value(self.system.ref.coords + result2[:-1].reshape((-1, 3)))
+                t1 = time1 - time0
+                t2 = time2 - time1
+                chi1 = chi(result.x)
+                chi2 = chi(result2[:-1])
+                print "%6s   %+8.6f | %+8.6f   %3.1e       %5.2f | %+8.6f   %3.1e       %5.2f" % (iq, q, q1, chi1, t1.total_seconds(), q2, chi2, t2.total_seconds())
+            if selector in ['slsqp', 'both']:
+                trajectory[iq] = result.x.reshape([-1, 3])
+                #Use the result just found as the new guess to ensure continuity
+                guess = result.x
+            else: trajectory[iq] = result2[:-1].reshape([-1,3])
+        if selector == 'both':
+            print "="*80
+            print ""
         return trajectory
