@@ -25,6 +25,7 @@
 
 from molmod.units import deg
 from molmod.ic import bond_length, dihed_angle
+from yaff.sampling.harmonic import estimate_cart_hessian
 
 import numpy as np, math
 
@@ -35,7 +36,7 @@ from quickff.fftable import DataArray, FFTable
 __all__ = [
     'Model', 'AIPart', 'EIPart', 'ValencePart', 'ZeroPot', 'HarmonicPot',
     'CoulPointPot', 'CoulGaussPot', 'LennardJonesPot', 'MM3BuckinghamPot',
-    'TermListPot',
+    'NonbondedYaffPot', 'TermListPot',
 ]
 
 
@@ -46,7 +47,7 @@ class Model(object):
        force field valence contribution.
     '''
 
-    def __init__(self, ai, val, ei, vdw):
+    def __init__(self, ai, val, ei, vdw, nbyaff=None):
         '''
            **Arguments**
 
@@ -65,11 +66,21 @@ class Model(object):
            vdw
                 A model for the force field van der Waals energy, should be
                 an instance of VDWPart
+
+           nbyaff
+                A model for the forcefield nonbonded energy, specified with a
+                Yaff Forcefield instance. Should be an instance of
+                NonbondedYaffPart. If not specified, this defaults to a zero
+                potential.
         '''
         self.ai = ai
         self.val = val
         self.ei = ei
         self.vdw = vdw
+        # If no NonbondedYaffPart is specified, add one that defaults to a zero
+        # potential.
+        if nbyaff is None: nbyaff = NonbondedYaffPart()
+        self.nbyaff = nbyaff
 
     @classmethod
     def from_system(cls, system, ai_project=True, ic_ids=['all'],
@@ -134,6 +145,7 @@ class Model(object):
         self.ai.print_info()
         self.ei.print_info()
         self.vdw.print_info()
+        self.nbyaff.print_info()
         self.val.print_info()
 
 
@@ -363,6 +375,16 @@ class VDWPart(BasePart):
         'Method to dump basic information about the van der Waals part.'
         print '    %s scales = %.2f %.2f %.2f' %(self.name, self.scales[0], self.scales[1], self.scales[2])
         BasePart.print_info(self)
+
+
+class NonbondedYaffPart(BasePart):
+    '''
+        A class for describing the nonbonded part of the PES with a Yaff
+        Forcefield instance.
+    '''
+    def __init__(self, pot=None):
+        if pot is None: pot = ZeroPot()
+        BasePart.__init__(self, 'Nonbonded Yaff', pot)
 
 
 class ValencePart(BasePart):
@@ -943,6 +965,47 @@ class MM3BuckinghamPot(BasePot):
                 d2Vdr2 = 2.6496e7*np.exp(-12.0*x)-94.5/x**8
                 hess += scale*epsilon/sigma*(d2Vdr2/sigma*np.outer(qgrad, qgrad) + dVdr*bond.hess(coords))
         return hess
+
+
+class NonbondedYaffPot(BasePot):
+    '''
+        A class defining the nonbonded potential(s) with a Yaff Forcefield
+        instance.
+    '''
+    def __init__(self, ff):
+        BasePot.__init__(self, 'NonbondedYaff')
+        self.ff = ff
+
+    def calc_energy(self, coords):
+        # Set the new coordinates in the Yaff system
+        self.ff.system.pos[:] = coords
+        # Update the neighbourlist
+        self.ff.nlist.update()
+        # Compute the energy using Yaff
+        energy = self.ff.compute()
+        return energy
+
+    def calc_gradient(self, coords):
+        natoms = len(coords)
+        gradient = np.zeros([natoms, 3], float)
+        # Set the new coordinates in the Yaff system
+        self.ff.system.pos[:] = coords
+        # Update the neighbourlist
+        self.ff.nlist.update()
+        # Compute the gradient using Yaff
+        energy = self.ff.compute(gradient)
+        return gradient.ravel()
+
+
+    def calc_hessian(self, coords):
+        # Set the new coordinates in the Yaff system
+        self.ff.system.pos[:] = coords
+        # Update the neighbourlist
+        self.ff.nlist.update()
+        # Compute the hessian using Yaff
+        hess = estimate_cart_hessian(self.ff)
+        return hess
+
 
 
 class TermListPot(BasePot):

@@ -73,6 +73,33 @@ def test_harmpoint_hessian_water():
     dxs = np.random.normal(0.0, 1e-4, [100, 3*len(numbers)])
     check_delta(fun, coords.ravel(), dxs)
 
+def test_nbyaff_coulomb_water():
+    from yaff import System, NeighborList, Scalings, PairPotEI, ForcePartPair, ForceField
+    from yaff import log
+    log.set_level(log.silent)
+    coords, numbers, fcharges = get_water()
+    pot = CoulombPot(fcharges, [1.0, 1.0, 1.0],  [[], [], []])
+    # Calculate energy, gradient and hessian using QuickFF
+    E_QFF = pot.calc_energy(coords)
+    G_QFF = pot.calc_gradient(coords)
+    H_QFF = pot.calc_hessian(coords)
+    # Make a Yaff system
+    system = System(numbers,coords,charges=fcharges)
+    nlist = NeighborList(system)
+    scalings = Scalings(system, 1.0,1.0,1.0)
+    # Make a Yaff pair potential for electrostatic interactions
+    pair_pot = PairPotEI(system.charges,0.0,100.0*angstrom)
+    part_pair = ForcePartPair(system, nlist, scalings, pair_pot)
+    ff = ForceField(system, [part_pair], nlist)
+    pot2 = NonbondedYaffPot(ff)
+    # Calculate energy, gradient and hessian using Yaff (called from QuickFF)
+    E_YAFF = pot2.calc_energy(coords)
+    G_YAFF = pot2.calc_gradient(coords)
+    H_YAFF = pot2.calc_hessian(coords)
+    assert np.abs(E_YAFF-E_QFF) < 1e-8
+    assert np.all( np.abs(G_YAFF-G_QFF)) < 1e-8
+    assert np.all( np.abs(H_QFF-H_YAFF) ) < 1e-8
+
 #test potentials for ethanol
 def test_coulpoint_gradient_ethanol():
     coords, numbers, fcharges, fradii, epsilons, sigmas = get_ethanol()
@@ -145,3 +172,31 @@ def test_harmpoint_hessian_ethanol():
     fun = get_hessian_check(pot)
     dxs = np.random.normal(0.0, 1e-4, [100, 3*len(numbers)])
     check_delta(fun, coords.ravel(), dxs)
+
+
+def test_nbyaff_lj_ethanol():
+    from yaff import System, NeighborList, Scalings, PairPotLJ, ForcePartPair, ForceField
+    from yaff import log
+    log.set_level(log.silent)
+    coords, numbers, fcharges, sigmas, epsilons = get_ethanol()
+    pot = LennardJonesPot(sigmas, epsilons, [1.0, 1.0, 1.0],  [[], [], []])
+    # Calculate energy, gradient and hessian using QuickFF
+    E_QFF = pot.calc_energy(coords)
+    G_QFF = pot.calc_gradient(coords)
+    H_QFF = pot.calc_hessian(coords)
+    # Make a Yaff system
+    system = System(numbers,coords,charges=fcharges)
+    nlist = NeighborList(system)
+    scalings = Scalings(system, 1.0,1.0,1.0)
+    # Make a Yaff pair potential for electrostatic interactions
+    pair_pot = PairPotLJ(sigmas, epsilons, 100.0*angstrom)
+    part_pair = ForcePartPair(system, nlist, scalings, pair_pot)
+    ff = ForceField(system, [part_pair], nlist)
+    pot2 = NonbondedYaffPot(ff)
+    # Calculate energy, gradient and hessian using Yaff (called from QuickFF)
+    E_YAFF = pot2.calc_energy(coords)
+    G_YAFF = pot2.calc_gradient(coords)
+    H_YAFF = pot2.calc_hessian(coords)
+    assert np.abs(E_YAFF-E_QFF) < 1e-8
+    assert np.all( np.abs(G_YAFF-G_QFF)) < 1e-8
+    assert np.all( np.abs(H_QFF-H_YAFF) ) < 1e-8
