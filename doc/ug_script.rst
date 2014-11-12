@@ -155,8 +155,8 @@ Electrostatic interactions
     comma-separated floats are required. The first one sets the scale for atoms
     separated by 1 bond, the second for atoms separated by 2 bonds etc ... This
     option can also be used to exclude, for example, 1-2 bonded atoms by simply
-    setting the first float to zero. By default, all interactions are left 
-    unscaled, i.e. :option:`--ei-scales=1.0,1.0,1.0`
+    setting the first float to zero. The default is
+    :option:`--ei-scales=0.0,0.0,1.0`
 
 * Charges and atomic radii (:option:`--ei-path`):
     Defines the path in the HDF5 file, given as an input file, from which the 
