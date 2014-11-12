@@ -50,7 +50,7 @@ def parser():
              '[default=%default]'
     )
     parser.add_option(
-        '--ei-scales', default='1.0,1.0,1.0', type=str,
+        '--ei-scales', default='0.0,0.0,1.0', type=str,
         help='Defines the scaling rule for the electrostatic interactions. '    +\
              'Three comma-separated floats are required. The first one sets '   +\
              'the scale for atoms separated by 1 bond, the second for atoms '   +\

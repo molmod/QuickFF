@@ -73,7 +73,7 @@ class Model(object):
 
     @classmethod
     def from_system(cls, system, ai_project=True, ic_ids=['all'],
-        ei_scales=[1.0,1.0,1.0], ei_pot_kind='Harmonic',
+        ei_scales=[0.0,0.0,1.0], ei_pot_kind='Harmonic',
         vdw_scales=[0.0,0.0,1.0], vdw_pot_kind='Harmonic'):
         '''
             **Arguments**
