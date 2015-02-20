@@ -87,9 +87,10 @@ will ignore them in this tutorial):
         The ab initio energy is approximated as a second order Taylor expansion,
         i.e. a harmonic energy expression
         
-    * FF Electrostatic scales = 1.00 1.00 1.00
-        1-2, 1-3 and 1-4 electrostatic interactions all get rescaled with a 
-        factor of 1.00. Hence, they are all fully accounted for.
+    * FF Electrostatic scales = 0.00 0.00 1.00
+        1-2 and 1-3 electrostatic interactions are rescaled with a factor 0.00,
+        i.e. they are switched of, and 1-4 electrostatic interactions are 
+        rescaled with a factor 1.00, i.e. they are all fully accounted for.
     
     * FF Electrostatic kind = Zero
         The electrostatic interactions in the force field are modeled by means
@@ -97,7 +98,7 @@ will ignore them in this tutorial):
         (disregarding the van der Waals scales values).
     
     * FF van der Waals scales = 0.00 0.00 1.00
-        1-2 and 1-3 van der Waals interactions are rescaled by a factor of 0.0,
+        1-2 and 1-3 van der Waals interactions are rescaled by a factor of 0.00,
         hence, they are switched off. 1-4 interactions are fully accounted for.
     
     * FF van der Waals kind = Zero
