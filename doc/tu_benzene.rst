@@ -129,9 +129,9 @@ the level `low`. This time, the required command is::
 
     qff-est.py --ei-model=HarmPoint --ei-path=/wpart/hi --ei-scales=1.0,1.0,1.0 --vdw-model=Zero --atypes-level=low --ic-ids=all gaussian.fchk gaussian_wpart.h5
 
-Again, some options are not necessary (:option:`--ei-scales=1.0,1.0,1.0`, 
-:option:`--vdw-model=Zero` and :option:`--ic-ids=all`), because their value 
-matches the default value. The output of the script this time is as follows:
+Again, some options are not necessary (:option:`--vdw-model=Zero` and 
+:option:`--ic-ids=all`), because their value matches the default value. The 
+output of the script this time is as follows:
 
 .. program-output:: qff-est.py --ei-model=HarmPoint --ei-path=/wpart/hi --ei-scales=1.0,1.0,1.0 --vdw-model=Zero --atypes-level=low --ic-ids=all /home/louis/build/quickff/share/systems/benzene/gaussian.fchk /home/louis/build/quickff/share/systems/benzene/gaussian_wpart.h5
 
