@@ -242,8 +242,6 @@ class System(object):
                     charges = f['%s/charges' % ei_path][:]
                     if '%s/radii' %ei_path in f:
                         radii = f['%s/radii' %ei_path][:]
-                    else:
-                        radii = np.zeros(charges.shape)
                 if vdw_path is not None:
                     epsilons = f['%s/epsilons' % vdw_path][:]
                     sigmas = f['%s/sigmas' % vdw_path][:]
