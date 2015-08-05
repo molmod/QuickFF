@@ -132,10 +132,10 @@ class BasePertTheory(object):
                 `MolMod documentation <http://molmod.github.io/molmod/reference/const.html#module-molmod.units>`_.
         '''
         import matplotlib.pyplot as pp
-        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw')]
-        qs, tot, ei, vdw = self.analyze(trajectory, evaluators)
+        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw'), eval_energy('nbyaff')]
+        qs, tot, ei, vdw, nbyaff = self.analyze(trajectory, evaluators)
         label = {}
-        for (name, obs) in zip(['ai', 'ei', 'vdw', 'cov'], [tot, ei, vdw, tot-ei-vdw]):
+        for (name, obs) in zip(['ai', 'ei', 'vdw', 'nbyaff', 'cov'], [tot, ei, vdw, nbyaff, tot-ei-vdw]):
             pars = fitpar(qs, obs, rcond=1e-6)
             k = 2*pars[0]
             if k != 0.0:
@@ -160,6 +160,10 @@ class BasePertTheory(object):
         ax.plot(
             qs/parse_unit(ic.qunit), vdw/parse_unit(eunit),
             'g--', linewidth=2, label='FF vdW   %s' %label['vdw']
+        )
+        ax.plot(
+            qs/parse_unit(ic.qunit), nbyaff/parse_unit(eunit),
+            'g--', linewidth=2, label='FF nbyaff   %s' %label['nbyaff']
         )
         ax.plot(
             qs/parse_unit(ic.qunit), cov/parse_unit(eunit),
@@ -190,9 +194,9 @@ class BasePertTheory(object):
                 associated to the given ic. It contains F frames of
                 (N,3)-dimensional geometry arrays.
         '''
-        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw')]
-        qs, tot, ei, vdw = self.analyze(trajectory, evaluators)
-        pars = fitpar(qs, tot-ei-vdw, rcond=1e-6)
+        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw'), eval_energy('nbyaff')]
+        qs, tot, ei, vdw, nbyaff = self.analyze(trajectory, evaluators)
+        pars = fitpar(qs, tot-ei-vdw-nbyaff, rcond=1e-6)
         return 2*pars[0], -pars[1]/(2*pars[0])
 
 
