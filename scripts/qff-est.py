@@ -125,6 +125,11 @@ def parser():
                'python -m scoop -n4 ~/bin/qff-est.py --scoop ...' +\
                '[default=False]'
     )
+    parser.add_option(
+        '--linear', default=False, action='store_true',
+        help = 'Use a linearized model to construct perturbation trajectories ' +\
+               '[default=False]'
+    )
     options, fns = parser.parse_args()
     options.ei_scales = [float(x) for x in options.ei_scales.split(',')]
     options.vdw_scales = [float(x) for x in options.vdw_scales.split(',')]
@@ -151,7 +156,7 @@ def main(fns, options):
     )
     program = Program(system, model, fn_traj=options.fn_traj)
     #Run program
-    ff = program.run()
+    ff = program.run(linear_model=options.linear)
     #Make output
     ff.dump_ffit2('pars_ffit2%s.txt' % options.suffix, mode='w')
     ff.dump_yaff('pars_yaff%s.txt' % options.suffix, mode='w')
