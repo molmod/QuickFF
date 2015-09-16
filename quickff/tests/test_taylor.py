@@ -39,7 +39,7 @@ def run_taylor(molecule, pot):
     maxs = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     for i, dx in enumerate(dxs):
         current = [
-            np.linalg.norm(dx)/np.sqrt(3*len(coords0)), max(abs(dx)), 
+            np.linalg.norm(dx)/np.sqrt(3*len(coords0)), max(abs(dx)),
             exactEs[i], harmEs[i],
             abs(harmEs[i]-exactEs[i]), abs(harmEs[i]-exactEs[i])/abs(exactEs[i])
         ]

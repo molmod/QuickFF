@@ -113,7 +113,7 @@ def test_nbyaff_valence_water():
     # because this is probably a mistake made by the user
     with assert_raises(UserWarning):
         nbyaff = NonbondedYaffPot(ff)
-    
+
 
 #test potentials for ethanol
 def test_coulpoint_gradient_ethanol():
