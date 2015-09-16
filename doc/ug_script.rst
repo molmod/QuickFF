@@ -153,10 +153,11 @@ Electrostatic interactions
 * Scaling (:option:`--ei-scales`):
     Defines the scaling rule for the electrostatic interactions. Three 
     comma-separated floats are required. The first one sets the scale for atoms
-    separated by 1 bond, the second for atoms separated by 2 bonds etc ... This
-    option can also be used to exclude, for example, 1-2 bonded atoms by simply
-    setting the first float to zero. The default is
-    :option:`--ei-scales=0.0,0.0,1.0`
+    separated by 1 bond, the second for atoms separated by 2 bonds and the third
+    for atoms separated by 3 bonds. This option can also be used to exclude, 
+    for example, 1-2 bonded atoms by simply setting the first float to zero. 
+    By default, 1-2 and 1-3 interactions are excluded and 1-4 interactions are 
+    left unscaled, i.e. :option:`--ei-scales=0.0,0.0,1.0`
 
 * Charges and atomic radii (:option:`--ei-path`):
     Defines the path in the HDF5 file, given as an input file, from which the 
@@ -181,11 +182,11 @@ Van der Waals interactions
 * Scaling (:option:`--vdw-scales`):
     Defines the scaling rule for the van der Waals interactions. Three 
     comma-separated floats are required. The first one sets the scale for atoms
-    separated by 1 bond, the second for atoms separated by 2 bonds etc ... This
-    option can also be used to exclude, for example, 1-2 bonded atoms by simply
-    setting the first float to zero. By default, 1-2 and 1-3 interactions are
-    excluded (scale of zero) and 1-4 interactions are left unscaled, i.e. 
-    :option:`--vdw-scales=0.0,0.0,1.0`
+    separated by 1 bond, the second for atoms separated by 2 bonds and the third
+    for atoms separated by 3 bonds. This option can also be used to exclude, 
+    for example, 1-2 bonded atoms by simply setting the first float to zero. 
+    By default, 1-2 and 1-3 interactions are excluded and 1-4 interactions are 
+    left unscaled, i.e. :option:`--vdw-scales=0.0,0.0,1.0`
 
 * Epsilons and sigmas (:option:`--vdw-path`):
     Defines the path in the HDF5 file, given as an input file, from which the 

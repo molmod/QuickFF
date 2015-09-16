@@ -1,26 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#QuickFF is a code to quickly derive accurate force fields from ab initio input.
-#Copyright (C) 2012 - 2014 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
-#Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
-#Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
-#(CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
-#stated.
+# QuickFF is a code to quickly derive accurate force fields from ab initio input.
+# Copyright (C) 2012 - 2015 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
+# Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
+# (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
+# stated.
 #
-#This file is part of QuickFF.
+# This file is part of QuickFF.
 #
-#QuickFF is free software; you can redistribute it and/or
-#modify it under the terms of the GNU General Public License
-#as published by the Free Software Foundation; either version 3
-#of the License, or (at your option) any later version.
+# QuickFF is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
 #
-#QuickFF is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
+# QuickFF is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-#You should have received a copy of the GNU General Public License
-#along with this program; if not, see <http://www.gnu.org/licenses/>
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
 
@@ -53,8 +53,7 @@ def parser():
         help='Defines the scaling rule for the electrostatic interactions. '    +\
              'Three comma-separated floats are required. The first one sets '   +\
              'the scale for atoms separated by 1 bond, the second for atoms '   +\
-             'separated by 2 bonds etc ... By default, all interactions are '   +\
-             'left unscaled [default=%default]'
+             'separated by 2 bonds etc ... [default=%default]'
     )
     parser.add_option(
         '--ei-path', default=None,
@@ -126,6 +125,11 @@ def parser():
                'python -m scoop -n4 ~/bin/qff-est.py --scoop ...' +\
                '[default=False]'
     )
+    parser.add_option(
+        '--linear', default=False, action='store_true',
+        help = 'Use a linearized model to construct perturbation trajectories ' +\
+               '[default=False]'
+    )
     options, fns = parser.parse_args()
     options.ei_scales = [float(x) for x in options.ei_scales.split(',')]
     options.vdw_scales = [float(x) for x in options.vdw_scales.split(',')]
@@ -152,7 +156,7 @@ def main(fns, options):
     )
     program = Program(system, model, fn_traj=options.fn_traj)
     #Run program
-    ff = program.run()
+    ff = program.run(linear_model=options.linear)
     #Make output
     ff.dump_ffit2('pars_ffit2%s.txt' % options.suffix, mode='w')
     ff.dump_yaff('pars_yaff%s.txt' % options.suffix, mode='w')

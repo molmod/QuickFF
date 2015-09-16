@@ -7,15 +7,15 @@ Stable release
 A stable version of QuickFF, which includes all features described on this 
 website, can be downloaded from:
 
-     http://users.ugent.be/~lvduyfhu/quickff-1.0.tar.gz
+     http://users.ugent.be/~lvduyfhu/quickff-1.0.1.tar.gz
 
 Choose a suitable directory, e.g. ``~/build``, download and unpack the archive::
 
     mkdir -p ~/build
     cd ~/build
-    wget http://users.ugent.be/~lvduyfhu/quickff-1.0.tar.gz
-    tar -xvzf quickff-1.0.tar.gz
-    cd quickff-1.0
+    wget http://users.ugent.be/~lvduyfhu/quickff-1.0.1.tar.gz
+    tar -xvzf quickff-1.0.1.tar.gz
+    cd quickff-1.0.1
 
 
 Latest development version (experts only)

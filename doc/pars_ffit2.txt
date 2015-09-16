@@ -1,0 +1,18 @@
+# Parameters
+# -----------------------------------------------------------------------------#------
+# longname                                                   unit        value # fx/fr
+# -----------------------------------------------------------------------------#------
+  angle/C.C.C/harm/angle/K                            kjmol/rad^2   490.584511 #  free
+  angle/C.C.C/harm/angle/q0                                   deg   120.040145 #  free
+  angle/C.C.H/harm/angle/K                            kjmol/rad^2   332.442231 #  free
+  angle/C.C.H/harm/angle/q0                                   deg   120.014018 #  free
+  bond/C.C/harm/dist/K                                  kjmol/A^2  3193.326416 #  free
+  bond/C.C/harm/dist/q0                                         A     1.393420 #  free
+  bond/C.H/harm/dist/K                                  kjmol/A^2  3330.806513 #  free
+  bond/C.H/harm/dist/q0                                         A     1.088582 #  free
+  dihed/C.C.C.C/cos-m2-0/dihed/K                            kjmol    32.070233 #  free
+  dihed/C.C.C.H/cos-m2-0/dihed/K                            kjmol    32.139571 #  free
+  dihed/H.C.C.H/cos-m2-0/dihed/K                            kjmol    13.355453 #  free
+  opdist/C.C.H.C/harm/opdist/K                          kjmol/A^2   272.582434 #  free
+  opdist/C.C.H.C/harm/opdist/q0                                 A     0.000001 #  free
+# -----------------------------------------------------------------------------#------

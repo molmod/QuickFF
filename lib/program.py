@@ -1,27 +1,29 @@
 # -*- coding: utf-8 -*-
-#QuickFF is a code to quickly derive accurate force fields from ab initio input.
-#Copyright (C) 2012 - 2014 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
-#Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
-#Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
-#(CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
-#stated.
+# QuickFF is a code to quickly derive accurate force fields from ab initio input.
+# Copyright (C) 2012 - 2015 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
+# Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
+# (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
+# stated.
 #
-#This file is part of QuickFF.
+# This file is part of QuickFF.
 #
-#QuickFF is free software; you can redistribute it and/or
-#modify it under the terms of the GNU General Public License
-#as published by the Free Software Foundation; either version 3
-#of the License, or (at your option) any later version.
+# QuickFF is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
 #
-#QuickFF is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
+# QuickFF is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-#You should have received a copy of the GNU General Public License
-#along with this program; if not, see <http://www.gnu.org/licenses/>
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
+
+import numpy as np
 
 from quickff.fftable import DataArray, FFTable
 from quickff.perturbation import RelaxedGeoPertTheory
@@ -179,6 +181,58 @@ class Program(object):
         self.model.val.update_fftable(ff)
         return ff
 
+    def estimate_linear_model(self, skip_dihedrals=True, verbose=True):
+        ff = FFTable()
+        ndofs = 3*self.system.natoms
+        maxlength = max([len(icname) for icname in self.model.val.pot.terms.keys()]) + 2
+        # Total number of internal coordinates
+        nics = 0
+        for icname, ics in sorted(self.system.ics.iteritems()):
+            for ic0 in ics: nics += 1
+        # Construct matrix containing gradients of ics wrt cartesian
+        # coordinates as columns
+        grads = np.zeros((nics,ndofs), float)
+        counter = 0
+        for icname, ics in sorted(self.system.ics.iteritems()):
+            for ic0 in ics:
+                grads[counter,:] = ic0.grad(self.system.ref.coords)
+                counter += 1
+        # Compute reference hessian and gradient
+        hessian  = self.system.ref.hess.reshape([ndofs, ndofs]).copy()
+        hessian -= self.model.ei.calc_hessian(self.system.ref.coords).reshape([ndofs, ndofs])
+        hessian -= self.model.vdw.calc_hessian(self.system.ref.coords).reshape([ndofs, ndofs])
+        gradient  = self.system.ref.grad.reshape([ndofs]).copy()
+        gradient -= self.model.ei.calc_gradient(self.system.ref.coords).reshape([ndofs])
+        gradient -= self.model.vdw.calc_gradient(self.system.ref.coords).reshape([ndofs])
+        # Estimate force constant and rest value for all ics
+        counter = 0.0
+        for icname in sorted(self.model.val.pot.terms.keys()):
+            ics = self.system.ics[icname]
+            if skip_dihedrals and icname.startswith('dihed'):
+                continue
+            ks  = DataArray(unit=ics[0].kunit)
+            q0s = DataArray(unit=ics[0].qunit)
+            for ic in ics:
+                # Determine k and q0 by solving an overdetermined system of
+                # equations. This will go haywire for ics with grad zero...
+                rhs = np.zeros((nics))
+                rhs[counter] = 1.0
+                sol = np.linalg.lstsq(grads, rhs, rcond=1e-6)
+                x = sol[0]
+                k = np.dot(x.transpose(),np.dot(hessian,x))
+                q0 = ic.value(self.system.ref.coords) - np.dot(gradient,x)/k
+                ks.append(k)
+                q0s.append(q0)
+                counter += 1
+            ff.add(icname, ks, q0s)
+            descr = icname + ' '*(maxlength-len(icname))
+            if verbose:
+                print '    %s   K = %s    q0 = %s' % (
+                    descr, ks.string(), q0s.string()
+                )
+        self.model.val.update_fftable(ff)
+        return ff
+
     def refine_cost(self, verbose=True):
         '''
             Second step of force field development: refine the force constants
@@ -191,7 +245,7 @@ class Program(object):
             fftab.print_screen()
         return fftab
 
-    def run(self):
+    def run(self,linear_model=False):
         '''
             Run all steps of the QuickFF methodology to derive a covalent
             force field. This method returns an instance of the class
@@ -207,10 +261,14 @@ class Program(object):
         self.model.print_info()
         print '\nDetermine dihedral potentials\n'
         self.model.val.determine_dihedral_potentials(self.system)
-        print '\nDetermine the coordinates of the perturbation trajectories\n'
-        self.trajectories = self.generate_trajectories()
-        print '\nEstimating all pars for bonds, bends and opdists\n'
-        fftab = self.estimate_from_pt(self.trajectories)
+        if not linear_model:
+            print '\nDetermine the coordinates of the perturbation trajectories\n'
+            self.trajectories = self.generate_trajectories()
+            print '\nEstimating all pars for bonds, bends and opdists\n'
+            fftab = self.estimate_from_pt(self.trajectories)
+        else:
+            print '\nEstimating all pars for bonds, bends and opdists\n'
+            fftab = self.estimate_linear_model()
         print '\nRefining force constants using a Hessian LSQ cost\n'
         fftab = self.refine_cost()
         print '\n'+'~'*120+'\n'
