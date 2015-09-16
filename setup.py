@@ -66,7 +66,7 @@ setup(
     author='Louis Vanduyfhuys',
     author_email='Louis.Vanduyfhuys@UGent.be',
     url='http://molmod.ugent.be/code/',
-    package_dir = {'quickff': 'lib'},
+    package_dir = {'quickff': 'quickff'},
     packages=['quickff'],
     cmdclass = {'install_data': my_install_data},
     data_files=find_all_data_files('share'),

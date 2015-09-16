@@ -1,6 +1,10 @@
 from molmod.units import angstrom, kjmol
 from molmod.minimizer import check_delta
 import numpy as np
+from nose.tools import assert_raises
+from yaff import System, NeighborList, Scalings, PairPotEI, ForcePartPair, \
+    ForceField, ForcePartValence, PairPotLJ
+from yaff import log
 
 from quickff.model import *
 
@@ -74,11 +78,9 @@ def test_harmpoint_hessian_water():
     check_delta(fun, coords.ravel(), dxs)
 
 def test_nbyaff_coulomb_water():
-    from yaff import System, NeighborList, Scalings, PairPotEI, ForcePartPair, ForceField
-    from yaff import log
     log.set_level(log.silent)
-    coords, numbers, fcharges = get_water()
-    pot = CoulombPot(fcharges, [1.0, 1.0, 1.0],  [[], [], []])
+    coords, numbers, fcharges, fradii = get_water()
+    pot = CoulPointPot(fcharges, [1.0, 1.0, 1.0],  [[], [], []])
     # Calculate energy, gradient and hessian using QuickFF
     E_QFF = pot.calc_energy(coords)
     G_QFF = pot.calc_gradient(coords)
@@ -99,6 +101,19 @@ def test_nbyaff_coulomb_water():
     assert np.abs(E_YAFF-E_QFF) < 1e-8
     assert np.all( np.abs(G_YAFF-G_QFF)) < 1e-8
     assert np.all( np.abs(H_QFF-H_YAFF) ) < 1e-8
+
+
+def test_nbyaff_valence_water():
+
+    coords, numbers, fcharges, fradii = get_water()
+    system = System(numbers, coords)
+    part = ForcePartValence(system)
+    ff = ForceField(system,[part])
+    # We do not allow to include a covalent part in the NonbondedYaff,
+    # because this is probably a mistake made by the user
+    with assert_raises(UserWarning):
+        nbyaff = NonbondedYaffPot(ff)
+    
 
 #test potentials for ethanol
 def test_coulpoint_gradient_ethanol():
@@ -175,10 +190,8 @@ def test_harmpoint_hessian_ethanol():
 
 
 def test_nbyaff_lj_ethanol():
-    from yaff import System, NeighborList, Scalings, PairPotLJ, ForcePartPair, ForceField
-    from yaff import log
     log.set_level(log.silent)
-    coords, numbers, fcharges, sigmas, epsilons = get_ethanol()
+    coords, numbers, fcharges, fradii, epsilons, sigmas = get_ethanol()
     pot = LennardJonesPot(sigmas, epsilons, [1.0, 1.0, 1.0],  [[], [], []])
     # Calculate energy, gradient and hessian using QuickFF
     E_QFF = pot.calc_energy(coords)

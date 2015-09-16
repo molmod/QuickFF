@@ -974,6 +974,10 @@ class NonbondedYaffPot(BasePot):
     '''
     def __init__(self, ff):
         BasePot.__init__(self, 'NonbondedYaff')
+        # Check that the valence part is not included in the force field
+        names = [part.name for part in ff.parts]
+        if 'valence' in names:
+            raise UserWarning("You are trying to include a covalent part in the NonbondedYaff potential")
         self.ff = ff
 
     def calc_energy(self, coords):
@@ -1003,9 +1007,10 @@ class NonbondedYaffPot(BasePot):
         # Update the neighbourlist
         self.ff.nlist.update()
         # Compute the hessian using Yaff
-        hess = estimate_cart_hessian(self.ff)
+        ndof = np.prod(self.ff.system.pos.shape)
+        hess = np.zeros((ndof,ndof), float)
+        self.ff.compute(hess=hess)
         return hess
-
 
 
 class TermListPot(BasePot):
