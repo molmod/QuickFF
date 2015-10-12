@@ -23,20 +23,27 @@
 #
 #--
 
-from molmod.units import angstrom, deg, parse_unit
-from molmod.periodic import periodic as pt
-from molmod.io.xyz import XYZWriter
+'''Tools to construact perturbation trajectories for internal coordinates.
+'''
 
+
+import warnings
+warnings.filterwarnings('ignore', 'The iteration is not making good progress')
 from scipy.optimize import minimize
 from scipy.optimize import fsolve
 import numpy as np
-
-from quickff.tools import fitpar
-from quickff.evaluators import *
 from datetime import datetime
 
+from yaff import ForcePartValence, Harmonic, Chebychev1, ForceField
+from molmod.units import angstrom, deg, parse_unit, kjmol
+from molmod.periodic import periodic as pt
+from molmod.io.xyz import XYZWriter
+from molmod.ic import *
+from molmod import parse_unit
 
-__all__ = ['BasePertTheory', 'RelaxedGeoPertTheory']
+from quickff.tools import fitpar
+
+__all__ = ['BasePertTheory', 'RelaxedGeoPertTheory', 'Strain']
 
 
 class BasePertTheory(object):
@@ -44,46 +51,28 @@ class BasePertTheory(object):
        Base class to generate and analyze the perturbation trajectories of an
        ic.
     '''
-    def __init__(self, system, model):
+    def __init__(self, system, refdata, iclist):
         '''
             **Arguments**
 
             system
                 an instance of the System class
 
-            model
-                an instance of the Model class
+            refdata
+                an instance of the RefData class
+
+            iclist
+                an instance of the ICList class
         '''
         self.system = system
-        self.model = model
+        self.refdata = refdata
+        self.iclist = iclist
 
     def generate(self, ic, start=None, end=None, steps=11):
         '''
             This method should be implemented in derived classes.
         '''
         raise NotImplementedError
-
-    def analyze(self, trajectory, evaluators):
-        '''
-            A method to analyze the perturbation trajectory, i.e. apply all
-            evaluators to the trajectory and return an array of values along
-            the trajectory for each evaluator given.
-
-            **Arguments**
-
-            trajectory
-                A (F, N, 3) numpy array defining the perturbation trajectory.
-                It contains F frames of (N,3)-dimensional geometry arrays.
-
-            evaluators
-                A list of evaluators that is to be applied to the trajectory.
-        '''
-        values = [[] for i in xrange(len(evaluators))]
-        for dx in trajectory:
-            coords = self.system.ref.coords + dx
-            for i, evaluator in enumerate(evaluators):
-                values[i].append(evaluator(self.model, coords))
-        return np.array(values)
 
     def write(self, trajectory, filename):
         '''
@@ -100,12 +89,11 @@ class BasePertTheory(object):
         '''
         _f = open(filename, 'w')
         xyz = XYZWriter(_f, [pt[Z].symbol for Z in self.system.numbers])
-        for idx, dx in enumerate(trajectory):
-            coords = self.system.ref.coords + dx
-            xyz.dump('frame %i' %idx, coords)
+        for itraj, traj in enumerate(trajectory):
+            xyz.dump('frame %i' %itraj, traj)
         _f.close()
 
-    def plot(self, ic, trajectory, filename, eunit='kjmol'):
+    def plot(self, iic, trajectory, filename, eunit='kjmol'):
         '''
             Method to plot the energy contributions along a perturbation
             trajectory associated to a given ic.
@@ -113,8 +101,8 @@ class BasePertTheory(object):
             **Arguments**
 
             ic
-                an instance of the class :class:`quickff.ic.IC` defining for
-                which ic the plot will be made.
+                Index of the ic in the associated iclist for
+                which the plot will be made.
 
             trajectory
                 a (F,N,3) numpy array defining the perturbation trajectory
@@ -132,17 +120,27 @@ class BasePertTheory(object):
                 `MolMod documentation <http://molmod.github.io/molmod/reference/const.html#module-molmod.units>`_.
         '''
         import matplotlib.pyplot as pp
-        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw'), eval_energy('nbyaff')]
-        qs, tot, ei, vdw, nbyaff = self.analyze(trajectory, evaluators)
+        qs = np.zeros(len(trajectory))
+        tot = np.zeros(len(trajectory))
+        noncov = np.zeros(len(trajectory))
+        for istep, pos in enumerate(trajectory):
+            tot[istep] = self.refdata.calc_energy(pos, ff=False)
+            noncov[istep] = self.refdata.calc_energy(pos, ai=False)
+            self.system.pos[:] = pos
+            self.iclist.dlist.forward()
+            self.iclist.forward()
+            qs[istep] = self.iclist.ictab[iic]['value']
+        tot[:] -= tot[len(trajectory)/2]
+        noncov[:] -= noncov[len(trajectory)/2]
         label = {}
-        for (name, obs) in zip(['ai', 'ei', 'vdw', 'nbyaff', 'cov'], [tot, ei, vdw, nbyaff, tot-ei-vdw]):
+        for (name, obs) in zip(['ai', 'noncov', 'cov'], [tot, noncov, tot-noncov]):
             pars = fitpar(qs, obs, rcond=1e-6)
             k = 2*pars[0]
             if k != 0.0:
                 q0 = -0.5*pars[1]/pars[0]
                 label[name] = '(K=%.0f q0=%.3f)' %(
-                    k/parse_unit(ic.kunit),
-                    q0/parse_unit(ic.qunit)
+                    k/parse_unit(self.iclist.kunits[self.iclist.icname_ids[iic]]),
+                    q0/parse_unit(self.iclist.qunits[self.iclist.icname_ids[iic]])
                 )
             else:
                 label[name] = '(K=0.0 q0=None)'
@@ -150,34 +148,26 @@ class BasePertTheory(object):
                 cov = (pars[0]*qs**2+pars[1]*qs+pars[2])
         fig, ax = pp.subplots()
         ax.plot(
-            qs/parse_unit(ic.qunit), tot/parse_unit(eunit),
+            qs/parse_unit(self.iclist.qunits[self.iclist.icname_ids[iic]]), tot/parse_unit(eunit),
             'k--', linewidth=4, label='AI total %s' %label['ai']
         )
         ax.plot(
-            qs/parse_unit(ic.qunit), ei/parse_unit(eunit),
-            'b--', linewidth=2, label='FF elec  %s' %label['ei']
+            qs/parse_unit(self.iclist.qunits[self.iclist.icname_ids[iic]]), noncov/parse_unit(eunit),
+            'b--', linewidth=2, label='FF noncov  %s' %label['noncov']
         )
         ax.plot(
-            qs/parse_unit(ic.qunit), vdw/parse_unit(eunit),
-            'g--', linewidth=2, label='FF vdW   %s' %label['vdw']
-        )
-        ax.plot(
-            qs/parse_unit(ic.qunit), nbyaff/parse_unit(eunit),
-            'g--', linewidth=2, label='FF nbyaff   %s' %label['nbyaff']
-        )
-        ax.plot(
-            qs/parse_unit(ic.qunit), cov/parse_unit(eunit),
+            qs/parse_unit(self.iclist.qunits[self.iclist.icname_ids[iic]]), cov/parse_unit(eunit),
             'r-', linewidth=2, label='FF cov   %s' %label['cov']
         )
-        ax.set_title(ic.name)
-        ax.set_xlabel('%s [%s]' % (ic.name.split('/')[0], ic.qunit), fontsize=16)
+        ax.set_title(self.iclist.icnames[self.iclist.icname_ids[iic]])
+        ax.set_xlabel('%s [%s]' % (self.iclist.icnames[self.iclist.icname_ids[iic]].split('/')[0], self.iclist.qunits[self.iclist.icname_ids[iic]]), fontsize=16)
         ax.set_ylabel('Energy [%s]' %eunit, fontsize=16)
         ax.grid()
         ax.legend(loc='best', fontsize=16)
         fig.set_size_inches([8, 8])
         fig.savefig(filename)
 
-    def estimate(self, ic, trajectory):
+    def estimate(self, iic, trajectory):
         '''
             Method to estimate the FF parameters for the given ic from the given
             perturbation trajectory by fitting a harmonic potential to the
@@ -185,19 +175,62 @@ class BasePertTheory(object):
 
             **Arguments**
 
-            ic
-                an instance of the class :class:`quickff.ic.IC` defining for
-                which ic the FF parameters will be estimated
+            iic
+                The index of the ic in the associated iclist
 
             trajectory
                 a (F,N,3) numpy array defining the perturbation trajectory
                 associated to the given ic. It contains F frames of
                 (N,3)-dimensional geometry arrays.
         '''
-        evaluators = [eval_ic(ic), eval_energy('ai'), eval_energy('ei'), eval_energy('vdw'), eval_energy('nbyaff')]
-        qs, tot, ei, vdw, nbyaff = self.analyze(trajectory, evaluators)
-        pars = fitpar(qs, tot-ei-vdw-nbyaff, rcond=1e-6)
-        return 2*pars[0], -pars[1]/(2*pars[0])
+        Es = np.zeros(len(trajectory))
+        qs = np.zeros(len(trajectory))
+        for istep, pos in enumerate(trajectory):
+            Es[istep] = self.refdata.calc_energy(pos)
+            self.system.pos[:] = pos
+            self.iclist.dlist.forward()
+            self.iclist.forward()
+            qs[istep] = self.iclist.ictab[iic]['value']
+        pars = fitpar(qs, Es, rcond=1e-6)
+        if pars[0]!=0.0:
+            return 2*pars[0], -pars[1]/(2*pars[0])
+        else: return 0.0, qs[len(qs)/2]
+
+    def refineq(self, iic, trajectory, old, val_ff):
+        '''
+            Method to refine the rest values of the covalent terms assuming the
+            force constants are known.
+
+            **Arguments**
+
+            iic
+                The index of the ic in the associated iclist
+            trajectory
+                a (F,N,3) numpy array defining the perturbation trajectory
+                associated to the given ic. It contains F frames of
+                (N,3)-dimensional geometry arrays.
+            old
+                A 2-typle representing the previous force constant and rest
+                value for the given ic.
+        '''
+        kold, q0old = old
+        if kold<1.0*kjmol:
+            return kold, q0old
+        else:
+            Es = np.zeros(len(trajectory))
+            qs = np.zeros(len(trajectory))
+            for istep, pos in enumerate(trajectory):
+                val_ff.update_pos(pos)
+                Es[istep] = self.refdata.calc_energy(pos) - val_ff.compute()
+                self.system.pos[:] = pos
+                self.iclist.dlist.forward()
+                self.iclist.forward()
+                qs[istep] = self.iclist.ictab[iic]['value']
+            pars = fitpar(qs, Es, rcond=1e-6)
+            q0new = -0.5*pars[1]/pars[0]
+            if q0new<0.0:
+                q0new = 0.0
+            return kold, q0new
 
 
 class RelaxedGeoPertTheory(BasePertTheory):
@@ -208,7 +241,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
         directions. The relaxation is implemented as the minimization of the
         strain due to all other ics.
     '''
-    def __init__(self, system, model):
+    def __init__(self, system, refdata, iclist):
         '''
             **Arguments**
 
@@ -218,57 +251,9 @@ class RelaxedGeoPertTheory(BasePertTheory):
             model
                 an instance of the Model class
         '''
-        BasePertTheory.__init__(self, system, model)
+        BasePertTheory.__init__(self, system, refdata, iclist)
 
-    def get_strain_matrix(self, ic):
-        '''
-            Method to calculate the strain matrix.
-
-            If sandwiched between a geometry perturbation vector, this
-            represents the weighted sum of the deviations of the ics
-            from their equilibrium values, except for the ic given in args.
-
-            **Arguments**
-
-            ic
-                an instance of the class :class:`quickff.ic.IC` defining which
-                ic is to be excluded from the strain cost.
-        '''
-        ndofs = 3*self.system.natoms
-        strain = np.zeros([ndofs, ndofs], float)
-        for icname, ics in sorted(self.system.ics.iteritems()):
-            if ic is None:
-                Gq = np.array([ic0.grad(self.system.ref.coords) for ic0 in ics])
-            else:
-                Gq = np.array([ic0.grad(self.system.ref.coords) for ic0 in ics if ic0.name!=ic.name])
-            if len(Gq) > 0:
-                U, S, Vt = np.linalg.svd(Gq)
-                svals = np.array([1.0 for s in S if s > 1e-6])
-                rank = len(svals)
-                if rank > 0:
-                    S2 = np.diag(svals**2)
-                    V  = Vt.T[:, :rank]
-                    Vo = Vt.T[:, rank:]
-                    strain += np.dot(V, np.dot(S2, V.T)) \
-                            + np.dot(Vo, Vo.T)/(100*ndofs)
-                else:
-                    #if the gradient of the current ic is zero in equilibrium,
-                    #use the second order contribution to the Taylor expansion
-                    #of the ic (without the square)
-                    print '    WARNING: %s '  % icname + 'gradient is zero,' +\
-                          'using second order Taylor to estimate strain'
-                    Hq = np.zeros([ndofs, ndofs], float)
-                    for ic0 in ics:
-                        if ic is None or ic0.name != ic.name:
-                            Hq += ic0.hess(self.system.ref.coords)
-                    S, V = np.linalg.eigh(Hq)
-                    S = np.diag([1.0 for s in S if abs(s) > 1e-6])
-                    rank = len(S)
-                    V = V[:, :rank]
-                    strain += np.dot(V, np.dot(S, V.T))
-        return strain
-
-    def generate(self, ic, start=None, end=None, steps=11):
+    def generate(self, iic, start=None, end=None, steps=11, taylor=False):
         '''
             Method to calculate the perturbation trajectory, i.e. the trajectory
             that arises when the geometry is perturbed in the direction of ic
@@ -276,9 +261,9 @@ class RelaxedGeoPertTheory(BasePertTheory):
 
             **Arguments**
 
-            ic
-                an instance of the class :class:`quickff.ic.IC` that defines
-                for which ic the perturbation trajectory will be calculated.
+            iic
+                The index of the ic in the associated iclist for which the
+                perturbation trajectory will be generated
 
             **Optional Arguments**
 
@@ -296,88 +281,202 @@ class RelaxedGeoPertTheory(BasePertTheory):
                 an integer defining the number of steps in the perturbation
                 trajectory. The default value is 11 steps.
         '''
-        #selector = 'slsqp'  # Original minimizer
-        #selector = 'fsolve' # New minimizer
-        selector = 'both'   # Do both and compare timings
-        ndofs = 3*self.system.natoms
-        #initialization
-        q0 = ic.value(self.system.ref.coords)
-        if ic.name.startswith('bond'):
+        if taylor: strain = StrainTaylor(self.system, self.iclist, [iic], self.refdata)
+        else: strain = Strain(self.system, self.iclist, [iic], self.refdata)
+        self.system.pos[:] = self.refdata.coords
+        self.iclist.dlist.forward()
+        self.iclist.forward()
+        q0 = self.iclist.ictab[iic]['value']
+        if self.iclist.icnames[self.iclist.icname_ids[iic]].startswith('bond'):
             if start is None: start = q0 - 0.05*angstrom
             if end is None:   end   = q0 + 0.05*angstrom
-        elif ic.name.startswith('angle'):
+        elif self.iclist.icnames[self.iclist.icname_ids[iic]].startswith('angle'):
             if start is None:   start = q0 - 5*deg
             if end is None:       end = q0 + 5*deg
             if end > 180.0*deg:   end = 179.0*deg
             if q0 == 180.0*deg:   end = 180.0*deg
-        elif ic.name.startswith('dihed'):
+        elif self.iclist.icnames[self.iclist.icname_ids[iic]].startswith('dihed'):
             if start is None:      start = q0 - 5*deg
             if end is None:          end = q0 + 5*deg
             if start < -180.0*deg: start = -180.0*deg
             if end > 180.0*deg:      end = 180.0*deg
-        elif ic.name.startswith('opdist'):
+        elif self.iclist.icnames[self.iclist.icname_ids[iic]].startswith('opdist'):
             if start is None: start = q0 - 0.05*angstrom
             if end is None:     end = q0 + 0.05*angstrom
+        else: raise NotImplementedError
         qarray = start + (end-start)/(steps-1)*np.array(range(steps), float)
-        trajectory = np.zeros([steps, self.system.natoms, 3], float)
-        #Define cost function that needs to be minimized
-        S = self.get_strain_matrix(ic)
-        def chi(dx):
-            return 0.5*np.dot(dx.T, np.dot(S, dx))
-        def dchi(X):
-            func = np.zeros((len(X),))
-            dx = X[:-1]
-            L = X[-1]
-            func[:-1] = np.dot(S, dx) - L*ic.grad(self.system.ref.coords + dx.reshape((-1, 3)))
-            func[-1] = q - ic.value(self.system.ref.coords + dx.reshape((-1, 3)))
-            return func
-        #Guess delta_x first time
-        guess = np.zeros(ndofs, float)
-        guess2 = np.zeros(ndofs+1, float)
-        if selector == 'both':
-            # Some debugging output, should be deleted...
-            print "="*80
-            print "Setting up perturbation trajectory with %2d steps for ic %s" % (steps, ic.name)
-            print "="*80
-            print "%6s    %8s |  %8s   %7s   %8s |  %8s   %7s   %8s" % ("Step", "q", "q1", "chi1", "time1 [s]", "q2", "chi2", "time2 [s]")
+        trajectory = np.zeros([steps, self.system.natom, 3], float)
         for iq, q in enumerate(qarray):
-            #Only use if the minimum is located in 180*deg
-            if ic.name.startswith('angle') and q == 180*deg and q0 == 180*deg:
-                trajectory[iq] = np.zeros([self.system.natoms, 3], float)
-                continue
-            #Define the constraint under which the cost function needs
-            #to be minimized
-            constraints = ({
-                'type': 'eq',
-                'fun' : lambda dx: ic.value(self.system.ref.coords + dx.reshape((-1, 3))) - q,
-                'jac' : lambda dx: ic.grad(self.system.ref.coords + dx.reshape((-1, 3))),
-            },)
-            time0 = datetime.now()
-            if selector in ['slsqp', 'both']:
-                # Minimize chi directly
-                result = minimize(
-                    chi, guess, method='SLSQP',
-                    constraints=constraints,
-                    tol=1e-9
-                )
-            time1 = datetime.now()
-            # Solve dchi=0 with Lagrange multiplier to take constraint into account
-            if selector in ['fsolve', 'both']: result2 = fsolve(dchi, guess2, xtol=1e-10)
-            if selector == 'both':
-                time2 = datetime.now()
-                q1 = ic.value(self.system.ref.coords + result.x.reshape((-1, 3)))
-                q2 = ic.value(self.system.ref.coords + result2[:-1].reshape((-1, 3)))
-                t1 = time1 - time0
-                t2 = time2 - time1
-                chi1 = chi(result.x)
-                chi2 = chi(result2[:-1])
-                print "%6s   %+8.6f | %+8.6f   %3.1e       %5.2f | %+8.6f   %3.1e       %5.2f" % (iq, q, q1, chi1, t1.total_seconds(), q2, chi2, t2.total_seconds())
-            if selector in ['slsqp', 'both']:
-                trajectory[iq] = result.x.reshape([-1, 3])
-                #Use the result just found as the new guess to ensure continuity
-                guess = result.x
-            else: trajectory[iq] = result2[:-1].reshape([-1,3])
-        if selector == 'both':
-            print "="*80
-            print ""
+            strain.constrain_values[0] = q
+            # Minimize strain function
+            guess = np.zeros((self.system.natom*3+1,))
+            sol = fsolve(strain.gradient, guess, xtol=1e-9)
+            trajectory[iq,:,:] = self.refdata.coords + sol[:self.system.natom*3].reshape((-1,3))
+        k,q = self.estimate(iic,trajectory)
         return trajectory
+
+
+class StrainTaylor(object):
+    #TODO Implement this...
+    def __init__(self, system, iclist, iics, refdata):
+        raise NotImplementedError
+        self.refdata = refdata
+        self.system = system
+        self.iclist = iclist
+        self.iics = iics
+        self.S = self.get_strain_matrix()
+        self.constrain_values = np.zeros((len(self.iics),))
+
+    def get_strain_matrix(self):
+        ndofs = 3*self.system.natom
+        strain = np.zeros([ndofs, ndofs], float)
+        self.system.pos[:] = self.refdata.coords
+        self.iclist.dlist.forward()
+        self.iclist.forward()
+        for icname in self.iclist.icnames:
+            ic_id = np.where(self.iclist.icnames==icname)[0][0]
+            Gq = []
+            for iic in np.where(self.iclist.icname_ids==ic_id)[0]:
+                if iic in self.iics: continue
+                r0 = np.zeros((3,))
+                ic0 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i0']]
+                r1 = np.array([ic0['dx'],ic0['dy'],ic0['dz']])*self.iclist.ictab[iic]['sign0']
+                ic1 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i1']]
+                r2 = np.array([ic1['dx'],ic1['dy'],ic1['dz']])*self.iclist.ictab[iic]['sign1']
+                ic2 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i2']]
+                r3 = np.array([ic2['dx'],ic2['dy'],ic2['dz']])*self.iclist.ictab[iic]['sign2']
+                if icname.startswith('bond'):
+                    q, grad = bond_length([r0,r1], deriv=1)
+                elif icname.startswith('angle'):
+                    q, grad = bend_angle([r0,r1,r1-r2], deriv=1)
+                elif icname.startswith('dihed'):
+                    q, grad = dihed_angle([r0,r1,r1-r2,r1-r2-r3], deriv=1)
+                elif icname.startswith('opdist'):
+                    q, grad = opbend_dist([r0,r1,r1-r2,r1-r2-r3], deriv=1)
+                Gq.append(grad)
+                print grad
+            Gq = np.asarray(Gq)
+            print Gq.shape
+            if len(Gq) > 0:
+                U, S, Vt = np.linalg.svd(Gq)
+                svals = np.array([1.0 for s in S if s > 1e-6])
+                rank = len(svals)
+                if rank > 0:
+                    S2 = np.diag(svals**2)
+                    V  = Vt.T[:, :rank]
+                    Vo = Vt.T[:, rank:]
+                    strain += np.dot(V, np.dot(S2, V.T)) \
+                            + np.dot(Vo, Vo.T)/(100*ndofs)
+                else:
+                    raise NotImplementedError
+                    #if the gradient of the current ic is zero in equilibrium,
+                    #use the second order contribution to the Taylor expansion
+                    #of the ic (without the square)
+                    print '    WARNING: %s '  % icname + 'gradient is zero,' +\
+                          'using second order Taylor to estimate strain'
+                    Hq = np.zeros([ndofs, ndofs], float)
+                    for ic0 in ics:
+                        if ic is None or ic0.name != ic.name:
+                            Hq += ic0.hess(self.system.ref.coords)
+                    S, V = np.linalg.eigh(Hq)
+                    S = np.diag([1.0 for s in S if abs(s) > 1e-6])
+                    rank = len(S)
+                    V = V[:, :rank]
+                    strain += np.dot(V, np.dot(S, V.T))
+        return strain
+
+    def value(self, X):
+        return 0.5*np.dot(X.T, np.dot(self.S, X))
+
+    def gradient(self, X):
+        assert X.shape[0] == 3*self.system.natom + 1
+        func = np.zeros((len(X),))
+        dx = X[:3*self.system.natom]
+        L = X[-1]
+        iic = self.iics[0]
+        self.system.pos[:] = self.refdata.coords + dx.reshape((-1,3))
+        self.iclist.dlist.forward()
+        r0 = np.zeros((3,))
+        ic0 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i0']]
+        r1 = np.array([ic0['dx'],ic0['dy'],ic0['dz']])*self.iclist.ictab[iic]['sign0']
+        ic1 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i1']]
+        r2 = np.array([ic1['dx'],ic1['dy'],ic1['dz']])*self.iclist.ictab[iic]['sign1']
+        ic2 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i2']]
+        r3 = np.array([ic2['dx'],ic2['dy'],ic2['dz']])*self.iclist.ictab[iic]['sign2']
+        if icname.startswith('bond'):
+            q, grad = bond_length([r0,r1], deriv=1)
+        elif icname.startswith('angle'):
+            q, grad = bend_angle([r0,r1,r1-r2], deriv=1)
+        elif icname.startswith('dihed'):
+            q, grad = dihed_angle([r0,r1,r1-r2,r1-r2-r3], deriv=1)
+        elif icname.startswith('opdist'):
+            q, grad = opbend_dist([r0,r1,r1-r2,r1-r2-r3], deriv=1)
+        func[:3*self.system.natom] = np.dot(self.S, dx) - L*grad
+        func[-1] = q - self.constrain_values[0]
+        return func
+
+
+class Strain(object):
+    '''
+        The strain is the sum of quadratic deviations of the internal coordinates
+        from their values in the reference structure. Typically one or more ics
+        are not included in the strain but rather constrained to a fixed value.
+    '''
+    def __init__(self, system, iclist, iics, refdata):
+        '''
+            **Arguments**
+                system: a Yaff System object
+                iclist: a list of all the relevant internal coordinates
+                iics: list of indexes of internal coordinates that will not be
+                    included in the strain. Typically the values of these
+                    internal coordinates will be constrained
+                refdata: ReferenceData object, necessary here to get the
+                    reference coordinates.
+        '''
+        self.refdata = refdata
+        self.system = system
+        self.iclist = iclist
+        self.iics = iics
+        self.constrain_values = np.zeros((len(self.iics),))
+        self.system.pos[:] = self.refdata.coords
+        self.iclist.dlist.forward()
+        self.iclist.forward()
+        strainpart = ForcePartValence(self.system)
+        for jic in xrange(self.iclist.nic):
+            if jic in iics: continue
+            icname = self.iclist.icnames[self.iclist.icname_ids[jic]]
+            #TODO Figure out why we have to throw away dihedrals
+            if self.iclist.icnames[self.iclist.icname_ids[jic]].startswith('dihed'):
+                continue
+            strainpart.add_term(Harmonic(1.0,self.iclist.ictab[jic]['value'],self.iclist.ics[jic]))
+        constraintpart = ForcePartValence(self.system)
+        for iic in iics:
+            # Abuse the Chebychev1 polynomial to simply get the value of q-1
+            constraintpart.add_term(Chebychev1(-2.0,self.iclist.ics[iic]))
+        self.strain = ForceField(self.system, [strainpart])
+        self.constraint = ForceField(self.system, [constraintpart])
+
+    def value(self, X):
+        self.strain.update_pos(self.refdata.coords + X[:3*self.system.natom].reshape((-1,3)))
+        return self.strain.compute()
+
+    def gradient(self, X):
+        '''
+        Computed the gradient of the strain wrt Cartesian coordinates of the
+        system. For every ic that needs to be constrained, a Lagrange multiplier
+        is included.
+        '''
+        assert X.shape[0] == 3*self.system.natom + len(self.iics)
+        func = np.zeros((len(X),))
+        gstrain = np.zeros(self.system.pos.shape)
+        gconstraint = np.zeros(self.system.pos.shape)
+        self.strain.update_pos(self.refdata.coords + X[:3*self.system.natom].reshape((-1,3)))
+        self.iclist.dlist.forward()
+        self.iclist.forward()
+        self.strain.compute(gpos=gstrain)
+        self.constraint.update_pos(self.refdata.coords + X[:3*self.system.natom].reshape((-1,3)))
+        self.constraint.compute(gpos=gconstraint)
+        for i in xrange(self.constraint.parts[0].vlist.nv):
+            func[-1-i] =  self.constraint.parts[0].vlist.vtab[0]['energy'] + 1.0 - self.constrain_values[i]
+        func[:3*self.system.natom] = gstrain.reshape((-1,)) + X[-1]*gconstraint.reshape((-1,)) + 0.01*X[:3*self.system.natom]
+        return func

@@ -1,10 +1,36 @@
+# -*- coding: utf-8 -*-
+# QuickFF is a code to quickly derive accurate force fields from ab initio input.
+# Copyright (C) 2012 - 2015 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
+# Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
+# (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
+# stated.
+#
+# This file is part of QuickFF.
+#
+# QuickFF is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+#
+# QuickFF is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <http://www.gnu.org/licenses/>
+#
+#--
+
 from molmod.units import parse_unit, angstrom, kjmol
 import numpy as np, os
 
-from quickff.system import System
+from yaff import System
+
 from quickff.context import context
 
-__all__ = ['get_water', 'get_ethanol', 'translate_rule', 'get_scaled_pairs']
+__all__ = ['get_water', 'get_ethanol']
 
 def get_system(molecule, atypes_level='high', ei_path=None):
     moldir = context.get_fn('systems/%s' %molecule)
@@ -26,9 +52,11 @@ def get_water():
         [-0.000000000, -0.763382315, -0.468300621],
     ])*angstrom
     numbers = np.array([1,8,1])
+    bonds = np.array([[0,1],[1,2]])
     fcharges = np.array([0.5, -1, 0.5]) #'formal' charges
     fradii = 0.5*np.array([2.571,3.118,2.571])/2.0**(1.0/6.0)*angstrom #0.5 rescaled UFF-vdW minima
-    return coords, numbers, fcharges, fradii
+    system = System(numbers, coords, charges=fcharges, radii=fradii)
+    return system
 
 def get_ethanol():
     coords = np.array([
@@ -48,34 +76,3 @@ def get_ethanol():
     fcharges = np.array([-0.3, 0.3, 0.1, 0.1, 0.1, 0.1, -1.0, 0.1, 0.5]) #'formal' charges
     fradii = 0.5*sigmas/2.0**(1.0/6.0) #0.5 rescaled UFF-vdW minima
     return coords, numbers, fcharges, fradii, epsilons, sigmas
-
-def translate_rule(rule):
-    if rule==-1:
-        pot_kind='Zero'
-        scales = [0.0,0.0,0.0]
-    elif rule==0:
-        pot_kind='Harm'
-        scales = [1.0,1.0,1.0]
-    elif rule==1:
-        pot_kind='Harm'
-        scales = [0.0,1.0,1.0]
-    elif rule==2:
-        pot_kind='Harm'
-        scales = [0.0,0.0,1.0]
-    elif rule==3:
-        pot_kind='Harm'
-        scales = [0.0,0.0,0.0]
-    else:
-        raise ValueError('Invalid rule %i' %rule)
-    return scales, pot_kind
-
-def get_scaled_pairs(system):
-    'Generate list of atom pairs subject to scaling of non-bonding interactions'
-    scaled_pairs = [[],[],[]]
-    for bond in system.bonds:
-        scaled_pairs[0].append([bond[0], bond[1]])
-    for bend in system.bends:
-        scaled_pairs[1].append([bend[0], bend[2]])
-    for dihed in system.diheds:
-        scaled_pairs[2].append([dihed[0], dihed[3]])
-    return scaled_pairs

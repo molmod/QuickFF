@@ -26,70 +26,30 @@
 
 from optparse import OptionParser
 
-from quickff.system import System
-from quickff.model import Model
+from yaff import System, ForceField
+from yaff import log
+
+from quickff.refdata import ReferenceData
 from quickff.program import Program
-from quickff.fftable import FFTable
+from quickff.tools import guess_ffatypes, read_abinitio
 from quickff.paracontext import *
 
 def parser():
-    usage = "%prog [options] fns"
+    usage = "%prog [options] fn"
     description = 'This script is part of QuickFF. It calculates the harmonic'+\
-                  'ff parameters a system specified in the files fns.'
+                  'ff parameters. The file fn should contain ab initio '+\
+                  'reference data. Currently Gaussian .fchk and VASP .xml '+\
+                  'files are supported.'
     parser = OptionParser(usage=usage, description=description)
+
     parser.add_option(
-        '--ei-model', default='HarmPoint',
-        help='Defines the potential used for the electrostatic interactions. '  +\
-             'Can be CoulPoint, CoulGauss, HarmPoint, HarmGauss or Zero. If '   +\
-             'CoulPoint/CoulGauss is chosen, the exact Coulombic potential '    +\
-             'between point/gaussian charges will be used to evaluate EI '      +\
-             'interactions. If HarmPoint/HarmGauss is chosen, a second order '  +\
-             'Taylor expansion of the Coulomb potential is used. Harmonic is a '+\
-             'lot faster and should already give accurate results. '            +\
-             '[default=%default]'
+        '--chk-fn', default=None,
+        help='Read Yaff system from this .chk file. If not given, the Yaff '+\
+             'system is constructed from the ab initio data.'
     )
     parser.add_option(
-        '--ei-scales', default='0.0,0.0,1.0', type=str,
-        help='Defines the scaling rule for the electrostatic interactions. '    +\
-             'Three comma-separated floats are required. The first one sets '   +\
-             'the scale for atoms separated by 1 bond, the second for atoms '   +\
-             'separated by 2 bonds etc ... [default=%default]'
-    )
-    parser.add_option(
-        '--ei-path', default=None,
-        help='Defines the path in the HDF5 file which contains a dataset '      +\
-             '`EI_PATH/charges` from which the atomic charges will be '         +\
-             'extracted.'
-    )
-    parser.add_option(
-        '--vdw-model', default='Zero',
-        help='Defines the potential used for van der Waals interactions. Can '  +\
-             'be LJ, MM3, HarmLJ, HarmMM3 or Zero. If LJ/MM3 is chosen, the '   +\
-             'exact Lennard-Jones/MM3-Buckingham potential will be used to '    +\
-             'evaluate van der Waals interactions. If HarmLJ/HarmMM3 is '       +\
-             'chosen, a second order Taylor expansion of the LJ/MM3 potential ' +\
-             'is used. Harmonic is a lot faster and should already give '       +\
-             'accurate results. [default=%default]'
-    )
-    parser.add_option(
-        '--vdw-scales', default='0.0,0.0,1.0', type=str,
-        help='Defines the scaling rule for the van der Waals interactions. '    +\
-             'Three comma-separated floats are required. The first one sets '   +\
-             'the scale for atoms separated by 1 bond, the second for atoms '   +\
-             'separated by 2 bonds etc ... [default=%default]'
-    )
-    parser.add_option(
-        '--vdw-path', default=None,
-        help='Defines the path in the HDF5 file which contains 2 dataset: '     +\
-             '`VDW_PATH/epsilons` and `VDW_PATH/sigmas` from which the atomic ' +\
-             'vdW parameters will be extracted.'
-    )
-    parser.add_option(
-        '--vdw-from', default='none',
-        help='Defines from which force field to extract vdW parameters. If '    +\
-             'this value is anythin else then None, the values extracted from ' +\
-             'a HDF5 file will be overwritten. Currently only UFF is supported '+\
-             '[default=%default]'
+        '--ncff-fn', default=None,
+        help='Generate a non-covalent force field from this Yaff parameter file.'
     )
     parser.add_option(
         '--atypes-level', default=None,
@@ -111,6 +71,12 @@ def parser():
              "will be included. [default=%default]"
     )
     parser.add_option(
+        '--refine-rvs', default=False, action='store_true',
+        help = 'Refine the rest values after the second step of force-field ' +\
+               'development' +\
+               '[default=False]'
+    )
+    parser.add_option(
         '--suffix', default='',
         help = "Suffix that will be added to all output files. [default='']"
     )
@@ -127,48 +93,51 @@ def parser():
     )
     parser.add_option(
         '--linear', default=False, action='store_true',
-        help = 'Use a linearized model to construct perturbation trajectories ' +\
+        help = 'Use a linearized model to avoid construction of perturbation '+\
+               'trajectories ' +\
                '[default=False]'
     )
-    options, fns = parser.parse_args()
-    options.ei_scales = [float(x) for x in options.ei_scales.split(',')]
-    options.vdw_scales = [float(x) for x in options.vdw_scales.split(',')]
+    parser.add_option(
+        '--yaff-output', default=False, action='store_true',
+        help = 'Provide Yaff screen output. ' +\
+               '[default=False]'
+    )
+    options, fn = parser.parse_args()
     options.ic_ids = options.ic_ids.split(',')
-    return fns, options
+    return fn[0], options
 
-def main(fns, options):
-    #Setup system, model and program
-    system = System.from_files(
-        fns, ei_path=options.ei_path, vdw_path=options.vdw_path
-    )
+def main(fn, options):
+    if not options.yaff_output: log.set_level(log.silent)
+    numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn)
+    # Setup system
+    if options.chk_fn is not None:
+        system = System.from_file(options.chk_fn)
+        #TODO Check that there is some correspondence to ab initio data
+    else:
+        system = System(numbers, coords, masses=masses, rvecs=rvecs)
+        system.detect_bonds()
     if options.atypes_level is not None:
-        system.guess_ffatypes(options.atypes_level)
-    if options.vdw_model.lower() != 'zero':
-        if options.vdw_from.lower() == 'uff':
-            system.read_uff_vdw()
-        elif options.vdw_from is not 'none':
-            raise ValueError('Unsupported value for vdw_from, recieved %s' %options.vdw_from)
-    system.determine_ics_from_topology()
-    model = Model.from_system(
-        system, ic_ids=options.ic_ids,
-        ei_scales=options.ei_scales, ei_pot_kind=options.ei_model,
-        vdw_scales=options.vdw_scales, vdw_pot_kind=options.vdw_model,
-    )
-    program = Program(system, model, fn_traj=options.fn_traj)
-    #Run program
-    ff = program.run(linear_model=options.linear)
+        guess_ffatypes(system, options.atypes_level)
+    if system.ffatypes is None: raise UserWarning, "No force-field atom types defined!"
+    # Read non-covalent force field
+    if options.ncff_fn is not None:
+        ff = ForceField.generate(system, options.ncff_fn)
+    else:
+        ff = None
+    # Construct reference data
+    refdata = ReferenceData(coords, energy, grad, hess, ncff=ff, pbc=pbc)
+    # Construct QuickFF program
+    program = Program(system, refdata, fn_traj=options.fn_traj, skip_ics=options.ic_ids,
+        refineq=options.refine_rvs)
+    # Run the program
+    qff = program.run(linear_model=options.linear)
     #Make output
-    ff.dump_ffit2('pars_ffit2%s.txt' % options.suffix, mode='w')
-    ff.dump_yaff('pars_yaff%s.txt' % options.suffix, mode='w')
-    if options.ei_model.lower() != 'zero':
-        system.dump_charges_yaff(
-            'pars_yaff%s.txt' % options.suffix, model.ei, mode='a'
-        )
-    if options.vdw_model.lower() != 'zero':
-        system.dump_vdw_yaff(
-            'pars_yaff%s.txt' % options.suffix, model.vdw, mode='a'
-        )
-    system.dump('system%s.chk' % options.suffix)
+    qff.dump_ffit2('pars_ffit2%s.txt' % options.suffix, mode='w')
+    qff.dump_yaff('pars_yaff%s.txt' % options.suffix, mode='w')
+    if options.ncff_fn is not None:
+        with open('pars_yaff%s.txt' % options.suffix, mode='a') as fout:
+            with open(options.ncff_fn, mode='r') as fin:
+                for line in fin: fout.write(line)
 
 #Use scoop if requested. This has to be outside of __main__ to set the
 #context for all workers

@@ -53,7 +53,6 @@ guide.
    :numbered:
 
    ug_script.rst
-   ug_library.rst
 
 .. _seclab_tutorials:
    
@@ -80,18 +79,7 @@ Modules of QuickFF:
    :maxdepth: 2
    :numbered:
 
-   rg_system.rst
-   rg_model.rst
-   rg_program.rst
-   rg_perturbation.rst
-   rg_cost.rst
-   rg_refdata.rst
-   rg_terms.rst
-   rg_uff.rst
-   rg_ic.rst
-   rg_evaluators.rst
-   rg_fftable.rst
-   rg_tools.rst
+   rg_quickff.rst
 
 Scripts of QuickFF:
 

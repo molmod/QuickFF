@@ -23,6 +23,10 @@
 #
 #--
 
+'''Representation of the ab initio reference data that serve as input.
+'''
+
+
 import numpy as np
 from quickff.tools import global_translation, global_rotation
 
@@ -30,16 +34,22 @@ __all__ = ['ReferenceData']
 
 class ReferenceData(object):
     '''
-        A class to store the ab initio reference data from which the force field
-        will be derived.
+        A class to store the reference data from which the force field will be
+        derived. This contains the difference of the ab initio data and the
+        non-covalent interactions.
     '''
-    def __init__(self, coords=None, grad=None, hess=None):
+    def __init__(self, coords, energy=0.0, grad=None, hess=None, ncff=None, pbc=[0,0,0]):
         '''
-        **Optional Arguments**
+        **Arguments**
 
         coords
             A (N,3) numpy array containing the cartesian coordinates of all
             atoms in equilibrium.
+
+        **Optional Arguments**
+
+        energy
+            A float giving the energy in equilibrium
 
         grad
             A (N,3) numpy array containing the cartesian gradient of all
@@ -48,20 +58,35 @@ class ReferenceData(object):
         hess
             A (N,3,N,3) numpy array containing the cartesian Hessian in
             equilibrium.
+
+        ncff
+            A Yaff ForceField instance representing the non-covalent
+            interactions.
+
+        pbc
+            Periodic boundaries along cell vectors. Should be either all zeros
+            (non-periodic) or all ones (3D periodic)
         '''
-        self.coords = coords
+        self.coords = coords.copy()
+        self.energy = energy
         self.grad = grad
         self.hess = hess
+        self.ncff = ncff
+        self.pbc = pbc
+        assert np.all(np.array(self.pbc)==self.pbc[0]), "PBC should be either all 0 or all 1"
         if hess is not None:
-            self.phess = self._get_phess()
+            self.phess = self._get_phess(self.pbc)
         else:
             self.phess = None
-
-    def _get_natoms(self):
-        'Get the number of atoms in the reference data'
-        return len(self.coords)
-
-    _natoms = property(_get_natoms)
+        if self.ncff is not None:
+            # Check that there is no valence part present in the non-covalent ff
+            if 'valence' in [part.name for part in self.ncff.parts]:
+                raise UserWarning, "The ncff contains covalent terms!"
+            # Compute force-field gradient and hessian
+            self.ncff.update_pos(self.coords)
+            self.ff_grad = np.zeros(self.ncff.system.pos.shape,float)
+            self.ff_hessian = np.zeros((np.prod(self.ncff.system.pos.shape),np.prod(self.ncff.system.pos.shape)),float)
+            self.ncff.compute(gpos=self.ff_grad, hess=self.ff_hessian)
 
     def update(self, coords=None, grad=None, hess=None):
         '''
@@ -83,6 +108,43 @@ class ReferenceData(object):
             self.hess = hess
             self.phess = self._get_phess()
 
+    def calc_energy(self, coords, harmonic=False, ai=True, ff=True):
+        '''
+            Compute the reference energy for the given positions
+
+            **Optional Arguments**
+
+            harmonic
+                Use a harmonic approximation to compute the non-covalent force-
+                field contribution.
+
+            ai
+                Compute the ab initio contribution
+
+            ff
+                Compute the non-covalent force-field contribution
+        '''
+        assert np.all(coords.shape==self.coords.shape)
+        ndof = np.prod(self.coords.shape)
+        dx = (coords - self.coords).reshape([ndof])
+        energy, grad, hess = 0.0, np.zeros(ndof), np.zeros((ndof, ndof))
+        # Ab initio part
+        if ai:
+            energy += self.energy
+            grad[:] = self.grad.reshape([ndof])
+            hess[:] = self.phess.reshape([ndof, ndof])
+        # Subtract non-covalent ff contribution
+        if ff and self.ncff is not None:
+            if harmonic:
+                grad[:] -= self.ff_grad.reshape([ndof])
+                hess[:] -= self.ff_hess.reshape([ndof, ndof])
+            else:
+                self.ncff.update_pos(coords)
+                energy -= self.ncff.compute()
+        energy += np.dot(grad, dx)
+        energy += 0.5*np.dot(dx, np.dot(hess, dx))
+        return energy
+
     def _check(self, natoms=None):
         'Internal consistency check'
         assert self.coords is not None
@@ -99,17 +161,24 @@ class ReferenceData(object):
         assert self.hess.shape[2] == self.coords.shape[0]
         assert self.hess.shape[3] == 3
 
-    def _get_phess(self):
+    def _get_phess(self, pbc):
         '''
             Constuct a hessian from which the translational and rotational
             degrees of freedom have been projected out.
         '''
-        hess = self.hess.copy().reshape([3*self._natoms, 3*self._natoms])
+        hess = self.hess.copy().reshape([np.prod(self.coords.shape), np.prod(self.coords.shape)])
         VTx, VTy, VTz = global_translation(self.coords)
         VRx, VRy, VRz = global_rotation(self.coords)
-        U = np.linalg.svd(
-            np.array([VTx, VTy, VTz, VRx, VRy, VRz]).transpose()
-        )[0]
-        proj = np.dot(U[:, 6:], U[:, 6:].T)
+        if np.all(np.array(self.pbc)==0):
+            U = np.linalg.svd(
+                np.array([VTx, VTy, VTz, VRx, VRy, VRz]).transpose()
+            )[0]
+            nproj = 6
+        elif np.all(np.array(self.pbc)==1):
+            U = np.linalg.svd(
+                np.array([VTx, VTy, VTz]).transpose()
+            )[0]
+            nproj = 3
+        proj = np.dot(U[:, nproj:], U[:, nproj:].T)
         PHP = np.dot(proj, np.dot(hess, proj))
-        return PHP.reshape([self._natoms, 3, self._natoms, 3])
+        return PHP.reshape([self.coords.shape[0], 3, self.coords.shape[0], 3])

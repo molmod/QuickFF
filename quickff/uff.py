@@ -23,6 +23,10 @@
 #
 #--
 
+'''Read appropriate van der Waals parameters from UFF parameter file.
+'''
+
+
 from molmod.units import angstrom, kjmol, kcalmol
 from molmod.periodic import periodic as pt
 import numpy as np, os

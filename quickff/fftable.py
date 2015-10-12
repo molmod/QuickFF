@@ -23,6 +23,10 @@
 #
 #--
 
+'''Internal representation of covalent force fields
+'''
+
+
 from molmod.units import deg, angstrom, kjmol, parse_unit, rad
 import numpy as np
 
@@ -44,6 +48,9 @@ class DataArray(object):
         else:
             self.data = np.array(data)
         self.unit = unit
+        self.update_statistics()
+
+    def update_statistics(self):
         self.mean, self.std, self.num = statistics(self.data)
 
     def append(self, value):

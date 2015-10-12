@@ -23,11 +23,19 @@
 #
 #--
 
-from molmod.units import kjmol
-from quickff.tools import matrix_squared_sum
-from scipy.optimize import minimize
+'''Quadratic cost function measuring deviation between ab initio and force-field hessian.
 
+   The force constants are determined by minimizing this cost function while
+   keeping the variables within certain boundaries.
+'''
+
+from scipy.optimize import minimize
 import numpy as np
+
+from molmod.units import kjmol, angstrom
+from yaff import ForcePartValence, Cosine, Harmonic, ForceField, estimate_cart_hessian
+
+from quickff.tools import get_vterm
 
 __all__ = [
     'HessianFCCost', 'FixedValueConstraint', 'LowerLimitConstraint',
@@ -40,7 +48,7 @@ class HessianFCCost(object):
         field hessian from the ab initio hessian. Only the force constants
         are regarded as variable parameters, the rest values are kept fixed.
         The initial force constants and fixed rest values should be stored
-        in attributes of the members of model.val.pot.terms.
+        in a FFTable object
 
         The cost function measures half the sum of the squares of the
         difference between ab initio and force field hessian elements:
@@ -53,58 +61,80 @@ class HessianFCCost(object):
 
         in which k is the vector of unknown force constants.
     '''
-    def __init__(self, system, model):
+    def __init__(self, system, refdata, iclist):
         '''
             **Arguments**
 
             system
-                An instance of the System class containing all system info
+                An instance of the Yaff System class containing all system info
 
-            model
-                An instance of the Model class defining the total ab initio
-                energy, the electrostatic contribution, the van der Waals
-                contribution and the valence terms.
+            refdata
+                ReferenceData object containing reference coordinates, gradient
+                and hessian
         '''
         self.system = system
-        self.model = model
-        self._A = np.zeros([model.val.nterms, model.val.nterms], float)
-        self._B = np.zeros([model.val.nterms], float)
-        self._C = 0.0
+        self.refdata = refdata
+        self.iclist = iclist
 
-    def _update_lstsq_matrices(self):
+    def _update_lstsq_matrices(self, fftab):
         '''
             Calculate the matrix A, vector B and scalar C of the cost function
         '''
-        ndofs = 3*self.system.natoms
-        ref  = self.system.ref.hess.reshape([ndofs, ndofs]).copy()
-        ref -= self.model.ei.calc_hessian(self.system.ref.coords).reshape([ndofs, ndofs])
-        ref -= self.model.vdw.calc_hessian(self.system.ref.coords).reshape([ndofs, ndofs])
-        self._A = np.zeros([self.model.val.nterms, self.model.val.nterms], float)
-        self._B = np.zeros([self.model.val.nterms], float)
-        h = np.zeros([self.model.val.nterms, ndofs, ndofs], float)
-        for i, icname in enumerate(sorted(self.model.val.pot.terms.keys())):
-            for vterm in self.model.val.pot.terms[icname]:
-                h[i] += vterm.calc_hessian(coords=self.system.ref.coords, k=1.0)
-            self._B[i] = matrix_squared_sum(h[i], ref)
+        ndofs = 3*self.system.natom
+        #TODO Figure out difference between phess and hess on final force field
+        ref  = self.refdata.phess.reshape([ndofs, ndofs]).copy()
+        if self.refdata.ncff is not None:
+            ref -= self.refdata.ff_hessian.reshape([ndofs, ndofs]).copy()
+        nterms = len(fftab.pars.keys())
+        self._A = np.zeros([nterms, nterms], float)
+        self._B = np.zeros([nterms], float)
+        h = np.zeros([nterms, ndofs, ndofs], float)
+        for i, icname in enumerate(sorted(fftab.pars.keys())):
+            num_hessian = False
+            val = ForcePartValence(self.system)
+            ic_id = np.where(self.iclist.icnames==icname)[0][0]
+            for iic in np.where(self.iclist.icname_ids==ic_id)[0]:
+                if icname.startswith('dihed'):
+                    pars = [fftab.pars[icname]['m'].mean,1.0,fftab.pars[icname]['q0'].mean]
+                    indexes = self.iclist.ics[iic].index_pairs
+                    term = get_vterm(pars, [indexes[0][1],indexes[0][0],indexes[2][0],indexes[2][1]])
+                    if term is None:
+                        # Requested a dihedral term that can not be expressed as
+                        # a polynomial in cos(phi), but Yaff hessian is not stable
+                        # for such terms. Resort to numerical hessian
+                        num_hessian = True
+                        term = Cosine(pars[0], pars[1], pars[2], self.iclist.ics[iic])
+                    val.add_term(term)
+                else:
+                    val.add_term(Harmonic(1.0, fftab.pars[icname]['q0'].mean, self.iclist.ics[iic]))
+            ff = ForceField(self.system,[val])
+            ff.update_pos(self.refdata.coords)
+            if num_hessian:
+                h[i] = estimate_cart_hessian(ff)
+            else:
+                ff.compute(hess=h[i])
+            self._B[i] = np.sum(h[i]*ref)
             for j in xrange(i+1):
-                self._A[i, j] = matrix_squared_sum(h[i], h[j])
+                self._A[i, j] = np.sum(h[i]*h[j])
                 self._A[j, i] = self._A[i, j]
-        self._C = matrix_squared_sum(ref, ref)
+        self._C = np.sum(ref*ref)
+        return h
 
-    def _define_constraints(self, kinit):
+    def _define_constraints(self, fftab):
         'Define the constraints active during the minimization'
         constraints = []
-        for i, icname in enumerate(sorted(self.model.val.pot.terms.keys())):
+        nterms = len(fftab.pars.keys())
+        for i, icname in enumerate(sorted(fftab.pars.keys())):
             if icname.startswith('dihed'):
                 constraints.append(
-                    LowerLimitConstraint(i,   0*kjmol, self.model.val.nterms)()
+                    LowerLimitConstraint(i,   0*kjmol, nterms)()
                 )
                 constraints.append(
-                    UpperLimitConstraint(i, 200*kjmol, self.model.val.nterms)()
+                    UpperLimitConstraint(i, 200*kjmol, nterms)()
                 )
             else:
                 constraints.append(
-                    LowerLimitConstraint(i, 0.0, self.model.val.nterms)()
+                    LowerLimitConstraint(i, 0.0, nterms)()
                 )
         return tuple(constraints)
 
@@ -126,19 +156,60 @@ class HessianFCCost(object):
         else:
             return chi2
 
-    def estimate(self):
+    def jac(self, k):
+        return np.dot(self._A, k) - self._B
+
+    def estimate(self, fftab):
         '''
             Estimate the force constants by minimizing the cost function
 
         '''
-        kinit = self.model.val.get_fcs()
-        constraints = self._define_constraints(kinit)
-        self._update_lstsq_matrices()
+        constraints = self._define_constraints(fftab)
+        h = self._update_lstsq_matrices(fftab)
+        kinit = []
+        for icname in sorted(fftab.pars.keys()):
+            if icname.startswith('dihed'):
+                kinit.append(10.0*kjmol)
+            else:
+                kinit.append(fftab.pars[icname]['k'].mean)
+        kinit = np.asarray(kinit)
+        #TODO: should be done by solving the linear system of equations in a subspace
+        #that is defined by the applied constraints
         result = minimize(
-            self.fun, kinit, method='SLSQP', constraints=constraints,
+            self.fun, kinit, jac=self.jac, method='SLSQP', constraints=constraints,
             tol=1e-9, options={'disp': False}
         )
-        return result.x
+        for i, icname in enumerate(sorted(fftab.pars.keys())):
+            fftab.pars[icname]['k'].data[:] = result.x[i]
+            fftab.pars[icname]['k'].update_statistics()
+        return fftab
+
+    def estimate_xalglib(self, fftab):
+        # QP with box constraints using xalglib
+        import xalglib
+        h = self._update_lstsq_matrices(fftab)
+        a = self._A.tolist()
+        b = (-self._B).tolist()
+        bndl, bndu = [], []
+        for i, icname in enumerate(sorted(fftab.pars.keys())):
+            if icname.startswith('dihed'):
+                bndu.append(200.0*kjmol)
+            else: bndu.append(float("inf"))
+            bndl.append(0.0)
+        # create solver, set quadratic/linear terms
+        state = xalglib.minqpcreate(len(b))
+        xalglib.minqpsetquadraticterm(state, a)
+        xalglib.minqpsetlinearterm(state, b)
+        xalglib.minqpsetbc(state, bndl, bndu)
+        # solve problem with QuickQP solver, default stopping criteria are used
+        xalglib.minqpsetalgoquickqp(state, 0.0, 0.0, 0.0, 0, True)
+        xalglib.minqpoptimize(state)
+        x, rep = xalglib.minqpresults(state)
+        print self.fun(np.array(x))
+        for i, icname in enumerate(sorted(fftab.pars.keys())):
+            fftab.pars[icname]['k'].data[:] = x[i]
+            fftab.pars[icname]['k'].update_statistics()
+        return fftab
 
 
 class BaseConstraint(object):

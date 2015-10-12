@@ -23,6 +23,9 @@
 #
 #--
 
+'''Convenience functions to enable using scoop.
+'''
+
 __all__ = ['ParaContext', 'paracontext']
 
 class FakeFuture(object):

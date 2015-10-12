@@ -12,6 +12,15 @@ be used or installed. Installation and download instructions can be found in the
 `molmod documentation <http://molmod.github.com/molmod/tutorial/install.html>`_.
 The instructions below only work if the MolMod package is installed.
 
+Yaff dependency
+=================
+
+`Yaff <http://molmod.github.com/yaff/>`_ is a pythonic force-field (FF)
+code used at the Center for Molecular Modeling (CMM) to test-drive new FF models.
+Installation and download instructions can be found in the
+`yaff documentation <http://molmod.github.io/yaff/ug_install.html>`_.
+The instructions below only work if the Yaff package is installed.
+
 External dependencies
 =====================
 
@@ -48,3 +57,20 @@ download and install Scoop (version 0.6.0.final), run the following commands
     tar -xvzf scoop-0.6.0.final.tar.gz
     cd scoop-0.6.0.final
     python setup.py install
+
+An optional dependency is ALGLIB, which is used to perform the minimization of
+a quadratic cost function with box constraints. If ALGLIB is not installed,
+this minimization can also be performed using standar SciPy minimizers.
+You can find instructions on how to install the Python wrapper for ALGLIB
+`here <http://www.alglib.net/download.php>`_. Following commands might work:
+
+* UNIX::
+
+    wget http://www.alglib.net/translator/re/alglib-3.10.0.cpython.gpl.zip
+    unzip alglib-3.10.0.cpython.gpl.zip
+    cd cpython/core
+    chmod u+x aenv build-unix
+    ./build-unix
+    cd ../
+    chmod u+x setup.py
+    ./setup.py install --home=~
