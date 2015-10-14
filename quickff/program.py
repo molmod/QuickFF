@@ -85,7 +85,7 @@ class Program(object):
     '''
         The central class to manage the entire program.
     '''
-    def __init__(self, system, refdata, fn_traj=None, skip_ics=[], refineq=False):
+    def __init__(self, system, refdata, fn_traj=None, skip_ics=[], refineq=False, strain_taylor=False):
         '''
             **Arguments**
 
@@ -103,13 +103,21 @@ class Program(object):
                 A file name to store the perturbation trajectories to or to
                 read the trajectories from if the file exists. The trajectories
                 are stored/read after Pickling.
+
+            refineq
+                Add a final step to the ff development: refine the rest values
+                by revisiting the perturbation trajectories after minimizing
+                the RMSD between the hessians
+
+            strain_taylor
+                Approximate the strain function using a Taylor expansion
         '''
         self.system = system
         self.refdata = refdata
         self.skip_ics = skip_ics
         self.make_iclist(skip_ics)
         self.refineq = refineq
-        self.pert_theory = RelaxedGeoPertTheory(self.system, self.refdata, self.iclist)
+        self.pert_theory = RelaxedGeoPertTheory(self.system, self.refdata, self.iclist, taylor=strain_taylor)
         self.cost = HessianFCCost(self.system, self.refdata, self.iclist)
         self.fn_traj = fn_traj
         self._check()

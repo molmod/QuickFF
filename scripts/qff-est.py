@@ -98,6 +98,12 @@ def parser():
                '[default=False]'
     )
     parser.add_option(
+        '--strain-taylor', default=False, action='store_true',
+        help = 'Use a Taylor expansion to approximate the strain function used '+\
+               'to generate trajectories ' +\
+               '[default=False]'
+    )
+    parser.add_option(
         '--yaff-output', default=False, action='store_true',
         help = 'Provide Yaff screen output. ' +\
                '[default=False]'
@@ -130,7 +136,7 @@ def main(fn, options):
     refdata = ReferenceData(coords, energy, grad, hess, ncff=ff, pbc=pbc)
     # Construct QuickFF program
     program = Program(system, refdata, fn_traj=options.fn_traj, skip_ics=options.ic_ids,
-        refineq=options.refine_rvs)
+        refineq=options.refine_rvs,strain_taylor=options.strain_taylor)
     # Run the program
     qff = program.run(linear_model=options.linear)
     #Make output

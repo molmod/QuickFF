@@ -43,7 +43,7 @@ from molmod import parse_unit
 
 from quickff.tools import fitpar
 
-__all__ = ['BasePertTheory', 'RelaxedGeoPertTheory', 'Strain']
+__all__ = ['BasePertTheory', 'RelaxedGeoPertTheory', 'Strain', 'StrainTaylor']
 
 
 class BasePertTheory(object):
@@ -241,7 +241,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
         directions. The relaxation is implemented as the minimization of the
         strain due to all other ics.
     '''
-    def __init__(self, system, refdata, iclist):
+    def __init__(self, system, refdata, iclist, taylor=False):
         '''
             **Arguments**
 
@@ -252,8 +252,9 @@ class RelaxedGeoPertTheory(BasePertTheory):
                 an instance of the Model class
         '''
         BasePertTheory.__init__(self, system, refdata, iclist)
+        self.taylor = taylor
 
-    def generate(self, iic, start=None, end=None, steps=11, taylor=False):
+    def generate(self, iic, start=None, end=None, steps=11):
         '''
             Method to calculate the perturbation trajectory, i.e. the trajectory
             that arises when the geometry is perturbed in the direction of ic
@@ -281,7 +282,7 @@ class RelaxedGeoPertTheory(BasePertTheory):
                 an integer defining the number of steps in the perturbation
                 trajectory. The default value is 11 steps.
         '''
-        if taylor: strain = StrainTaylor(self.system, self.iclist, [iic], self.refdata)
+        if self.taylor: strain = StrainTaylor(self.system, self.iclist, [iic], self.refdata)
         else: strain = Strain(self.system, self.iclist, [iic], self.refdata)
         self.system.pos[:] = self.refdata.coords
         self.iclist.dlist.forward()
@@ -316,106 +317,6 @@ class RelaxedGeoPertTheory(BasePertTheory):
         return trajectory
 
 
-class StrainTaylor(object):
-    #TODO Implement this...
-    def __init__(self, system, iclist, iics, refdata):
-        raise NotImplementedError
-        self.refdata = refdata
-        self.system = system
-        self.iclist = iclist
-        self.iics = iics
-        self.S = self.get_strain_matrix()
-        self.constrain_values = np.zeros((len(self.iics),))
-
-    def get_strain_matrix(self):
-        ndofs = 3*self.system.natom
-        strain = np.zeros([ndofs, ndofs], float)
-        self.system.pos[:] = self.refdata.coords
-        self.iclist.dlist.forward()
-        self.iclist.forward()
-        for icname in self.iclist.icnames:
-            ic_id = np.where(self.iclist.icnames==icname)[0][0]
-            Gq = []
-            for iic in np.where(self.iclist.icname_ids==ic_id)[0]:
-                if iic in self.iics: continue
-                r0 = np.zeros((3,))
-                ic0 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i0']]
-                r1 = np.array([ic0['dx'],ic0['dy'],ic0['dz']])*self.iclist.ictab[iic]['sign0']
-                ic1 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i1']]
-                r2 = np.array([ic1['dx'],ic1['dy'],ic1['dz']])*self.iclist.ictab[iic]['sign1']
-                ic2 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i2']]
-                r3 = np.array([ic2['dx'],ic2['dy'],ic2['dz']])*self.iclist.ictab[iic]['sign2']
-                if icname.startswith('bond'):
-                    q, grad = bond_length([r0,r1], deriv=1)
-                elif icname.startswith('angle'):
-                    q, grad = bend_angle([r0,r1,r1-r2], deriv=1)
-                elif icname.startswith('dihed'):
-                    q, grad = dihed_angle([r0,r1,r1-r2,r1-r2-r3], deriv=1)
-                elif icname.startswith('opdist'):
-                    q, grad = opbend_dist([r0,r1,r1-r2,r1-r2-r3], deriv=1)
-                Gq.append(grad)
-                print grad
-            Gq = np.asarray(Gq)
-            print Gq.shape
-            if len(Gq) > 0:
-                U, S, Vt = np.linalg.svd(Gq)
-                svals = np.array([1.0 for s in S if s > 1e-6])
-                rank = len(svals)
-                if rank > 0:
-                    S2 = np.diag(svals**2)
-                    V  = Vt.T[:, :rank]
-                    Vo = Vt.T[:, rank:]
-                    strain += np.dot(V, np.dot(S2, V.T)) \
-                            + np.dot(Vo, Vo.T)/(100*ndofs)
-                else:
-                    raise NotImplementedError
-                    #if the gradient of the current ic is zero in equilibrium,
-                    #use the second order contribution to the Taylor expansion
-                    #of the ic (without the square)
-                    print '    WARNING: %s '  % icname + 'gradient is zero,' +\
-                          'using second order Taylor to estimate strain'
-                    Hq = np.zeros([ndofs, ndofs], float)
-                    for ic0 in ics:
-                        if ic is None or ic0.name != ic.name:
-                            Hq += ic0.hess(self.system.ref.coords)
-                    S, V = np.linalg.eigh(Hq)
-                    S = np.diag([1.0 for s in S if abs(s) > 1e-6])
-                    rank = len(S)
-                    V = V[:, :rank]
-                    strain += np.dot(V, np.dot(S, V.T))
-        return strain
-
-    def value(self, X):
-        return 0.5*np.dot(X.T, np.dot(self.S, X))
-
-    def gradient(self, X):
-        assert X.shape[0] == 3*self.system.natom + 1
-        func = np.zeros((len(X),))
-        dx = X[:3*self.system.natom]
-        L = X[-1]
-        iic = self.iics[0]
-        self.system.pos[:] = self.refdata.coords + dx.reshape((-1,3))
-        self.iclist.dlist.forward()
-        r0 = np.zeros((3,))
-        ic0 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i0']]
-        r1 = np.array([ic0['dx'],ic0['dy'],ic0['dz']])*self.iclist.ictab[iic]['sign0']
-        ic1 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i1']]
-        r2 = np.array([ic1['dx'],ic1['dy'],ic1['dz']])*self.iclist.ictab[iic]['sign1']
-        ic2 = self.iclist.dlist.deltas[self.iclist.ictab[iic]['i2']]
-        r3 = np.array([ic2['dx'],ic2['dy'],ic2['dz']])*self.iclist.ictab[iic]['sign2']
-        if icname.startswith('bond'):
-            q, grad = bond_length([r0,r1], deriv=1)
-        elif icname.startswith('angle'):
-            q, grad = bend_angle([r0,r1,r1-r2], deriv=1)
-        elif icname.startswith('dihed'):
-            q, grad = dihed_angle([r0,r1,r1-r2,r1-r2-r3], deriv=1)
-        elif icname.startswith('opdist'):
-            q, grad = opbend_dist([r0,r1,r1-r2,r1-r2-r3], deriv=1)
-        func[:3*self.system.natom] = np.dot(self.S, dx) - L*grad
-        func[-1] = q - self.constrain_values[0]
-        return func
-
-
 class Strain(object):
     '''
         The strain is the sum of quadratic deviations of the internal coordinates
@@ -445,7 +346,7 @@ class Strain(object):
         for jic in xrange(self.iclist.nic):
             if jic in iics: continue
             icname = self.iclist.icnames[self.iclist.icname_ids[jic]]
-            #TODO Figure out why we have to throw away dihedrals
+            #TODO Figure out why it is best to throw away dihedrals
             if self.iclist.icnames[self.iclist.icname_ids[jic]].startswith('dihed'):
                 continue
             strainpart.add_term(Harmonic(1.0,self.iclist.ictab[jic]['value'],self.iclist.ics[jic]))
@@ -462,7 +363,7 @@ class Strain(object):
 
     def gradient(self, X):
         '''
-        Computed the gradient of the strain wrt Cartesian coordinates of the
+        Compute the gradient of the strain wrt Cartesian coordinates of the
         system. For every ic that needs to be constrained, a Lagrange multiplier
         is included.
         '''
@@ -479,4 +380,79 @@ class Strain(object):
         for i in xrange(self.constraint.parts[0].vlist.nv):
             func[-1-i] =  self.constraint.parts[0].vlist.vtab[0]['energy'] + 1.0 - self.constrain_values[i]
         func[:3*self.system.natom] = gstrain.reshape((-1,)) + X[-1]*gconstraint.reshape((-1,)) + 0.01*X[:3*self.system.natom]
+        return func
+
+
+class StrainTaylor(Strain):
+    def __init__(self, system, iclist, iics, refdata):
+        super(StrainTaylor, self).__init__(system, iclist, iics, refdata)
+        self.S = self.get_strain_matrix()
+
+    def get_strain_matrix(self):
+        def fill_gpos(jacobian, iic):
+            gpos = np.zeros(np.prod(self.system.pos.shape))
+            ic_jac = jacobian[iic]
+            kind = self.iclist.ictab[iic]['kind']
+            # Loop over all relative vectors making up this internal coordinate
+            index = self.iclist.ictab[iic]['i0']
+            i,j = self.iclist.dlist.deltas[index]['i'],self.iclist.dlist.deltas[index]['j']
+            d = self.iclist.ictab[iic]['i0']
+            gpos[3*i:3*(i+1)] -= ic_jac[3*d:3*(d+1)]
+            gpos[3*j:3*(j+1)] += ic_jac[3*d:3*(d+1)]
+            if not kind in [0,5]:
+                index = self.iclist.ictab[iic]['i1']
+                i,j = self.iclist.dlist.deltas[index]['i'],self.iclist.dlist.deltas[index]['j']
+                d = self.iclist.ictab[iic]['i1']
+                gpos[3*i:3*(i+1)] -= ic_jac[3*d:3*(d+1)]
+                gpos[3*j:3*(j+1)] += ic_jac[3*d:3*(d+1)]
+            if not kind in [0,1,2,5]:
+                index = self.iclist.ictab[iic]['i2']
+                i,j = self.iclist.dlist.deltas[index]['i'],self.iclist.dlist.deltas[index]['j']
+                d = self.iclist.ictab[iic]['i2']
+                gpos[3*i:3*(i+1)] -= ic_jac[3*d:3*(d+1)]
+                gpos[3*j:3*(j+1)] += ic_jac[3*d:3*(d+1)]
+            return gpos
+        ndofs = 3*self.system.natom
+        strain = np.zeros([ndofs, ndofs], float)
+        self.system.pos[:] = self.refdata.coords
+        self.iclist.dlist.forward()
+        self.iclist.forward()
+        jacobian = self.iclist.jacobian()
+        for icname in self.iclist.icnames:
+            ic_id = np.where(self.iclist.icnames==icname)[0][0]
+            Gq = np.array([fill_gpos(jacobian, iic) for iic in np.where(self.iclist.icname_ids==ic_id)[0] if not iic in self.iics])
+            if len(Gq) > 0:
+                U, S, Vt = np.linalg.svd(Gq)
+                svals = np.array([1.0 for s in S if s > 1e-6])
+                rank = len(svals)
+                if rank > 0:
+                    S2 = np.diag(svals**2)
+                    V  = Vt.T[:, :rank]
+                    Vo = Vt.T[:, rank:]
+                    strain += np.dot(V, np.dot(S2, V.T)) \
+                            + np.dot(Vo, Vo.T)/(100*ndofs)
+                else:
+                    raise NotImplementedError
+                    #if the gradient of the current ic is zero in equilibrium,
+                    #use the second order contribution to the Taylor expansion
+                    #of the ic (without the square)
+        return strain
+
+    def value(self, X):
+        return 0.5*np.dot(X.T, np.dot(self.S, X))
+
+    def gradient(self, X):
+        assert X.shape[0] == 3*self.system.natom + len(self.iics)
+        func = np.zeros((len(X),))
+        gconstraint = np.zeros(self.system.pos.shape)
+        self.iclist.dlist.forward()
+        self.iclist.forward()
+        #TODO Currently the evaluation of this gradient is slow.
+        #Typically the constraint force field will only contain one term, so
+        #gradient can be calculated more efficiently than what is done now.
+        self.constraint.update_pos(self.refdata.coords + X[:3*self.system.natom].reshape((-1,3)))
+        self.constraint.compute(gpos=gconstraint)
+        for i in xrange(self.constraint.parts[0].vlist.nv):
+            func[-1-i] =  self.constraint.parts[0].vlist.vtab[0]['energy'] + 1.0 - self.constrain_values[i]
+        func[:3*self.system.natom] = np.dot(self.S, X[:3*self.system.natom]) + X[-1]*gconstraint.reshape((-1,))
         return func
