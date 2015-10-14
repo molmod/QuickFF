@@ -38,7 +38,7 @@ from quickff.io import VASPRun
 
 __all__ = [
     'global_translation', 'global_rotation', 'statistics', 'fitpar',
-    'guess_ffatypes', 'get_vterm', 'read_abinitio'
+    'guess_ffatypes', 'get_vterm', 'read_abinitio', 'boxqp',
 ]
 
 def global_translation(coords):
@@ -255,79 +255,6 @@ def get_vterm( pars, indexes):
         return None
 
 
-def dump_charges_yaff(system, fn, mode='w', scales=[1.0,1.0,1.0]):
-    '''
-        Write or append charges to a file in Yaff format.
-        Assumes that charges and radii have been averaged over ffatypes.
-    '''
-    f = open(fn, mode)
-    print >> f, ''
-    print >> f, '# Fixed charges'
-    print >> f, '# ============='
-    print >> f, ''
-    print >> f, "# Mathematical form: q_A = q_0A + sum'_B p_BA"
-    print >> f, '# where q0_A is the reference charge of atom A. It is mostly zero, sometimes a'
-    print >> f, '# non-zero integer. The total charge of a fragment is the sum of all reference'
-    print >> f, '# charges. The parameter p_BA is the charge transfered from B to A. Such charge'
-    print >> f, '# transfers are only carried out over bonds in the FF topology.'
-    print >> f, '# The charge on an atom is modeled as a Gaussian distribution. The spread on the'
-    print >> f, '# Gaussian is called the radius R. When the radius is set to zero, point charges'
-    print >> f, '# will be used instead of smeared charges.'
-    print >> f, ''
-    print >> f, 'FIXQ:UNIT Q0 e'
-    print >> f, 'FIXQ:UNIT P e'
-    print >> f, 'FIXQ:UNIT R angstrom'
-    print >> f, 'FIXQ:SCALE 1 %3.1f' % scales[0]
-    print >> f, 'FIXQ:SCALE 2 %3.1f' % scales[1]
-    print >> f, 'FIXQ:SCALE 3 %3.1f' % scales[2]
-    print >> f, 'FIXQ:DIELECTRIC 1.0'
-    print >> f, ''
-    print >> f, '# Atomic parameters'
-    print >> f, '# ----------------------------------------------------'
-    print >> f, '# KEY        label  Q_0A              R_A'
-    print >> f, '# ----------------------------------------------------'
-    added = []
-    for atype, q, radius in zip(system.ffatype_ids, system.charges, system.radii):
-        if system.ffatypes[atype] not in added:
-            print >> f, 'FIXQ:ATOM %8s % 13.10f  %12.10f' % (system.ffatypes[atype], q, radius/angstrom)
-            added.append(system.ffatypes[atype])
-    f.close()
-
-def dump_vdw_yaff(system, fn, vdw, mode='w'):
-    '''
-        Write or append van der Waals parameters to a file in Yaff format.
-    '''
-    raise NotImplementedError
-    if vdw.pot.kind.startswith('MM3Buckingham'):
-        pot_id = 'MM3'
-    elif vdw.pot.kind.startswith('LennartJones'):
-        pot_id = 'LJ'
-    else:
-        raise ValueError('VDWPart in model has unsupported pot_kind: %s' %vdw.kind)
-    f = open(fn, mode)
-    print >> f, '# van der Waals'
-    print >> f, '#=============='
-    print >> f, '# The following mathemetical form is supported:'
-    print >> f, '#  - MM3:   EPSILON*(1.84e5*exp(-12*r/SIGMA)-2.25*(SIGMA/r)^6)'
-    print >> f, '#  - LJ:    4.0*EPSILON*((SIGMA/r)^12 - (SIGMA/r)^6)'
-    print >> f, '#  - PAULI: A*exp(-B*r)'
-    print >> f, ''
-    print >> f, '%s:UNIT SIGMA angstrom' %(pot_id)
-    print >> f, '%s:UNIT EPSILON kjmol' %(pot_id)
-    print >> f, '%s:SCALE 1 %4.2f' % (pot_id, vdw.scales[0])
-    print >> f, '%s:SCALE 2 %4.2f' % (pot_id, vdw.scales[1])
-    print >> f, '%s:SCALE 3 %4.2f' % (pot_id, vdw.scales[2])
-    print >> f, ''
-    print >> f, '# -------------------------------------------'
-    print >> f, '# KEY    ffatype  SIGMA         EPSILON'
-    print >> f, '# -------------------------------------------'
-    added = []
-    for atype, sigma, epsilon in zip(self.ffatypes, self.sigmas, self.epsilons):
-        if atype not in added:
-            print >> f, '%s:PARS %8s % .10f % .10f' %(pot_id, atype, sigma/angstrom, epsilon/kjmol)
-            added.append(atype)
-    f.close()
-
 def read_abinitio(fn):
     '''Wrapper to read all information from an ab initio calculation that
     QuickFF needs. Currently Gaussian .fchk and VASP .xml files are supported.
@@ -355,3 +282,65 @@ def read_abinitio(fn):
         pbc = [1,1,1]
     else: raise NotImplementedError
     return numbers, coords, energy, grad, hess, masses, rvecs, pbc
+
+def boxqp(A, B, bndl, bndu, x0, threshold=1e-12, status=False):
+    '''Minimize the function
+            1/2*xT.A.x - B.x
+    subject to
+            bndl < x < bndu (element-wise)
+    This minimization is performed using a projected gradient method with
+    step lengths computed using the Barzilai-Borwein method.
+    See 10.1007/s00211-004-0569-y for a description.
+
+    **Arguments**
+        A       (n x n) NumPy array appearing in cost function
+        B       (n) NumPy array appearing in cost function
+        bndl    (n) NumPy array giving lower boundaries for the variables
+        bndu    (n) NumPy array giving upper boundaries for the variables
+        x0      (n) NumPy array providing an initial guess
+
+    **Optional Arguments**
+        threshold   Criterion to consider the iterations converged
+        status      Return also the number of iterations performed
+    '''
+    # Check that boundaries make sense
+    assert np.all(bndl<bndu), "Some lower boundaries are higher than upper boundaries"
+    # Check that matrix A is positive definite
+    def project(x):
+        '''Project x on to the box of constraints'''
+        x[x<bndl] = bndl[x<bndl]
+        x[x>bndu] = bndu[x>bndu]
+        return x
+    def gradient(x):
+        return np.dot(A,x) - B
+    def stopping(x):
+        q = gradient(x)
+        mask = x==bndl
+        q[mask] = np.amin(np.asarray([q[mask],[0.0]*np.sum(mask)]), axis=0)
+        mask = x==bndu
+        q[mask] = np.amax(np.asarray([q[mask],[0.0]*np.sum(mask)]), axis=0)
+        return np.linalg.norm(q)
+    # Bootstrapping alpha
+    alpha = 0.1
+    g0 = gradient(x0)
+    x1 = project(x0-alpha*g0)
+    gstop = np.linalg.norm(gradient(x1))
+    converged = False
+    nit = 0
+    while converged is False:
+        nit += 1
+        # New gradient
+        g1 = gradient(x1)
+        # Compute new step length
+        s = x1 - x0
+        y = g1 - g0
+        alpha = np.dot(s,s)/np.dot(s,y)
+        # Update old values
+        x0 = x1
+        g0 = g1
+        # Compute new values
+        x1 = project(x1-alpha*g1)
+        if stopping(x1)/gstop < threshold:
+            converged = True
+    if status: return x1, nit
+    else: return x1

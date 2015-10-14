@@ -29,17 +29,15 @@
    keeping the variables within certain boundaries.
 '''
 
-from scipy.optimize import minimize
 import numpy as np
 
 from molmod.units import kjmol, angstrom
 from yaff import ForcePartValence, Cosine, Harmonic, ForceField, estimate_cart_hessian
 
-from quickff.tools import get_vterm
+from quickff.tools import get_vterm, boxqp
 
 __all__ = [
-    'HessianFCCost', 'FixedValueConstraint', 'LowerLimitConstraint',
-    'UpperLimitConstraint'
+    'HessianFCCost',
 ]
 
 class HessianFCCost(object):
@@ -120,24 +118,6 @@ class HessianFCCost(object):
         self._C = np.sum(ref*ref)
         return h
 
-    def _define_constraints(self, fftab):
-        'Define the constraints active during the minimization'
-        constraints = []
-        nterms = len(fftab.pars.keys())
-        for i, icname in enumerate(sorted(fftab.pars.keys())):
-            if icname.startswith('dihed'):
-                constraints.append(
-                    LowerLimitConstraint(i,   0*kjmol, nterms)()
-                )
-                constraints.append(
-                    UpperLimitConstraint(i, 200*kjmol, nterms)()
-                )
-            else:
-                constraints.append(
-                    LowerLimitConstraint(i, 0.0, nterms)()
-                )
-        return tuple(constraints)
-
     def fun(self, k, do_grad=False):
         '''
             Calculate the actual cost
@@ -156,15 +136,11 @@ class HessianFCCost(object):
         else:
             return chi2
 
-    def jac(self, k):
-        return np.dot(self._A, k) - self._B
-
     def estimate(self, fftab):
         '''
             Estimate the force constants by minimizing the cost function
 
         '''
-        constraints = self._define_constraints(fftab)
         h = self._update_lstsq_matrices(fftab)
         kinit = []
         for icname in sorted(fftab.pars.keys()):
@@ -173,39 +149,13 @@ class HessianFCCost(object):
             else:
                 kinit.append(fftab.pars[icname]['k'].mean)
         kinit = np.asarray(kinit)
-        #TODO: should be done by solving the linear system of equations in a subspace
-        #that is defined by the applied constraints
-        result = minimize(
-            self.fun, kinit, jac=self.jac, method='SLSQP', constraints=constraints,
-            tol=1e-9, options={'disp': False}
-        )
-        for i, icname in enumerate(sorted(fftab.pars.keys())):
-            fftab.pars[icname]['k'].data[:] = result.x[i]
-            fftab.pars[icname]['k'].update_statistics()
-        return fftab
-
-    def estimate_xalglib(self, fftab):
-        # QP with box constraints using xalglib
-        import xalglib
-        h = self._update_lstsq_matrices(fftab)
-        a = self._A.tolist()
-        b = (-self._B).tolist()
-        bndl, bndu = [], []
+        bndl = np.zeros((len(fftab.pars.keys())))
+        bndu = np.zeros((len(fftab.pars.keys()))) + np.inf
         for i, icname in enumerate(sorted(fftab.pars.keys())):
             if icname.startswith('dihed'):
-                bndu.append(200.0*kjmol)
-            else: bndu.append(float("inf"))
-            bndl.append(0.0)
-        # create solver, set quadratic/linear terms
-        state = xalglib.minqpcreate(len(b))
-        xalglib.minqpsetquadraticterm(state, a)
-        xalglib.minqpsetlinearterm(state, b)
-        xalglib.minqpsetbc(state, bndl, bndu)
-        # solve problem with QuickQP solver, default stopping criteria are used
-        xalglib.minqpsetalgoquickqp(state, 0.0, 0.0, 0.0, 0, True)
-        xalglib.minqpoptimize(state)
-        x, rep = xalglib.minqpresults(state)
-        print self.fun(np.array(x))
+                print i, icname
+                bndu[i] = 200.0*kjmol
+        x = boxqp(self._A, self._B, bndl, bndu, kinit)
         for i, icname in enumerate(sorted(fftab.pars.keys())):
             fftab.pars[icname]['k'].data[:] = x[i]
             fftab.pars[icname]['k'].update_statistics()

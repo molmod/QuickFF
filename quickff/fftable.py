@@ -60,7 +60,7 @@ class DataArray(object):
         else:
             assert isinstance(self.data, np.ndarray)
             self.data = np.append(self.data, value)
-        self.mean, self.std, self.num = statistics(self.data)
+        self.update_statistics()
 
     def __len__(self):
         'Get the number of elements in the array'

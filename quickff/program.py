@@ -210,10 +210,8 @@ class Program(object):
                 q0s.append(q0)
             ff.add(icname, ks, q0s)
             descr = icname + ' '*(maxlength-len(icname))
-            if verbose:
-                print '    %s   K = %s    q0 = %s' % (
-                    descr, ks.string(), q0s.string()
-                )
+        if verbose:
+            ff.print_screen()
         return ff
 
     def estimate_linear_model(self, skip_dihedrals=True, verbose=True, ff=None):
@@ -284,10 +282,8 @@ class Program(object):
                 q0s.append(q0)
             ff.add(icname, ks, q0s)
             descr = icname + ' '*(maxlength-len(icname))
-            if verbose:
-                print '    %s   K = %s    q0 = %s' % (
-                    descr, ks.string(), q0s.string()
-                )
+        if verbose:
+            ff.print_screen()
         return ff
 
     def refine_cost(self, fftab, verbose=True):

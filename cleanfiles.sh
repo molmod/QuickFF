@@ -4,6 +4,5 @@ for i in $(find doc | egrep "\.pyc$|\.py~$|\.pyc~$|\.bak$|\.so$") ; do rm -v ${i
 for i in $(find share/systems | egrep "\.pdf$|\.xyz$|\.txt$|\.chk$|\.pps$|\.zip$|\.log$") ; do rm -v ${i}; done
 
 (cd doc; make clean)
-rm -v MANIFEST
 rm -vr dist
 rm -vr build

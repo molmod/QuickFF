@@ -108,6 +108,8 @@ def parser():
 
 def main(fn, options):
     if not options.yaff_output: log.set_level(log.silent)
+    if options.linear and options.refine_rvs:
+        raise UserWarning, "The options --linear and --refine-rvs are incompatible, choose one of both"
     numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn)
     # Setup system
     if options.chk_fn is not None:

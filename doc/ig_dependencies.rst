@@ -57,20 +57,3 @@ download and install Scoop (version 0.6.0.final), run the following commands
     tar -xvzf scoop-0.6.0.final.tar.gz
     cd scoop-0.6.0.final
     python setup.py install
-
-An optional dependency is ALGLIB, which is used to perform the minimization of
-a quadratic cost function with box constraints. If ALGLIB is not installed,
-this minimization can also be performed using standar SciPy minimizers.
-You can find instructions on how to install the Python wrapper for ALGLIB
-`here <http://www.alglib.net/download.php>`_. Following commands might work:
-
-* UNIX::
-
-    wget http://www.alglib.net/translator/re/alglib-3.10.0.cpython.gpl.zip
-    unzip alglib-3.10.0.cpython.gpl.zip
-    cd cpython/core
-    chmod u+x aenv build-unix
-    ./build-unix
-    cd ../
-    chmod u+x setup.py
-    ./setup.py install --home=~
