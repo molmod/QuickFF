@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2015 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2016 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 # (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
@@ -23,7 +23,8 @@
 #
 #--
 
-'''Convenience functions to enable using scoop.
+'''
+    Convenience functions to enable using scoop.
 '''
 
 __all__ = ['ParaContext', 'paracontext']
@@ -40,12 +41,12 @@ class FakeFuture(object):
 
 class ParaContext(object):
     def __init__(self):
-        # initialize with serial version of map and submit
+        #initialize with serial version of map and submit by default
         self.use_stub()
 
     def use_stub(self):
-        def my_map(fn, l, **kwargs):
-            return [fn(i, **kwargs) for i in l]
+        def my_map(fn, args, **kwargs):
+            return [fn(arg, **kwargs) for arg in args]
         def my_wait_first(fs):
             return fs[:1], fs[1:]
         def debug_log(*args):

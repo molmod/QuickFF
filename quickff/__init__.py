@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2015 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2016 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 # (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
@@ -26,14 +26,17 @@
 '''QuickFF is a code to quickly derive accurate force fields from ab initio input.
 '''
 
+from yaff import System
+from yaff import log
+log.set_level(log.silent)
 
-from quickff.program import *
+from quickff.reference import *
+from quickff.valence import *
 from quickff.perturbation import *
-from quickff.refdata import *
-from quickff.fftable import *
-from quickff.tools import *
+from quickff.program import *
 from quickff.cost import *
 from quickff.io import *
+from quickff.tools import *
 
 import numpy
 numpy.set_printoptions(linewidth=170)

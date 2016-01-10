@@ -26,6 +26,8 @@
 
 from optparse import OptionParser
 
+from molmod.units import *
+
 from yaff import System, ForceField
 from yaff import log
 
@@ -101,7 +103,9 @@ def main():
     if system.ffatypes is None: raise NotImplementedError
     # Read non-covalent force field
     if options.ncff_fn is not None:
-        ff = ForceField.generate(system, options.ncff_fn)
+        if pbc[0]==0: rcut = 50*angstrom
+        else: rcut = 15*angstrom
+        ff = ForceField.generate(system, options.ncff_fn, rcut=rcut)
     else:
         ff = None
     # Construct reference data
