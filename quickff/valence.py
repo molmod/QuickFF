@@ -24,13 +24,16 @@
 #--
 from molmod.units import *
 
-from yaff.pes.ff import ForcePartValence
+from yaff.pes.ff import ForceField, ForcePartValence
 from yaff.pes.parameters import *
 from yaff.pes.vlist import ValenceList
 from yaff.pes.vlist import Harmonic, Fues, Cosine, Cross
 from yaff.pes.iclist import InternalCoordinateList
 from yaff.pes.iclist import Bond, BendAngle, DihedAngle, OopDist
 from yaff.pes.dlist import DeltaList
+from yaff.sampling.harmonic import estimate_cart_hessian
+
+from quickff.tools import dihed_to_chebychev, term_sort_atypes
 
 import numpy as np
 
@@ -38,21 +41,21 @@ __all__ = ['ValenceFF']
 
 class Term(object):
     '''
-        A class to store some extra easy-accessible information compared to
-        what is stored in the Yaff classes.
+        A class to store easy-accessible information about a term included in 
+        the valence force field
     '''
-    def __init__(self, index, kind, basename, tasks, ics, units, master=None, slaves=None):
+    def __init__(self, index, basename, kind, ics, tasks, units,master=None, slaves=None):
         self.index = index
-        self.kind = kind
         self.basename = basename
-        self.tasks = tasks
+        self.kind = kind
         self.ics = ics
+        self.tasks = tasks
         self.units = units
         self.master = master
         self.slaves = slaves
     
     def is_master(self):
-        return self.index==self.master
+        return self.master==self.index
     
     def to_string(self, valence):
         #check if current is master
@@ -78,12 +81,12 @@ class Term(object):
             fmt = [('fc = ', 1, '%6.1f'), ('rv  = ', 2, '%7.3f'), ('m = ', 0, '%i')]
         else:
             raise NotImplementedError
-        line = '\t'+self.basename+' '*(40-len(self.basename))
+        line = self.basename+' '*(40-len(self.basename))
         for start, ipar, strfmt in fmt:
             par_line = start
             if not np.isnan(means[ipar]):
                 par_line += strfmt %(means[ipar]/parse_unit(self.units[ipar]))
-                par_line += u' \u00B1 '
+                par_line += '+-'#u' \u00B1 '
                 par_line += strfmt %(stds[ipar]/parse_unit(self.units[ipar]))
                 par_line += ' %s' %self.units[ipar]
             line += par_line + ' '*(35-len(par_line))
@@ -97,16 +100,52 @@ class ValenceFF(ForcePartValence):
     '''
     def __init__(self, system, specs=None):
         self.system = system
-        self.data = []
+        self.terms = []
         ForcePartValence.__init__(self, system)
         self.init_terms(specs=specs)
         self.set_dihedral_multiplicities()
     
-    def add_data(self, kind, basename, tasks, ics, units):
-        index = len(self.data)
+    def add_term(self, termpot, ics, atypes, tasks, units):
+        '''
+            Adds new term both to the Yaff vlist object and a new QuickFF
+            list (self.terms) which holds all information about the term
+            for easy access later in QuickFF.
+        '''
+        index = len(self.terms)
+        #define the name
+        if len(ics)==1:
+            tmp = {
+                (0,0): 'BondHarm/', (2,0): 'BendAHarm/', (4,4): 'Torsion/',
+                (10,0): 'Oopdist/',
+            }
+            prefix = tmp[(ics[0].kind, termpot.kind)]
+            suffix = ''
+        else:
+            assert len(ics)==2 and termpot.kind==3
+            prefix = 'Cross/'
+            if ics[0].kind==0 and ics[1].kind==0:
+                suffix = '/bb' #first bond and second bond
+            elif ics[0].kind==0 and ics[1].kind==2:
+                if set(ics[0].index_pairs[0])==set(ics[1].index_pairs[0]):
+                    suffix = '/b0a' #first bond and angle
+                elif set(ics[0].index_pairs[0])==set(ics[1].index_pairs[1]):
+                    suffix = '/b1a' #second bond and angle
+                else:   
+                    raise ValueError('Incompatible bond/angle given in cross term')
+            else:
+                raise ValueError('Incompatible ICs given in cross term')
+        sorted_atypes = atypes[:]
+        if len(ics)==1 and ics[0].kind==10:
+            assert len(atypes)==4
+            sorted_atypes = sorted(atypes[:3])+[atypes[3]]
+        else:
+            if atypes[0]>atypes[-1]:
+                sorted_atypes = atypes[::-1]
+        basename = prefix+'.'.join(sorted_atypes)+suffix
+        #search for possible master and update slaves
         master = None
         slaves = None
-        for i, term in enumerate(self.data):
+        for i, term in enumerate(self.terms):
             if term.basename==basename:
                 if term.is_master():
                     master = term.index
@@ -116,14 +155,22 @@ class ValenceFF(ForcePartValence):
         if master is None:
             master = index
             slaves = []
-        term = Term(
-            index, kind, basename, tasks, ics, 
+        #add term to self.terms and self.vlist.vtab
+        self.terms.append(Term(
+            index, basename, termpot.kind, ics, tasks,
             units, master=master, slaves=slaves
-        )
-        self.data.append(term)
+        ))
+        _npars = {0: 2, 3: 3, 4: 3}#number of pars for each term kind
+        args = [None,]*_npars[termpot.kind] + ics
+        ForcePartValence.add_term(self, termpot(*args))
+        assert len(self.terms)==self.vlist.nv
     
     def iter_masters(self, label=None):
-        for term in self.data:
+        '''
+            Iterate over all master terms (whos name possibly contain the given
+            label) in the valence force field
+        '''
+        for term in self.terms:
             if label is None or label.lower() in term.basename.lower():
                 if term.is_master():
                     yield term
@@ -141,96 +188,55 @@ class ValenceFF(ForcePartValence):
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
         #get the bond terms
         for bond in self.system.iter_bonds():
-            types = [ffatypes[i] for i in bond]
-            if types[-1]<types[0]:
-                types = types[::-1]
-                bond = bond[::-1]
-            ic = Bond(bond[0], bond[1])
-            basename = 'BondHarm/%s.%s' %(types[0],types[1])
+            bond, types = term_sort_atypes(ffatypes, bond, 'bond')
             units = ['kjmol/A**2', 'A']
-            self.add_data(0, basename, ['PT_ALL', 'HC_FC_DIAG'], [ic], units)
-            self.add_term(Harmonic(None, None, ic))
+            self.add_term(Harmonic, [Bond(*bond)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
         #get the angle terms
         for angle in self.system.iter_angles():
-            types = [ffatypes[i] for i in angle]
-            if types[-1]<types[0]:
-                types = types[::-1]
-                angle = angle[::-1]
-            ic = BendAngle(angle[0], angle[1], angle[2])
-            basename = 'BendAHarm/%s.%s.%s' %(types[0],types[1],types[2])
+            angle, types = term_sort_atypes(ffatypes, angle, 'angle')
             units = ['kjmol/rad**2', 'deg']
-            self.add_data(0,basename, ['PT_ALL', 'HC_FC_DIAG'], [ic], units)
-            self.add_term(Harmonic(None, None, ic))
+            self.add_term(Harmonic, [BendAngle(*angle)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
         #get the dihedral terms
         for dihedral in self.system.iter_dihedrals():
-            types = [ffatypes[i] for i in dihedral]
-            if types[-1]<types[0]:
-                types = types[::-1]
-                dihedral = dihedral[::-1]
-            ic = DihedAngle(dihedral[0], dihedral[1], dihedral[2], dihedral[3])
-            basename = 'Torsion/%s.%s.%s.%s' %(types[0],types[1],types[2],types[3])
+            dihedral, types = term_sort_atypes(ffatypes, dihedral, 'dihedral')
             units = ['au', 'kjmol', 'deg']
-            self.add_data(4, basename, ['EQ_RV', 'HC_FC_DIAG'], [ic], units)
-            self.add_term(Cosine(None, None, None, ic))
+            self.add_term(Cosine, [DihedAngle(*dihedral)], types, ['EQ_RV', 'HC_FC_DIAG'], units)
         #get the out-of-plane distance terms
         for oopdist in self.system.iter_oops():
-            types = sorted([ffatypes[i] for i in oopdist[:3]])
-            types.append(ffatypes[oopdist[3]])
-            ic = OopDist(oopdist[0], oopdist[1], oopdist[2], oopdist[3])
-            basename = 'Oopdist/%s.%s.%s.%s' %(types[0],types[1],types[2],types[3])
+            oopdist, types = term_sort_atypes(ffatypes, oopdist, 'dihedral')
             units = ['kjmol/A**2', 'A']
-            self.add_data(0, basename, ['PT_ALL', 'HC_FC_DIAG'], [ic], units)
-            self.add_term(Harmonic(None, None, ic))
-    
-    def _get_bond(self, atom0, atom1):
-        '''
-            Method to extract the Bond IC between the given atoms from the
-            existing ICList. Return error if it does not yet exist.
-        '''
-        bond = Bond(atom0, atom1)
-        rows_signs = bond.get_rows_signs(self.dlist)
-        key = (bond.kind,) + sum(rows_signs, ())
-        if key not in self.iclist.lookup.keys():
-            bond = Bond(atom1, atom0)
-            rows_signs = bond.get_rows_signs(self.dlist)
-            key = (bond.kind,) + sum(rows_signs, ())
-            assert key in self.iclist.lookup.keys(), \
-                'No bond between atoms %i and %i detected' %(atom0, atom1)
-        return bond
+            self.add_term(Harmonic, [OopDist(*oopdist)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
     
     def init_cross_terms(self, specs=None):
         ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
         for angle in self.system.iter_angles():
-            types = [ffatypes[i] for i in angle]
-            if types[-1]<types[0]:
-                types = types[::-1]
-                angle = angle[::-1]
-            bond0 = self._get_bond(angle[0], angle[1])
-            bond1 = self._get_bond(angle[1], angle[2])
-            bend = BendAngle(angle[0], angle[1], angle[2])
+            angle, types = term_sort_atypes(ffatypes, angle, 'angle')
+            bond0, btypes = term_sort_atypes(ffatypes, angle[:2], 'bond')
+            bond1, btypes = term_sort_atypes(ffatypes, angle[1:], 'bond')
             #add stretch-stretch
-            basename = 'CrossBondBond/%s.%s.%s' %(types[0],types[1],types[2])
-            units = ['kjmol/A**2', 'A', 'A']
-            self.add_data(3, basename, ['HC_FC_CROSS'], [bond0,bond1], units)
-            self.add_term(Cross(None, None, None, bond0, bond1))
+            self.add_term(Cross,
+                [Bond(*bond0), Bond(*bond1)],
+                types, ['HC_FC_CROSS'], ['kjmol/A**2', 'A', 'A']
+            )
             #add stretch0-bend
-            basename = 'CrossBond0Bend/%s.%s.%s' %(types[0],types[1],types[2])
-            units = ['kjmol/(A*rad)', 'A', 'deg']
-            self.add_data(3, basename, ['HC_FC_CROSS'], [bond0, bend], units)
-            self.add_term(Cross(None, None, None, bond0, bend))
+            self.add_term(Cross, 
+                [Bond(*bond0), BendAngle(*angle)],
+                types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
+            )
             #add stretch1-bend
-            basename = 'CrossBond1Bend/%s.%s.%s' %(types[0],types[1],types[2])
-            units = ['kjmol/(A*rad)', 'A', 'deg']
-            self.add_data(3, basename, ['HC_FC_CROSS'], [bond1, bend], units)
-            self.add_term(Cross(None, None, None, bond1, bend))
+            self.add_term(Cross, 
+                [Bond(*bond1), BendAngle(*angle)],
+                types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
+            )
 
-    def set_dihedral_multiplicities(self):  
+    def set_dihedral_multiplicities(self):
+        'Estimate the dihedral multiplicities from the local topology'
         for index in xrange(self.vlist.nv):
             term = self.vlist.vtab[index]
             ic = self.iclist.ictab[term['ic0']]
             if not ic['kind']==4: continue #only proceed for DihedAngle
-            i = self.data[index].ics[0].index_pairs[0][0]
-            j = self.data[index].ics[0].index_pairs[1][1]
+            i = self.terms[index].ics[0].index_pairs[0][0]
+            j = self.terms[index].ics[0].index_pairs[1][1]
             n1 = len(self.system.neighs1[i])
             n2 = len(self.system.neighs1[j])
             if set([n1,n2])==set([4,4]):   m = 3
@@ -241,8 +247,35 @@ class ValenceFF(ForcePartValence):
             elif set([n1,n2])==set([2,2]): m = 1
             else:
                 raise ValueError('No estimate for mult of %s(%i) found') \
-                    %(self.data[index].basename, index)
+                    %(self.terms[index].basename, index)
             self.set_params(index, m=m)
+    
+    def set_dihedral_rest_values(self):
+        'Estimate the dihedral rest values from the local topology'
+        #set the rest value for each master and slave seperately
+        for index in xrange(self.vlist.nv):
+            term = self.terms[index]
+            vterm = self.vlist.vtab[index]
+            ic = self.iclist.ictab[vterm['ic0']]
+            if not ic['kind']==4: continue #only proceed for DihedAngle
+            m = self.get_params(index, only='m')
+            assert not np.isnan(m), 'Multiplicity not set for %s' %term.basename
+            per = 360.0*deg/m
+            psi0 = ic['value']%per
+            if (psi0>=0 and psi0<=per/6.0) or (psi0>=5*per/6.0 and psi0<=per):
+                rv = 0.0
+            elif psi0>=2*per/6.0 and psi0<=4*per/6.0:
+                rv = per/2.0
+            else:
+                raise ValueError('Could not determine rv of %s' %term.basename)
+            self.set_params(index, rv0=rv)
+        #check whether all slaves have identical rest value as the master
+        for master in self.iter_masters(label='Torsion'):
+            rv = self.get_params(master.index, only='rv')
+            for slave in master.slaves:
+                rvslave = self.get_params(slave, only='rv')
+                assert rvslave==rv, "Slaves of %s do not have identical \
+                    rest value as the master" %master.basename
     
     def calc_energy(self, pos):
         self.system.pos = pos.copy()
@@ -250,6 +283,47 @@ class ValenceFF(ForcePartValence):
         self.iclist.forward()
         self.vlist.forward()
         return self.compute()
+    
+    def get_hessian_contrib(self, index, fc=None):
+        '''
+            Get the contribution to the covalent hessian of term with given
+            index (and its slaves). If fc is given, set the fc of the master
+            and its slave to the given fc.
+        '''
+        val = ForcePartValence(self.system)
+        kind = self.vlist.vtab[index]['kind']
+        masterslaves = [index]+self.terms[index].slaves
+        kind_to_term = {0: Harmonic, 2: Fues, 3: Cross, 4: Cosine}
+        if kind==4:#Cosine
+            m, k, rv = self.get_params(index)
+            if fc is not None: k = fc
+            for jterm in masterslaves:
+                ics = self.terms[jterm].ics
+                chebychev = None #dihed_to_chebychev([m, k, rv], ics[0])
+                if chebychev is not None:
+                    val.add_term(chebychev)
+                else:
+                    args = (m, k, rv) + tuple(ics)
+                    val.add_term(Cosine(*args))
+        elif kind==3:#cross
+            k, rv0, rv1 = self.get_params(index)
+            if fc is not None: k = fc
+            for jterm in masterslaves:
+                ics = self.terms[jterm].ics
+                args = (k, rv0, rv1) + tuple(ics)
+                val.add_term(Cross(*args))
+        elif kind==0:#Harmonic:
+            k, rv = self.get_params(index)
+            if fc is not None: k = fc
+            for jterm in masterslaves:
+                ics = self.terms[jterm].ics
+                args = (k, rv) + tuple(ics)
+                val.add_term(kind_to_term[kind](*args))
+        else:
+            raise ValueError('Term kind %i not supported' %kind)
+        ff = ForceField(self.system, [val])
+        hcov = estimate_cart_hessian(ff)
+        return hcov
     
     def set_params(self, term_index, fc=None, rv0=None, rv1=None, m=None):
         term = self.vlist.vtab[term_index]
@@ -291,7 +365,28 @@ class ValenceFF(ForcePartValence):
             raise NotImplementedError, \
                 'set_params not implemented for Yaff %s term' %term['kind']
 
+    def check_params(self, term, labels):
+        '''
+            Check whether the given term has all given pars defined in
+            labels.
+            
+            **Arguments**
+            
+            term
+                An instance of the Term class defining the term that has to be
+                checked
+            
+            labels
+                A list of strings defining which parameters should be checked.
+                only arguments of the `only` option of Valence.get_params
+                are allowed.
+        '''
+        for label in labels:
+            value = self.get_params(term.index, only=label)
+            assert not np.isnan(value), '%s of %s is not set' %(label, term.basename)
+    
     def dump_screen(self):
+        'Dump the parameters to stdout'
         sequence = ['bondharm', 'bendaharm', 'torsion', 'oopdist', 'cross']
         print ''
         for label in sequence:
@@ -299,7 +394,7 @@ class ValenceFF(ForcePartValence):
             for term in self.iter_masters(label=label):
                 lines.append(term.to_string(self))
             for line in sorted(lines):
-                print line
+                print '  '+line
         print ''
 
     def _bonds_to_yaff(self):
@@ -373,37 +468,43 @@ class ValenceFF(ForcePartValence):
                 'THETA0 deg'
             ]
         )
+        done = []
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
-            ffatypes = master.basename.split('/')[1].split('.')
-            K, rv0, rv1 = self.get_params(master.index)
-            if K<1e-6: continue
-            if 'bondbond' in master.basename.lower():
-                pars.lines.append(
-                    '%8s  %8s  %8s  %.10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
-                        ffatypes[0], ffatypes[1], ffatypes[2],
-                        K/parse_unit(master.units[0]), 0.0, 0.0,
-                        rv0/parse_unit(master.units[1]),
-                        rv1/parse_unit(master.units[2]), 0.0,
-                ))
-            elif 'bond0bend' in master.basename.lower():
-                pars.lines.append(
-                    '%8s  %8s  %8s  %.10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
-                        ffatypes[0], ffatypes[1], ffatypes[2],
-                        0.0, K/parse_unit(master.units[0]), 0.0,
-                        rv0/parse_unit(master.units[1]),
-                        0.0, rv1/parse_unit(master.units[2]),
-                ))
-            elif 'bond1bend' in master.basename.lower():
-                pars.lines.append(
-                    '%8s  %8s  %8s  %.10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
-                        ffatypes[0], ffatypes[1], ffatypes[2],
-                        0.0, 0.0, K/parse_unit(master.units[0]),
-                        0.0, rv0/parse_unit(master.units[1]),
-                        rv1/parse_unit(master.units[2]),
-                ))
-            else:
-                raise ValueError
+            prefix, ffatypes, suffix = master.basename.split('/')
+            label = prefix+'/'+ffatypes
+            if label in done: continue
+            for j, other in enumerate(self.iter_masters(label=label)):
+                if 'bb' in other.basename:
+                    bb = self.get_params(other.index)
+                    kssunit = other.units[0]
+                    r0unit = other.units[1]
+                    r1unit = other.units[2]
+                elif 'b0a' in other.basename:
+                    b0a = self.get_params(other.index)
+                    kbs0unit = other.units[0]
+                    theta0unit = other.units[2]
+                elif 'b1a' in other.basename:
+                    b1a = self.get_params(other.index)
+                    kbs1unit = other.units[0]
+                else:
+                    raise ValueError('Invalid Cross term %s' %other.basename)
+            assert j==2, 'Exactly 3 %s terms should exist' %label
+            assert bb[1]==b0a[1], 'Incompatible parameters in %s' %label
+            assert bb[2]==b1a[1], 'Incompatible parameters in %s' %label
+            assert b0a[2]==b1a[2], 'Incompatible parameters in %s' %label
+            Kss, r0, r1 = bb
+            Kbs0, r0, theta0 = b0a
+            Kbs1, r1, theta0 = b1a
+            ffatypes = ffatypes.split('.')
+            pars.lines.append(
+                '%8s  %8s  %8s  %.10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
+                    ffatypes[0], ffatypes[1], ffatypes[2],
+                    Kss/parse_unit(kssunit), Kbs0/parse_unit(kbs0unit),
+                    Kbs1/parse_unit(kbs1unit), r0/parse_unit(r0unit),
+                    r1/parse_unit(r1unit), theta0/parse_unit(theta0unit),
+            ))
+            done.append(label)
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
     def dump_yaff(self, fn):

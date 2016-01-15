@@ -61,9 +61,8 @@ class BaseProgram(object):
         self.kwargs = kwargs
         self.valence = ValenceFF(system, specs=kwargs.get('term_specs', None))
         self.perturbation = RelaxedStrain(
-                system, refs, self.valence,
-                do_taylor=kwargs.get('do_taylor', None)
-            )
+            system, refs, do_taylor=kwargs.get('do_taylor', None)
+        )
 
     def reset_system(self):
         '''
@@ -77,24 +76,16 @@ class BaseProgram(object):
                 return
         raise IOError("No Ab Initio reference found. Be sure to add the string 'ai' to its name.")
     
-    def do_pt_generate(self, fn_traj=None):
+    def do_pt_generate(self):
         '''
             Generate perturbation trajectories.
         '''
+        #configure
         self.reset_system()
-        #load/construct perturbation trajectories
-        if fn_traj is not None and os.path.isfile(fn_traj):
-            with open(fn_traj,'r') as f:
-                trajectories = cPickle.load(f)
-        else:
-            #configure
-            trajectories = self.perturbation.prepare()
-            #compute
-            paracontext.map(self.perturbation.generate, trajectories)
-            #write to file
-            if 'fn_traj' in self.kwargs.keys():
-                with open(fn_traj,'w') as f:
-                    cPickle.dump(trajectories,f)
+        do_terms = [term for term in self.valence.terms if 'PT_ALL' in term.tasks]
+        trajectories = self.perturbation.prepare(self.valence, do_terms)
+        #compute
+        paracontext.map(self.perturbation.generate, trajectories)
         return trajectories
         
     def do_pt_estimate(self, trajectories):
@@ -107,18 +98,7 @@ class BaseProgram(object):
             #compute fc and rv from trajectory
             self.perturbation.estimate(traj)
             #set force field parameters to computed fc and rv
-            self.valence.set_params(traj.index, fc=traj.fc, rv0=traj.rv)
-
-    def do_pt_refinervs(self, trajectories):
-        '''
-            Refine rest values by revisiting the perturbation trajectories.
-        '''
-        self.reset_system()
-        for traj in trajectories:
-            #refine rest value for current trajectory
-            self.perturbation.refinervs(traj)
-            #set force field parameters to computed fc and rv
-            self.valence.set_params(traj.index, fc=traj.fc, rv0=traj.rv)
+            self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
     
     def do_eq_setrv(self, task_flag):
         '''
@@ -127,7 +107,7 @@ class BaseProgram(object):
         self.reset_system()
         for index in xrange(self.valence.vlist.nv):
             term = self.valence.vlist.vtab[index]
-            if task_flag is None or task_flag in self.valence.data[index].tasks:
+            if task_flag is None or task_flag in self.valence.terms[index].tasks:
                 if term['kind']==3:#cross term
                     ic0 = self.valence.iclist.ictab[term['ic0']]
                     ic1 = self.valence.iclist.ictab[term['ic1']]
@@ -152,14 +132,23 @@ class BaseProgram(object):
         self.reset_system()
         term_indices = []
         for index in xrange(self.valence.vlist.nv):
-            if task_flag in self.valence.data[index].tasks:
-                term = self.valence.data[index]
+            term = self.valence.terms[index]
+            if task_flag in term.tasks:
+                #first check if all rest values and multiplicities have been defined
+                if term.kind==0: self.valence.check_params(term, ['rv'])
+                if term.kind==3: self.valence.check_params(term, ['rv0','rv1'])
+                if term.kind==4: self.valence.check_params(term, ['rv', 'm'])
                 if term.is_master():
                     term_indices.append(index)
+            else:
+                #first check if all pars have been defined
+                if term.kind==0: self.valence.check_params(term, ['fc', 'rv'])
+                if term.kind==3: self.valence.check_params(term, ['fc', 'rv0','rv1'])
+                if term.kind==4: self.valence.check_params(term, ['fc', 'rv', 'm'])
         cost = HessianFCCost(self.system, self.refs, self.valence, term_indices)   
         fcs = cost.estimate()
         for index, fc in zip(term_indices, fcs):
-            master = self.valence.data[index]
+            master = self.valence.terms[index]
             assert master.is_master()
             self.valence.set_params(index, fc=fc)
             for islave in master.slaves:
@@ -187,7 +176,7 @@ class BaseProgram(object):
                     assert rv1 is None
                     rv1 = self.valence.get_params(index2, only='rv')
             if rv0 is None or rv1 is None:
-                raise ValueError('No rest values found for %s' %self.valence.data[index].basename)
+                raise ValueError('No rest values found for %s' %self.valence.terms[index].basename)
             self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
     
     def do_average_pars(self):
@@ -240,9 +229,7 @@ class BaseProgram(object):
 
 class Program(BaseProgram):
     def run(self):
-        trajectories = self.do_pt_generate(
-            fn_traj=self.kwargs.get('fn_traj', None),
-        )
+        trajectories = self.do_pt_generate()
         self.do_pt_estimate(trajectories)
         self.do_eq_setrv('EQ_RV')
         self.do_average_pars()

@@ -25,9 +25,11 @@
 
 from molmod.io.xyz import XYZWriter
 from molmod.units import *
+from molmod.periodic import periodic as pt
 
 from yaff.pes.ff import ForceField, ForcePartValence
-from yaff.pes.vlist import Chebychev1
+from yaff.pes.vlist import Chebychev1, Harmonic
+from yaff.pes.iclist import Bond, BendAngle, DihedAngle, OopDist
 
 from quickff.tools import fitpar
 
@@ -40,20 +42,16 @@ class Trajectory(object):
     '''
         A class to store a perturbation trajectory
     '''
-    def __init__(self, index, name, numbers, start, end, steps=11, qunit='au', kunit='au'):
+    def __init__(self, term, strain, start, end, steps=11):
         '''
             **Arguments**
             
-            index
-                the index in the valence force field vlist of the valence term 
-                associated with the current trajectory 
+            term
+                an instance of the Term class for which the perturbation
+                trajectory will be computed
             
-            name
-                the name of the valence term associated with the current
-                trajectory
-            
-            numbers
-                a numpy array containing the atomic numbers of the system
+            strain
+                a Strain instanve
             
             start
                 a float defining the lower limit of the perturbation value of
@@ -70,24 +68,17 @@ class Trajectory(object):
             steps
                 an integer defining the number of steps in the perturbation
                 trajectory. The default value is 11 steps.
-            
-            qunit
-                the unit of the internal coordinate value
-            
-            kunit
-                the unit of the force constant associated with the IC
         '''
-        self.index = index
-        self.name = name
-        self.numbers = numbers
-        self.qunit = qunit
-        self.kunit = kunit
+        self.term = term
+        self.strain = strain
+        self.qunit = term.units[1]
+        self.kunit = term.units[0]
         self.qvals = start + (end-start)/(steps-1)*np.array(range(steps), float)
-        self.coords =  np.zeros([steps, len(numbers), 3], float)
+        self.coords = np.zeros([steps, len(self.strain.system.numbers), 3], float)
         self.fc = None
         self.rv = None
     
-    def plot(self, fn, refs, eunit='kjmol'):
+    def plot(self, refs, fn=None, eunit='kjmol'):
         '''
             Method to plot the energy contributions along a perturbation
             trajectory associated to a given ic. This method assumes that the
@@ -95,14 +86,14 @@ class Trajectory(object):
 
             **Arguments**
             
-            fn
-                a string defining the name of the figure
-            
             refs
                 a list of Reference instances. The value of each of these
                 contributions will be plotted.
 
             **Optional Arguments**
+            
+            fn
+                a string defining the name of the figure
 
             eunit
                 a string describing the conversion of the unit of energy. More
@@ -138,51 +129,54 @@ class Trajectory(object):
             #plot data
             ax.plot(
                 self.qvals/parse_unit(self.qunit), data/parse_unit(eunit), linestyle, 
-                linewidth=linewidth, label='%8s %s' %(ref.name, label)
+                linewidth=linewidth, label='%8s %s' %(ref.name+' '*(8-len(ref.name)), label)
             )
         #plot current term 
         cov = 0.5*self.fc*(self.qvals - self.rv)**2
         cov -= cov[len(cov)/2]
         label = '(K=%.0f q0=%.3f)' %(
-            k/parse_unit(self.kunit),
-            q0/parse_unit(self.qunit)
+            self.fc/parse_unit(self.kunit),
+            self.rv/parse_unit(self.qunit)
         )
         ax.plot(
             self.qvals/parse_unit(self.qunit), cov/parse_unit(eunit),
-            'r-', linewidth=2, label='FF cov   %s' %covlabel
+            'r-', linewidth=2, label='FF cov %s' %label
         )
         #decorate plot with title, labels, ...
-        ax.set_title(self.name)
-        ax.set_xlabel('%s [%s]' % (self.name.split('/')[0], self.qunit), fontsize=16)
+        ax.set_title(self.term.basename)
+        ax.set_xlabel('%s [%s]' % (self.term.basename.split('/')[0], self.qunit), fontsize=16)
         ax.set_ylabel('Energy [%s]' %eunit, fontsize=16)
         ax.grid()
         ax.legend(loc='best', fontsize=16)
         fig.set_size_inches([8, 8])
+        if fn is None: fn = self.term.basename.replace('/', '-')+'-%i.png'%self.term.index
         fig.savefig(fn)
     
-    def to_xyz(self, fn):
+    def to_xyz(self, fn=None):
         '''
             Method to write the given trajectory to an XYZ file. This method
             assumes that the coords attribute has been assigned.
 
-            **Arguments**
+            **Optional Arguments**
 
             fn
                 a string defining the name of the output file
         '''
-        assert self.coords is None, 'Coords attribute not assigned'
-        f = open(filename, 'w')
-        xyz = XYZWriter(f, [pt[Z].symbol for Z in self.numbers])
+        if fn is None: fn = self.term.basename.replace('/', '-')+'-%i.xyz'%self.term.index
+        f = open(fn, 'w')
+        xyz = XYZWriter(f, [pt[Z].symbol for Z in self.strain.system.numbers])
         for frame, coord in enumerate(self.coords):
-            xyz.dump('frame %i' %frame, coords)
+            xyz.dump('frame %i' %frame, coord)
         f.close()
 
 
 
-
-class BasePerturbationTheory(object):
-    def __init__(self, system, refs, valence):
+class RelaxedStrain(object):
+    def __init__(self, system, refs, do_taylor=False):
         self.system = system
+        if do_taylor:
+            #TODO: extend for taylor strain
+            raise NotImplementedError
         self.ai = None
         self.refs = []
         for ref in refs:
@@ -192,55 +186,31 @@ class BasePerturbationTheory(object):
                 self.refs.append(ref)
         if self.ai is None:
             raise IOError("No Ab Initio reference found. Be sure to add the string 'ai' to its name.")
-        self.valence = valence
 
-    def prepare(self):
+    def prepare(self, valence, do_terms):
         '''
             Method to initialize trajectories and configure everything required
             for the generate method.
         '''
-        #set system coords to ab initio reference and compute the values of
-        #all ics
-        self.system.pos = self.ai.coords.copy()
-        self.valence.dlist.forward()
-        self.valence.iclist.forward()
-        #list of diagonal terms for which the perturbation trajectories will be
-        #computed also set fc to 1.0 and rv to ai equilibrium of each harmonic
-        #term
         trajectories = []
-        for index in xrange(self.valence.vlist.nv):
-            term = self.valence.vlist.vtab[index]
-            ic = self.valence.iclist.ictab[term['ic0']]
-            self.valence.set_params(index,fc=1.0,rv0=ic['value'])
-            if 'PT_ALL' in self.valence.data[index].tasks:
-                if 'EQ_RV' in self.valence.data[index].tasks:
-                    raise ValueError, 'Both PT_ALL and EQ_RV are in the tasks of %s' \
-                        % self.valence.data[index].name
-                if term['kind']==0:#harmonic
-                    kunit, qunit = self.valence.data[index].units
-                else:
-                    raise ValueError('Perturbation trajectory not supported for terms of kind %i' %term['kind'])
-                if ic['kind'] in [0, 10]:
-                    start=ic['value']-0.05*angstrom
-                    end=ic['value']+0.05*angstrom
-                elif ic['kind'] in [2, 4]:
-                    start=ic['value']-5*deg
-                    end=ic['value']+5*deg
-                    if end>180*deg: end=180*deg
-                    if start<0*deg:
-                        raise ValueError(
-                            'Starting angle for %s is smaller than zero' %(
-                                self.valence.data[index].name
-                            )
-                        )
-                else:
-                    raise NotImplementedError
-                traj = Trajectory(
-                    index, self.valence.data[index].name+'('+str(index)+')',
-                    self.system.numbers, start, end, steps=11, qunit=qunit, 
-                    kunit=kunit
-                )
-                trajectories.append(traj)
+        for term in do_terms:
+            assert term.kind==0, 'Only harmonic terms supported for pert traj'
+            ic = valence.iclist.ictab[valence.vlist.vtab[term.index]['ic0']]
+            kunit, qunit = term.units
+            if ic['kind'] in [0, 10]:
+                start=ic['value']-0.05*angstrom
+                end=ic['value']+0.05*angstrom
+            elif ic['kind'] in [2, 4]:
+                start=ic['value']-5*deg
+                end=ic['value']+5*deg
+                if end>180*deg: end=180*deg
+                if start<0*deg:
+                    raise ValueError('Starting angle for %s is smaller than zero' %(term.basename))
+            else:
+                raise NotImplementedError
+            strain = Strain(self.system, term, valence.terms)
+            traj = Trajectory(term, strain, start, end, steps=11)
+            trajectories.append(traj)
         return trajectories
     
     def generate(self, trajectory):
@@ -255,9 +225,11 @@ class BasePerturbationTheory(object):
             trajectory
                 a Trajectory instance representing the perturbation trajectory
         '''
-        raise NotImplementeError
-
-
+        for iq, q in enumerate(trajectory.qvals):
+            trajectory.strain.constrain_value = q
+            guess = np.zeros([trajectory.strain.ndof+1], float)
+            sol = scipy.optimize.fsolve(trajectory.strain.gradient, guess, xtol=1e-9)
+            trajectory.coords[iq,:,:] = trajectory.strain.coords0 + sol[:self.system.natom*3].reshape((-1,3))
 
     def estimate(self, trajectory):
         '''
@@ -284,69 +256,41 @@ class BasePerturbationTheory(object):
             trajectory.fc = 0
             trajectory.rv = qs[len(qs)/2]
 
-    def refinervs(self, trajectory):
-        '''
-            Method to refine the rest values of the covalent terms assuming the
-            force constants are known.
 
+
+class Strain(ForceField):
+    def __init__(self, system, cons_term, terms):
+        '''
             **Arguments**
-
-            trajectory
-                a Trajectory instance representing the perturbation trajectory
+             
+            system
+            
+            cons_term
+                A Term instance representing the constrained term in the strain
+            
+            terms
+                A list of Term instances for which the strain needs to be
+                minimized
         '''
-        term = self.valence.vlist.vtab[trajectory.index]
-        kold, q0old = trajectory.fc, trajectory.rv
-        if kold<1.0*kjmol:
-            return kold, q0old
-        else:
-            Es = np.zeros(len(trajectory.coords))
-            qs = trajectory.qvals.copy()
-            for istep, pos in enumerate(trajectory.coords):
-                Es[istep] += self.ai.energy(pos)
-                for ref in self.refs:
-                    Es[istep] -= ref.energy(pos)
-                #substract valence energy minus the current term energy
-                Es[istep] -= (self.valence.energy(pos) - term['energy'])
-            pars = fitpar(qs, Es, rcond=1e-6)
-            q0new = -0.5*pars[1]/pars[0]
-            if q0new<0.0:
-                q0new = 0.0
-            trajectory.rv = q0new
-
-
-class RelaxedStrain(BasePerturbationTheory):
-    def __init__(self, system, refs, valence, do_taylor=False):
-        self.do_taylor = do_taylor
-        BasePerturbationTheory.__init__(self, system, refs, valence)
-    
-    def generate(self, trajectory):
-        term = self.valence.vlist.vtab[trajectory.index]
-        strain = Strain(self.system, self.valence, trajectory.index)
-        if self.do_taylor:
-            #TODO: extend for taylor strain
-            raise NotImplementedError
-        for iq, q in enumerate(trajectory.qvals):
-            strain.constrain_value = q
-            guess = np.zeros((self.system.natom*3+1,))
-            sol = scipy.optimize.fsolve(strain.gradient, guess, xtol=1e-9)
-            trajectory.coords[iq,:,:] = self.ai.coords + sol[:self.system.natom*3].reshape((-1,3))
-
-
-class Strain(object):
-    def __init__(self, system, valence, index):
         self.coords0 = system.pos.copy()
         self.ndof = np.prod(self.coords0.shape)
-        self.strain = ForceField(system, [valence])
-        self.constrain_value = None
-        constraintpart = ForcePartValence(system)
-        # Abuse the Chebychev1 polynomial to simply get the value of q-1
-        assert len(valence.data[index].ics)==1#should not be cross term
-        constraintpart.add_term(Chebychev1(-2.0,valence.data[index].ics[0]))
-        self.constraint = ForceField(system, [constraintpart])
-
-    def value(self, X):
-        self.strain.update_pos(self.refdata.coords + X[:self.ndof].reshape((-1,3)))
-        return self.strain.compute()
+        part = ForcePartValence(system)
+        for term in terms:
+            if term.index != cons_term.index:
+                part.add_term(Harmonic(1.0, None, term.ics[0]))
+        part.dlist.forward()
+        part.iclist.forward()
+        for iterm in xrange(part.vlist.nv):
+            term = part.vlist.vtab[iterm]
+            ic = part.iclist.ictab[term['ic0']]
+            term['par1'] = ic['value']
+        ForceField.__init__(self, system, [part])
+        #Abuse the Chebychev1 polynomial to simply get the value of q-1 and
+        #implement the contraint
+        part = ForcePartValence(system)
+        part.add_term(Chebychev1(-2.0,cons_term.ics[0]))
+        self.constraint = ForceField(system, [part])
+        self.constraint_value = None
 
     def gradient(self, X):
         '''
@@ -360,8 +304,8 @@ class Strain(object):
         grad = np.zeros((len(X),))
         #compute strain gradient
         gstrain = np.zeros(self.coords0.shape)
-        self.strain.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))
-        self.strain.compute(gpos=gstrain)
+        self.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))
+        self.compute(gpos=gstrain)
         #compute constraint gradient
         gconstraint = np.zeros(self.coords0.shape)
         self.constraint.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))

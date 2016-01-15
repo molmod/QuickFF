@@ -23,6 +23,7 @@
 #
 #--
 from molmod.io.fchk import FCHKFile
+from molmod.periodic import periodic as pt
 from yaff import Chebychev1, Chebychev2, Chebychev3, Chebychev4, Chebychev6
 from quickff.io import VASPRun
 
@@ -30,7 +31,7 @@ import numpy as np
 
 __all__ = [
     'global_translation', 'global_rotation', 'fitpar', 'read_abinitio', 
-    'dihed_to_chebychev', 'boxqp',
+    'dihed_to_chebychev', 'boxqp', 'guess_ffatypes', 'term_sort_atypes',
 ]
 
 def global_translation(coords):
@@ -170,7 +171,7 @@ def dihed_to_chebychev(pars, ic):
     else:
         return None
 
-def boxqp(A, B, bndl, bndu, x0, threshold=1e-12, status=False):
+def boxqp(A, B, bndl, bndu, x0, threshold=1e-9, status=False):
     '''Minimize the function
             1/2*xT.A.x - B.x
     subject to
@@ -231,3 +232,99 @@ def boxqp(A, B, bndl, bndu, x0, threshold=1e-12, status=False):
             converged = True
     if status: return x1, nit
     else: return x1
+
+def guess_ffatypes(system, level):
+    '''
+       A method to guess atom types. This will overwrite ffatypes
+       that are already defined in the system.
+
+       **Arguments:**
+
+       system
+            A yaff system instance
+       
+       level
+            A string used for guessing atom types:
+
+                * low:     based on atomic number
+                * medium:  based on atomic number and number of neighbors
+                * high:    based on atomic number, number of neighbors and atomic number of neighbors
+                * highest: based on index in the molecule
+    '''
+    if system.ffatypes is not None:
+        raise ValueError('Atom types are already defined in the system.')
+    if level == 'low':
+        atypes = np.array([pt[number].symbol for number in system.numbers])
+    elif level == 'medium':
+        atypes = []
+        for index, number in enumerate(system.numbers):
+            nind = system.neighs1[index]
+            sym = pt[system.numbers[index]].symbol.upper()
+            atype = '%s%i' % (sym, len(nind))
+            atypes.append(atype)
+    elif level == 'high':
+        atypes = []
+        for index, number in enumerate(system.numbers):
+            nind = system.neighs1[index]
+            nsym = sorted([
+                pt[system.numbers[neigh]].symbol.lower() for neigh in nind
+            ])
+            sym = pt[system.numbers[index]].symbol.upper()
+            if len(nsym)==1:
+                atype = '%s1_%s' % (sym, nsym[0])
+            elif len(nsym)==2:
+                atype = '%s2_%s%s' % (sym, nsym[0], nsym[1])
+            else:
+                atype = '%s%i' % (sym, len(nind))
+                num_c = sum([1.0 for sym in nsym if sym == 'c'])
+                num_n = sum([1.0 for sym in nsym if sym == 'n'])
+                num_o = sum([1.0 for sym in nsym if sym == 'o'])
+                if num_c > 0: atype += '_c%i' % num_c
+                if num_n > 0: atype += '_n%i' % num_n
+                if num_o > 0: atype += '_o%i' % num_o
+            atypes.append(atype)
+    elif level == 'highest':
+        atypes = np.array([
+            '%s%i' % (pt[n].symbol, i) for i, n in enumerate(system.numbers)
+        ])
+    else:
+        raise ValueError('Invalid level, recieved %s' % level)
+    system.ffatype_ids = np.zeros(len(system.numbers), int)
+    system.ffatypes = []
+    for i, atype in enumerate(atypes):
+        if atype not in system.ffatypes:
+            system.ffatypes.append(atype)
+        system.ffatype_ids[i] = system.ffatypes.index(atype)
+    system.ffatypes = np.array(system.ffatypes)
+
+def term_sort_atypes(ffatypes, indexes, kind):
+    '''
+        Routine to sort the atoms defined in indexes to give consistent term
+        names. This routine returns the sorted atom indexes as well as the 
+        corresponding atom types.
+    '''
+    atypes = [ffatypes[i] for i in indexes]
+    if kind in ['bond', 'dist', 'bend', 'angle']:
+        if atypes[-1]<atypes[0] \
+        or (atypes==atypes[::-1] and indexes[-1]<indexes[0]) :
+            sorted_indexes = indexes[::-1]
+            sorted_atypes = atypes[::-1]
+        else:
+            sorted_indexes = indexes
+            sorted_atypes = atypes
+    elif kind in ['dihed', 'dihedral', 'torsion']:
+        if atypes[-1]<atypes[0] \
+        or (atypes[-1]==atypes[0] and atypes[-2]<atypes[1]) \
+        or (atypes==atypes[::-1] and indexes[-1]<indexes[0]):
+            sorted_indexes = indexes[::-1]
+            sorted_atypes = atypes[::-1]
+        else:
+            sorted_indexes = indexes
+            sorted_atypes = atypes
+    elif kind in ['opdist', 'oopdist']:
+        pairs = sorted(zip(indexes[:3], atypes[:3]), key=lambda x: x[1]+str(x[0]))
+        sorted_indexes = [index for index, atype in pairs]
+        sorted_indexes.append(indexes[3])
+        sorted_atypes = [atype for index, atype in pairs]
+        sorted_atypes.append(atypes[3])
+    return sorted_indexes, sorted_atypes
