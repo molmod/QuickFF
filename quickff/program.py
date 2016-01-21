@@ -100,40 +100,57 @@ class BaseProgram(object):
             #set force field parameters to computed fc and rv
             self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
     
-    def do_eq_setrv(self, task_flag):
+    def do_eq_setrv(self, tasks):
         '''
             Set the rest values to their respective AI equilibrium values.
         '''
         self.reset_system()
-        for index in xrange(self.valence.vlist.nv):
-            term = self.valence.vlist.vtab[index]
-            if task_flag is None or task_flag in self.valence.terms[index].tasks:
-                if term['kind']==3:#cross term
-                    ic0 = self.valence.iclist.ictab[term['ic0']]
-                    ic1 = self.valence.iclist.ictab[term['ic1']]
-                    self.valence.set_params(index, rv0=ic0['value'], rv1=ic1['value'])
+        for term in self.valence.terms:
+            vterm = self.valence.vlist.vtab[term.index]
+            flagged = False
+            for flag in tasks:
+                if flag in term.tasks:
+                    flagged = True
+                    break
+            if flagged:
+                if term.kind==3:#cross term
+                    ic0 = self.valence.iclist.ictab[vterm['ic0']]
+                    ic1 = self.valence.iclist.ictab[vterm['ic1']]
+                    self.valence.set_params(term.index, rv0=ic0['value'], rv1=ic1['value'])
+                elif term.kind==4 and term.ics[0].kind==4:#Cosine of DihedAngle
+                    ic = self.valence.iclist.ictab[vterm['ic0']]
+                    m = self.valence.get_params(term.index, only='m')
+                    rv = ic['value']%(360.0*deg/m)
+                    self.valence.set_params(term.index, rv0=rv)
                 else:
-                    ic = self.valence.iclist.ictab[term['ic0']]
-                    self.valence.set_params(index, rv0=ic['value'])
+                    rv = self.valence.iclist.ictab[vterm['ic0']]['value']
+                    self.valence.set_params(term.index, rv0=rv)
     
-    def do_hc_estimatefc(self, task_flag):
+    def do_hc_estimatefc(self, tasks):
         '''
             Refine force constants using Hessian Cost function.
             
             **Arguments**
             
-            task_flag
-                A string identifying which terms should have their force
-                constant estimated from the hessian cost function. Using such a
-                flag, one can distinguish between for example force constant
-                refinement (flag=HC_FC_DIAG) of the diagonal terms and force 
-                constant estimation of the cross terms (flag=HC_FC_CROSS).
+            tasks
+                A list of strings identifying which terms should have their
+                force constant estimated from the hessian cost function. Using
+                such a flag, one can distinguish between for example force
+                constant refinement (flag=HC_FC_DIAG) of the diagonal terms and
+                force constant estimation of the cross terms (flag=HC_FC_CROSS).
+                If the string 'all' is present in tasks, all fc's will be
+                estimated.
         '''
         self.reset_system()
         term_indices = []
         for index in xrange(self.valence.vlist.nv):
             term = self.valence.terms[index]
-            if task_flag in term.tasks:
+            flagged = False
+            for flag in tasks:
+                if flag in term.tasks:
+                    flagged = True
+                    break
+            if flagged:
                 #first check if all rest values and multiplicities have been defined
                 if term.kind==0: self.valence.check_params(term, ['rv'])
                 if term.kind==3: self.valence.check_params(term, ['rv0','rv1'])
@@ -143,6 +160,7 @@ class BaseProgram(object):
             else:
                 #first check if all pars have been defined
                 if term.kind==0: self.valence.check_params(term, ['fc', 'rv'])
+                if term.kind==1: self.valence.check_params(term, ['a0', 'a1', 'a2', 'a3'])
                 if term.kind==3: self.valence.check_params(term, ['fc', 'rv0','rv1'])
                 if term.kind==4: self.valence.check_params(term, ['fc', 'rv', 'm'])
         cost = HessianFCCost(self.system, self.refs, self.valence, term_indices)   
@@ -192,26 +210,26 @@ class BaseProgram(object):
             for i, islave in enumerate(master.slaves):
                 pars[1+i,:] = np.array(self.valence.get_params(islave))
             if master.kind==0:#harmonic
-                fc = pars[:,0].mean()
-                rv = pars[:,1].mean()
+                fc, rv = pars.mean(axis=0)
                 if master.ics[0].kind==10:#opdist
                     if rv<0.0 and abs(rv)<1e-2*angstrom:
                         rv=0.0
                 self.valence.set_params(master.index, fc=fc, rv0=rv)
                 for islave in master.slaves:
                     self.valence.set_params(islave, fc=fc, rv0=rv)
+            elif master.kind==1:
+                a0, a1, a2, a3 = pars.mean(axis=0)
+                self.valence.set_params(master.index, a0=a0, a1=a1, a2=a2, a3=a3)
+                for islave in master.slaves:
+                    self.valence.set_params(islave, a0=a0, a1=a1, a2=a2, a3=a3) 
             elif master.kind==3:#cross
-                fc = pars[:,0].mean()
-                rv0 = pars[:,1].mean()
-                rv1 = pars[:,2].mean()
+                fc, rv0, rv1 = pars.mean(axis=0)
                 self.valence.set_params(master.index, fc=fc, rv0=rv0, rv1=rv1)
                 for islave in master.slaves:
                     self.valence.set_params(islave, fc=fc, rv0=rv0, rv1=rv1)
             elif master.kind==4:#cosine
-                m = pars[:,0].mean()
                 assert pars[:,0].std()<1e-6, 'dihedral multiplicity not unique'
-                fc = pars[:,1].mean()
-                rv = pars[:,2].mean()
+                m, fc, rv = pars.mean(axis=0)
                 self.valence.set_params(master.index, fc=fc, rv0=rv, m=m)
                 for islave in master.slaves:
                     self.valence.set_params(islave, fc=fc, rv0=rv, m=m)
@@ -231,8 +249,8 @@ class Program(BaseProgram):
     def run(self):
         trajectories = self.do_pt_generate()
         self.do_pt_estimate(trajectories)
-        self.do_eq_setrv('EQ_RV')
+        self.do_eq_setrv(['EQ_RV'])
         self.do_average_pars()
-        self.do_hc_estimatefc('HC_FC_DIAG')
+        self.do_hc_estimatefc(['HC_FC_DIAG'])
         self.do_cross_init()
-        self.do_hc_estimatefc('HC_FC_CROSS')
+        self.do_hc_estimatefc(['HC_FC_CROSS'])

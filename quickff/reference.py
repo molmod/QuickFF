@@ -23,6 +23,7 @@
 #
 #--
 from yaff.pes.ff import ForceField, ForcePartValence
+from yaff.sampling.harmonic import estimate_cart_hessian
 from quickff.tools import global_translation, global_rotation
 import numpy as np
 
@@ -156,25 +157,17 @@ class YaffForceField(Reference):
         super(YaffForceField, self).__init__(name)
     
     def energy(self, coords):
-        ndof = np.prod(coords.shape)
-        self.ff.update_pos(coords.reshape([ndof]))
+        self.ff.update_pos(coords.copy())
         return self.ff.compute()
     
     def gradient(self, coords):
-        ndof = np.prod(coords.shape)
-        gpos = np.zeros([ndof], float)
-        self.ff.update_pos(coords.reshape([ndof]))
+        gpos = np.zeros(coords.shape, float)
+        self.ff.update_pos(coords.copy())
         energy = self.ff.compute(gpos=gpos)
         return gpos.reshape(coords.shap)
     
-    def hessian(self, coords, analytical=False):
-        ndof = np.prod(coords.shape)
-        if analytical:
-            hess = np.zeros([ndof, ndof], float)
-            self.ff.update_pos(coords.reshape([ndof]))
-            energy = self.ff.compute(hess=hess)
-        else:
-            hess = estimate_cart_hessian(ff)
-        natoms = coords.shape[0]
-        assert ndof==3*natoms
+    def hessian(self, coords):
+        self.ff.update_pos(coords.copy())
+        hess = estimate_cart_hessian(self.ff)
+        natoms = len(coords)
         return hess.reshape([natoms, 3, natoms, 3])

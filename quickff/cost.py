@@ -50,7 +50,7 @@ class HessianFCCost(object):
         
         '''
         #initialization
-        self.init = np.ones(len(fit_indices), float)*kjmol
+        self.init = np.zeros(len(fit_indices), float)
         self.upper = np.zeros(len(fit_indices), float)+np.inf
         self.lower = np.zeros(len(fit_indices), float)
         self.A = np.zeros([len(fit_indices), len(fit_indices)], float)
@@ -70,20 +70,17 @@ class HessianFCCost(object):
         #compute the reference hessian
         href = ai.phess0.reshape([ndofs, ndofs]).copy()
         for ffref in ffrefs:
-            href -= ffref.phess0.reshape([ndofs, ndofs])
+            href -= ffref.hessian(system.pos).reshape([ndofs, ndofs])
         #loop over valence terms and add to reference (if not in fit_indices or
         #its slaves) or add to covalent hessians hcovs (if in fit_indices)
-        hcovs = []
+        hcovs = [None,]*len(fit_indices)
         for master in valence.iter_masters():
             if master.index in fit_indices:
+                i = fit_indices.index(master.index)
                 #add to covalent hessians (includes slaves as well)
                 hcov = valence.get_hessian_contrib(master.index, fc=1.0)
-                hcovs.append(hcov)
-                #set init and upper
-                i = fit_indices.index(master.index)
-                fc = valence.get_params(master.index, only='fc')
-                if not np.isnan(fc):
-                    self.init[i] = fc
+                hcovs[i] = hcov
+                #set upper and lower
                 if master.kind==4:
                     self.upper[i] = 200*kjmol
                 if master.kind==3:
