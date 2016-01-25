@@ -191,7 +191,8 @@ class Trajectory(object):
         ax.grid()
         ax.legend(loc='best', fontsize=16)
         fig.set_size_inches([8, 8])
-        if fn is None: fn = self.term.basename.replace('/', '-')+'-%i.png'%self.term.index
+        if fn is None:
+            fn = 'trajectory-%s-%i.png' %(self.term.basename.replace('/', '-'),self.term.index)
         fig.savefig(fn)
     
     def to_xyz(self, fn=None):
@@ -204,7 +205,8 @@ class Trajectory(object):
             fn
                 a string defining the name of the output file
         '''
-        if fn is None: fn = self.term.basename.replace('/', '-')+'-%i.xyz'%self.term.index
+        if fn is None:
+            fn = 'trajectory-%s-%i.xyz' %(self.term.basename.replace('/', '-'),self.term.index)
         f = open(fn, 'w')
         xyz = XYZWriter(f, [pt[Z].symbol for Z in self.numbers])
         for frame, coord in enumerate(self.coords):
@@ -214,11 +216,8 @@ class Trajectory(object):
 
 
 class RelaxedStrain(object):
-    def __init__(self, system, refs, do_taylor=False):
+    def __init__(self, system, refs):
         self.system = system
-        if do_taylor:
-            #TODO: extend for taylor strain
-            raise NotImplementedError
         self.ai = None
         self.refs = []
         for ref in refs:
@@ -241,22 +240,29 @@ class RelaxedStrain(object):
             assert term.kind==0, 'Only harmonic terms supported for pert traj'
             ic = valence.iclist.ictab[valence.vlist.vtab[term.index]['ic0']]
             kunit, qunit = term.units
-            if ic['kind'] in [0, 10, 11]:
+            if ic['kind'] in [0]:
                 start=ic['value']-0.05*angstrom
                 end=ic['value']+0.05*angstrom
-            elif ic['kind'] in [2, 4]:
+                if start<0.0: start = 0.0
+            elif ic['kind'] in [2]:
                 start=ic['value']-5*deg
                 end=ic['value']+5*deg
+                if start<0*deg: start = 0.0
                 if end>180*deg: end=180*deg
-                if start<0*deg:
-                    raise ValueError('Starting angle for %s is smaller than zero' %(term.basename))
+            elif ic['kind']  in [10]:
+                start=-0.01*angstrom
+                end=0.01*angstrom
+            elif ic['kind'] in [11]:
+                start=ic['value']-0.01*angstrom**2
+                end=ic['value']+0.01*angstrom**2
+                if start<0.0: start=0.0
             else:
                 raise NotImplementedError
             #collect all other ics
             ics = []
             for term2 in valence.terms:
-                if term2.index == term.index: continue
-                if term2.kind == 3: continue
+                if term2.index == term.index: continue #not the current term ic
+                if term2.kind == 3: continue #not a cross term ic
                 ics.append(term2.ics[0])
             self.strains[term.index] = Strain(term.index, self.system, term.ics[0], ics)
             traj = Trajectory(term, start, end, self.system.numbers, steps=11)
@@ -274,13 +280,18 @@ class RelaxedStrain(object):
 
             trajectory
                 a Trajectory instance representing the perturbation trajectory
+            
+            **Optional Arguments**
+            
+            remove_com
+                if set to True, removes the center of mass translation from the
+                resulting perturbation trajectories [default=True].
         '''
         strain = self.strains[trajectory.term.index]
-        assert strain.term_index == trajectory.term.index
         for iq, q in enumerate(trajectory.qvals):
             strain.constrain_value = q
-            guess = np.zeros([strain.ndof+1], float)
-            sol = scipy.optimize.fsolve(strain.gradient, guess, xtol=1e-9)
+            init = np.zeros([strain.ndof+1], float)
+            sol = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-9)
             x = strain.coords0 + sol[:self.system.natom*3].reshape((-1,3))
             if remove_com:
                 com = (x.T*self.system.masses).sum(axis=1)/self.system.masses.sum()
@@ -318,6 +329,10 @@ class RelaxedStrain(object):
 class Strain(ForceField):
     def __init__(self, term_index, system, cons_ic, ics):
         '''
+            A class deriving from the Yaff ForceField class to implement the
+            strain of a molecular geometry associated with the term defined by
+            term_index.
+        
             **Arguments**
             
             term_index
@@ -325,14 +340,15 @@ class Strain(ForceField):
                 which the current strain is designed.
             
             system
+                A Yaff System instance containing all system information.
             
             cons_ic
                 An instance of Yaff Internal Coordinate representing the
-                constrained term in the strain
+                constrained term in the strain.
             
             ics
                 A list of Yaff Internal Coordinate instances for which the
-                strain needs to be minimized
+                strain needs to be minimized.
         '''
         self.term_index = term_index
         self.coords0 = system.pos.copy()

@@ -59,10 +59,8 @@ class BaseProgram(object):
         self.system = system
         self.refs = refs
         self.kwargs = kwargs
-        self.valence = ValenceFF(system, specs=kwargs.get('term_specs', None))
-        self.perturbation = RelaxedStrain(
-            system, refs, do_taylor=kwargs.get('do_taylor', None)
-        )
+        self.valence = ValenceFF(system)
+        self.perturbation = RelaxedStrain(system, refs)
 
     def reset_system(self):
         '''

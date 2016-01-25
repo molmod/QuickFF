@@ -112,10 +112,14 @@ class SecondOrderTaylor(Reference):
     @classmethod
     def from_other_model(cls, model, coords0):
         energy0 = model.energy(coords0)
-        grad0 = model.gradient(coords0)
-        hess0 = model.hessian(coords0)
+        grad0 = model.gradient(coords0).copy()
+        hess0 = model.hessian(coords0).copy()
         name = model.name + ' (Harmonic)'
-        return cls(name, coords=coords0, energy=energy0, grad=grad0, hess=hess0, pbc=model.pbc)
+        if 'rvecs' in model.ff.system.__dict__:
+            pbc = [1,1,1,]
+        else:
+            pbc = [0,0,0]
+        return cls(name, coords=coords0, energy=energy0, grad=grad0, hess=hess0, pbc=pbc)
             
     def energy(self, coords):
         '''
@@ -143,7 +147,7 @@ class SecondOrderTaylor(Reference):
             Compute the hessian for the given positions
         '''
         assert np.all(coords.shape==self.coords0.shape)
-        return self.phess0
+        return self.phess0.copy()
 
 
 class YaffForceField(Reference):
@@ -154,7 +158,7 @@ class YaffForceField(Reference):
     '''
     def __init__(self, name, ff):
         self.ff = ff
-        super(YaffForceField, self).__init__(name)
+        Reference.__init__(self, name)
     
     def energy(self, coords):
         self.ff.update_pos(coords.copy())
@@ -164,7 +168,7 @@ class YaffForceField(Reference):
         gpos = np.zeros(coords.shape, float)
         self.ff.update_pos(coords.copy())
         energy = self.ff.compute(gpos=gpos)
-        return gpos.reshape(coords.shap)
+        return gpos.reshape(coords.shape)
     
     def hessian(self, coords):
         self.ff.update_pos(coords.copy())
