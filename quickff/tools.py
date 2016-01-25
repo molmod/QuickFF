@@ -22,16 +22,17 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-from molmod.io.fchk import FCHKFile
+
+from molmod.units import deg, angstrom
 from molmod.periodic import periodic as pt
 from yaff import Chebychev1, Chebychev2, Chebychev3, Chebychev4, Chebychev6
-from quickff.io import VASPRun
 
 import numpy as np
 
 __all__ = [
-    'global_translation', 'global_rotation', 'fitpar', 'read_abinitio', 
-    'dihed_to_chebychev', 'boxqp', 'guess_ffatypes', 'term_sort_atypes',
+    'global_translation', 'global_rotation', 'fitpar', 'dihed_to_chebychev',
+    'boxqp', 'guess_ffatypes', 'term_sort_atypes', 'get_multiplicity',
+    'get_restvalue', 'get_ei_radii',
 ]
 
 def global_translation(coords):
@@ -114,36 +115,6 @@ def fitpar(xs, ys, rcond=1e-3):
     sol = np.linalg.lstsq(D, ys, rcond=rcond)[0]
     return sol
 
-def read_abinitio(fn):
-    '''
-        Wrapper to read all information from an ab initio calculation that
-        QuickFF needs. Currently Gaussian .fchk and VASP .xml files are
-        supported.
-    '''
-    extension = fn.split('.')[-1]
-    if extension=='fchk':
-        fchk = FCHKFile(fn)
-        numbers = fchk.fields.get('Atomic numbers')
-        energy = fchk.fields.get('Total Energy')
-        coords = fchk.fields.get('Current cartesian coordinates').reshape([len(numbers), 3])
-        grad = fchk.fields.get('Cartesian Gradient').reshape([len(numbers), 3])
-        hess = fchk.get_hessian().reshape([len(numbers), 3, len(numbers), 3])
-        masses = None
-        rvecs = None
-        pbc = [0,0,0]
-    elif extension=='xml':
-        vasprun = VASPRun(fn,field_labels=['hessian','gradient'])
-        numbers = vasprun.fields['numbers']
-        coords = vasprun.fields['pos_init']
-        energy = vasprun.fields['energies'][0]
-        grad = vasprun.fields['gradient'][0]
-        hess = vasprun.fields['hessian'].reshape((len(numbers),3,len(numbers),3 ))
-        masses = vasprun.fields['masses']
-        rvecs = vasprun.fields['rvecs_init']
-        pbc = [1,1,1]
-    else: raise NotImplementedError
-    return numbers, coords, energy, grad, hess, masses, rvecs, pbc
-
 def dihed_to_chebychev(pars, ic):
     # A torsion term with multiplicity m and rest value either 0 or pi/m
     # degrees, can be treated as a polynomial in cos(phi). The code below
@@ -172,24 +143,29 @@ def dihed_to_chebychev(pars, ic):
         return None
 
 def boxqp(A, B, bndl, bndu, x0, threshold=1e-9, status=False):
-    '''Minimize the function
-            1/2*xT.A.x - B.x
-    subject to
-            bndl < x < bndu (element-wise)
-    This minimization is performed using a projected gradient method with
-    step lengths computed using the Barzilai-Borwein method.
-    See 10.1007/s00211-004-0569-y for a description.
+    '''
+        Minimize the function
+        
+                1/2*xT.A.x - B.x
+        
+        subject to
+        
+                bndl < x < bndu (element-wise)
+        
+        This minimization is performed using a projected gradient method with
+        step lengths computed using the Barzilai-Borwein method.
+        See 10.1007/s00211-004-0569-y for a description.
 
-    **Arguments**
-        A       (n x n) NumPy array appearing in cost function
-        B       (n) NumPy array appearing in cost function
-        bndl    (n) NumPy array giving lower boundaries for the variables
-        bndu    (n) NumPy array giving upper boundaries for the variables
-        x0      (n) NumPy array providing an initial guess
+        **Arguments**
+            A       (n x n) NumPy array appearing in cost function
+            B       (n) NumPy array appearing in cost function
+            bndl    (n) NumPy array giving lower boundaries for the variables
+            bndu    (n) NumPy array giving upper boundaries for the variables
+            x0      (n) NumPy array providing an initial guess
 
-    **Optional Arguments**
-        threshold   Criterion to consider the iterations converged
-        status      Return also the number of iterations performed
+        **Optional Arguments**
+            threshold   Criterion to consider the iterations converged
+            status      Return also the number of iterations performed
     '''
     # Check that boundaries make sense
     assert np.all(bndl<bndu), "Some lower boundaries are higher than upper boundaries"
@@ -327,4 +303,65 @@ def term_sort_atypes(ffatypes, indexes, kind):
         sorted_indexes.append(indexes[3])
         sorted_atypes = [atype for index, atype in pairs]
         sorted_atypes.append(atypes[3])
-    return sorted_indexes, sorted_atypes
+    return tuple(sorted_indexes), tuple(sorted_atypes)
+
+def get_multiplicity(n1, n2):
+    'Routine to estimate m from local topology'
+    if   set([n1,n2])==set([4,4]): return 3
+    elif set([n1,n2])==set([3,4]): return 6
+    elif set([n1,n2])==set([2,4]): return 3
+    elif set([n1,n2])==set([3,3]): return 2
+    elif set([n1,n2])==set([2,3]): return 2
+    elif set([n1,n2])==set([2,2]): return 1
+    else:                          return None
+
+def get_restvalue(values, m, thresshold=5*deg):
+    '''
+        Get a rest value of 0.0, 360/(2*m) or None depending on the given
+        equilbrium values
+    '''
+    rv = None
+    per = 360*deg/m
+    for value in values:
+        x = value % per
+        if abs(x)<=thresshold or abs(per-x)<thresshold:
+            if rv is not None and rv!=0.0:
+                return None
+            elif rv is None:
+                rv = 0.0
+        elif abs(x-per/2.0)<thresshold:
+            if rv is not None and rv!=per/2.0:
+                return None
+            elif rv is None:
+                rv = per/2.0
+        else:
+            return None
+    return rv
+
+def get_ei_radii(numbers):
+    '''
+        Routine to return atomic radii for use in the Gaussian charge
+        distribution. These radii are computed according to the procedure of
+        Chen et al.:
+        
+        First the Slater exponent is computed from the hardness using the
+        formula of Rappe and Goddard (hardness of Pearson and Parr is used)
+        
+        Next the gaussian exponent alpha is fitted by minimizing the
+        L2-difference between the between the homonuclear Coulomb integral over
+        Slater orbitals and over Gaussian orbitals.
+    '''
+    radii = {
+        'H' : 0.7309*angstrom, 
+        'Li': 1.2951*angstrom, 'B' : 1.2020*angstrom, 'C' : 1.1646*angstrom,
+        'N' : 1.1039*angstrom, 'O' : 1.1325*angstrom, 'F' : 1.1097*angstrom, 
+        'Na': 1.7093*angstrom, 'Al': 1.6744*angstrom, 'Si': 1.6378*angstrom,
+        'P' : 1.5730*angstrom, 'S' : 1.6022*angstrom, 'Cl': 1.5789*angstrom,
+    }
+    values = np.zeros(len(numbers), float)
+    for i, number in enumerate(numbers):
+        symbol = pt[number].symbol
+        if not symbol in radii.keys():
+            raise ValueError('No electrostatic Gaussian radii found for %s' %symbol)
+        values[i] = radii[symbol]
+    return values

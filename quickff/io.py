@@ -31,12 +31,10 @@ import xml.etree.ElementTree as ET
 
 from molmod.periodic import periodic
 from molmod.units import angstrom, electronvolt, amu
+from molmod.io.fchk import FCHKFile
 
-__all__ = [
-    'VASPRun'
-]
+__all__ = ['VASPRun', 'read_abinitio']
 
-#TODO Move io to appropriate place in CMM software...
 
 class VASPRun(object):
     #TODO Figure out the logic begind vasprun.xml to parse it in a more structured manner
@@ -103,3 +101,34 @@ class VASPRun(object):
                 result[-1].append([float(w) for w in line.text.split()])
         if len(result)==1: result = result[0]
         return np.asarray(result)*unit
+
+
+def read_abinitio(fn):
+    '''
+        Wrapper to read all information from an ab initio calculation that
+        QuickFF needs. Currently Gaussian .fchk and VASP .xml files are
+        supported.
+    '''
+    extension = fn.split('.')[-1]
+    if extension=='fchk':
+        fchk = FCHKFile(fn)
+        numbers = fchk.fields.get('Atomic numbers')
+        energy = fchk.fields.get('Total Energy')
+        coords = fchk.fields.get('Current cartesian coordinates').reshape([len(numbers), 3])
+        grad = fchk.fields.get('Cartesian Gradient').reshape([len(numbers), 3])
+        hess = fchk.get_hessian().reshape([len(numbers), 3, len(numbers), 3])
+        masses = None
+        rvecs = None
+        pbc = [0,0,0]
+    elif extension=='xml':
+        vasprun = VASPRun(fn,field_labels=['hessian','gradient'])
+        numbers = vasprun.fields['numbers']
+        coords = vasprun.fields['pos_init']
+        energy = vasprun.fields['energies'][0]
+        grad = vasprun.fields['gradient'][0]
+        hess = vasprun.fields['hessian'].reshape((len(numbers),3,len(numbers),3 ))
+        masses = vasprun.fields['masses']
+        rvecs = vasprun.fields['rvecs_init']
+        pbc = [1,1,1]
+    else: raise NotImplementedError
+    return numbers, coords, energy, grad, hess, masses, rvecs, pbc

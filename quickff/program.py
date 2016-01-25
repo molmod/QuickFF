@@ -211,7 +211,7 @@ class BaseProgram(object):
                 pars[1+i,:] = np.array(self.valence.get_params(islave))
             if master.kind==0:#harmonic
                 fc, rv = pars.mean(axis=0)
-                if master.ics[0].kind==10:#opdist
+                if master.ics[0].kind in [10, 11]:#opdist
                     if rv<0.0 and abs(rv)<1e-2*angstrom:
                         rv=0.0
                 self.valence.set_params(master.index, fc=fc, rv0=rv)

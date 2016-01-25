@@ -29,11 +29,11 @@ from yaff.pes.parameters import *
 from yaff.pes.vlist import ValenceList
 from yaff.pes.vlist import Harmonic, PolyFour, Fues, Cosine, Cross
 from yaff.pes.iclist import InternalCoordinateList
-from yaff.pes.iclist import Bond, BendAngle, DihedCos, DihedAngle, OopDist
+from yaff.pes.iclist import Bond, BendAngle, DihedCos, DihedAngle, OopDist, SqOopDist
 from yaff.pes.dlist import DeltaList
 from yaff.sampling.harmonic import estimate_cart_hessian
 
-from quickff.tools import dihed_to_chebychev, term_sort_atypes
+from quickff.tools import term_sort_atypes, get_multiplicity, get_restvalue
 
 import numpy as np
 
@@ -150,8 +150,10 @@ class ValenceFF(ForcePartValence):
         self.system = system
         self.terms = []
         ForcePartValence.__init__(self, system)
-        self.init_terms(specs=specs)
-        self.set_dihedral_potentials()
+        self.init_bond_terms()
+        self.init_bend_terms()
+        self.init_dihedral_terms()
+        self.init_oop_terms()
     
     def add_term(self, pot, ics, atypes, tasks, units):
         '''
@@ -163,8 +165,9 @@ class ValenceFF(ForcePartValence):
         #define the name
         if len(ics)==1:
             tmp = {
-                (0,0): 'BondHarm/', (2,0): 'BendAHarm/', (4,4): 'Torsion/',
-                (10,0): 'Oopdist/',
+                (0,0) : 'BondHarm/', (2,0) : 'BendAHarm/' ,
+                (4,4) : 'Torsion/' , (3,1) : 'TorsC2Harm/',
+                (10,0): 'Oopdist/' , (11,0): 'SqOopdist/' ,
             }
             prefix = tmp[(ics[0].kind, pot.kind)]
             suffix = ''
@@ -197,13 +200,17 @@ class ValenceFF(ForcePartValence):
             master = index
             slaves = []
         #add term to self.terms and self.vlist.vtab
-        self.terms.append(Term(
+        term = Term(
             index, basename, pot.kind, ics, tasks,
             units, master=master, slaves=slaves
-        ))
-        args = [None,]*len(units) + ics
+        )
+        self.terms.append(term)
+        if pot.kind==1:#all 4 parameters of PolyFour are given as 1 tuple
+            args = [(None,)*len(units)] + ics
+        else:
+            args = [None,]*len(units) + ics
         ForcePartValence.add_term(self, pot(*args))
-        assert len(self.terms)==self.vlist.nv
+        return term
     
     def iter_masters(self, label=None):
         '''
@@ -215,61 +222,23 @@ class ValenceFF(ForcePartValence):
                 if term.is_master():
                     yield term
     
-    def init_terms(self, specs=None):
-        '''
-            specs
-                A list of specifications to control the behaviour of certain
-                terms for which parameters need to be estimated. The tasks
-                of a term can be defined in this object.
-        '''
-        #TODO: include specs functionality
-        if specs is not None:
-            raise NotImplementedError('Specs functionality not yet implemented')
+    def init_bond_terms(self):
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
         #get the bond terms
         for bond in self.system.iter_bonds():
             bond, types = term_sort_atypes(ffatypes, bond, 'bond')
             units = ['kjmol/A**2', 'A']
             self.add_term(Harmonic, [Bond(*bond)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
+
+    def init_bend_terms(self):
+        ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
         #get the angle terms
         for angle in self.system.iter_angles():
             angle, types = term_sort_atypes(ffatypes, angle, 'angle')
             units = ['kjmol/rad**2', 'deg']
             self.add_term(Harmonic, [BendAngle(*angle)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
-        #get the dihedral terms
-        for dihedral in self.system.iter_dihedrals():
-            dihedral, types = term_sort_atypes(ffatypes, dihedral, 'dihedral')
-            units = ['au', 'kjmol', 'deg']
-            self.add_term(Cosine, [DihedAngle(*dihedral)], types, ['HC_FC_DIAG'], units)
-        #get the out-of-plane distance terms
-        for oopdist in self.system.iter_oops():
-            oopdist, types = term_sort_atypes(ffatypes, oopdist, 'oopdist')
-            units = ['kjmol/A**2', 'A']
-            self.add_term(Harmonic, [OopDist(*oopdist)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
-    
-    def init_cross_terms(self, specs=None):
-        ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
-        for angle in self.system.iter_angles():
-            angle, types = term_sort_atypes(ffatypes, angle, 'angle')
-            bond0, btypes = term_sort_atypes(ffatypes, angle[:2], 'bond')
-            bond1, btypes = term_sort_atypes(ffatypes, angle[1:], 'bond')
-            #add stretch-stretch
-            self.add_term(Cross,
-                [Bond(*bond0), Bond(*bond1)],
-                types, ['HC_FC_CROSS'], ['kjmol/A**2', 'A', 'A']
-            )
-            #add stretch0-bend
-            self.add_term(Cross, 
-                [Bond(*bond0), BendAngle(*angle)],
-                types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
-            )
-            #add stretch1-bend
-            self.add_term(Cross, 
-                [Bond(*bond1), BendAngle(*angle)],
-                types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
-            )
 
-    def set_dihedral_potentials(self, thresshold=5*deg, verbose=False):
+    def init_dihedral_terms(self, verbose=False):
         '''
             Estimate the dihedral potentials from the local topology. The
             dihedral potential will be one of the two following possibilities:
@@ -293,117 +262,124 @@ class ValenceFF(ForcePartValence):
                     a0*cos(psi) + a1*cos(psi)^2 + a2*cos(psi)^3 + a3*cos(psi)^4
                     
                     with a0=0, a1=K*-4*cos(psi0)**2, a2=0, a3=K*2
-            
         '''
-        def _get_multiplicity(n1, n2):
-            'Routine to estimate m from local topology'
-            if   set([n1,n2])==set([4,4]): return 3
-            elif set([n1,n2])==set([3,4]): return 6
-            elif set([n1,n2])==set([2,4]): return 3
-            elif set([n1,n2])==set([3,3]): return 2
-            elif set([n1,n2])==set([2,3]): return 2
-            elif set([n1,n2])==set([2,2]): return 1
-            else:                          return None
-        
-        def _get_restvalue(values, m):
-            '''
-                Get a rest value of 0.0, 360/(2*m) or None depending on the given
-                equilbrium values
-            '''
-            rv = None
-            per = 360*deg/m
-            for value in values:
-                x = value % per
-                if abs(x)<=thresshold or abs(per-x)<thresshold:
-                    if rv is not None and rv!=0.0:
-                        return None
-                    elif rv is None:
-                        rv = 0.0
-                elif abs(x-per/2.0)<thresshold:
-                    if rv is not None and rv!=per/2.0:
-                        return None
-                    elif rv is None:
-                        rv = per/2.0
-                else:
-                    return None
-            return rv
-        
-        def _apply_polyfour(term, psi0):
-            'Convert current term to a TorsC2Harm term using PolyFour/DihedCos'
-            term.basename = term.basename.replace('Torsion', 'TorsC2Harm')
-            term.kind = 1
-            term.tasks = ['HC_FC_DIAG']
-            term.units = ['kjmol', 'kjmol', 'kjmol', 'kjmol']
-            j, i = term.ics[0].index_pairs[0]
-            k, l = term.ics[0].index_pairs[2]
-            term.ics = [DihedCos(i, j, k, l)]
-            vterm = self.vlist.vtab[term.index]
-            vterm['kind'] = 1 #PolyFour
-            ic = self.iclist.ictab[vterm['ic0']]
-            ic['kind'] = 3 #DihedCos
-            #Initialize parameters with harmonic fc=1.0
-            a1 = -4.0*np.cos(psi0)**2
-            self.set_params(term.index, a0=0.0, a1=a1, a2=0.0, a3=2.0)
-        
-        self.dlist.forward()
-        self.iclist.forward()
-        for master in self.iter_masters(label='Torsion'):
-            if verbose: print ''
-            if verbose: print '  Determining potential for %s ...' %(master.basename)
-            vterm = self.vlist.vtab[master.index]
-            ic = self.iclist.ictab[vterm['ic0']]
-            assert ic['kind']==4 #By default the term ic was a DihedAngle
-            i = master.ics[0].index_pairs[0][0]
-            j = master.ics[0].index_pairs[1][1]
-            n1 = len(self.system.neighs1[i])
-            n2 = len(self.system.neighs1[j])
-            m = _get_multiplicity(n1, n2)
-            if verbose: print '    m = ', m
-            #get master value
-            values = [ic['value']]
-            #get slave values
-            for islave in master.slaves:
-                vslave = self.vlist.vtab[islave]
-                icslave = self.iclist.ictab[vslave['ic0']]
-                values.append(icslave['value'])
-            if verbose: print '    eq vals: '+' '.join(['%.1f' %(x/deg) for x in values])
-            #determine dihedral potential
-            if m is not None:
-                rv = _get_restvalue(values, m)
-                if rv is not None:
-                    #Set parameters of already initialized Cosine term
-                    self.set_params(master.index, m=m, rv0=rv)
-                    for islave in master.slaves:
-                        self.set_params(islave, m=m, rv0=rv)
-                    if verbose: print '    potential set to Torsion with rv = %.1f' %(rv/deg)
-                elif m==2:
-                    folded_values = []
-                    for value in values:
-                        if abs(value)<90*deg:
-                            folded_values.append(abs(value))
-                        else:
-                            folded_values.append(180*deg-abs(value))
-                    mean = np.array(folded_values).mean()
-                    std = np.array(folded_values).std()
-                    if std<thresshold:
-                        #apply new PolyFour term for master and its slaves
-                        _apply_polyfour(master, mean)
-                        for islave in master.slaves:
-                            _apply_polyfour(self.terms[islave], mean)
-                        if verbose: print '    potential set to TorsC2Harm with rv = %.1f' %(mean/deg)
-                else:
-                    raise NotImplementedError()
+        #get all dihedrals
+        from molmod.ic import dihed_angle
+        ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
+        dihedrals = {}
+        for dihedral in self.system.iter_dihedrals():
+            dihedral, types = term_sort_atypes(ffatypes, dihedral, 'dihedral')
+            if types in dihedrals.keys():
+                dihedrals[types].append(dihedral)
             else:
-                raise NotImplementedError()
-        self.dlist.forward()
-        self.iclist.forward()
+                dihedrals[types] = [dihedral]
+        #loop over all distinct dihedral types
+        for types, diheds in dihedrals.iteritems():
+            psi0s = np.zeros(len(diheds), float)
+            ms = np.zeros(len(diheds), float)
+            for i, dihed in enumerate(diheds):
+                rs = np.array([self.system.pos[j] for j in dihed])
+                psi0s[i] = dihed_angle(rs)[0]
+                n1 = len(self.system.neighs1[dihed[1]])
+                n2 = len(self.system.neighs1[dihed[2]])
+                ms[i] = get_multiplicity(n1, n2)
+            if None in ms or ms.std()>1e-3:
+                print 'WARNING: no dihedral potential for %s (no multiplicity found)' %('.'.join(types))
+                continue
+            m = int(np.round(ms.mean()))
+            rv = get_restvalue(psi0s, m, thresshold=5*deg)
+            if rv is not None:
+                #a regular Cosine term is used for the dihedral potential
+                for dihed in diheds:
+                    term = self.add_term(Cosine, [DihedAngle(*dihed)], types, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
+                    self.set_params(term.index, rv0=rv, m=m)
+            elif m==2:
+                #try to determine a term harmonic in the cos(2*psi)
+                #fold all dihedral angles to the range [0,90]
+                folded = []
+                for psi0 in psi0s:
+                    if abs(psi0)<90*deg:
+                        folded.append(abs(psi0))
+                    else:
+                        folded.append(180*deg-abs(psi0))
+                if np.array(folded).std()<5*deg:
+                    #a PolyFour(Cos(2*psi)) is added
+                    for dihed in diheds:
+                        term = self.add_term(PolyFour, [DihedCos(*dihed)], types, ['HC_FC_DIAG'], ['kjmol', 'kjmol', 'kjmol', 'kjmol'])
+                        a1 = -4.0*np.cos(np.array(folded).mean())**2*1.0*kjmol
+                        self.set_params(term.index, a0=0.0, a1=a1, a2=0.0, a3=2.0*kjmol)
+                else:
+                    #no dihedral potential could be determine, hence it is ignored
+                    print 'WARNING: no dihedral potential for %s (attempted TORSC2HARM but folded angles to far appart, %.3e deg)' %('.'.join(types), np.array(folded).std()/deg)
+                    continue
+            else:
+                #no dihedral potential could be determine, hence it is ignored
+                print 'WARNING: no dihedral potential for %s (no TORSION or TORSC2HARM attempted)' %('.'.join(types))
+                continue
+
+    def init_oop_terms(self):
+        #get all dihedrals
+        from molmod.ic import opbend_dist
+        ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
+        opdists = {}
+        for opdist in self.system.iter_oops():
+            opdist, types = term_sort_atypes(ffatypes, opdist, 'opdist')
+            if types in opdists.keys():
+                opdists[types].append(opdist)
+            else:
+                opdists[types] = [opdist]
+        #loop over all distinct opdist types
+        for types, oops in opdists.iteritems():
+            d0s = np.zeros(len(oops), float)
+            for i, oop in enumerate(oops):
+                rs = np.array([#mind the order, is different in molmod and yaff
+                    self.system.pos[oop[3]],
+                    self.system.pos[oop[0]],
+                    self.system.pos[oop[1]],
+                    self.system.pos[oop[2]],
+                ])
+                d0s[i] = abs(opbend_dist(rs)[0])
+            if d0s.mean()<5e-2:
+                #add regular term harmonic in oopdist
+                for oop in oops:
+                    term = self.add_term(Harmonic, [OopDist(*oop)], types, ['HC_FC_DIAG'], ['kjmol/A**2', 'A'])
+                    self.set_params(term.index, rv0=0.0)
+            else:
+                #add term harmonic in square of oopdist
+                for oop in oops:
+                    self.add_term(Harmonic, [SqOopDist(*oop)], types, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/A**4', 'A**2'])
+    
+    def init_cross_terms(self, specs=None):
+        ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
+        for angle in self.system.iter_angles():
+            angle, types = term_sort_atypes(ffatypes, angle, 'angle')
+            bond0, btypes = term_sort_atypes(ffatypes, angle[:2], 'bond')
+            bond1, btypes = term_sort_atypes(ffatypes, angle[1:], 'bond')
+            #add stretch-stretch
+            self.add_term(Cross,
+                [Bond(*bond0), Bond(*bond1)],
+                types, ['HC_FC_CROSS'], ['kjmol/A**2', 'A', 'A']
+            )
+            #add stretch0-bend
+            self.add_term(Cross, 
+                [Bond(*bond0), BendAngle(*angle)],
+                types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
+            )
+            #add stretch1-bend
+            self.add_term(Cross, 
+                [Bond(*bond1), BendAngle(*angle)],
+                types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
+            )
     
     def calc_energy(self, pos):
+        old =  self.system.pos.copy()
         self.system.pos = pos.copy()
         self.dlist.forward()
         self.iclist.forward()
         self.vlist.forward()
-        return self.compute()
+        energy = self.compute()
+        self.system.pos = old
+        return energy
     
     def get_hessian_contrib(self, index, fc=None):
         '''
@@ -612,7 +588,22 @@ class ValenceFF(ForcePartValence):
             if K<1e-6: continue
             pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
-                K/parse_unit(master.units[0]), q0/parse_unit(master.units[1])
+                K/(kjmol/angstrom**2), q0/angstrom
+            ))
+        return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+    
+    def _sqopdists_to_yaff(self):
+        'construct a opdist section of a yaff parameter file'
+        prefix = 'SQOOPDIST'
+        units = ParameterDefinition('UNIT', lines=['K kjmol/A**4', 'D0 A**2'])
+        pars = ParameterDefinition('PARS')
+        for i, master in enumerate(self.iter_masters(label=prefix)):
+            ffatypes = master.basename.split('/')[1].split('.')
+            K, q0 = self.get_params(master.index)
+            if K<1e-6: continue
+            pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                K/(kjmol/angstrom**4), q0/angstrom**2
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
@@ -636,16 +627,10 @@ class ValenceFF(ForcePartValence):
             for j, other in enumerate(self.iter_masters(label=label)):
                 if 'bb' in other.basename:
                     bb = self.get_params(other.index)
-                    kssunit = other.units[0]
-                    r0unit = other.units[1]
-                    r1unit = other.units[2]
                 elif 'b0a' in other.basename:
                     b0a = self.get_params(other.index)
-                    kbs0unit = other.units[0]
-                    theta0unit = other.units[2]
                 elif 'b1a' in other.basename:
                     b1a = self.get_params(other.index)
-                    kbs1unit = other.units[0]
                 else:
                     raise ValueError('Invalid Cross term %s' %other.basename)
             assert j==2, 'Exactly 3 %s terms should exist' %label
@@ -657,11 +642,10 @@ class ValenceFF(ForcePartValence):
             Kbs1, r1, theta0 = b1a
             ffatypes = ffatypes.split('.')
             pars.lines.append(
-                '%8s  %8s  %8s  %.10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
+                '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
                     ffatypes[0], ffatypes[1], ffatypes[2],
-                    Kss/parse_unit(kssunit), Kbs0/parse_unit(kbs0unit),
-                    Kbs1/parse_unit(kbs1unit), r0/parse_unit(r0unit),
-                    r1/parse_unit(r1unit), theta0/parse_unit(theta0unit),
+                    Kss/(kjmol/angstrom**2), Kbs0/(kjmol/angstrom),
+                    Kbs1/(kjmol/angstrom), r0/angstrom, r1/angstrom, theta0/deg,
             ))
             done.append(label)
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
@@ -674,6 +658,7 @@ class ValenceFF(ForcePartValence):
         ]
         f = open(fn, 'w')
         for section in sections:
+            if len(section['PARS'].lines)==0: continue
             print >> f, '# %s' %section.prefix
             print >> f, '#-%s' %('-'*len(section.prefix))
             for line in section['UNIT'].lines:
