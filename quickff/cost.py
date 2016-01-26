@@ -29,17 +29,15 @@ import numpy as np
 __all__ = ['HessianFCCost']
 
 class HessianFCCost(object):
-    def __init__(self, system, refs, valence, fit_indices):
+    def __init__(self, system, ai, valence, fit_indices, ffrefs=[]):
         '''
             **Arguments**
             
             system
                 a Yaff system object
             
-            refs
-                a list of ReferenceData objecst, one of which should be the
-                ab initio reference indicated with the string 'ai' in its
-                title attribute.
+            ai
+                an instance of the Reference representing the ab initio input
             
             valence
                 A ValenceFF object containing all valence terms.
@@ -47,7 +45,13 @@ class HessianFCCost(object):
             fit_indices
                 a list of indices indicating the terms for which the force
                 constants should be determined.
-        
+            
+            **Optional Arguments**
+                        
+            ffrefs
+                a list of Reference instances representing possible a priori
+                determined contributions to the force field (such as eg. 
+                electrostatics and van der Waals)
         '''
         #initialization
         self.init = np.zeros(len(fit_indices), float)
@@ -56,17 +60,6 @@ class HessianFCCost(object):
         self.A = np.zeros([len(fit_indices), len(fit_indices)], float)
         self.B = np.zeros([len(fit_indices)], float)
         ndofs = 3*system.natom
-        #sort references in ai and ff
-        ai = None
-        ffrefs = []
-        for ref in refs:
-            if 'ai' in ref.name.lower():
-                assert ai is None
-                ai = ref
-            else:
-                ffrefs.append(ref)
-        if ai is None:
-            raise IOError("No Ab Initio reference found. Be sure to add the string 'ai' to its name.")
         #compute the reference hessian
         href = ai.phess0.reshape([ndofs, ndofs]).copy()
         for ffref in ffrefs:

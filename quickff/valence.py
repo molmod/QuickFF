@@ -72,7 +72,7 @@ class Term(object):
         if self.kind==0:#harmonic
             fc, rv = pars.mean(axis=0)
             dfc, drv = pars.std(axis=0)
-            par_line = 'fc = %6.1f +- %5.1f %s' %(
+            par_line = 'fc = %7.1f +- %5.1f %s' %(
                 fc/parse_unit(self.units[0]), dfc/parse_unit(self.units[0]),
                 self.units[0]
             )
@@ -86,7 +86,7 @@ class Term(object):
             fcs = 0.5*pars[:,3]
             rvs = np.arccos(np.sqrt(-pars[:,1]/(2*pars[:,3])))
             fc, dfc, rv, drv = fcs.mean(), fcs.std(), rvs.mean(), rvs.std()
-            par_line = 'fc = %6.1f +- %5.1f %s' %(
+            par_line = 'fc = %7.1f +- %5.1f %s' %(
                 fc/parse_unit(self.units[3]), dfc/parse_unit(self.units[3]),
                 self.units[3]
             )
@@ -98,7 +98,7 @@ class Term(object):
         elif self.kind==3:#cross
             fc, rv0, rv1 = pars.mean(axis=0)
             dfc, drv0, drv1 = pars.std(axis=0)
-            par_line = 'fc = %6.1f +- %5.1f %s' %(
+            par_line = 'fc = %7.1f +- %5.1f %s' %(
                 fc/parse_unit(self.units[0]),
                 dfc/parse_unit(self.units[0]),
                 self.units[0]
@@ -119,7 +119,7 @@ class Term(object):
         elif self.kind==4:#cosine
             m, fc, rv = pars.mean(axis=0)
             dm, dfc, drv = pars.std(axis=0)
-            par_line = 'fc = %6.1f +- %5.1f %s' %(
+            par_line = 'fc = %7.1f +- %5.1f %s' %(
                 fc/parse_unit(self.units[1]),
                 dfc/parse_unit(self.units[1]),
                 self.units[1]

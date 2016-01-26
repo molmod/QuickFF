@@ -69,6 +69,8 @@ class Trajectory(object):
                 an integer defining the number of steps in the perturbation
                 trajectory. The default value is 11 steps.
         '''
+        if not term.kind in [0]:
+            raise NotImplementedError('Perturbation trajectory only implemented for Harmonic terms')
         self.term = term
         self.numbers = numbers
         self.qunit = term.units[1]
@@ -78,7 +80,7 @@ class Trajectory(object):
         self.fc = None
         self.rv = None
     
-    def plot(self, refs, fn=None, eunit='kjmol', valence=None):
+    def plot(self, ai, ffrefs=[], valence=None, fn=None, eunit='kjmol'):
         '''
             Method to plot the energy contributions along a perturbation
             trajectory associated to a given ic. This method assumes that the
@@ -86,11 +88,21 @@ class Trajectory(object):
 
             **Arguments**
             
-            refs
-                a list of Reference instances. The value of each of these
-                contributions will be plotted.
+            ai
+                an instance of the Reference representing the ab initio input
 
             **Optional Arguments**
+                        
+            ffrefs
+                a list of Reference instances representing possible a priori
+                determined contributions to the force field (such as eg. 
+                electrostatics and van der Waals)
+            
+            valence
+                an instance of ValenceFF which will be used to plot the covalent
+                contribution. If not given, only the contribution of the IC
+                corresponding to the trajectory will be plotted using the values
+                of fc and rv
             
             fn
                 a string defining the name of the figure
@@ -99,97 +111,43 @@ class Trajectory(object):
                 a string describing the conversion of the unit of energy. More
                 info regarding possible strings can be found in the
                 `MolMod documentation <http://molmod.github.io/molmod/reference/const.html#module-molmod.units>`_.
-           
-            valence
-                an instance of ValenceFF which will be used to plot the covalent
-                contribution. If not given, only the contribution of the IC
-                corresponding to the trajectory will be plotted using the values
-                of fc and rv
         '''
         import matplotlib.pyplot as pp
         fig, ax = pp.subplots()
-        #plot reference data
-        ffrefs = np.zeros([len(self.coords)], float)
-        for iref, ref in enumerate(refs):
-            #collect data
-            data = np.zeros([len(self.coords)], float)
-            for istep, pos in enumerate(self.coords):
-                data[istep] = ref.energy(pos)
-            data[:] -= data[len(data)/2]
-            if not 'ai' in ref.name.lower():
-                ffrefs += data
-            #configure labels, linestyle, color
+        def add_plot(data, prefix, kwargs):
             pars = fitpar(self.qvals, data, rcond=1e-6)
             k = 2*pars[0]
-            if k != 0.0:
-                q0 = -0.5*pars[1]/pars[0]
-                label = '(K=%.0f q0=%.3f)' %(
-                    k/parse_unit(self.kunit),
-                    q0/parse_unit(self.qunit)
-                )
-            else:
-                label = '(K=0.0 q0=None)'
-            if 'ai' in ref.name.lower():
-                linestyle = 'k-'
-                linewidth = 4.0
-            else:
-                linestyle = ':'
-                linewidth = 2.0
-            #plot data
-            ax.plot(
-                self.qvals/parse_unit(self.qunit), data/parse_unit(eunit), linestyle, 
-                linewidth=linewidth, label='%8s %s' %(ref.name+' '*(8-len(ref.name)), label)
-            )
-        #plot covalent part
+            if k==0: q0 = np.nan
+            else: q0 = -pars[1]/k
+            label = '%s (K=%.0f q0=%.3f)' %(prefix, k/parse_unit(self.kunit), q0/parse_unit(self.qunit))
+            kwargs['label'] = label
+            ax.plot(self.qvals/parse_unit(self.qunit), (data-data[len(self.qvals)/2])/parse_unit(eunit), **kwargs)
+        #ai
+        data = np.array([ai.energy(pos) for pos in self.coords])
+        add_plot(data, 'AI ref', {'linestyle': '--', 'color': 'k', 'linewidth': 4.0})
+        #ffrefs
+        totff = np.zeros([len(self.qvals)], float)
+        colors = ['b', 'g', 'm', 'y', 'c']
+        for i, ffref in enumerate(ffrefs):
+            data = np.array([ffref.energy(pos) for pos in self.coords])
+            totff += data
+            add_plot(data, ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
+        #complete fitted valence model if given
         if valence is not None:
-            cov = np.zeros(len(self.qvals), float)
-            for istep, pos in enumerate(self.coords):
-                cov[istep] = valence.calc_energy(pos)
-            pars = fitpar(self.qvals, cov, rcond=1e-6)
-            k = 2*pars[0]
-            if k != 0.0:
-                q0 = -0.5*pars[1]/pars[0]
-                label = '(K=%.0f q0=%.3f)' %(
-                    k/parse_unit(self.kunit),
-                    q0/parse_unit(self.qunit)
-                )
-            else:
-                label = '(K=0.0 q0=None)'
+            data = np.array([valence.calc_energy(pos) for pos in self.coords])
+            add_plot(data, 'Fitted Valence', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
+            add_plot(totff+data, 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
+        #complete fitted term if valence is not given
         else:
-            if self.fc is None or self.rv is None:
-                raise ValueError('The values of fc and rv for %s(%i) are not set' %(self.term.basename, self.term.index))
-            cov = 0.5*self.fc*(self.qvals - self.rv)**2
-            label = '(K=%.0f q0=%.3f)' %(
-                self.fc/parse_unit(self.kunit),
-                self.rv/parse_unit(self.qunit)
-            )
-        cov -= cov[len(cov)/2]
-        ax.plot(
-            self.qvals/parse_unit(self.qunit), cov/parse_unit(eunit),
-            'r-', linewidth=2, label='FF cov %s' %label
-        )
-        #plot ff total if valence was given
-        if valence is not None:
-            pars = fitpar(self.qvals, cov+ffrefs, rcond=1e-6)
-            k = 2*pars[0]
-            if k != 0.0:
-                q0 = -0.5*pars[1]/pars[0]
-                label = '(K=%.0f q0=%.3f)' %(
-                    k/parse_unit(self.kunit),
-                    q0/parse_unit(self.qunit)
-                )
-            else:
-                label = '(K=0.0 q0=None)'
-            ax.plot(
-                self.qvals/parse_unit(self.qunit), (cov+ffrefs)/parse_unit(eunit),
-                'k--', linewidth=2, label='FF tot %s' %label
-            )
-        #decorate plot with title, labels, ...
-        ax.set_title(self.term.basename)
+            assert self.fc is not None and self.rv is not None
+            data = 0.5*self.fc*(self.qvals - self.rv)**2
+            add_plot(data, 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})            
+        #decorate plot
+        ax.set_title('%s-%i' %(self.term.basename, self.term.index))
         ax.set_xlabel('%s [%s]' % (self.term.basename.split('/')[0], self.qunit), fontsize=16)
         ax.set_ylabel('Energy [%s]' %eunit, fontsize=16)
         ax.grid()
-        ax.legend(loc='best', fontsize=16)
+        ax.legend(loc='upper right', fontsize=16)
         fig.set_size_inches([8, 8])
         if fn is None:
             fn = 'trajectory-%s-%i.png' %(self.term.basename.replace('/', '-'),self.term.index)
@@ -216,17 +174,8 @@ class Trajectory(object):
 
 
 class RelaxedStrain(object):
-    def __init__(self, system, refs):
+    def __init__(self, system):
         self.system = system
-        self.ai = None
-        self.refs = []
-        for ref in refs:
-            if 'ai' in ref.name.lower():
-                self.ai = ref
-            else:
-                self.refs.append(ref)
-        if self.ai is None:
-            raise IOError("No Ab Initio reference found. Be sure to add the string 'ai' to its name.")
         self.strains = []
 
     def prepare(self, valence, do_terms):
@@ -299,7 +248,7 @@ class RelaxedStrain(object):
                     x[i,:] -= com
             trajectory.coords[iq,:,:] = x
 
-    def estimate(self, trajectory):
+    def estimate(self, trajectory, ai, ffrefs=[], valence=None):
         '''
             Method to estimate the FF parameters for the relevant ic from the
             given perturbation trajectory by fitting a harmonic potential to the
@@ -309,13 +258,34 @@ class RelaxedStrain(object):
 
             trajectory
                 a Trajectory instance representing the perturbation trajectory
+            
+            ai
+                an instance of the Reference representing the ab initio input
+
+            **Optional Arguments**
+                        
+            ffrefs
+                a list of Reference instances representing possible a priori
+                determined contributions to the force field (such as eg. 
+                electrostatics and van der Waals)
+            
+            valence
+                an instance of the ValenceFF which will be used to compute the
+                contributions of all valence terms except the one currently 
+                under investigation
         '''
         qs = trajectory.qvals.copy()
         Es = np.zeros(len(trajectory.coords))
         for istep, pos in enumerate(trajectory.coords):
-            Es[istep] += self.ai.energy(pos)
-            for ref in self.refs:
+            Es[istep] += ai.energy(pos)
+            for ref in ffrefs:
                 Es[istep] -= ref.energy(pos)
+        if valence is not None:
+            k, q0 = valence.get_params(trajectory.term.index)
+            valence.set_params(trajectory.term.index, fc=0.0)
+            for istep, pos in enumerate(trajectory.coords):
+                Es[istep] -= valence.calc_energy(pos)
+            valence.set_params(trajectory.term.index, fc=k)
         pars = fitpar(qs, Es, rcond=1e-6)
         if pars[0]!=0.0:
             trajectory.fc = 2*pars[0]

@@ -34,7 +34,7 @@ import os, cPickle, numpy as np
 __all__ = ['Program']
 
 class BaseProgram(object):
-    def __init__(self, system, refs, **kwargs):
+    def __init__(self, system, ai, **kwargs):
         #TODO: finish documentation
         '''
             **Arguments**
@@ -42,37 +42,30 @@ class BaseProgram(object):
             system
                 a Yaff system object defining the system
             
-            refs
-                a list of Reference objects of which one should be identified
-                as the ab initio reference by including the string 'ai' in its
-                name.
-            
+            ai
+                a Reference instance corresponding to the ab initio input data
             
             **Keyword Arguments**
             
-            term_specs
-            
-            do_taylor
-            
-            fn_traj
+            ffrefs
+                a list of Reference objects corresponding to a priori determined
+                contributions to the force field (such as eg. electrostatics
+                or van der Waals contributions)
         '''
         self.system = system
-        self.refs = refs
+        self.ai = ai
+        self.ffrefs = kwargs.get('ffrefs', [])
         self.kwargs = kwargs
         self.valence = ValenceFF(system)
-        self.perturbation = RelaxedStrain(system, refs)
+        self.perturbation = RelaxedStrain(system)
 
     def reset_system(self):
         '''
             routine to reset the system coords to the ai equilbrium
         '''
-        for ref in self.refs:
-            if 'ai' in ref.name.lower():
-                self.system.pos = ref.coords0.copy()
-                self.valence.dlist.forward()
-                self.valence.iclist.forward()
-                return
-        raise IOError("No Ab Initio reference found. Be sure to add the string 'ai' to its name.")
+        self.system.pos = self.ai.coords0.copy()
+        self.valence.dlist.forward()
+        self.valence.iclist.forward()
     
     def do_pt_generate(self):
         '''
@@ -86,16 +79,26 @@ class BaseProgram(object):
         paracontext.map(self.perturbation.generate, trajectories)
         return trajectories
         
-    def do_pt_estimate(self, trajectories):
+    def do_pt_estimate(self, trajectories, do_valence=False):
         '''
             Estimate force constants and rest values from the perturbation
             trajectories
+            
+            **Optional Arguments**
+            
+            do_valence
+                if set to True, the current valence force field will be used to
+                
         '''
         self.reset_system()
         for traj in trajectories:
             #compute fc and rv from trajectory
-            self.perturbation.estimate(traj)
-            #set force field parameters to computed fc and rv
+            if do_valence:
+                self.perturbation.estimate(traj, self.ai, ffrefs=self.ffrefs, valence=self.valence)
+            else:
+                self.perturbation.estimate(traj, self.ai, ffrefs=self.ffrefs)
+        #set force field parameters to computed fc and rv
+        for traj in trajectories:
             self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
     
     def do_eq_setrv(self, tasks):
@@ -161,7 +164,7 @@ class BaseProgram(object):
                 if term.kind==1: self.valence.check_params(term, ['a0', 'a1', 'a2', 'a3'])
                 if term.kind==3: self.valence.check_params(term, ['fc', 'rv0','rv1'])
                 if term.kind==4: self.valence.check_params(term, ['fc', 'rv', 'm'])
-        cost = HessianFCCost(self.system, self.refs, self.valence, term_indices)   
+        cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=self.ffrefs)   
         fcs = cost.estimate()
         for index, fc in zip(term_indices, fcs):
             master = self.valence.terms[index]
