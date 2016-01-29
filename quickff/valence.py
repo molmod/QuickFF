@@ -332,11 +332,11 @@ class ValenceFF(ForcePartValence):
         for types, oops in opdists.iteritems():
             d0s = np.zeros(len(oops), float)
             for i, oop in enumerate(oops):
-                rs = np.array([#mind the order, is different in molmod and yaff
-                    self.system.pos[oop[3]],
+                rs = np.array([#mind the order, is wrongly documented in molmod
                     self.system.pos[oop[0]],
                     self.system.pos[oop[1]],
                     self.system.pos[oop[2]],
+                    self.system.pos[oop[3]],
                 ])
                 d0s[i] = abs(opbend_dist(rs)[0])
             if d0s.mean()<5e-2:
