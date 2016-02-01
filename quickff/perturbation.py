@@ -247,6 +247,7 @@ class RelaxedStrain(object):
                 for i in xrange(self.system.natom):
                     x[i,:] -= com
             trajectory.coords[iq,:,:] = x
+        return trajectory
 
     def estimate(self, trajectory, ai, ffrefs=[], valence=None):
         '''
@@ -324,8 +325,42 @@ class Strain(ForceField):
         self.coords0 = system.pos.copy()
         self.ndof = np.prod(self.coords0.shape)
         part = ForcePartValence(system)
-        for ic in ics:
-            part.add_term(Harmonic(1.0, None, ic))
+        #construct ordered list of atoms in the constrained ic
+        if cons_ic.kind==0: 
+            cons_ic_atoms = cons_ic.index_pairs[0]
+        elif cons_ic.kind in [1,2]:
+            cons_ic_atoms = [
+                cons_ic.index_pairs[0][1],
+                cons_ic.index_pairs[1][0],
+                cons_ic.index_pairs[1][1],
+            ]
+        elif cons_ic.kind in [3,4]:
+            cons_ic_atoms = [
+                cons_ic.index_pairs[0][1],
+                cons_ic.index_pairs[1][0],
+                cons_ic.index_pairs[1][1],
+                cons_ic.index_pairs[2][1],
+            ]
+        elif cons_ic.kind in [10,11]:
+            cons_ic_atoms = [
+                cons_ic.index_pairs[0][0],
+                cons_ic.index_pairs[0][1],
+                cons_ic.index_pairs[2][0],
+                cons_ic.index_pairs[2][1],
+            ]
+        else:      
+            raise ValueError('IC of kind %i not supported' %cons_ic.kind)
+        #add all bonds, bends and diheds that are not constrained
+        for bond in system.iter_bonds():
+            if not bond==cons_ic_atoms or bond==cons_ic_atoms[::-1]:
+                part.add_term(Harmonic(1.0, None, Bond(*bond)))
+        for angle in system.iter_angles():
+            if not angle==cons_ic_atoms or angle==cons_ic_atoms[::-1]:
+                part.add_term(Harmonic(1.0, None, BendAngle(*angle)))
+        for dihed in system.iter_dihedrals():
+            if not dihed==cons_ic_atoms or dihed==cons_ic_atoms[::-1]:
+                part.add_term(Harmonic(1.0, None, DihedAngle(*dihed)))
+        #set the rest values to the equilibrium values
         part.dlist.forward()
         part.iclist.forward()
         for iterm in xrange(part.vlist.nv):

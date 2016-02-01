@@ -68,7 +68,7 @@ class Term(object):
         for i, index in enumerate(self.slaves):
             pars[1+i,:] = np.array(valence.get_params(index))
         #convert term pars to string
-        line = self.basename+' '*(40-len(self.basename))
+        line = self.basename+' '*(45-len(self.basename))
         if self.kind==0:#harmonic
             fc, rv = pars.mean(axis=0)
             dfc, drv = pars.std(axis=0)
@@ -76,21 +76,25 @@ class Term(object):
                 fc/parse_unit(self.units[0]), dfc/parse_unit(self.units[0]),
                 self.units[0]
             )
-            line += par_line + ' '*(35-len(par_line))
+            line += par_line + ' '*(40-len(par_line))
             par_line = 'rv  = %7.3f +- %7.3f %s' %(
                 rv/parse_unit(self.units[1]), drv/parse_unit(self.units[1]),
                 self.units[1]
             )
             line += par_line
         elif self.kind==1 and self.ics[0].kind==3:#PolyFour for torsc2harm
-            fcs = 0.5*pars[:,3]
-            rvs = np.arccos(np.sqrt(-pars[:,1]/(2*pars[:,3])))
+            for par in pars:
+                if par[3]>0.0:
+                    rv = np.arccos(np.sqrt(-0.5*par[1]/par[3]))
+                    assert abs(rv-par[0])<1e-3*deg, 'Inconsistent PolyFour parameters for %s: ' %self.basename + str(par)
+            fcs = 0.5*pars[:,3].mean()
+            rvs = pars[:,0].mean()
             fc, dfc, rv, drv = fcs.mean(), fcs.std(), rvs.mean(), rvs.std()
             par_line = 'fc = %7.1f +- %5.1f %s' %(
                 fc/parse_unit(self.units[3]), dfc/parse_unit(self.units[3]),
                 self.units[3]
             )
-            line += par_line + ' '*(35-len(par_line))
+            line += par_line + ' '*(40-len(par_line))
             par_line = 'rv  = %7.3f +- %7.3f %s' %(
                 rv/deg, drv/deg, 'deg'
             )
@@ -103,7 +107,7 @@ class Term(object):
                 dfc/parse_unit(self.units[0]),
                 self.units[0]
             )
-            line += par_line + ' '*(35-len(par_line))
+            line += par_line + ' '*(40-len(par_line))
             par_line = 'rv0 = %7.3f +- %7.3f %s' %(
                 rv0/parse_unit(self.units[1]),
                 drv0/parse_unit(self.units[1]),
@@ -124,7 +128,7 @@ class Term(object):
                 dfc/parse_unit(self.units[1]),
                 self.units[1]
             )
-            line += par_line + ' '*(35-len(par_line))
+            line += par_line + ' '*(40-len(par_line))
             par_line = 'rv  = %7.3f +- %7.3f %s' %(
                 rv/parse_unit(self.units[2]),
                 drv/parse_unit(self.units[2]),
@@ -238,7 +242,7 @@ class ValenceFF(ForcePartValence):
             units = ['kjmol/rad**2', 'deg']
             self.add_term(Harmonic, [BendAngle(*angle)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
 
-    def init_dihedral_terms(self, verbose=False):
+    def init_dihedral_terms(self):
         '''
             Estimate the dihedral potentials from the local topology. The
             dihedral potential will be one of the two following possibilities:
@@ -283,7 +287,10 @@ class ValenceFF(ForcePartValence):
                 n1 = len(self.system.neighs1[dihed[1]])
                 n2 = len(self.system.neighs1[dihed[2]])
                 ms[i] = get_multiplicity(n1, n2)
-            if None in ms or ms.std()>1e-3:
+            nan = False
+            for m in ms:
+                if np.isnan(m): nan = True
+            if nan or None in ms or ms.std()>1e-3:
                 print 'WARNING: no dihedral potential for %s (no multiplicity found)' %('.'.join(types))
                 continue
             m = int(np.round(ms.mean()))
@@ -306,8 +313,10 @@ class ValenceFF(ForcePartValence):
                     #a PolyFour(Cos(2*psi)) is added
                     for dihed in diheds:
                         term = self.add_term(PolyFour, [DihedCos(*dihed)], types, ['HC_FC_DIAG'], ['kjmol', 'kjmol', 'kjmol', 'kjmol'])
+                        #small ugly hack: store rest value in a0 (this is a constant contribution to the energy, hence doesn't influence ff derivation)
+                        a0 = np.array(folded).mean()
                         a1 = -4.0*np.cos(np.array(folded).mean())**2*1.0*kjmol
-                        self.set_params(term.index, a0=0.0, a1=a1, a2=0.0, a3=2.0*kjmol)
+                        self.set_params(term.index, a0=a0, a1=a1, a2=0.0, a3=2.0*kjmol)
                 else:
                     #no dihedral potential could be determine, hence it is ignored
                     print 'WARNING: no dihedral potential for %s (attempted TORSC2HARM but folded angles to far appart, %.3e deg)' %('.'.join(types), np.array(folded).std()/deg)
@@ -317,7 +326,7 @@ class ValenceFF(ForcePartValence):
                 print 'WARNING: no dihedral potential for %s (no TORSION or TORSC2HARM attempted)' %('.'.join(types))
                 continue
 
-    def init_oop_terms(self):
+    def init_oop_terms(self, thresshold_zero=5e-2*angstrom):
         #get all dihedrals
         from molmod.ic import opbend_dist
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
@@ -332,14 +341,14 @@ class ValenceFF(ForcePartValence):
         for types, oops in opdists.iteritems():
             d0s = np.zeros(len(oops), float)
             for i, oop in enumerate(oops):
-                rs = np.array([#mind the order, is wrongly documented in molmod
+                rs = np.array([#mind the order, is(or was) wrongly documented in molmod
                     self.system.pos[oop[0]],
                     self.system.pos[oop[1]],
                     self.system.pos[oop[2]],
                     self.system.pos[oop[3]],
                 ])
                 d0s[i] = abs(opbend_dist(rs)[0])
-            if d0s.mean()<5e-2:
+            if d0s.mean()<thresshold_zero: #TODO: check this thresshold
                 #add regular term harmonic in oopdist
                 for oop in oops:
                     term = self.add_term(Harmonic, [OopDist(*oop)], types, ['HC_FC_DIAG'], ['kjmol/A**2', 'A'])
@@ -407,12 +416,12 @@ class ValenceFF(ForcePartValence):
                 val.add_term(Cross(*args))
         elif kind==1:#Polyfour
             a0, a1, a2, a3 = list(self.get_params(index))
-            s = 1.0
             if fc is not None:
-                s = 2.0*fc/a3
+                a3 = 2.0*fc
+                a1 = -4.0*fc*np.cos(a0)**2
             for jterm in masterslaves:
                 ics = self.terms[jterm].ics
-                args = ([s*a0,s*a1,s*a2,s*a3],)+tuple(ics)
+                args = ([0.0,a1,0.0,a3],)+tuple(ics)
                 val.add_term(PolyFour(*args))
         elif kind==0:#Harmonic:
             k, rv = self.get_params(index)
@@ -438,10 +447,12 @@ class ValenceFF(ForcePartValence):
             if a1 is not None: term['par1'] = a1
             if a2 is not None: term['par2'] = a2
             if a3 is not None: term['par3'] = a3
-            if fc is not None:
-                pars = self.get_params(term_index)
-                assert pars[3] is not None
-                term['par1'] = 2.0*fc/pars[3]*pars[1]
+            if fc is not None or rv0 is not None:
+                if fc is None:  fc = self.get_params(term_index, only='fc')
+                if rv0 is None: rv0 = self.get_params(term_index, only='rv')
+                term['par0'] = rv0
+                term['par1'] = -4.0*fc*np.cos(rv0)**2
+                term['par2'] = 0.0
                 term['par3'] = 2.0*fc
         elif term['kind'] in [4]:#['Cosine']
             if m is not None:   term['par0'] = m
@@ -469,6 +480,7 @@ class ValenceFF(ForcePartValence):
             elif only.lower()=='a2': return term['par2']
             elif only.lower()=='a3': return term['par3']
             elif only.lower()=='fc': return 0.5*term['par3']
+            elif only.lower()=='rv': return term['par0']
             else: raise ValueError('Invalid par kind definition %s' %only)
         elif term['kind'] in [4]:#['Cosine']
             if only.lower()=='all': return term['par0'], term['par1'], term['par2']
@@ -569,8 +581,8 @@ class ValenceFF(ForcePartValence):
             ffatypes = master.basename.split('/')[1].split('.')
             a = self.get_params(master.index)
             K = 0.5*a[3]
-            cos0 = np.arccos(np.sqrt(-0.5*a[1]/a[3]))
             if K<1e-6*kjmol: continue
+            cos0 = np.arccos(np.sqrt(-0.5*a[1]/a[3]))
             pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3],
                 K/kjmol, cos0
@@ -622,7 +634,7 @@ class ValenceFF(ForcePartValence):
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
             prefix, ffatypes, suffix = master.basename.split('/')
-            label = prefix+'/'+ffatypes
+            label = prefix+'/'+ffatypes+'/'
             if label in done: continue
             for j, other in enumerate(self.iter_masters(label=label)):
                 if 'bb' in other.basename:

@@ -73,6 +73,7 @@ class ParaContext(object):
         self.wait_first = my_wait_first
         self.submit = futures.submit
         self.debug_log = debug_log
+        print 'SCOOP activated'
 
 
 paracontext = ParaContext()

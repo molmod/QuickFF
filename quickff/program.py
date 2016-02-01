@@ -29,9 +29,9 @@ from quickff.perturbation import RelaxedStrain
 from quickff.cost import HessianFCCost
 from quickff.paracontext import paracontext
 
-import os, cPickle, numpy as np
+import os, cPickle, numpy as np, datetime
 
-__all__ = ['Program']
+__all__ = ['BaseProgram', 'Program']
 
 class BaseProgram(object):
     def __init__(self, system, ai, **kwargs):
@@ -51,10 +51,26 @@ class BaseProgram(object):
                 a list of Reference objects corresponding to a priori determined
                 contributions to the force field (such as eg. electrostatics
                 or van der Waals contributions)
+            
+            verbose
+                a flag to increase the verbosity
+            
+            fn_traj
+                a cPickle filename to read/write the perturbation trajectories
+                from/to. If the file exists, the trajectories are read from the
+                file. If the file does not exist, the trajectories are written 
+                to the file.
+            
+            plot_traj
+                if set to True, all energy contributions along each perturbation
+                trajectory will be plotted using the final force field.
+            
+            xyz_traj
+                if set to True, each perturbation trajectory will be written to
+                an XYZ file.
         '''
         self.system = system
         self.ai = ai
-        self.ffrefs = kwargs.get('ffrefs', [])
         self.kwargs = kwargs
         self.valence = ValenceFF(system)
         self.perturbation = RelaxedStrain(system)
@@ -71,12 +87,22 @@ class BaseProgram(object):
         '''
             Generate perturbation trajectories.
         '''
+        #read if an existing file was specified through fn_traj
+        fn_traj = self.kwargs.get('fn_traj', None)
+        if fn_traj is not None and os.path.isfile(fn_traj):
+            trajectories = cPickle.load(open(fn_traj, 'r'))
+            if self.kwargs.get('verbose', False): print 'perturbation trajectories read from file %s' %fn_traj
+            return trajectories
         #configure
         self.reset_system()
         do_terms = [term for term in self.valence.terms if 'PT_ALL' in term.tasks]
         trajectories = self.perturbation.prepare(self.valence, do_terms)
         #compute
-        paracontext.map(self.perturbation.generate, trajectories)
+        trajectories = paracontext.map(self.perturbation.generate, trajectories)
+        #write the trajectories to the non-existing file fn_traj
+        if fn_traj is not None:
+            assert not os.path.isfile(fn_traj)
+            cPickle.dump(trajectories, open(fn_traj, 'w'))
         return trajectories
         
     def do_pt_estimate(self, trajectories, do_valence=False):
@@ -88,15 +114,16 @@ class BaseProgram(object):
             
             do_valence
                 if set to True, the current valence force field will be used to
-                
+                estimate the contribution of all other valence terms.
         '''
         self.reset_system()
+        ffrefs = self.kwargs.get('ffrefs', [])
         for traj in trajectories:
             #compute fc and rv from trajectory
             if do_valence:
-                self.perturbation.estimate(traj, self.ai, ffrefs=self.ffrefs, valence=self.valence)
+                self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs, valence=self.valence)
             else:
-                self.perturbation.estimate(traj, self.ai, ffrefs=self.ffrefs)
+                self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs)
         #set force field parameters to computed fc and rv
         for traj in trajectories:
             self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
@@ -143,6 +170,7 @@ class BaseProgram(object):
                 estimated.
         '''
         self.reset_system()
+        ffrefs = self.kwargs.get('ffrefs', [])
         term_indices = []
         for index in xrange(self.valence.vlist.nv):
             term = self.valence.terms[index]
@@ -164,7 +192,7 @@ class BaseProgram(object):
                 if term.kind==1: self.valence.check_params(term, ['a0', 'a1', 'a2', 'a3'])
                 if term.kind==3: self.valence.check_params(term, ['fc', 'rv0','rv1'])
                 if term.kind==4: self.valence.check_params(term, ['fc', 'rv', 'm'])
-        cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=self.ffrefs)   
+        cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=ffrefs)   
         fcs = cost.estimate()
         for index, fc in zip(term_indices, fcs):
             master = self.valence.terms[index]
@@ -200,9 +228,7 @@ class BaseProgram(object):
     
     def do_average_pars(self):
         '''
-            Average force field parameters over master and slaves. Small
-            negative rest values of out-of-plane distance terms will
-            also be set to zero.
+            Average force field parameters over master and slaves.
         '''
         for master in self.valence.iter_masters():
             npars = len(self.valence.get_params(master.index))
@@ -212,9 +238,6 @@ class BaseProgram(object):
                 pars[1+i,:] = np.array(self.valence.get_params(islave))
             if master.kind==0:#harmonic
                 fc, rv = pars.mean(axis=0)
-                if master.ics[0].kind in [10, 11]:#opdist
-                    if rv<0.0 and abs(rv)<1e-2*angstrom:
-                        rv=0.0
                 self.valence.set_params(master.index, fc=fc, rv0=rv)
                 for islave in master.slaves:
                     self.valence.set_params(islave, fc=fc, rv0=rv)
@@ -248,10 +271,78 @@ class BaseProgram(object):
 
 class Program(BaseProgram):
     def run(self):
+        time0 = datetime.datetime.now()
+        verbose = self.kwargs.get('verbose', False)
+        
+        if verbose: print 'generating perturbation trajectories ...'
         trajectories = self.do_pt_generate()
+        time1 = datetime.datetime.now()
+        
+        if verbose: print 'estimating pars from perturbation trajectories ...'
         self.do_pt_estimate(trajectories)
-        self.do_eq_setrv(['EQ_RV'])
+        self.valence.dump_screen()
         self.do_average_pars()
+        self.valence.dump_yaff('pars_pert.txt')
+        time2 = datetime.datetime.now()
+        
+        if verbose: print 'estimating diagonal force constants from Hessian ...'
         self.do_hc_estimatefc(['HC_FC_DIAG'])
+        self.valence.dump_screen()
+        self.valence.dump_yaff('pars_hess_diag.txt')
+        time3 = datetime.datetime.now()
+        
+        if verbose: print 'revisiting perturbation trajectories ...'
+        self.do_pt_estimate(trajectories, do_valence=True)
+        self.valence.dump_screen()
+        self.do_average_pars()
+        self.valence.dump_yaff('pars_pert2.txt')
+        
+        if verbose: print 'reestimate diagonal force constants from Hessian ...'
+        self.do_hc_estimatefc(['HC_FC_DIAG'])
+        self.valence.dump_screen()
+        self.valence.dump_yaff('pars_hess_diag2.txt')
+        time4 = datetime.datetime.now()
+        
+        if verbose: print 'estimating cross force constants from Hessian ...'
         self.do_cross_init()
         self.do_hc_estimatefc(['HC_FC_CROSS'])
+        self.valence.dump_screen()
+        self.valence.dump_yaff('pars_hess_cross.txt')
+        time5 = datetime.datetime.now()
+        
+        if verbose: print 'estimating all force constants from Hessian ...'
+        self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
+        self.valence.dump_screen()
+        self.valence.dump_yaff('pars_hess_all.txt')
+        time6 = datetime.datetime.now()
+        
+        if verbose: print 'dumping additional output ...'
+        if self.kwargs.get('plot_traj', False):
+            for trajectory in trajectories:
+                trajectory.plot(self.ai, ffrefs=self.kwargs.get('ffrefs', []), valence=self.valence)
+        if self.kwargs.get('xyz_traj', False):
+            for trajectory in trajectories:
+                trajectory.to_xyz()
+        self.system.to_file('system.chk')
+        time7 = datetime.datetime.now()
+        
+        if verbose:
+            timings = {
+                'Generate PT':          time1-time0,
+                'Estimate PT':          time2-time1,
+                'Estimate Cost diag':   time3-time2,
+                'Revisit  PT':          time4-time3,
+                'Estimate Cost cross':  time5-time4,
+                'Estimate Cost all':    time6-time5,
+                'Dumping  Output':       time7-time6,
+            }
+            labels = ['Generate PT', 'Estimate PT', 'Estimate Cost diag', 'Revisit  PT', 'Estimate Cost cross', 'Estimate Cost all', 'Dumping  Output']
+            print ''
+            print 'TIMING:'
+            print '-'*45
+            for label in labels:
+                line = '%30s  ' %(label+' '*(30-len(label)))
+                seconds = timings[label].total_seconds()
+                line += '  %10.1f' %seconds
+                print line
+            print '-'*45
