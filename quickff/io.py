@@ -33,6 +33,9 @@ from molmod.periodic import periodic
 from molmod.units import angstrom, electronvolt, amu
 from molmod.io.fchk import FCHKFile
 
+from yaff.pes.ext import PairPotEI
+from yaff.pes.ff import ForcePartPair
+
 __all__ = ['VASPRun', 'read_abinitio']
 
 

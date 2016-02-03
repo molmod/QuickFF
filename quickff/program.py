@@ -28,14 +28,14 @@ from quickff.valence import ValenceFF
 from quickff.perturbation import RelaxedStrain
 from quickff.cost import HessianFCCost
 from quickff.paracontext import paracontext
+from quickff.log import log
 
 import os, cPickle, numpy as np, datetime
 
-__all__ = ['BaseProgram', 'Program']
+__all__ = ['BaseProgram', 'MakeTrajectories', 'Program']
 
 class BaseProgram(object):
     def __init__(self, system, ai, **kwargs):
-        #TODO: finish documentation
         '''
             **Arguments**
             
@@ -72,6 +72,7 @@ class BaseProgram(object):
         self.system = system
         self.ai = ai
         self.kwargs = kwargs
+        log.set_level(self.kwargs.get('verbosity', 'medium'))
         self.valence = ValenceFF(system)
         self.perturbation = RelaxedStrain(system)
 
@@ -79,6 +80,7 @@ class BaseProgram(object):
         '''
             routine to reset the system coords to the ai equilbrium
         '''
+        log.dump('Resetting system coordinates to ab initio ref')
         self.system.pos = self.ai.coords0.copy()
         self.valence.dlist.forward()
         self.valence.iclist.forward()
@@ -87,22 +89,26 @@ class BaseProgram(object):
         '''
             Generate perturbation trajectories.
         '''
-        #read if an existing file was specified through fn_traj
-        fn_traj = self.kwargs.get('fn_traj', None)
-        if fn_traj is not None and os.path.isfile(fn_traj):
-            trajectories = cPickle.load(open(fn_traj, 'r'))
-            if self.kwargs.get('verbose', False): print 'perturbation trajectories read from file %s' %fn_traj
-            return trajectories
-        #configure
-        self.reset_system()
-        do_terms = [term for term in self.valence.terms if 'PT_ALL' in term.tasks]
-        trajectories = self.perturbation.prepare(self.valence, do_terms)
-        #compute
-        trajectories = paracontext.map(self.perturbation.generate, trajectories)
-        #write the trajectories to the non-existing file fn_traj
-        if fn_traj is not None:
-            assert not os.path.isfile(fn_traj)
-            cPickle.dump(trajectories, open(fn_traj, 'w'))
+        log.section('PTGEN')
+        with log.time('PT Generate'):
+            #read if an existing file was specified through fn_traj
+            fn_traj = self.kwargs.get('fn_traj', None)
+            if fn_traj is not None and os.path.isfile(fn_traj):
+                trajectories = cPickle.load(open(fn_traj, 'r'))
+                log.dump('Trajectories read from file %s' %fn_traj)
+                return trajectories
+            #configure
+            self.reset_system()
+            do_terms = [term for term in self.valence.terms if 'PT_ALL' in term.tasks]
+            trajectories = self.perturbation.prepare(self.valence, do_terms)
+            #compute
+            log.dump('Constructing trajectories')
+            trajectories = paracontext.map(self.perturbation.generate, trajectories)
+            #write the trajectories to the non-existing file fn_traj
+            if fn_traj is not None:
+                assert not os.path.isfile(fn_traj)
+                cPickle.dump(trajectories, open(fn_traj, 'w'))
+                log.dump('Trajectories stored to file %s' %fn_traj)
         return trajectories
         
     def do_pt_estimate(self, trajectories, do_valence=False):
@@ -116,43 +122,53 @@ class BaseProgram(object):
                 if set to True, the current valence force field will be used to
                 estimate the contribution of all other valence terms.
         '''
+        log.section('PTEST')
         self.reset_system()
-        ffrefs = self.kwargs.get('ffrefs', [])
-        for traj in trajectories:
-            #compute fc and rv from trajectory
-            if do_valence:
-                self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs, valence=self.valence)
-            else:
-                self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs)
-        #set force field parameters to computed fc and rv
-        for traj in trajectories:
-            self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
+        log.dump('Estimating FF parameters from perturbation trajectories')
+        with log.time('PT Estimate'):
+            ffrefs = self.kwargs.get('ffrefs', [])
+            for traj in trajectories:
+                #compute fc and rv from trajectory
+                if do_valence:
+                    self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs, valence=self.valence)
+                else:
+                    self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs)
+            #set force field parameters to computed fc and rv
+            for traj in trajectories:
+                self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
+            #logging
+            self.valence.dump_screen()
     
     def do_eq_setrv(self, tasks):
         '''
             Set the rest values to their respective AI equilibrium values.
         '''
+        log.section('EQSET')
         self.reset_system()
-        for term in self.valence.terms:
-            vterm = self.valence.vlist.vtab[term.index]
-            flagged = False
-            for flag in tasks:
-                if flag in term.tasks:
-                    flagged = True
-                    break
-            if flagged:
-                if term.kind==3:#cross term
-                    ic0 = self.valence.iclist.ictab[vterm['ic0']]
-                    ic1 = self.valence.iclist.ictab[vterm['ic1']]
-                    self.valence.set_params(term.index, rv0=ic0['value'], rv1=ic1['value'])
-                elif term.kind==4 and term.ics[0].kind==4:#Cosine of DihedAngle
-                    ic = self.valence.iclist.ictab[vterm['ic0']]
-                    m = self.valence.get_params(term.index, only='m')
-                    rv = ic['value']%(360.0*deg/m)
-                    self.valence.set_params(term.index, rv0=rv)
-                else:
-                    rv = self.valence.iclist.ictab[vterm['ic0']]['value']
-                    self.valence.set_params(term.index, rv0=rv)
+        log.dump('Setting rest values to AI equilibrium values for tasks %s' %' '.join(tasks))
+        with log.time('Equil Set RV'):
+            for term in self.valence.terms:
+                vterm = self.valence.vlist.vtab[term.index]
+                flagged = False
+                for flag in tasks:
+                    if flag in term.tasks:
+                        flagged = True
+                        break
+                if flagged:
+                    if term.kind==3:#cross term
+                        ic0 = self.valence.iclist.ictab[vterm['ic0']]
+                        ic1 = self.valence.iclist.ictab[vterm['ic1']]
+                        self.valence.set_params(term.index, rv0=ic0['value'], rv1=ic1['value'])
+                    elif term.kind==4 and term.ics[0].kind==4:#Cosine of DihedAngle
+                        ic = self.valence.iclist.ictab[vterm['ic0']]
+                        m = self.valence.get_params(term.index, only='m')
+                        rv = ic['value']%(360.0*deg/m)
+                        self.valence.set_params(term.index, rv0=rv)
+                    else:
+                        rv = self.valence.iclist.ictab[vterm['ic0']]['value']
+                        self.valence.set_params(term.index, rv0=rv)
+            #logging
+            self.valence.dump_screen()
     
     def do_hc_estimatefc(self, tasks):
         '''
@@ -169,37 +185,42 @@ class BaseProgram(object):
                 If the string 'all' is present in tasks, all fc's will be
                 estimated.
         '''
+        log.section('HCEST')
         self.reset_system()
-        ffrefs = self.kwargs.get('ffrefs', [])
-        term_indices = []
-        for index in xrange(self.valence.vlist.nv):
-            term = self.valence.terms[index]
-            flagged = False
-            for flag in tasks:
-                if flag in term.tasks:
-                    flagged = True
-                    break
-            if flagged:
-                #first check if all rest values and multiplicities have been defined
-                if term.kind==0: self.valence.check_params(term, ['rv'])
-                if term.kind==3: self.valence.check_params(term, ['rv0','rv1'])
-                if term.kind==4: self.valence.check_params(term, ['rv', 'm'])
-                if term.is_master():
-                    term_indices.append(index)
-            else:
-                #first check if all pars have been defined
-                if term.kind==0: self.valence.check_params(term, ['fc', 'rv'])
-                if term.kind==1: self.valence.check_params(term, ['a0', 'a1', 'a2', 'a3'])
-                if term.kind==3: self.valence.check_params(term, ['fc', 'rv0','rv1'])
-                if term.kind==4: self.valence.check_params(term, ['fc', 'rv', 'm'])
-        cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=ffrefs)   
-        fcs = cost.estimate()
-        for index, fc in zip(term_indices, fcs):
-            master = self.valence.terms[index]
-            assert master.is_master()
-            self.valence.set_params(index, fc=fc)
-            for islave in master.slaves:
-                self.valence.set_params(islave, fc=fc)
+        log.dump('Estimating force constants from Hessian cost for tasks %s' %' '.join(tasks))
+        with log.time('HC Estimate FC'):
+            ffrefs = self.kwargs.get('ffrefs', [])
+            term_indices = []
+            for index in xrange(self.valence.vlist.nv):
+                term = self.valence.terms[index]
+                flagged = False
+                for flag in tasks:
+                    if flag in term.tasks:
+                        flagged = True
+                        break
+                if flagged:
+                    #first check if all rest values and multiplicities have been defined
+                    if term.kind==0: self.valence.check_params(term, ['rv'])
+                    if term.kind==3: self.valence.check_params(term, ['rv0','rv1'])
+                    if term.kind==4: self.valence.check_params(term, ['rv', 'm'])
+                    if term.is_master():
+                        term_indices.append(index)
+                else:
+                    #first check if all pars have been defined
+                    if term.kind==0: self.valence.check_params(term, ['fc', 'rv'])
+                    if term.kind==1: self.valence.check_params(term, ['a0', 'a1', 'a2', 'a3'])
+                    if term.kind==3: self.valence.check_params(term, ['fc', 'rv0','rv1'])
+                    if term.kind==4: self.valence.check_params(term, ['fc', 'rv', 'm'])
+            cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=ffrefs)   
+            fcs = cost.estimate()
+            for index, fc in zip(term_indices, fcs):
+                master = self.valence.terms[index]
+                assert master.is_master()
+                self.valence.set_params(index, fc=fc)
+                for islave in master.slaves:
+                    self.valence.set_params(islave, fc=fc)
+            #logging
+            self.valence.dump_screen()
 
     def do_cross_init(self):
         '''
@@ -207,7 +228,9 @@ class BaseProgram(object):
             corresponding diagonal terms. The force constants are initialized
             to zero.
         '''
+        log.section('CRINIT')
         self.reset_system()
+        log.dump('Initializing cross terms')
         self.valence.init_cross_terms()
         for index in xrange(self.valence.vlist.nv):
             term = self.valence.vlist.vtab[index]
@@ -230,6 +253,8 @@ class BaseProgram(object):
         '''
             Average force field parameters over master and slaves.
         '''
+        log.section('AVERAGE')
+        log.dump('Averaging force field parameters over master and slaves')
         for master in self.valence.iter_masters():
             npars = len(self.valence.get_params(master.index))
             pars = np.zeros([len(master.slaves)+1, npars], float)
@@ -269,80 +294,33 @@ class BaseProgram(object):
         raise NotImplementedError
 
 
+class MakeTrajectories(BaseProgram):
+    def run(self):
+        fn_traj = self.kwargs.get('fn_traj', None)
+        assert fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
+        trajectories = self.do_pt_generate()
+        log.print_timetable()
+        log.print_footer()
+
 class Program(BaseProgram):
     def run(self):
-        time0 = datetime.datetime.now()
-        verbose = self.kwargs.get('verbose', False)
-        
-        if verbose: print 'generating perturbation trajectories ...'
+        self.do_eq_setrv(['EQ_RV'])
         trajectories = self.do_pt_generate()
-        time1 = datetime.datetime.now()
-        
-        if verbose: print 'estimating pars from perturbation trajectories ...'
         self.do_pt_estimate(trajectories)
-        self.valence.dump_screen()
         self.do_average_pars()
-        self.valence.dump_yaff('pars_pert.txt')
-        time2 = datetime.datetime.now()
-        
-        if verbose: print 'estimating diagonal force constants from Hessian ...'
         self.do_hc_estimatefc(['HC_FC_DIAG'])
-        self.valence.dump_screen()
-        self.valence.dump_yaff('pars_hess_diag.txt')
-        time3 = datetime.datetime.now()
-        
-        if verbose: print 'revisiting perturbation trajectories ...'
         self.do_pt_estimate(trajectories, do_valence=True)
-        self.valence.dump_screen()
         self.do_average_pars()
-        self.valence.dump_yaff('pars_pert2.txt')
-        
-        if verbose: print 'reestimate diagonal force constants from Hessian ...'
         self.do_hc_estimatefc(['HC_FC_DIAG'])
-        self.valence.dump_screen()
-        self.valence.dump_yaff('pars_hess_diag2.txt')
-        time4 = datetime.datetime.now()
-        
-        if verbose: print 'estimating cross force constants from Hessian ...'
         self.do_cross_init()
         self.do_hc_estimatefc(['HC_FC_CROSS'])
-        self.valence.dump_screen()
-        self.valence.dump_yaff('pars_hess_cross.txt')
-        time5 = datetime.datetime.now()
-        
-        if verbose: print 'estimating all force constants from Hessian ...'
         self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
-        self.valence.dump_screen()
         self.valence.dump_yaff('pars_hess_all.txt')
-        time6 = datetime.datetime.now()
-        
-        if verbose: print 'dumping additional output ...'
         if self.kwargs.get('plot_traj', False):
             for trajectory in trajectories:
                 trajectory.plot(self.ai, ffrefs=self.kwargs.get('ffrefs', []), valence=self.valence)
         if self.kwargs.get('xyz_traj', False):
             for trajectory in trajectories:
                 trajectory.to_xyz()
-        self.system.to_file('system.chk')
-        time7 = datetime.datetime.now()
-        
-        if verbose:
-            timings = {
-                'Generate PT':          time1-time0,
-                'Estimate PT':          time2-time1,
-                'Estimate Cost diag':   time3-time2,
-                'Revisit  PT':          time4-time3,
-                'Estimate Cost cross':  time5-time4,
-                'Estimate Cost all':    time6-time5,
-                'Dumping  Output':       time7-time6,
-            }
-            labels = ['Generate PT', 'Estimate PT', 'Estimate Cost diag', 'Revisit  PT', 'Estimate Cost cross', 'Estimate Cost all', 'Dumping  Output']
-            print ''
-            print 'TIMING:'
-            print '-'*45
-            for label in labels:
-                line = '%30s  ' %(label+' '*(30-len(label)))
-                seconds = timings[label].total_seconds()
-                line += '  %10.1f' %seconds
-                print line
-            print '-'*45
+        log.print_timetable()
+        log.print_footer()

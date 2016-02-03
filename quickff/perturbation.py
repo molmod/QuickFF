@@ -32,6 +32,7 @@ from yaff.pes.vlist import Chebychev1, Harmonic
 from yaff.pes.iclist import Bond, BendAngle, DihedAngle, OopDist
 
 from quickff.tools import fitpar
+from quickff.log import log
 
 import numpy as np, scipy.optimize, warnings
 warnings.filterwarnings('ignore', 'The iteration is not making good progress')
@@ -113,45 +114,46 @@ class Trajectory(object):
                 `MolMod documentation <http://molmod.github.io/molmod/reference/const.html#module-molmod.units>`_.
         '''
         import matplotlib.pyplot as pp
-        fig, ax = pp.subplots()
-        def add_plot(data, prefix, kwargs):
-            pars = fitpar(self.qvals, data, rcond=1e-6)
-            k = 2*pars[0]
-            if k==0: q0 = np.nan
-            else: q0 = -pars[1]/k
-            label = '%s (K=%.0f q0=%.3f)' %(prefix, k/parse_unit(self.kunit), q0/parse_unit(self.qunit))
-            kwargs['label'] = label
-            ax.plot(self.qvals/parse_unit(self.qunit), (data-data[len(self.qvals)/2])/parse_unit(eunit), **kwargs)
-        #ai
-        data = np.array([ai.energy(pos) for pos in self.coords])
-        add_plot(data, 'AI ref', {'linestyle': '--', 'color': 'k', 'linewidth': 4.0})
-        #ffrefs
-        totff = np.zeros([len(self.qvals)], float)
-        colors = ['b', 'g', 'm', 'y', 'c']
-        for i, ffref in enumerate(ffrefs):
-            data = np.array([ffref.energy(pos) for pos in self.coords])
-            totff += data
-            add_plot(data, ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
-        #complete fitted valence model if given
-        if valence is not None:
-            data = np.array([valence.calc_energy(pos) for pos in self.coords])
-            add_plot(data, 'Fitted Valence', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
-            add_plot(totff+data, 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
-        #complete fitted term if valence is not given
-        else:
-            assert self.fc is not None and self.rv is not None
-            data = 0.5*self.fc*(self.qvals - self.rv)**2
-            add_plot(data, 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})            
-        #decorate plot
-        ax.set_title('%s-%i' %(self.term.basename, self.term.index))
-        ax.set_xlabel('%s [%s]' % (self.term.basename.split('/')[0], self.qunit), fontsize=16)
-        ax.set_ylabel('Energy [%s]' %eunit, fontsize=16)
-        ax.grid()
-        ax.legend(loc='upper right', fontsize=16)
-        fig.set_size_inches([8, 8])
-        if fn is None:
-            fn = 'trajectory-%s-%i.png' %(self.term.basename.replace('/', '-'),self.term.index)
-        fig.savefig(fn)
+        with log.time('Trajectory Plot Energy'):
+            fig, ax = pp.subplots()
+            def add_plot(data, prefix, kwargs):
+                pars = fitpar(self.qvals, data, rcond=1e-6)
+                k = 2*pars[0]
+                if k==0: q0 = np.nan
+                else: q0 = -pars[1]/k
+                label = '%s (K=%.0f q0=%.3f)' %(prefix, k/parse_unit(self.kunit), q0/parse_unit(self.qunit))
+                kwargs['label'] = label
+                ax.plot(self.qvals/parse_unit(self.qunit), (data-data[len(self.qvals)/2])/parse_unit(eunit), **kwargs)
+            #ai
+            data = np.array([ai.energy(pos) for pos in self.coords])
+            add_plot(data, 'AI ref', {'linestyle': '--', 'color': 'k', 'linewidth': 4.0})
+            #ffrefs
+            totff = np.zeros([len(self.qvals)], float)
+            colors = ['b', 'g', 'm', 'y', 'c']
+            for i, ffref in enumerate(ffrefs):
+                data = np.array([ffref.energy(pos) for pos in self.coords])
+                totff += data
+                add_plot(data, ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
+            #complete fitted valence model if given
+            if valence is not None:
+                data = np.array([valence.calc_energy(pos) for pos in self.coords])
+                add_plot(data, 'Fitted Valence', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
+                add_plot(totff+data, 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
+            #complete fitted term if valence is not given
+            else:
+                assert self.fc is not None and self.rv is not None
+                data = 0.5*self.fc*(self.qvals - self.rv)**2
+                add_plot(data, 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})            
+            #decorate plot
+            ax.set_title('%s-%i' %(self.term.basename, self.term.index))
+            ax.set_xlabel('%s [%s]' % (self.term.basename.split('/')[0], self.qunit), fontsize=16)
+            ax.set_ylabel('Energy [%s]' %eunit, fontsize=16)
+            ax.grid()
+            ax.legend(loc='upper right', fontsize=16)
+            fig.set_size_inches([8, 8])
+            if fn is None:
+                fn = 'trajectory-%s-%i.png' %(self.term.basename.replace('/', '-'),self.term.index)
+            fig.savefig(fn)
     
     def to_xyz(self, fn=None):
         '''
@@ -163,13 +165,14 @@ class Trajectory(object):
             fn
                 a string defining the name of the output file
         '''
-        if fn is None:
-            fn = 'trajectory-%s-%i.xyz' %(self.term.basename.replace('/', '-'),self.term.index)
-        f = open(fn, 'w')
-        xyz = XYZWriter(f, [pt[Z].symbol for Z in self.numbers])
-        for frame, coord in enumerate(self.coords):
-            xyz.dump('frame %i' %frame, coord)
-        f.close()
+        with log.time('Trajectory Write XYZ'):
+            if fn is None:
+                fn = 'trajectory-%s-%i.xyz' %(self.term.basename.replace('/', '-'),self.term.index)
+            f = open(fn, 'w')
+            xyz = XYZWriter(f, [pt[Z].symbol for Z in self.numbers])
+            for frame, coord in enumerate(self.coords):
+                xyz.dump('frame %i' %frame, coord)
+            f.close()
 
 
 

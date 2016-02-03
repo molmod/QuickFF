@@ -22,12 +22,19 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-from yaff.pes.ff import ForceField, ForcePartValence
+from yaff.pes.ff import ForceField, ForcePartValence, ForcePartPair
+from yaff.pes.ext import PairPotEI 
+from yaff.pes.nlist import NeighborList
+from yaff.pes.scaling import Scalings
 from yaff.sampling.harmonic import estimate_cart_hessian
+
 from quickff.tools import global_translation, global_rotation
+
+from molmod.units import angstrom
+
 import numpy as np
 
-__all__ = ['SecondOrderTaylor', 'YaffForceField']
+__all__ = ['SecondOrderTaylor', 'YaffForceField', 'get_ei_ff']
 
 
 class Reference(object):
@@ -175,3 +182,56 @@ class YaffForceField(Reference):
         hess = estimate_cart_hessian(self.ff)
         natoms = len(coords)
         return hess.reshape([natoms, 3, natoms, 3])
+
+
+def get_ei_ff(name, system, charges, scales, radii=None, average=True):
+    '''
+        A routine to construct a Yaff force field for the electrostatics
+        
+        **Arguments**
+        
+        name
+            A string for the name of the force field. This name will show in
+            possible plots visualizing contributions along perturbation
+            trajectories
+        
+        system
+            A Yaff System instance representing the system
+        
+        charges
+            A numpy array containing the charge of each separate atom
+        
+        scales
+            A list of 4 floats, representing scale1, scale2, scale3, scale4,
+            i.e. the electrostatic scaling factors
+        
+        **Optional Arguments**
+        
+        radii
+            A numpy array containing the gaussian radii of each separate atom.
+            If this argument is omitted, point charges are used.
+        
+        average
+            If set to True, the charges and radii will first be averaged over
+            atom types. This is True by default.
+    '''
+    if average:
+        qs = {}
+        rs = {}
+        ffatypes = [system.ffatypes[i] for i in system.ffatype_ids]
+        for i, atype in enumerate(ffatypes):
+            if atype in qs: qs[atype].append(charges[i])
+            else: qs[atype] = [charges[i]]
+            if radii is not None:
+                if atype in rs: rs[atype].append(radii[i])
+                else: rs[atype] = [radii[i]]
+        for i, atype in enumerate(ffatypes):
+            charges[i] = np.array(qs[atype]).mean()
+            if radii is not None:
+                radii[i] = np.array(rs[atype]).mean()
+    pair_pot = PairPotEI(charges.astype(np.float), 0.0, 50*angstrom, None, 1.0, radii.astype(np.float))
+    nlist = NeighborList(system, 0)
+    scalings = Scalings(system, scale1=scales[0], scale2=scales[1], scale3=scales[2], scale4=scales[3])
+    part = ForcePartPair(system, nlist, scalings, pair_pot)
+    ff = ForceField(system, [part], nlist=nlist)
+    return YaffForceField(name, ff)

@@ -57,6 +57,42 @@ class Term(object):
     def is_master(self):
         return self.master==self.index
     
+    def get_atoms(self):
+        'Get the ordered list of indexes of the atoms involved'
+        atoms = None
+        if self.kind==3:#cross
+            if self.ics[0].kind==0 and self.ics[1].kind in [1,2]:
+                ic = self.ics[1]
+            elif self.ics[0].kin in [1,2] and self.ics[1].kind==0:
+                ic = self.ics[0]
+            elif self.ics[0].kind==0 and self.ics[1].kind==0:
+                a0 = self.ics[0].index_pairs[0]
+                a1 = self.ics[1].index_pairs[0]
+                if   a0[1]==a1[0]: return [a0[0], a0[1], a1[1]]
+                elif a0[0]==a1[1]: return [a1[0], a1[1], a0[1]]
+        else:
+            ic = self.ics[0]
+        if ic.kind==0:#Bond
+            atoms = ic.index_pairs[0]
+        elif ic.kind in [1,2]: #bend
+            a0 = ic.index_pairs[0]
+            a1 = ic.index_pairs[1]
+            atoms = [a0[1], a0[0], a1[1]]
+        elif ic.kind in [3,4]: #dihedral
+            a0 = ic.index_pairs[0]
+            a1 = ic.index_pairs[1]
+            a2 = ic.index_pairs[2]
+            atoms = [a0[1], a0[0], a1[1], a2[1]]
+        elif ic.kind in [10,11]: #oopdist
+            a0 = ic.index_pairs[0]
+            a1 = ic.index_pairs[1]
+            a2 = ic.index_pairs[2]
+            atoms = [a0[0], a0[1], a1[1], a2[1]]
+        if atoms is None:
+            raise ValueError('get_atoms not supported for term %s' %self.basename)
+        else:
+            return atoms
+    
     def to_string(self, valence):
         #check if current is master
         assert self.master is None or self.is_master(), \
@@ -216,6 +252,32 @@ class ValenceFF(ForcePartValence):
         ForcePartValence.add_term(self, pot(*args))
         return term
     
+    def modify_term(self, term_index, pot, ics, basename, tasks, units):
+        '''
+            Modify the term with given index to a new valence term.
+        '''
+        #modify in valence.terms
+        self.terms[term_index] = term
+        assert term.is_master(), ValueError('Modify term is only applicable to a master')
+        new_term = Term(
+            term_index, basename, pot.kind, ics, tasks,
+            units, master=term.master, slaves=term.slaves
+        )
+        self.terms[term_index] = new_term
+        #modify in valence.vlist.vtab
+        vterm = self.vlist.vtab[term_index]
+        if pot.kind==1:#all 4 parameters of PolyFour are given as 1 tuple
+            args = [(None,)*len(units)] + ics
+        else:
+            args = [None,]*len(units) + ics
+        new = pot(*args)
+        vterm['kind'] = new.kind
+        for i in xrange(len(new.pars)):
+            vterm['par%i'%i] = new.pars[i]
+        ic_indexes = new.get_ic_indexes(self.iclist)
+        for i in xrange(len(ic_indexes)):
+            vterm['ic%i'%i] = ic_indexes[i]
+    
     def iter_masters(self, label=None):
         '''
             Iterate over all master terms (whos name possibly contain the given
@@ -247,17 +309,19 @@ class ValenceFF(ForcePartValence):
             Estimate the dihedral potentials from the local topology. The
             dihedral potential will be one of the two following possibilities:
             
-                If a multiplicity m can be found such that the equilibrium value
-                of all instances of the torsion are within `thresshold` of 0 deg
-                or per/2 with per = 180deg/m, the following potential will be
-                chosen:
+                The multiplicity m is determined from the local topology, i.e.
+                the number of neighbors of the central two atoms in the dihedral
+                
+                If the equilibrium value of all instances of the torsion are 
+                within `thresshold` of 0 deg or per/2 with per = 180deg/m, 
+                the following potential will be chosen:
                 
                     0.5*K*(1-cos(m*psi-m*psi0)) with psi0 = 0 or 360/(2*m) 
                 
-                If no such multiplicity can be found, but one can found a rest
-                value psi0 such that the equilibrium values of all instances of
-                the torsion are within `thresshold` of psi0, psi0-180deg, -psi0
-                and 180deg-psi0, the following potential will be chosen:
+                If the above is not the case, but one can found a rest value
+                psi0 such that the equilibrium values of all instances of the
+                torsion are within `thresshold` of psi0, psi0-180deg, -psi0 and
+                180deg-psi0, the following potential will be chosen:
                 
                     0.5*K*(cos(2*psi)-cos(2*psi0))**2
                     
@@ -294,33 +358,33 @@ class ValenceFF(ForcePartValence):
                 print 'WARNING: no dihedral potential for %s (no multiplicity found)' %('.'.join(types))
                 continue
             m = int(np.round(ms.mean()))
-            rv = get_restvalue(psi0s, m, thresshold=5*deg)
+            rv = get_restvalue(psi0s, m, thresshold=10*deg)
             if rv is not None:
                 #a regular Cosine term is used for the dihedral potential
                 for dihed in diheds:
                     term = self.add_term(Cosine, [DihedAngle(*dihed)], types, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
                     self.set_params(term.index, rv0=rv, m=m)
-            elif m==2:
-                #try to determine a term harmonic in the cos(2*psi)
-                #fold all dihedral angles to the range [0,90]
-                folded = []
-                for psi0 in psi0s:
-                    if abs(psi0)<90*deg:
-                        folded.append(abs(psi0))
-                    else:
-                        folded.append(180*deg-abs(psi0))
-                if np.array(folded).std()<5*deg:
-                    #a PolyFour(Cos(2*psi)) is added
-                    for dihed in diheds:
-                        term = self.add_term(PolyFour, [DihedCos(*dihed)], types, ['HC_FC_DIAG'], ['kjmol', 'kjmol', 'kjmol', 'kjmol'])
-                        #small ugly hack: store rest value in a0 (this is a constant contribution to the energy, hence doesn't influence ff derivation)
-                        a0 = np.array(folded).mean()
-                        a1 = -4.0*np.cos(np.array(folded).mean())**2*1.0*kjmol
-                        self.set_params(term.index, a0=a0, a1=a1, a2=0.0, a3=2.0*kjmol)
-                else:
-                    #no dihedral potential could be determine, hence it is ignored
-                    print 'WARNING: no dihedral potential for %s (attempted TORSC2HARM but folded angles to far appart, %.3e deg)' %('.'.join(types), np.array(folded).std()/deg)
-                    continue
+#            elif m==2:
+#                #try to determine a term harmonic in the cos(2*psi)
+#                #fold all dihedral angles to the range [0,90]
+#                folded = []
+#                for psi0 in psi0s:
+#                    if abs(psi0)<90*deg:
+#                        folded.append(abs(psi0))
+#                    else:
+#                        folded.append(180*deg-abs(psi0))
+#                if np.array(folded).std()<5*deg:
+#                    #a PolyFour(Cos(2*psi)) is added
+#                    for dihed in diheds:
+#                        term = self.add_term(PolyFour, [DihedCos(*dihed)], types, ['HC_FC_DIAG'], ['kjmol', 'kjmol', 'kjmol', 'kjmol'])
+#                        #small ugly hack: store rest value in a0 (this is a constant contribution to the energy, hence doesn't influence ff derivation)
+#                        a0 = np.array(folded).mean()
+#                        a1 = -4.0*np.cos(np.array(folded).mean())**2*1.0*kjmol
+#                        self.set_params(term.index, a0=a0, a1=a1, a2=0.0, a3=2.0*kjmol)
+#                else:
+#                    #no dihedral potential could be determine, hence it is ignored
+#                    print 'WARNING: no dihedral potential for %s (attempted TORSC2HARM but folded angles to far appart, %.3e deg)' %('.'.join(types), np.array(folded).std()/deg)
+#                    continue
             else:
                 #no dihedral potential could be determine, hence it is ignored
                 print 'WARNING: no dihedral potential for %s (no TORSION or TORSC2HARM attempted)' %('.'.join(types))

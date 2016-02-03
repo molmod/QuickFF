@@ -30,10 +30,11 @@ from yaff import Chebychev1, Chebychev2, Chebychev3, Chebychev4, Chebychev6
 import numpy as np
 
 __all__ = [
-    'global_translation', 'global_rotation', 'fitpar', 'dihed_to_chebychev',
+    'global_translation', 'global_rotation', 'fitpar',
     'boxqp', 'guess_ffatypes', 'term_sort_atypes', 'get_multiplicity',
     'get_restvalue', 'get_ei_radii',
 ]
+
 
 def global_translation(coords):
     '''
@@ -91,6 +92,7 @@ def global_rotation(coords):
     VRz = U.transpose()[2]
     return VRx, VRy, VRz
 
+
 def fitpar(xs, ys, rcond=1e-3):
     '''
         Fit a parabola to the samples (xs, ys):
@@ -115,32 +117,6 @@ def fitpar(xs, ys, rcond=1e-3):
     sol = np.linalg.lstsq(D, ys, rcond=rcond)[0]
     return sol
 
-def dihed_to_chebychev(pars, ic):
-    # A torsion term with multiplicity m and rest value either 0 or pi/m
-    # degrees, can be treated as a polynomial in cos(phi). The code below
-    # selects the right polynomial.
-    if pars[2] == 0.0 and pars[0] == 1:
-        return Chebychev1(pars[1], ic, sign=-1)
-    elif abs(pars[2] - np.pi/1)<1e-6 and pars[0] == 1:
-        return Chebychev1(pars[1], ic, sign=1)
-    elif pars[2] == 0.0 and pars[0] == 2:
-        return Chebychev2(pars[1], ic, sign=-1)
-    elif abs(pars[2] - np.pi/2)<1e-6 and pars[0] == 2:
-        return Chebychev2(pars[1], ic, sign=1)
-    elif pars[2] == 0.0 and pars[0] == 3:
-        return Chebychev3(pars[1], ic, sign=-1)
-    elif abs(pars[2] - np.pi/3)<1e-6 and pars[0] == 3:
-        return Chebychev3(pars[1], ic, sign=1)
-    elif pars[2] == 0.0 and pars[0] == 4:
-        return Chebychev4(pars[1], ic, sign=-1)
-    elif abs(pars[2] - np.pi/4)<1e-6 and pars[0] == 4:
-        return Chebychev4(pars[1], ic, sign=1)
-    elif pars[2] == 0.0 and pars[0] == 6:
-        return Chebychev6(pars[1], ic, sign=-1)
-    elif abs(pars[2] - np.pi/6)<1e-6 and pars[0] == 6:
-        return Chebychev6(pars[1], ic, sign=1)
-    else:
-        return None
 
 def boxqp(A, B, bndl, bndu, x0, threshold=1e-9, status=False):
     '''
@@ -209,6 +185,7 @@ def boxqp(A, B, bndl, bndu, x0, threshold=1e-9, status=False):
     if status: return x1, nit
     else: return x1
 
+
 def guess_ffatypes(system, level):
     '''
        A method to guess atom types. This will overwrite ffatypes
@@ -273,6 +250,7 @@ def guess_ffatypes(system, level):
         system.ffatype_ids[i] = system.ffatypes.index(atype)
     system.ffatypes = np.array(system.ffatypes)
 
+
 def term_sort_atypes(ffatypes, indexes, kind):
     '''
         Routine to sort the atoms defined in indexes to give consistent term
@@ -305,6 +283,7 @@ def term_sort_atypes(ffatypes, indexes, kind):
         sorted_atypes.append(atypes[3])
     return tuple(sorted_indexes), tuple(sorted_atypes)
 
+
 def get_multiplicity(n1, n2):
     'Routine to estimate m from local topology'
     if   set([n1,n2])==set([4,4]): return 3
@@ -314,6 +293,7 @@ def get_multiplicity(n1, n2):
     elif set([n1,n2])==set([2,3]): return 2
     elif set([n1,n2])==set([2,2]): return 1
     else:                          return None
+
 
 def get_restvalue(values, m, thresshold=5*deg):
     '''
@@ -337,6 +317,7 @@ def get_restvalue(values, m, thresshold=5*deg):
         else:
             return None
     return rv
+
 
 def get_ei_radii(numbers):
     '''
