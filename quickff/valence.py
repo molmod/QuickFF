@@ -105,79 +105,51 @@ class Term(object):
         pars[0,:] = np.array(valence.get_params(self.index))
         for i, index in enumerate(self.slaves):
             pars[1+i,:] = np.array(valence.get_params(index))
-        #convert term pars to string
-        line = self.basename[:max_name]
-        line += ' '*(max_name-len(line))
-        if self.kind in [0,2]:
-            fc, rv = pars.mean(axis=0)
-            dfc, drv = pars.std(axis=0)
-            line += ' fc  = %5s %s %4s %s' %(
-                digits(fc/parse_unit(self.units[0]) , 5) , u"\u00B1",
-                digits(dfc/parse_unit(self.units[0]), 4), self.units[0].replace('**', '^')
-            )
-            line += ' '*(max_line-len(line))
-            line += ' '*max_name
-            line += ' rv  = %5s %s %4s %s' %(
-                digits(rv/parse_unit(self.units[1]) , 5), u"\u00B1",
-                digits(drv/parse_unit(self.units[1]), 4), self.units[1].replace('**', '^')
-            )
-        elif self.kind==1 and self.ics[0].kind==3:#PolyFour for torsc2harm
-            for par in pars:
-                if par[3]>0.0:
-                    rv = np.arccos(np.sqrt(-0.5*par[1]/par[3]))
-                    assert abs(rv-par[0])<1e-3*deg, 'Inconsistent PolyFour parameters for %s: ' %self.basename + str(par)
+        #set default config (applicable for harmonic terms)
+        means = pars.mean(axis=0)
+        stds = pars.std(axis=0)
+        formats = [
+            'fc = %%5s %s %%4s' %(u"\u00B1"),
+            'rv = %%5s %s %%4s' %(u"\u00B1"),
+        ]
+        ndigits = [(5,4), (5,4)]
+        units = self.units
+        #set special config
+        if self.kind==1 and self.ics[0].kind==3:#PolyFour for torsc2harm
             fcs = 0.5*pars[:,3].mean()
             rvs = pars[:,0].mean()
-            fc, dfc, rv, drv = fcs.mean(), fcs.std(), rvs.mean(), rvs.std()
-            line += ' fc  = %5s %s %4s %s' %(
-                digits(fc/parse_unit(self.units[3]), 5), u"\u00B1",
-                digits(dfc/parse_unit(self.units[3]), 4), self.units[3]
-            )
-            line += ' '*(max_line-len(line))
-            line += ' '*max_name
-            line += ' rv  = %5s %s %4s %s' %(
-                digits(rv/deg, 5), u"\u00B1", digits(drv/deg, 4), 'deg'
-            )
+            means = fcs.means(), rvs.mean()
+            stds = fcs.std(), rvs.std()
+            units = [self.units[3], 'deg']
         elif self.kind==3:#cross
-            fc, rv0, rv1 = pars.mean(axis=0)
-            dfc, drv0, drv1 = pars.std(axis=0)
-            line += ' fc  = %5s %s %4s %s' %(
-                digits(fc/parse_unit(self.units[0]), 5), u"\u00B1",
-                digits(dfc/parse_unit(self.units[0]), 4), self.units[0].replace('**', '^')
-            )
-            line += ' '*(max_line-len(line))
-            line += ' '*max_name
-            line += ' rv0 = %5s %s %4s %s' %(
-                digits(rv0/parse_unit(self.units[1]), 5), u"\u00B1",
-                digits(drv0/parse_unit(self.units[1]), 4), self.units[1].replace('**', '^')
-            )
-            line += ' '*(2*max_line-len(line))
-            line += ' '*max_name
-            line += ' rv1 = %5s %s %4s %s' %(
-                digits(rv1/parse_unit(self.units[2]), 5), u"\u00B1",
-                digits(drv1/parse_unit(self.units[2]), 4), self.units[2].replace('**', '^')
-            )
+            formats = [
+                'fc = %%4s %s %%2s' %(u"\u00B1"),
+                'rv0 = %%4s %s %%3s' %(u"\u00B1"),
+                'rv0 = %%4s %s %%3s' %(u"\u00B1")
+            ]
+            ndigits = [(4,2), (4,3), (4,3)]
         elif self.kind==4:#cosine
             m, fc, rv = pars.mean(axis=0)
             dm, dfc, drv = pars.std(axis=0)
-            line += ' fc  = %5s %s %4s %s' %(
-                digits(fc/parse_unit(self.units[1]) , 5), u"\u00B1",
-                digits(dfc/parse_unit(self.units[1]), 4), self.units[1]
-            )
-            line += ' '*(max_line-len(line))
-            line += ' '*max_name
-            line += ' rv  = %5s %s %4s %s' %(
-                digits(rv/parse_unit(self.units[2]) , 5), u"\u00B1",
-                digits(drv/parse_unit(self.units[2]), 4), self.units[2]
-            )
-            line += ' '*(2*max_line-len(line))
-            line += ' '*max_name
-            line += ' m   = %5s %s %4s' %(
-                digits(m/parse_unit(self.units[0]) , 5), u"\u00B1",
-                digits(dm/parse_unit(self.units[0]), 4),
-            )
-        else:
-            raise NotImplementedError
+            means = fc, rv, m
+            stds = dfc, drv, np.nan
+            formats = [
+                'fc = %%4s %s %%3s' %(u"\u00B1"),
+                'rv = %%4s %s %%3s' %(u"\u00B1"),
+                'm = %1s%0s'
+            ]
+            units = [self.units[1], self.units[2], 'au']
+            ndigits = [(4,3), (4,3), (1,0)]
+        #convert term pars to string
+        line = '%s (%s)' %(
+            self.basename[:max_line],
+            '  '.join([unit.replace('**','^') for unit in self.units])
+        )
+        line += ' '*(max_line-len(line))
+        for fmt, mean, std, ndigit, unit in zip(formats, means, stds, ndigits, units):
+            smean = digits(mean/parse_unit(unit), ndigit[0])
+            sstd = digits(std/parse_unit(unit), ndigit[1])
+            line += '    ' + fmt %(smean, sstd)
         return line
 
 
@@ -590,7 +562,7 @@ class ValenceFF(ForcePartValence):
                     lines.append(term.to_string(self))
                 for line in sorted(lines):
                     log.dump(line)
-            log.dump('')
+                    log.dump('')
 
     def _bonds_to_yaff(self):
         'construct a bonds section of a yaff parameter file'

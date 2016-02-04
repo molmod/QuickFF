@@ -355,8 +355,8 @@ def digits(x,n):
     sign = np.sign(x)
     x = float(abs(x))
     if np.isnan(x):
-        return " "*(n-3)+"nan"
-    if abs(x) < 0.5*10**(-n+2):
+        return ''
+    if abs(x) < 1e-6:
         return "." + "0"*(n-1)
     if sign<1: n -= 1
     i = int(x)
@@ -366,6 +366,8 @@ def digits(x,n):
             return '-'+str(r).lstrip('0')[:n]
         else:
             return str(r).lstrip('0')[:n]
+    if r==0:
+        return str(int(i*sign))[:n]
     else:
         if len(str(i))>=(n-1):
             return str(int(i*sign))
