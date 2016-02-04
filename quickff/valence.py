@@ -160,19 +160,19 @@ class Term(object):
         elif self.kind==4:#cosine
             m, fc, rv = pars.mean(axis=0)
             dm, dfc, drv = pars.std(axis=0)
-            line += ' fc = %5s %s %4s %s' %(
+            line += ' fc  = %5s %s %4s %s' %(
                 digits(fc/parse_unit(self.units[1]) , 5), u"\u00B1",
                 digits(dfc/parse_unit(self.units[1]), 4), self.units[1]
             )
             line += ' '*(max_line-len(line))
             line += ' '*max_name
-            line += 'rv = %5s %s %4s %s' %(
+            line += ' rv  = %5s %s %4s %s' %(
                 digits(rv/parse_unit(self.units[2]) , 5), u"\u00B1",
                 digits(drv/parse_unit(self.units[2]), 4), self.units[2]
             )
-            line += ' '*(max_line-len(line))
+            line += ' '*(2*max_line-len(line))
             line += ' '*max_name
-            line += 'm  = %5s %s %4s' %(
+            line += ' m   = %5s %s %4s' %(
                 digits(m/parse_unit(self.units[0]) , 5), u"\u00B1",
                 digits(dm/parse_unit(self.units[0]), 4),
             )
@@ -580,7 +580,7 @@ class ValenceFF(ForcePartValence):
             value = self.get_params(term.index, only=label)
             assert not np.isnan(value), '%s of %s is not set' %(label, term.basename)
     
-    def dump_logger(self, print_level=4):
+    def dump_logger(self, print_level=1):
         with log.section('', print_level):
             sequence = ['bondharm', 'bendaharm', 'torsion', 'torsc2harm', 'oopdist', 'cross']
             log.dump('')
