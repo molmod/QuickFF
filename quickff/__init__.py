@@ -27,8 +27,8 @@
 '''
 
 from yaff import System
-from yaff import log
-log.set_level(log.silent)
+from yaff import log as yafflog
+yafflog.set_level(yafflog.silent)
 
 from quickff.reference import *
 from quickff.valence import *
@@ -37,6 +37,7 @@ from quickff.program import *
 from quickff.cost import *
 from quickff.io import *
 from quickff.tools import *
+from quickff.log import log
 
 import numpy
 numpy.set_printoptions(linewidth=170)

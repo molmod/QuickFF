@@ -27,12 +27,12 @@ from molmod.units import deg, angstrom
 from molmod.periodic import periodic as pt
 from yaff import Chebychev1, Chebychev2, Chebychev3, Chebychev4, Chebychev6
 
-import numpy as np
+import numpy as np, math
 
 __all__ = [
     'global_translation', 'global_rotation', 'fitpar',
     'boxqp', 'guess_ffatypes', 'term_sort_atypes', 'get_multiplicity',
-    'get_restvalue', 'get_ei_radii',
+    'get_restvalue', 'get_ei_radii', 'digits'
 ]
 
 
@@ -346,3 +346,31 @@ def get_ei_radii(numbers):
             raise ValueError('No electrostatic Gaussian radii found for %s' %symbol)
         values[i] = radii[symbol]
     return values
+
+
+def digits(x,n):
+    """
+    returns a string representation of x with exactly n digits if possible.
+    """
+    sign = np.sign(x)
+    x = float(abs(x))
+    if np.isnan(x):
+        return " "*(n-3)+"nan"
+    if abs(x) < 0.5*10**(-n+2):
+        return "." + "0"*(n-1)
+    if sign<1: n -= 1
+    i = int(x)
+    r = x-i
+    if i==0:
+        if sign<0:
+            return '-'+str(r).lstrip('0')[:n]
+        else:
+            return str(r).lstrip('0')[:n]
+    else:
+        if len(str(i))>=(n-1):
+            return str(int(i*sign))
+        ndig = n - len(str(i))-1
+        if sign<0:
+            return '-%i.%s' %(i, str(r).lstrip('0.')[:ndig])
+        else:
+            return '%i.%s' %(i, str(r).lstrip('0.')[:ndig])

@@ -33,7 +33,9 @@ from yaff.pes.iclist import Bond, BendAngle, DihedCos, DihedAngle, OopDist, SqOo
 from yaff.pes.dlist import DeltaList
 from yaff.sampling.harmonic import estimate_cart_hessian
 
-from quickff.tools import term_sort_atypes, get_multiplicity, get_restvalue
+from quickff.tools import term_sort_atypes, get_multiplicity, get_restvalue, \
+    digits
+from quickff.log import log
 
 import numpy as np
 
@@ -93,7 +95,7 @@ class Term(object):
         else:
             return atoms
     
-    def to_string(self, valence):
+    def to_string(self, valence, max_name=38, max_line=72):
         #check if current is master
         assert self.master is None or self.is_master(), \
             'Current term is not the master'
@@ -104,20 +106,21 @@ class Term(object):
         for i, index in enumerate(self.slaves):
             pars[1+i,:] = np.array(valence.get_params(index))
         #convert term pars to string
-        line = self.basename+' '*(45-len(self.basename))
-        if self.kind==0:#harmonic
+        line = self.basename[:max_name]
+        line += ' '*(max_name-len(line))
+        if self.kind in [0,2]:
             fc, rv = pars.mean(axis=0)
             dfc, drv = pars.std(axis=0)
-            par_line = 'fc = %7.1f +- %5.1f %s' %(
-                fc/parse_unit(self.units[0]), dfc/parse_unit(self.units[0]),
-                self.units[0]
+            line += ' fc  = %5s %s %4s %s' %(
+                digits(fc/parse_unit(self.units[0]) , 5) , u"\u00B1",
+                digits(dfc/parse_unit(self.units[0]), 4), self.units[0].replace('**', '^')
             )
-            line += par_line + ' '*(40-len(par_line))
-            par_line = 'rv  = %7.3f +- %7.3f %s' %(
-                rv/parse_unit(self.units[1]), drv/parse_unit(self.units[1]),
-                self.units[1]
+            line += ' '*(max_line-len(line))
+            line += ' '*max_name
+            line += ' rv  = %5s %s %4s %s' %(
+                digits(rv/parse_unit(self.units[1]) , 5), u"\u00B1",
+                digits(drv/parse_unit(self.units[1]), 4), self.units[1].replace('**', '^')
             )
-            line += par_line
         elif self.kind==1 and self.ics[0].kind==3:#PolyFour for torsc2harm
             for par in pars:
                 if par[3]>0.0:
@@ -126,56 +129,53 @@ class Term(object):
             fcs = 0.5*pars[:,3].mean()
             rvs = pars[:,0].mean()
             fc, dfc, rv, drv = fcs.mean(), fcs.std(), rvs.mean(), rvs.std()
-            par_line = 'fc = %7.1f +- %5.1f %s' %(
-                fc/parse_unit(self.units[3]), dfc/parse_unit(self.units[3]),
-                self.units[3]
+            line += ' fc  = %5s %s %4s %s' %(
+                digits(fc/parse_unit(self.units[3]), 5), u"\u00B1",
+                digits(dfc/parse_unit(self.units[3]), 4), self.units[3]
             )
-            line += par_line + ' '*(40-len(par_line))
-            par_line = 'rv  = %7.3f +- %7.3f %s' %(
-                rv/deg, drv/deg, 'deg'
+            line += ' '*(max_line-len(line))
+            line += ' '*max_name
+            line += ' rv  = %5s %s %4s %s' %(
+                digits(rv/deg, 5), u"\u00B1", digits(drv/deg, 4), 'deg'
             )
-            line += par_line
         elif self.kind==3:#cross
             fc, rv0, rv1 = pars.mean(axis=0)
             dfc, drv0, drv1 = pars.std(axis=0)
-            par_line = 'fc = %7.1f +- %5.1f %s' %(
-                fc/parse_unit(self.units[0]),
-                dfc/parse_unit(self.units[0]),
-                self.units[0]
+            line += ' fc  = %5s %s %4s %s' %(
+                digits(fc/parse_unit(self.units[0]), 5), u"\u00B1",
+                digits(dfc/parse_unit(self.units[0]), 4), self.units[0].replace('**', '^')
             )
-            line += par_line + ' '*(40-len(par_line))
-            par_line = 'rv0 = %7.3f +- %7.3f %s' %(
-                rv0/parse_unit(self.units[1]),
-                drv0/parse_unit(self.units[1]),
-                self.units[1]
+            line += ' '*(max_line-len(line))
+            line += ' '*max_name
+            line += ' rv0 = %5s %s %4s %s' %(
+                digits(rv0/parse_unit(self.units[1]), 5), u"\u00B1",
+                digits(drv0/parse_unit(self.units[1]), 4), self.units[1].replace('**', '^')
             )
-            line += par_line + ' '*(35-len(par_line))
-            par_line = 'rv1 = %7.3f +- %7.3f %s' %(
-                rv1/parse_unit(self.units[2]),
-                drv1/parse_unit(self.units[2]),
-                self.units[2]
+            line += ' '*(2*max_line-len(line))
+            line += ' '*max_name
+            line += ' rv1 = %5s %s %4s %s' %(
+                digits(rv1/parse_unit(self.units[2]), 5), u"\u00B1",
+                digits(drv1/parse_unit(self.units[2]), 4), self.units[2].replace('**', '^')
             )
-            line += par_line
         elif self.kind==4:#cosine
             m, fc, rv = pars.mean(axis=0)
             dm, dfc, drv = pars.std(axis=0)
-            par_line = 'fc = %7.1f +- %5.1f %s' %(
-                fc/parse_unit(self.units[1]),
-                dfc/parse_unit(self.units[1]),
-                self.units[1]
+            line += ' fc = %5s %s %4s %s' %(
+                digits(fc/parse_unit(self.units[1]) , 5), u"\u00B1",
+                digits(dfc/parse_unit(self.units[1]), 4), self.units[1]
             )
-            line += par_line + ' '*(40-len(par_line))
-            par_line = 'rv  = %7.3f +- %7.3f %s' %(
-                rv/parse_unit(self.units[2]),
-                drv/parse_unit(self.units[2]),
-                self.units[2]
+            line += ' '*(max_line-len(line))
+            line += ' '*max_name
+            line += 'rv = %5s %s %4s %s' %(
+                digits(rv/parse_unit(self.units[2]) , 5), u"\u00B1",
+                digits(drv/parse_unit(self.units[2]), 4), self.units[2]
             )
-            line += par_line + ' '*(35-len(par_line))
-            par_line = 'm = %1i +- %.1f' %(
-                m/parse_unit(self.units[0]),
-                dm/parse_unit(self.units[0]),
+            line += ' '*(max_line-len(line))
+            line += ' '*max_name
+            line += 'm  = %5s %s %4s' %(
+                digits(m/parse_unit(self.units[0]) , 5), u"\u00B1",
+                digits(dm/parse_unit(self.units[0]), 4),
             )
-            line += par_line
         else:
             raise NotImplementedError
         return line
@@ -187,14 +187,16 @@ class ValenceFF(ForcePartValence):
         parameters need to be estimated.
     '''
     def __init__(self, system, specs=None):
-        self.system = system
-        self.terms = []
-        ForcePartValence.__init__(self, system)
-        self.init_bond_terms()
-        self.init_bend_terms()
-        self.init_dihedral_terms()
-        self.init_oop_terms()
-    
+        with log.section('VAL', 2, timer='Initializing'):
+            log.dump('Initializing valence force field')
+            self.system = system
+            self.terms = []
+            ForcePartValence.__init__(self, system)
+            self.init_bond_terms()
+            self.init_bend_terms()
+            self.init_dihedral_terms()
+            self.init_oop_terms()
+        
     def add_term(self, pot, ics, atypes, tasks, units):
         '''
             Adds new term both to the Yaff vlist object and a new QuickFF
@@ -291,18 +293,24 @@ class ValenceFF(ForcePartValence):
     def init_bond_terms(self):
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
         #get the bond terms
+        nbonds = 0
         for bond in self.system.iter_bonds():
             bond, types = term_sort_atypes(ffatypes, bond, 'bond')
             units = ['kjmol/A**2', 'A']
             self.add_term(Harmonic, [Bond(*bond)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
+            nbonds += 1
+        log.dump('Added %i Harmonic bond terms' %nbonds)
 
     def init_bend_terms(self):
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
         #get the angle terms
+        nbends = 0
         for angle in self.system.iter_angles():
             angle, types = term_sort_atypes(ffatypes, angle, 'angle')
             units = ['kjmol/rad**2', 'deg']
             self.add_term(Harmonic, [BendAngle(*angle)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
+            nbends += 1
+        log.dump('Added %i Harmonic bend terms' %nbends)
 
     def init_dihedral_terms(self):
         '''
@@ -342,6 +350,7 @@ class ValenceFF(ForcePartValence):
             else:
                 dihedrals[types] = [dihedral]
         #loop over all distinct dihedral types
+        ncos = 0
         for types, diheds in dihedrals.iteritems():
             psi0s = np.zeros(len(diheds), float)
             ms = np.zeros(len(diheds), float)
@@ -355,7 +364,7 @@ class ValenceFF(ForcePartValence):
             for m in ms:
                 if np.isnan(m): nan = True
             if nan or None in ms or ms.std()>1e-3:
-                print 'WARNING: no dihedral potential for %s (no multiplicity found)' %('.'.join(types))
+                log.dump('WARNING missing dihedral for %s (no multiplicity)' %('.'.join(types)))
                 continue
             m = int(np.round(ms.mean()))
             rv = get_restvalue(psi0s, m, thresshold=10*deg)
@@ -364,31 +373,12 @@ class ValenceFF(ForcePartValence):
                 for dihed in diheds:
                     term = self.add_term(Cosine, [DihedAngle(*dihed)], types, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
                     self.set_params(term.index, rv0=rv, m=m)
-#            elif m==2:
-#                #try to determine a term harmonic in the cos(2*psi)
-#                #fold all dihedral angles to the range [0,90]
-#                folded = []
-#                for psi0 in psi0s:
-#                    if abs(psi0)<90*deg:
-#                        folded.append(abs(psi0))
-#                    else:
-#                        folded.append(180*deg-abs(psi0))
-#                if np.array(folded).std()<5*deg:
-#                    #a PolyFour(Cos(2*psi)) is added
-#                    for dihed in diheds:
-#                        term = self.add_term(PolyFour, [DihedCos(*dihed)], types, ['HC_FC_DIAG'], ['kjmol', 'kjmol', 'kjmol', 'kjmol'])
-#                        #small ugly hack: store rest value in a0 (this is a constant contribution to the energy, hence doesn't influence ff derivation)
-#                        a0 = np.array(folded).mean()
-#                        a1 = -4.0*np.cos(np.array(folded).mean())**2*1.0*kjmol
-#                        self.set_params(term.index, a0=a0, a1=a1, a2=0.0, a3=2.0*kjmol)
-#                else:
-#                    #no dihedral potential could be determine, hence it is ignored
-#                    print 'WARNING: no dihedral potential for %s (attempted TORSC2HARM but folded angles to far appart, %.3e deg)' %('.'.join(types), np.array(folded).std()/deg)
-#                    continue
+                    ncos += 1
             else:
                 #no dihedral potential could be determine, hence it is ignored
-                print 'WARNING: no dihedral potential for %s (no TORSION or TORSC2HARM attempted)' %('.'.join(types))
+                log.dump('WARNING: missing dihedral for %s (no rest value)' %('.'.join(types)))
                 continue
+        log.dump('Added %i Cosine dihedral terms' %ncos)
 
     def init_oop_terms(self, thresshold_zero=5e-2*angstrom):
         #get all dihedrals
@@ -402,6 +392,8 @@ class ValenceFF(ForcePartValence):
             else:
                 opdists[types] = [opdist]
         #loop over all distinct opdist types
+        nharm = 0
+        nsq = 0
         for types, oops in opdists.iteritems():
             d0s = np.zeros(len(oops), float)
             for i, oop in enumerate(oops):
@@ -417,13 +409,17 @@ class ValenceFF(ForcePartValence):
                 for oop in oops:
                     term = self.add_term(Harmonic, [OopDist(*oop)], types, ['HC_FC_DIAG'], ['kjmol/A**2', 'A'])
                     self.set_params(term.index, rv0=0.0)
+                    nharm += 1
             else:
                 #add term harmonic in square of oopdist
                 for oop in oops:
                     self.add_term(Harmonic, [SqOopDist(*oop)], types, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/A**4', 'A**2'])
+                    nsq += 1
+        log.dump('Added %i Harmonic and %i SquareHarmonic out-of-plane distance terms' %(nharm, nsq))
     
     def init_cross_terms(self, specs=None):
         ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
+        nbend = 0
         for angle in self.system.iter_angles():
             angle, types = term_sort_atypes(ffatypes, angle, 'angle')
             bond0, btypes = term_sort_atypes(ffatypes, angle[:2], 'bond')
@@ -443,6 +439,8 @@ class ValenceFF(ForcePartValence):
                 [Bond(*bond1), BendAngle(*angle)],
                 types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
             )
+            nbend += 1
+        log.dump('Added %i cross terms for angle patterns' %nbend)
     
     def calc_energy(self, pos):
         old =  self.system.pos.copy()
@@ -582,17 +580,17 @@ class ValenceFF(ForcePartValence):
             value = self.get_params(term.index, only=label)
             assert not np.isnan(value), '%s of %s is not set' %(label, term.basename)
     
-    def dump_screen(self):
-        'Dump the parameters to stdout'
-        sequence = ['bondharm', 'bendaharm', 'torsion', 'torsc2harm', 'oopdist', 'cross']
-        print ''
-        for label in sequence:
-            lines = []
-            for term in self.iter_masters(label=label):
-                lines.append(term.to_string(self))
-            for line in sorted(lines):
-                print '  '+line
-        print ''
+    def dump_logger(self, print_level=4):
+        with log.section('', print_level):
+            sequence = ['bondharm', 'bendaharm', 'torsion', 'torsc2harm', 'oopdist', 'cross']
+            log.dump('')
+            for label in sequence:
+                lines = []
+                for term in self.iter_masters(label=label):
+                    lines.append(term.to_string(self))
+                for line in sorted(lines):
+                    log.dump(line)
+            log.dump('')
 
     def _bonds_to_yaff(self):
         'construct a bonds section of a yaff parameter file'

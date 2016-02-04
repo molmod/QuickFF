@@ -69,12 +69,13 @@ class BaseProgram(object):
                 if set to True, each perturbation trajectory will be written to
                 an XYZ file.
         '''
-        self.system = system
-        self.ai = ai
-        self.kwargs = kwargs
-        log.set_level(self.kwargs.get('verbosity', 'medium'))
-        self.valence = ValenceFF(system)
-        self.perturbation = RelaxedStrain(system)
+        with log.section('PROG', 2, timer='Initializing'):
+            log.dump('Initializing program')
+            self.system = system
+            self.ai = ai
+            self.kwargs = kwargs
+            self.valence = ValenceFF(system)
+            self.perturbation = RelaxedStrain(system)
 
     def reset_system(self):
         '''
@@ -89,8 +90,7 @@ class BaseProgram(object):
         '''
             Generate perturbation trajectories.
         '''
-        log.section('PTGEN')
-        with log.time('PT Generate'):
+        with log.section('PTGEN', 2, timer='PT Generate'):
             #read if an existing file was specified through fn_traj
             fn_traj = self.kwargs.get('fn_traj', None)
             if fn_traj is not None and os.path.isfile(fn_traj):
@@ -122,10 +122,12 @@ class BaseProgram(object):
                 if set to True, the current valence force field will be used to
                 estimate the contribution of all other valence terms.
         '''
-        log.section('PTEST')
-        self.reset_system()
-        log.dump('Estimating FF parameters from perturbation trajectories')
-        with log.time('PT Estimate'):
+        with log.section('PTEST', 2, timer='PT Estimate'):
+            self.reset_system()
+            if do_valence:
+                log.dump('Estimating FF parameters from perturbation trajectories with valence reference')
+            else:
+                log.dump('Estimating FF parameters from perturbation trajectories')
             ffrefs = self.kwargs.get('ffrefs', [])
             for traj in trajectories:
                 #compute fc and rv from trajectory
@@ -137,16 +139,15 @@ class BaseProgram(object):
             for traj in trajectories:
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
             #logging
-            self.valence.dump_screen()
+            self.valence.dump_logger(print_level=3)
     
     def do_eq_setrv(self, tasks):
         '''
             Set the rest values to their respective AI equilibrium values.
         '''
-        log.section('EQSET')
-        self.reset_system()
-        log.dump('Setting rest values to AI equilibrium values for tasks %s' %' '.join(tasks))
-        with log.time('Equil Set RV'):
+        with log.section('EQSET', 2, timer='Equil Set RV'):
+            self.reset_system()
+            log.dump('Setting rest values to AI equilibrium values for tasks %s' %' '.join(tasks))
             for term in self.valence.terms:
                 vterm = self.valence.vlist.vtab[term.index]
                 flagged = False
@@ -168,9 +169,9 @@ class BaseProgram(object):
                         rv = self.valence.iclist.ictab[vterm['ic0']]['value']
                         self.valence.set_params(term.index, rv0=rv)
             #logging
-            self.valence.dump_screen()
+            self.valence.dump_logger(print_level=3)
     
-    def do_hc_estimatefc(self, tasks):
+    def do_hc_estimatefc(self, tasks, dump=True):
         '''
             Refine force constants using Hessian Cost function.
             
@@ -185,10 +186,9 @@ class BaseProgram(object):
                 If the string 'all' is present in tasks, all fc's will be
                 estimated.
         '''
-        log.section('HCEST')
-        self.reset_system()
-        log.dump('Estimating force constants from Hessian cost for tasks %s' %' '.join(tasks))
-        with log.time('HC Estimate FC'):
+        with log.section('HCEST', 2, timer='HC Estimate FC'):
+            self.reset_system()
+            log.dump('Estimating force constants from Hessian cost for tasks %s' %' '.join(tasks))
             ffrefs = self.kwargs.get('ffrefs', [])
             term_indices = []
             for index in xrange(self.valence.vlist.nv):
@@ -220,7 +220,7 @@ class BaseProgram(object):
                 for islave in master.slaves:
                     self.valence.set_params(islave, fc=fc)
             #logging
-            self.valence.dump_screen()
+            if dump: self.valence.dump_logger(print_level=3)
 
     def do_cross_init(self):
         '''
@@ -228,62 +228,61 @@ class BaseProgram(object):
             corresponding diagonal terms. The force constants are initialized
             to zero.
         '''
-        log.section('CRINIT')
-        self.reset_system()
-        log.dump('Initializing cross terms')
-        self.valence.init_cross_terms()
-        for index in xrange(self.valence.vlist.nv):
-            term = self.valence.vlist.vtab[index]
-            if term['kind']!=3: continue
-            rv0, rv1 = None, None
-            for index2 in xrange(self.valence.vlist.nv):
-                term2 = self.valence.vlist.vtab[index2]               
-                if term2['kind']==3: continue
-                if term['ic0']==term2['ic0']:
-                    assert rv0 is None
-                    rv0 = self.valence.get_params(index2, only='rv')
-                if term['ic1']==term2['ic0']:
-                    assert rv1 is None
-                    rv1 = self.valence.get_params(index2, only='rv')
-            if rv0 is None or rv1 is None:
-                raise ValueError('No rest values found for %s' %self.valence.terms[index].basename)
-            self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+        with log.section('CRINI', 2):
+            self.reset_system()
+            self.valence.init_cross_terms()
+            for index in xrange(self.valence.vlist.nv):
+                term = self.valence.vlist.vtab[index]
+                if term['kind']!=3: continue
+                rv0, rv1 = None, None
+                for index2 in xrange(self.valence.vlist.nv):
+                    term2 = self.valence.vlist.vtab[index2]               
+                    if term2['kind']==3: continue
+                    if term['ic0']==term2['ic0']:
+                        assert rv0 is None
+                        rv0 = self.valence.get_params(index2, only='rv')
+                    if term['ic1']==term2['ic0']:
+                        assert rv1 is None
+                        rv1 = self.valence.get_params(index2, only='rv')
+                if rv0 is None or rv1 is None:
+                    raise ValueError('No rest values found for %s' %self.valence.terms[index].basename)
+                self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
     
     def do_average_pars(self):
         '''
             Average force field parameters over master and slaves.
         '''
-        log.section('AVERAGE')
-        log.dump('Averaging force field parameters over master and slaves')
-        for master in self.valence.iter_masters():
-            npars = len(self.valence.get_params(master.index))
-            pars = np.zeros([len(master.slaves)+1, npars], float)
-            pars[0,:] = np.array(self.valence.get_params(master.index))
-            for i, islave in enumerate(master.slaves):
-                pars[1+i,:] = np.array(self.valence.get_params(islave))
-            if master.kind==0:#harmonic
-                fc, rv = pars.mean(axis=0)
-                self.valence.set_params(master.index, fc=fc, rv0=rv)
-                for islave in master.slaves:
-                    self.valence.set_params(islave, fc=fc, rv0=rv)
-            elif master.kind==1:
-                a0, a1, a2, a3 = pars.mean(axis=0)
-                self.valence.set_params(master.index, a0=a0, a1=a1, a2=a2, a3=a3)
-                for islave in master.slaves:
-                    self.valence.set_params(islave, a0=a0, a1=a1, a2=a2, a3=a3) 
-            elif master.kind==3:#cross
-                fc, rv0, rv1 = pars.mean(axis=0)
-                self.valence.set_params(master.index, fc=fc, rv0=rv0, rv1=rv1)
-                for islave in master.slaves:
-                    self.valence.set_params(islave, fc=fc, rv0=rv0, rv1=rv1)
-            elif master.kind==4:#cosine
-                assert pars[:,0].std()<1e-6, 'dihedral multiplicity not unique'
-                m, fc, rv = pars.mean(axis=0)
-                self.valence.set_params(master.index, fc=fc, rv0=rv, m=m)
-                for islave in master.slaves:
-                    self.valence.set_params(islave, fc=fc, rv0=rv, m=m)
-            else:
-                raise NotImplementedError
+        with log.section('AVRGE', 2):
+            log.dump('Averaging force field parameters over master and slaves')
+            for master in self.valence.iter_masters():
+                npars = len(self.valence.get_params(master.index))
+                pars = np.zeros([len(master.slaves)+1, npars], float)
+                pars[0,:] = np.array(self.valence.get_params(master.index))
+                for i, islave in enumerate(master.slaves):
+                    pars[1+i,:] = np.array(self.valence.get_params(islave))
+                if master.kind==0:#harmonic
+                    fc, rv = pars.mean(axis=0)
+                    self.valence.set_params(master.index, fc=fc, rv0=rv)
+                    for islave in master.slaves:
+                        self.valence.set_params(islave, fc=fc, rv0=rv)
+                elif master.kind==1:
+                    a0, a1, a2, a3 = pars.mean(axis=0)
+                    self.valence.set_params(master.index, a0=a0, a1=a1, a2=a2, a3=a3)
+                    for islave in master.slaves:
+                        self.valence.set_params(islave, a0=a0, a1=a1, a2=a2, a3=a3) 
+                elif master.kind==3:#cross
+                    fc, rv0, rv1 = pars.mean(axis=0)
+                    self.valence.set_params(master.index, fc=fc, rv0=rv0, rv1=rv1)
+                    for islave in master.slaves:
+                        self.valence.set_params(islave, fc=fc, rv0=rv0, rv1=rv1)
+                elif master.kind==4:#cosine
+                    assert pars[:,0].std()<1e-6, 'dihedral multiplicity not unique'
+                    m, fc, rv = pars.mean(axis=0)
+                    self.valence.set_params(master.index, fc=fc, rv0=rv, m=m)
+                    for islave in master.slaves:
+                        self.valence.set_params(islave, fc=fc, rv0=rv, m=m)
+                else:
+                    raise NotImplementedError
     
     def run(self):
         '''
@@ -299,8 +298,6 @@ class MakeTrajectories(BaseProgram):
         fn_traj = self.kwargs.get('fn_traj', None)
         assert fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
         trajectories = self.do_pt_generate()
-        log.print_timetable()
-        log.print_footer()
 
 class Program(BaseProgram):
     def run(self):
@@ -314,7 +311,8 @@ class Program(BaseProgram):
         self.do_hc_estimatefc(['HC_FC_DIAG'])
         self.do_cross_init()
         self.do_hc_estimatefc(['HC_FC_CROSS'])
-        self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
+        self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], dump=False)
+        self.valence.dump_logger(print_level=1)
         self.valence.dump_yaff('pars_hess_all.txt')
         if self.kwargs.get('plot_traj', False):
             for trajectory in trajectories:
@@ -322,5 +320,3 @@ class Program(BaseProgram):
         if self.kwargs.get('xyz_traj', False):
             for trajectory in trajectories:
                 trajectory.to_xyz()
-        log.print_timetable()
-        log.print_footer()

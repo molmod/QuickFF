@@ -29,6 +29,7 @@ from yaff.pes.scaling import Scalings
 from yaff.sampling.harmonic import estimate_cart_hessian
 
 from quickff.tools import global_translation, global_rotation
+from quickff.log import log
 
 from molmod.units import angstrom
 
@@ -63,14 +64,16 @@ class SecondOrderTaylor(Reference):
     '''
     
     def __init__(self, name, coords=None, energy=0.0, grad=None, hess=None, pbc=[0,0,0]):
-        self.coords0 = coords.copy()
-        self.energy0 = energy
-        self.grad0 = grad.copy()
-        self.hess0 = hess.copy()
-        assert np.all(np.array(pbc)==pbc[0]) and pbc[0] in [0,1], "PBC should be either all 0 or all 1"
-        self.pbc = pbc
-        self.phess0 = self._get_phess()
-        super(SecondOrderTaylor, self).__init__(name)
+        with log.section('REF', '2', timer='Initializing'):
+            log.dump('Constructing Second order taylor reference for %s' %name)
+            self.coords0 = coords.copy()
+            self.energy0 = energy
+            self.grad0 = grad.copy()
+            self.hess0 = hess.copy()
+            assert np.all(np.array(pbc)==pbc[0]) and pbc[0] in [0,1], "PBC should be either all 0 or all 1"
+            self.pbc = pbc
+            self.phess0 = self._get_phess()
+            super(SecondOrderTaylor, self).__init__(name)
     
     def update(self, coords=None, grad=None, hess=None, pbc=None):
         '''
@@ -164,8 +167,10 @@ class YaffForceField(Reference):
         interactions.
     '''
     def __init__(self, name, ff):
-        self.ff = ff
-        Reference.__init__(self, name)
+        with log.section('REF', '2', timer='Initializing'):
+            log.dump('Constructing Yaff force field reference for %s' %name)
+            self.ff = ff
+            Reference.__init__(self, name)
     
     def energy(self, coords):
         self.ff.update_pos(coords.copy())

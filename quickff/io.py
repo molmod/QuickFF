@@ -36,6 +36,8 @@ from molmod.io.fchk import FCHKFile
 from yaff.pes.ext import PairPotEI
 from yaff.pes.ff import ForcePartPair
 
+from quickff.log import log
+
 __all__ = ['VASPRun', 'read_abinitio']
 
 

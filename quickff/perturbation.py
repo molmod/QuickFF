@@ -114,7 +114,7 @@ class Trajectory(object):
                 `MolMod documentation <http://molmod.github.io/molmod/reference/const.html#module-molmod.units>`_.
         '''
         import matplotlib.pyplot as pp
-        with log.time('Trajectory Plot Energy'):
+        with log.section('PLOT', 2, 'Trajectory Plot Energy'):
             fig, ax = pp.subplots()
             def add_plot(data, prefix, kwargs):
                 pars = fitpar(self.qvals, data, rcond=1e-6)
@@ -165,7 +165,7 @@ class Trajectory(object):
             fn
                 a string defining the name of the output file
         '''
-        with log.time('Trajectory Write XYZ'):
+        with log.section('XYZ', 2, 'Trajectory Write XYZ'):
             if fn is None:
                 fn = 'trajectory-%s-%i.xyz' %(self.term.basename.replace('/', '-'),self.term.index)
             f = open(fn, 'w')

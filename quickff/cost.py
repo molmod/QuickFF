@@ -23,7 +23,10 @@
 #
 #--
 from molmod.units import *
+
 from quickff.tools import boxqp
+from quickff.log import log
+
 import numpy as np
 
 __all__ = ['HessianFCCost']
