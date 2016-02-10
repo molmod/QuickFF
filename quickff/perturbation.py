@@ -29,7 +29,7 @@ from molmod.periodic import periodic as pt
 
 from yaff.pes.ff import ForceField, ForcePartValence
 from yaff.pes.vlist import Chebychev1, Harmonic
-from yaff.pes.iclist import Bond, BendAngle, DihedAngle, OopDist
+from yaff.pes.iclist import Bond, BendAngle, BendCos, DihedAngle, OopDist
 
 from quickff.tools import fitpar
 from quickff.log import log
@@ -78,6 +78,7 @@ class Trajectory(object):
         self.kunit = term.units[0]
         self.qvals = start + (end-start)/(steps-1)*np.array(range(steps), float)
         self.coords = np.zeros([steps, len(numbers), 3], float)
+        self.active = True
         self.fc = None
         self.rv = None
     
@@ -115,6 +116,7 @@ class Trajectory(object):
         '''
         import matplotlib.pyplot as pp
         with log.section('PLOT', 2, 'Trajectory Plot Energy'):
+            if 'active' in self.__dict__.keys() and not self.active: return
             fig, ax = pp.subplots()
             def add_plot(data, prefix, kwargs):
                 pars = fitpar(self.qvals, data, rcond=1e-6)
@@ -166,6 +168,7 @@ class Trajectory(object):
                 a string defining the name of the output file
         '''
         with log.section('XYZ', 2, 'Trajectory Write XYZ'):
+            if 'active' in self.__dict__.keys() and not self.active: return
             if fn is None:
                 fn = 'trajectory-%s-%i.xyz' %(self.term.basename.replace('/', '-'),self.term.index)
             f = open(fn, 'w')
@@ -177,20 +180,30 @@ class Trajectory(object):
 
 
 class RelaxedStrain(object):
-    def __init__(self, system):
+    def __init__(self, system, valence):
+        '''
+            **Arguments**
+            
+            system
+                an instance of the Yaff System class defining the system
+            
+            valence           
+                an instance of ValenceFF defining the valence force field
+        '''
         self.system = system
+        self.valence = valence
         self.strains = []
 
-    def prepare(self, valence, do_terms):
+    def prepare(self, do_terms):
         '''
             Method to initialize trajectories and configure everything required
             for the generate method.
         '''
         trajectories = []
-        self.strains = [None,]*len(valence.terms)
+        self.strains = [None,]*len(self.valence.terms)
         for term in do_terms:
             assert term.kind==0, 'Only harmonic terms supported for pert traj'
-            ic = valence.iclist.ictab[valence.vlist.vtab[term.index]['ic0']]
+            ic = self.valence.iclist.ictab[self.valence.vlist.vtab[term.index]['ic0']]
             kunit, qunit = term.units
             if ic['kind'] in [0]:
                 start=ic['value']-0.05*angstrom
@@ -212,7 +225,7 @@ class RelaxedStrain(object):
                 raise NotImplementedError
             #collect all other ics
             ics = []
-            for term2 in valence.terms:
+            for term2 in self.valence.terms:
                 if term2.index == term.index: continue #not the current term ic
                 if term2.kind == 3: continue #not a cross term ic
                 ics.append(term2.ics[0])
@@ -252,7 +265,7 @@ class RelaxedStrain(object):
             trajectory.coords[iq,:,:] = x
         return trajectory
 
-    def estimate(self, trajectory, ai, ffrefs=[], valence=None):
+    def estimate(self, trajectory, ai, ffrefs=[], do_valence=False):
         '''
             Method to estimate the FF parameters for the relevant ic from the
             given perturbation trajectory by fitting a harmonic potential to the
@@ -273,30 +286,55 @@ class RelaxedStrain(object):
                 determined contributions to the force field (such as eg. 
                 electrostatics and van der Waals)
             
-            valence
-                an instance of the ValenceFF which will be used to compute the
-                contributions of all valence terms except the one currently 
-                under investigation
+            do_valence
+                If set to True, the current valence force field (stored in
+                self.valence) will be used to compute the valence contribution
         '''
-        qs = trajectory.qvals.copy()
-        Es = np.zeros(len(trajectory.coords))
-        for istep, pos in enumerate(trajectory.coords):
-            Es[istep] += ai.energy(pos)
-            for ref in ffrefs:
-                Es[istep] -= ref.energy(pos)
-        if valence is not None:
-            k, q0 = valence.get_params(trajectory.term.index)
-            valence.set_params(trajectory.term.index, fc=0.0)
+        with log.section('PTEST', 2):
+            if 'active' in trajectory.__dict__.keys() and trajectory.active:
+                log.dump('WARNING: Skipping %s, perturbation trajectory was deactivated.' %trajectory.term.basename)
+                return
+            qs = trajectory.qvals.copy()
+            AIs = np.zeros(len(trajectory.coords))
+            FFs = np.zeros(len(trajectory.coords))
             for istep, pos in enumerate(trajectory.coords):
-                Es[istep] -= valence.calc_energy(pos)
-            valence.set_params(trajectory.term.index, fc=k)
-        pars = fitpar(qs, Es, rcond=1e-6)
-        if pars[0]!=0.0:
-            trajectory.fc = 2*pars[0]
-            trajectory.rv = -pars[1]/(2*pars[0])
-        else:
-            trajectory.fc = 0.0
-            trajectory.rv = qs[len(qs)/2]
+                eai = ai.energy(pos)
+                AIs[istep] += eai
+                for ref in ffrefs:
+                    FFs[istep] += ref.energy(pos)
+            if do_valence:
+                k = self.valence.get_params(trajectory.term.index, only='fc')
+                self.valence.set_params(trajectory.term.index, fc=0.0)
+                for istep, pos in enumerate(trajectory.coords):
+                    FFs[istep] += self.valence.calc_energy(pos)
+                self.valence.set_params(trajectory.term.index, fc=k)
+            pars = fitpar(qs, AIs-FFs, rcond=1e-6)
+            if pars[0]!=0.0:
+                trajectory.fc = 2*pars[0]
+                trajectory.rv = -pars[1]/(2*pars[0])
+            else:
+                trajectory.fc = 0.0
+                pars = fitpar(qs, AIs, rcond=1e-6)
+                trajectory.rv = -pars[1]/(2*pars[0])
+            #no negative rest values for all ics except dihedrals and bendcos
+            if trajectory.term.ics[0].kind not in [1,3,4]:
+                if trajectory.rv<0:
+                    trajectory.rv = 0
+                    log.dump('WARNING: rest value of %s was negative, set to zero' %trajectory.term.basename)
+            #no bending angles larger than 180*deg
+            if trajectory.term.ics[0].kind in [2]:
+                if trajectory.rv>180*deg:
+                    log.dump('WARNING: rest value of %s exceeds 180 deg, term set to BendCHarm with cos(phi0)=-1 and deactivated perturbation trajectory' %trajectory.term.basename)
+                    trajectory.rv = None
+                    trajectory.fc = None
+                    trajectory.active = False
+                    self.valence.modify_term(
+                        trajectory.term.index,
+                        Harmonic, [BendCos(*trajectory.term.get_atoms())], 
+                        trajectory.term.basename.replace('BendAHarm', 'BendCHarm'), 
+                        ['HC_FC_DIAG'], ['kjmol', 'au']
+                    )
+                    self.valence.set_params(trajectory.term.index, fc=0.0, rv0=-1.0)
 
 
 

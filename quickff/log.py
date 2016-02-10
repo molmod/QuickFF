@@ -56,8 +56,18 @@ __/\\\\\\__________________________________________________________________/\\\\
 ____\\///__________________________________________________________________\\///__
 """
 
-def splitstring(string, length):
-    return (string[0+i:length+i] for i in range(0, len(string), length))
+def splitstring(string, length, separators=[' ','/','-','_']):
+    result = []
+    remainder = string
+    while len(remainder)>length:
+        i=length-1
+        while remainder[i] not in separators and i>0:
+            i -= 1
+        result.append(remainder[:i+1])
+        remainder = remainder[i+1:]
+    if len(remainder)>0:
+        result.append(remainder)
+    return result
 
 
 class Section(object):
@@ -73,8 +83,8 @@ class Section(object):
             self.logger.add_blank_line = True
         self.logger.label = self.new_label
         self.logger.section_level = self.level
-        self.begin = datetime.datetime.now()
         if self.timer_description is not None:
+            self.begin = datetime.datetime.now()
             self.end = None
     
     def __exit__(self, type, value, traceback):

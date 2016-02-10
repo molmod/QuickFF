@@ -75,7 +75,7 @@ class BaseProgram(object):
             self.ai = ai
             self.kwargs = kwargs
             self.valence = ValenceFF(system)
-            self.perturbation = RelaxedStrain(system)
+            self.perturbation = RelaxedStrain(system, self.valence)
 
     def reset_system(self):
         '''
@@ -85,6 +85,23 @@ class BaseProgram(object):
         self.system.pos = self.ai.coords0.copy()
         self.valence.dlist.forward()
         self.valence.iclist.forward()
+    
+    
+    def update_trajectory_terms(self, trajectories):
+        '''
+            Routine to update the Term instances stored in trajectory.term
+            in case the trajectories were read from a file and some
+            modifications were done to the ValenceFF instance.
+        '''
+        log.dump('Updating terms of trajectories to current valenceFF terms')
+        for traj in trajectories:
+            index = traj.term.index
+            term = self.valence.terms[index]
+            assert traj.term.get_atoms()==term.get_atoms(), \
+                'Term of trajectory %i does not have same atom indices as term %i in valence.terms' %(index, index)
+            traj.term = term
+            if 'PT_ALL' not in term.tasks: traj.active=False
+    
     
     def do_pt_generate(self):
         '''
@@ -96,6 +113,7 @@ class BaseProgram(object):
             if fn_traj is not None and os.path.isfile(fn_traj):
                 trajectories = cPickle.load(open(fn_traj, 'r'))
                 log.dump('Trajectories read from file %s' %fn_traj)
+                self.update_trajectory_terms(trajectories)
                 return trajectories
             #configure
             self.reset_system()
@@ -129,14 +147,13 @@ class BaseProgram(object):
             else:
                 log.dump('Estimating FF parameters from perturbation trajectories')
             ffrefs = self.kwargs.get('ffrefs', [])
+            #compute fc and rv from trajectory
             for traj in trajectories:
-                #compute fc and rv from trajectory
-                if do_valence:
-                    self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs, valence=self.valence)
-                else:
-                    self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs)
+                if 'active' in traj.__dict__.keys() and not traj.active: continue
+                self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs, do_valence=do_valence)
             #set force field parameters to computed fc and rv
             for traj in trajectories:
+                if 'active' in traj.__dict__.keys() and not traj.active: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
             #logging
             self.valence.dump_logger(print_level=3)
@@ -201,6 +218,7 @@ class BaseProgram(object):
                 if flagged:
                     #first check if all rest values and multiplicities have been defined
                     if term.kind==0: self.valence.check_params(term, ['rv'])
+                    if term.kind==1: self.valence.check_params(term, ['a0', 'a1', 'a2', 'a3'])
                     if term.kind==3: self.valence.check_params(term, ['rv0','rv1'])
                     if term.kind==4: self.valence.check_params(term, ['rv', 'm'])
                     if term.is_master():
@@ -305,12 +323,10 @@ class Program(BaseProgram):
         trajectories = self.do_pt_generate()
         self.do_pt_estimate(trajectories)
         self.do_average_pars()
-        self.do_hc_estimatefc(['HC_FC_DIAG'])
+        self.do_cross_init()
+        self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
         self.do_pt_estimate(trajectories, do_valence=True)
         self.do_average_pars()
-        self.do_hc_estimatefc(['HC_FC_DIAG'])
-        self.do_cross_init()
-        self.do_hc_estimatefc(['HC_FC_CROSS'])
         self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], dump=False)
         self.valence.dump_logger(print_level=1)
         self.valence.dump_yaff('pars_hess_all.txt')

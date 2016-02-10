@@ -230,27 +230,28 @@ class ValenceFF(ForcePartValence):
         '''
             Modify the term with given index to a new valence term.
         '''
-        #modify in valence.terms
-        self.terms[term_index] = term
-        assert term.is_master(), ValueError('Modify term is only applicable to a master')
-        new_term = Term(
-            term_index, basename, pot.kind, ics, tasks,
-            units, master=term.master, slaves=term.slaves
-        )
-        self.terms[term_index] = new_term
-        #modify in valence.vlist.vtab
-        vterm = self.vlist.vtab[term_index]
-        if pot.kind==1:#all 4 parameters of PolyFour are given as 1 tuple
-            args = [(None,)*len(units)] + ics
-        else:
-            args = [None,]*len(units) + ics
-        new = pot(*args)
-        vterm['kind'] = new.kind
-        for i in xrange(len(new.pars)):
-            vterm['par%i'%i] = new.pars[i]
-        ic_indexes = new.get_ic_indexes(self.iclist)
-        for i in xrange(len(ic_indexes)):
-            vterm['ic%i'%i] = ic_indexes[i]
+        #TODO: only allow masters and automatically also modify the slaves
+        with log.section('VAL', 2):
+            #modify in valence.terms
+            old_term = self.terms[term_index]
+            new_term = Term(
+                term_index, basename, pot.kind, ics, tasks,
+                units, master=old_term.master, slaves=old_term.slaves
+            )
+            self.terms[term_index] = new_term
+            #modify in valence.vlist.vtab
+            vterm = self.vlist.vtab[term_index]
+            if pot.kind==1:#all 4 parameters of PolyFour are given as 1 tuple
+                args = [(None,)*len(units)] + ics
+            else:
+                args = [None,]*len(units) + ics
+            new = pot(*args)
+            vterm['kind'] = new.kind
+            for i in xrange(len(new.pars)):
+                vterm['par%i'%i] = new.pars[i]
+            ic_indexes = new.get_ic_indexes(self.iclist)
+            for i in xrange(len(ic_indexes)):
+                vterm['ic%i'%i] = ic_indexes[i]
     
     def iter_masters(self, label=None):
         '''
@@ -261,6 +262,11 @@ class ValenceFF(ForcePartValence):
             if label is None or label.lower() in term.basename.lower():
                 if term.is_master():
                     yield term
+    
+    def iter_terms(self, label=None):
+        for term in self.terms:
+            if label is None or label.lower() in term.basename.lower():
+                yield term
     
     def init_bond_terms(self):
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
@@ -394,6 +400,15 @@ class ValenceFF(ForcePartValence):
         nbend = 0
         for angle in self.system.iter_angles():
             angle, types = term_sort_atypes(ffatypes, angle, 'angle')
+            skip_angle = False
+            for term in self.iter_masters('.'.join(types)):
+                if len(term.ics)>1: continue
+                ickind = term.ics[0].kind
+                potkind = term.kind
+                if ickind==1 or (ickind==2 and potkind!=0):
+                    skip_angle = True
+                    log.dump('Skipped stretch-angle cross term for %s due to incompatible diagonal bend term with potkind=%i and ickind=%i' %('.'.join(types), potkind, ickind))
+                    break
             bond0, btypes = term_sort_atypes(ffatypes, angle[:2], 'bond')
             bond1, btypes = term_sort_atypes(ffatypes, angle[1:], 'bond')
             #add stretch-stretch
@@ -401,18 +416,41 @@ class ValenceFF(ForcePartValence):
                 [Bond(*bond0), Bond(*bond1)],
                 types, ['HC_FC_CROSS'], ['kjmol/A**2', 'A', 'A']
             )
-            #add stretch0-bend
-            self.add_term(Cross, 
-                [Bond(*bond0), BendAngle(*angle)],
-                types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
-            )
-            #add stretch1-bend
-            self.add_term(Cross, 
-                [Bond(*bond1), BendAngle(*angle)],
-                types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
-            )
+            if not skip_angle:
+                #add stretch0-bend
+                self.add_term(Cross, 
+                    [Bond(*bond0), BendAngle(*angle)],
+                    types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
+                )
+                #add stretch1-bend
+                self.add_term(Cross, 
+                    [Bond(*bond1), BendAngle(*angle)],
+                    types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
+                )
             nbend += 1
         log.dump('Added %i cross terms for angle patterns' %nbend)
+    
+    def apply_constraints(self, constraints):
+        '''
+            Routine to apply equality constraints in the force field fitting
+            
+            **Arguments**
+            
+            contraints
+                A dictionairy containing master: slaves definitions in which 
+                both master is a string defining the master basename and slaves
+                is a list of strings defining the slave basenames.
+        '''
+        for mastername, slavenames in constraints.iteritems():
+            masters = [term for term in self.iter_masters(mastername)]
+            assert len(masters)==1, 'Master %s is not uniquely defined' %mastername
+            master = masters[0]
+            for slavename in slavenames:
+                for slave in self.iter_terms(slavename):
+                    slave.master = master.index
+                    slave.slaves = []
+                    master.slaves.append(slave.index)
+    
     
     def calc_energy(self, pos):
         old =  self.system.pos.copy()
@@ -422,6 +460,8 @@ class ValenceFF(ForcePartValence):
         self.vlist.forward()
         energy = self.compute()
         self.system.pos = old
+        self.dlist.forward()
+        self.iclist.forward()
         return energy
     
     def get_hessian_contrib(self, index, fc=None):
@@ -554,7 +594,12 @@ class ValenceFF(ForcePartValence):
     
     def dump_logger(self, print_level=1):
         with log.section('', print_level):
-            sequence = ['bondharm', 'bendaharm', 'torsion', 'torsc2harm', 'oopdist', 'cross']
+            sequence = [
+                'bondharm',
+                'bendaharm', 'bendcharm', 'bendcos',
+                'torsion', 'torsc2harm',
+                'oopdist', 'cross'
+            ]
             log.dump('')
             for label in sequence:
                 lines = []
@@ -565,7 +610,7 @@ class ValenceFF(ForcePartValence):
                     log.dump('')
 
     def _bonds_to_yaff(self):
-        'construct a bonds section of a yaff parameter file'
+        'construct a BONDHARM section of a yaff parameter file'
         prefix = 'BONDHARM'
         units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'R0 A'])
         pars = ParameterDefinition('PARS')
@@ -578,8 +623,8 @@ class ValenceFF(ForcePartValence):
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
-    def _bends_to_yaff(self):
-        'construct a bends section of a yaff parameter file'
+    def _bendaharm_to_yaff(self):
+        'construct a BENDAHARM section of a yaff parameter file'
         prefix = 'BENDAHARM'
         units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'THETA0 deg'])
         pars = ParameterDefinition('PARS')
@@ -592,8 +637,36 @@ class ValenceFF(ForcePartValence):
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
+    def _bendcharm_to_yaff(self):
+        'construct a BENDCHARM section of a yaff parameter file'
+        prefix = 'BENDCHARM'
+        units = ParameterDefinition('UNIT', lines=['K kjmol', 'COS0 au'])
+        pars = ParameterDefinition('PARS')
+        for i, master in enumerate(self.iter_masters(label=prefix)):
+            ffatypes = master.basename.split('/')[1].split('.')
+            K, q0 = self.get_params(master.index)
+            if K<1e-6*kjmol: continue
+            pars.lines.append('%8s  %8s  %8s  %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol, q0
+            ))
+        return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+    def _bendcos_to_yaff(self):
+        'construct a BENDCOS section of a yaff parameter file'
+        prefix = 'BENDCOS'
+        units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
+        pars = ParameterDefinition('PARS')
+        for i, master in enumerate(self.iter_masters(label=prefix)):
+            ffatypes = master.basename.split('/')[1].split('.')
+            m, K, q0 = self.get_params(master.index)
+            if K<1e-6*kjmol: continue
+            pars.lines.append('%8s  %8s  %8s  %1i %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1], ffatypes[2], m, K/kjmol, q0/deg
+            ))
+        return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+    
     def _torsions_to_yaff(self):
-        'construct a dihedral section of a yaff parameter file'
+        'construct a TORSION section of a yaff parameter file'
         prefix = 'TORSION'
         units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
         pars = ParameterDefinition('PARS')
@@ -608,6 +681,7 @@ class ValenceFF(ForcePartValence):
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
     
     def _torsc2harm_to_yaff(self):
+        'construct a TORSC2HARM section of a yaff parameter file'
         prefix = 'TORSC2HARM'
         units = ParameterDefinition('UNIT', lines=['A kjmol', 'COS0 au'])
         pars = ParameterDefinition('PARS')
@@ -624,11 +698,12 @@ class ValenceFF(ForcePartValence):
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
     def _opdists_to_yaff(self):
-        'construct a opdist section of a yaff parameter file'
+        'construct a OOPDIST section of a yaff parameter file'
         prefix = 'OOPDIST'
         units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'D0 A'])
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if 'sqoopdist' in master.basename.lower(): continue
             ffatypes = master.basename.split('/')[1].split('.')
             K, q0 = self.get_params(master.index)
             if K<1e-6: continue
@@ -639,7 +714,7 @@ class ValenceFF(ForcePartValence):
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
     
     def _sqopdists_to_yaff(self):
-        'construct a opdist section of a yaff parameter file'
+        'construct a SQOOPDIST section of a yaff parameter file'
         prefix = 'SQOOPDIST'
         units = ParameterDefinition('UNIT', lines=['K kjmol/A**4', 'D0 A**2'])
         pars = ParameterDefinition('PARS')
@@ -654,7 +729,7 @@ class ValenceFF(ForcePartValence):
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
     def _cross_to_yaff(self):
-        'construct a cross section of a yaff parameter file'
+        'construct a CROSS section of a yaff parameter file'
         prefix = 'CROSS'
         units = ParameterDefinition(
             'UNIT', 
@@ -670,6 +745,7 @@ class ValenceFF(ForcePartValence):
             prefix, ffatypes, suffix = master.basename.split('/')
             label = prefix+'/'+ffatypes+'/'
             if label in done: continue
+            bb, b0a, b1a = None, None, None
             for j, other in enumerate(self.iter_masters(label=label)):
                 if 'bb' in other.basename:
                     bb = self.get_params(other.index)
@@ -679,13 +755,11 @@ class ValenceFF(ForcePartValence):
                     b1a = self.get_params(other.index)
                 else:
                     raise ValueError('Invalid Cross term %s' %other.basename)
-            assert j==2, 'Exactly 3 %s terms should exist' %label
-            assert bb[1]==b0a[1], 'Incompatible parameters in %s' %label
-            assert bb[2]==b1a[1], 'Incompatible parameters in %s' %label
-            assert b0a[2]==b1a[2], 'Incompatible parameters in %s' %label
-            Kss, r0, r1 = bb
-            Kbs0, r0, theta0 = b0a
-            Kbs1, r1, theta0 = b1a
+            Kss, Kbs0, Kbs1 = 0.0, 0.0, 0.0
+            r0, r1, theta0 = 0.0, 0.0, 0.0
+            if bb is not None: Kss, r0, r1 = bb
+            if b0a is not None: Kbs0, r0, theta0 = b0a
+            if b1a is not None: Kbs1, r1, theta0 = b1a
             ffatypes = ffatypes.split('.')
             pars.lines.append(
                 '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
@@ -698,9 +772,12 @@ class ValenceFF(ForcePartValence):
 
     def dump_yaff(self, fn):
         sections = [
-            self._bonds_to_yaff(), self._bends_to_yaff(), 
+            self._bonds_to_yaff(),
+            self._bendaharm_to_yaff(), self._bendcharm_to_yaff(),
+            self._bendcos_to_yaff(),
             self._torsions_to_yaff(), self._torsc2harm_to_yaff(),
-            self._opdists_to_yaff(), self._cross_to_yaff(),
+            self._opdists_to_yaff(),self._sqopdists_to_yaff(),
+            self._cross_to_yaff(),
         ]
         f = open(fn, 'w')
         for section in sections:
