@@ -64,8 +64,8 @@ class SecondOrderTaylor(Reference):
     '''
     
     def __init__(self, name, coords=None, energy=0.0, grad=None, hess=None, pbc=[0,0,0]):
-        with log.section('REF', '2', timer='Initializing'):
-            log.dump('Constructing Second order taylor reference for %s' %name)
+        with log.section('REF', 2, timer='Initializing'):
+            log.dump('Initializing Second order taylor reference for %s' %name)
             self.coords0 = coords.copy()
             self.energy0 = energy
             self.grad0 = grad.copy()
@@ -167,8 +167,8 @@ class YaffForceField(Reference):
         interactions.
     '''
     def __init__(self, name, ff):
-        with log.section('REF', '2', timer='Initializing'):
-            log.dump('Constructing Yaff force field reference for %s' %name)
+        with log.section('REF', 2, timer='Initializing'):
+            log.dump('Initializing Yaff force field reference for %s' %name)
             self.ff = ff
             Reference.__init__(self, name)
     

@@ -155,8 +155,6 @@ class BaseProgram(object):
             for traj in trajectories:
                 if 'active' in traj.__dict__.keys() and not traj.active: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
-            #logging
-            self.valence.dump_logger(print_level=3)
     
     def do_eq_setrv(self, tasks):
         '''
@@ -191,10 +189,8 @@ class BaseProgram(object):
                     else:
                         rv = self.valence.iclist.ictab[vterm['ic0']]['value']
                         self.valence.set_params(term.index, rv0=rv)
-            #logging
-            self.valence.dump_logger(print_level=3)
     
-    def do_hc_estimatefc(self, tasks, dump=True):
+    def do_hc_estimatefc(self, tasks):
         '''
             Refine force constants using Hessian Cost function.
             
@@ -243,8 +239,6 @@ class BaseProgram(object):
                 self.valence.set_params(index, fc=fc)
                 for islave in master.slaves:
                     self.valence.set_params(islave, fc=fc)
-            #logging
-            if dump: self.valence.dump_logger(print_level=3)
 
     def do_cross_init(self):
         '''
@@ -321,16 +315,20 @@ class MakeTrajectories(BaseProgram):
     def run(self):
         fn_traj = self.kwargs.get('fn_traj', None)
         assert fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
+        assert not os.path.isfile(fn_traj), 'Given file %s to store trajectories to already exists!' %fn_traj
         trajectories = self.do_pt_generate()
 
 class Program(BaseProgram):
     def run(self):
         self.do_eq_setrv(['EQ_RV'])
+        self.valence.dump_logger(print_level=3)
         trajectories = self.do_pt_generate()
         self.do_pt_estimate(trajectories)
+        self.valence.dump_logger(print_level=3)
         self.do_average_pars()
         self.do_cross_init()
         self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
+        self.valence.dump_logger(print_level=3)
         self.do_pt_estimate(trajectories, do_valence=True)
         self.do_average_pars()
         self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], dump=False)
