@@ -447,6 +447,7 @@ class ValenceFF(ForcePartValence):
             master = masters[0]
             for slavename in slavenames:
                 for slave in self.iter_terms(slavename):
+                    slave.basename = master.basename
                     slave.master = master.index
                     slave.slaves = []
                     master.slaves.append(slave.index)

@@ -181,6 +181,12 @@ class BaseProgram(object):
                         ic = self.valence.iclist.ictab[vterm['ic0']]
                         m = self.valence.get_params(term.index, only='m')
                         rv = ic['value']%(360.0*deg/m)
+                        with log.section('EQSET', 3, timer='Equil Set RV'):
+                            log.dump('Set rest value of %s(%s) (eq=%.3f deg) to %.3f deg' %(
+                                term.basename, 
+                                ('.'.join([str(at) for at in term.get_atoms()]),
+                                ic['value']/deg, rv/deg)
+                            ))
                         self.valence.set_params(term.index, rv0=rv)
                     else:
                         rv = self.valence.iclist.ictab[vterm['ic0']]['value']
