@@ -32,7 +32,7 @@ from quickff.log import log
 
 import os, cPickle, numpy as np, datetime
 
-__all__ = ['BaseProgram', 'MakeTrajectories', 'Program']
+__all__ = ['BaseProgram', 'MakeTrajectories', 'DeriveDiagFF', 'DeriveNonDiagFF']
 
 class BaseProgram(object):
     def __init__(self, system, ai, **kwargs):
@@ -52,8 +52,9 @@ class BaseProgram(object):
                 contributions to the force field (such as eg. electrostatics
                 or van der Waals contributions)
             
-            verbose
-                a flag to increase the verbosity
+            fn_yaff
+                the name of the file to write the final parameters to in Yaff
+                format. The default is pars.txt.
             
             fn_traj
                 a cPickle filename to read/write the perturbation trajectories
@@ -102,6 +103,50 @@ class BaseProgram(object):
             traj.term = term
             if 'PT_ALL' not in term.tasks: traj.active=False
     
+    def average_pars(self):
+        '''
+            Average force field parameters over master and slaves.
+        '''
+        log.dump('Averaging force field parameters over master and slaves')
+        for master in self.valence.iter_masters():
+            npars = len(self.valence.get_params(master.index))
+            pars = np.zeros([len(master.slaves)+1, npars], float)
+            pars[0,:] = np.array(self.valence.get_params(master.index))
+            for i, islave in enumerate(master.slaves):
+                pars[1+i,:] = np.array(self.valence.get_params(islave))
+            if master.kind==0:#harmonic
+                fc, rv = pars.mean(axis=0)
+                self.valence.set_params(master.index, fc=fc, rv0=rv)
+                for islave in master.slaves:
+                    self.valence.set_params(islave, fc=fc, rv0=rv)
+            elif master.kind==1:
+                a0, a1, a2, a3 = pars.mean(axis=0)
+                self.valence.set_params(master.index, a0=a0, a1=a1, a2=a2, a3=a3)
+                for islave in master.slaves:
+                    self.valence.set_params(islave, a0=a0, a1=a1, a2=a2, a3=a3) 
+            elif master.kind==3:#cross
+                fc, rv0, rv1 = pars.mean(axis=0)
+                self.valence.set_params(master.index, fc=fc, rv0=rv0, rv1=rv1)
+                for islave in master.slaves:
+                    self.valence.set_params(islave, fc=fc, rv0=rv0, rv1=rv1)
+            elif master.kind==4:#cosine
+                assert pars[:,0].std()<1e-6, 'dihedral multiplicity not unique'
+                m, fc, rv = pars.mean(axis=0)
+                self.valence.set_params(master.index, fc=fc, rv0=rv, m=m)
+                for islave in master.slaves:
+                    self.valence.set_params(islave, fc=fc, rv0=rv, m=m)
+            else:
+                raise NotImplementedError
+    
+    def make_output(self):
+        fn_yaff = self.kwargs.get('fn_yaff', 'pars_cov.txt')
+        self.valence.dump_yaff(fn_yaff)
+        if self.kwargs.get('plot_traj', False):
+            for trajectory in trajectories:
+                trajectory.plot(self.ai, ffrefs=self.kwargs.get('ffrefs', []), valence=self.valence)
+        if self.kwargs.get('xyz_traj', False):
+            for trajectory in trajectories:
+                trajectory.to_xyz()    
     
     def do_pt_generate(self):
         '''
@@ -118,7 +163,7 @@ class BaseProgram(object):
             #configure
             self.reset_system()
             do_terms = [term for term in self.valence.terms if 'PT_ALL' in term.tasks]
-            trajectories = self.perturbation.prepare(self.valence, do_terms)
+            trajectories = self.perturbation.prepare(do_terms)
             #compute
             log.dump('Constructing trajectories')
             trajectories = paracontext.map(self.perturbation.generate, trajectories)
@@ -155,6 +200,7 @@ class BaseProgram(object):
             for traj in trajectories:
                 if 'active' in traj.__dict__.keys() and not traj.active: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
+            self.average_pars()
     
     def do_eq_setrv(self, tasks):
         '''
@@ -182,13 +228,14 @@ class BaseProgram(object):
                         with log.section('EQSET', 3, timer='Equil Set RV'):
                             log.dump('Set rest value of %s(%s) (eq=%.3f deg) to %.3f deg' %(
                                 term.basename, 
-                                ('.'.join([str(at) for at in term.get_atoms()]),
-                                ic['value']/deg, rv/deg)
+                                '.'.join([str(at) for at in term.get_atoms()]),
+                                ic['value']/deg, rv/deg
                             ))
                         self.valence.set_params(term.index, rv0=rv)
                     else:
                         rv = self.valence.iclist.ictab[vterm['ic0']]['value']
                         self.valence.set_params(term.index, rv0=rv)
+            self.average_pars()
     
     def do_hc_estimatefc(self, tasks):
         '''
@@ -266,42 +313,6 @@ class BaseProgram(object):
                     raise ValueError('No rest values found for %s' %self.valence.terms[index].basename)
                 self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
     
-    def do_average_pars(self):
-        '''
-            Average force field parameters over master and slaves.
-        '''
-        with log.section('AVRGE', 2):
-            log.dump('Averaging force field parameters over master and slaves')
-            for master in self.valence.iter_masters():
-                npars = len(self.valence.get_params(master.index))
-                pars = np.zeros([len(master.slaves)+1, npars], float)
-                pars[0,:] = np.array(self.valence.get_params(master.index))
-                for i, islave in enumerate(master.slaves):
-                    pars[1+i,:] = np.array(self.valence.get_params(islave))
-                if master.kind==0:#harmonic
-                    fc, rv = pars.mean(axis=0)
-                    self.valence.set_params(master.index, fc=fc, rv0=rv)
-                    for islave in master.slaves:
-                        self.valence.set_params(islave, fc=fc, rv0=rv)
-                elif master.kind==1:
-                    a0, a1, a2, a3 = pars.mean(axis=0)
-                    self.valence.set_params(master.index, a0=a0, a1=a1, a2=a2, a3=a3)
-                    for islave in master.slaves:
-                        self.valence.set_params(islave, a0=a0, a1=a1, a2=a2, a3=a3) 
-                elif master.kind==3:#cross
-                    fc, rv0, rv1 = pars.mean(axis=0)
-                    self.valence.set_params(master.index, fc=fc, rv0=rv0, rv1=rv1)
-                    for islave in master.slaves:
-                        self.valence.set_params(islave, fc=fc, rv0=rv0, rv1=rv1)
-                elif master.kind==4:#cosine
-                    assert pars[:,0].std()<1e-6, 'dihedral multiplicity not unique'
-                    m, fc, rv = pars.mean(axis=0)
-                    self.valence.set_params(master.index, fc=fc, rv0=rv, m=m)
-                    for islave in master.slaves:
-                        self.valence.set_params(islave, fc=fc, rv0=rv, m=m)
-                else:
-                    raise NotImplementedError
-    
     def run(self):
         '''
             Sequence of instructions, should be implemented in the inheriting
@@ -318,25 +329,31 @@ class MakeTrajectories(BaseProgram):
         assert not os.path.isfile(fn_traj), 'Given file %s to store trajectories to already exists!' %fn_traj
         trajectories = self.do_pt_generate()
 
-class Program(BaseProgram):
+class DeriveDiagFF(BaseProgram):
     def run(self):
         self.do_eq_setrv(['EQ_RV'])
         self.valence.dump_logger(print_level=3)
         trajectories = self.do_pt_generate()
         self.do_pt_estimate(trajectories)
         self.valence.dump_logger(print_level=3)
-        self.do_average_pars()
+        self.do_hc_estimatefc(['HC_FC_DIAG'])
+        self.valence.dump_logger(print_level=3)
+        self.do_pt_estimate(trajectories, do_valence=True)
+        self.do_hc_estimatefc(['HC_FC_DIAG'])
+        self.valence.dump_logger(print_level=1)
+        self.make_output()
+
+class DeriveNonDiagFF(BaseProgram):
+    def run(self):
+        self.do_eq_setrv(['EQ_RV'])
+        self.valence.dump_logger(print_level=3)
+        trajectories = self.do_pt_generate()
+        self.do_pt_estimate(trajectories)
+        self.valence.dump_logger(print_level=3)
         self.do_cross_init()
         self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
         self.valence.dump_logger(print_level=3)
         self.do_pt_estimate(trajectories, do_valence=True)
-        self.do_average_pars()
-        self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], dump=False)
+        self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
         self.valence.dump_logger(print_level=1)
-        self.valence.dump_yaff('pars_hess_all.txt')
-        if self.kwargs.get('plot_traj', False):
-            for trajectory in trajectories:
-                trajectory.plot(self.ai, ffrefs=self.kwargs.get('ffrefs', []), valence=self.valence)
-        if self.kwargs.get('xyz_traj', False):
-            for trajectory in trajectories:
-                trajectory.to_xyz()
+        self.make_output()

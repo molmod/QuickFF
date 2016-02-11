@@ -291,7 +291,7 @@ class RelaxedStrain(object):
                 self.valence) will be used to compute the valence contribution
         '''
         with log.section('PTEST', 2):
-            if 'active' in trajectory.__dict__.keys() and trajectory.active:
+            if 'active' in trajectory.__dict__.keys() and not trajectory.active:
                 log.dump('WARNING: Skipping %s, perturbation trajectory was deactivated.' %trajectory.term.basename)
                 return
             qs = trajectory.qvals.copy()
