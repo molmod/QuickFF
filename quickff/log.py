@@ -56,7 +56,7 @@ __/\\\\\\__________________________________________________________________/\\\\
 ____\\///__________________________________________________________________\\///__
 """
 
-def splitstring(string, length, separators=[' ','/','-','_']):
+def splitstring(string, length, separators=[' ','/','_']):
     result = []
     remainder = string
     while len(remainder)>length:
@@ -139,6 +139,7 @@ class Logger(object):
         return Section(self, label, level, timer)
     
     def dump(self, message, new_line=True):
+        assert self.label is not None
         if not self._active:
             self._active = True
             self.print_header()

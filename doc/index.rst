@@ -18,7 +18,7 @@ How to cite QuickFF
 If you used QuickFF in your research, please refer to QuickFF as follows:
 
 L. Vanduyfhuys, S. Vandenbrande, T. Verstraelen, R. Schmid, M. Waroquier, 
-V. Van Speybroeck, *J. Comput. Chem.*, 2015, in press
+V. Van Speybroeck, *J. Comput. Chem.*, 2015, 36, 13, 1015–1027
 
 You can acces the paper through the following link:
 

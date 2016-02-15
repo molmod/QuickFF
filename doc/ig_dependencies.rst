@@ -17,8 +17,9 @@ Yaff dependency
 
 `Yaff <http://molmod.github.com/yaff/>`_ is a pythonic force-field (FF)
 code used at the Center for Molecular Modeling (CMM) to test-drive new FF models.
-Installation and download instructions can be found in the
-`yaff documentation <http://molmod.github.io/yaff/ug_install.html>`_.
+Yaff is required to run QuickFF, the implementation of each force field term is
+based on the implementation in Yaff. Installation and download instructions can
+be found in the `yaff documentation <http://molmod.github.io/yaff/ug_install.html>`_.
 The instructions below only work if the Yaff package is installed.
 
 External dependencies

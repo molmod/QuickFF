@@ -138,6 +138,8 @@ class Trajectory(object):
                 add_plot(data, ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
             #complete fitted valence model if given
             if valence is not None:
+                for term in valence.iter_terms():
+                    valence.check_params(term, ['all'])
                 data = np.array([valence.calc_energy(pos) for pos in self.coords])
                 add_plot(data, 'Fitted Valence', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
                 add_plot(totff+data, 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
@@ -192,15 +194,14 @@ class RelaxedStrain(object):
         '''
         self.system = system
         self.valence = valence
-        self.strains = []
+        self.strains = [None,]*len(self.valence.terms)
+        self.trajectories = [None,]*len(self.valence.terms)
 
     def prepare(self, do_terms):
         '''
             Method to initialize trajectories and configure everything required
             for the generate method.
         '''
-        trajectories = []
-        self.strains = [None,]*len(self.valence.terms)
         for term in do_terms:
             assert term.kind==0, 'Only harmonic terms supported for pert traj'
             ic = self.valence.iclist.ictab[self.valence.vlist.vtab[term.index]['ic0']]
@@ -230,11 +231,9 @@ class RelaxedStrain(object):
                 if term2.kind == 3: continue #not a cross term ic
                 ics.append(term2.ics[0])
             self.strains[term.index] = Strain(term.index, self.system, term.ics[0], ics)
-            traj = Trajectory(term, start, end, self.system.numbers, steps=11)
-            trajectories.append(traj)
-        return trajectories
+            self.trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=11)
     
-    def generate(self, trajectory, remove_com=True):
+    def generate(self, index, remove_com=True):
         '''
             Method to calculate the perturbation trajectory, i.e. the trajectory
             that scans the geometry along the direction of the ic figuring in
@@ -243,8 +242,9 @@ class RelaxedStrain(object):
 
             **Arguments**
 
-            trajectory
-                a Trajectory instance representing the perturbation trajectory
+            index
+                index of a Trajectory instance representing the perturbation
+                trajectory
             
             **Optional Arguments**
             
@@ -252,6 +252,7 @@ class RelaxedStrain(object):
                 if set to True, removes the center of mass translation from the
                 resulting perturbation trajectories [default=True].
         '''
+        trajectory = self.trajectories[index]
         strain = self.strains[trajectory.term.index]
         for iq, q in enumerate(trajectory.qvals):
             strain.constrain_value = q
@@ -263,9 +264,8 @@ class RelaxedStrain(object):
                 for i in xrange(self.system.natom):
                     x[i,:] -= com
             trajectory.coords[iq,:,:] = x
-        return trajectory
 
-    def estimate(self, trajectory, ai, ffrefs=[], do_valence=False):
+    def estimate(self, index, ai, ffrefs=[], do_valence=False):
         '''
             Method to estimate the FF parameters for the relevant ic from the
             given perturbation trajectory by fitting a harmonic potential to the
@@ -273,8 +273,9 @@ class RelaxedStrain(object):
 
             **Arguments**
 
-            trajectory
-                a Trajectory instance representing the perturbation trajectory
+            index
+                index of a Trajectory instance representing the perturbation
+                trajectory
             
             ai
                 an instance of the Reference representing the ab initio input
@@ -291,6 +292,7 @@ class RelaxedStrain(object):
                 self.valence) will be used to compute the valence contribution
         '''
         with log.section('PTEST', 2):
+            trajectory = self.trajectories[index]
             if 'active' in trajectory.__dict__.keys() and not trajectory.active:
                 log.dump('WARNING: Skipping %s, perturbation trajectory was deactivated.' %trajectory.term.basename)
                 return
@@ -325,16 +327,18 @@ class RelaxedStrain(object):
             if trajectory.term.ics[0].kind in [2]:
                 if trajectory.rv>180*deg:
                     log.dump('WARNING: rest value of %s exceeds 180 deg, term set to BendCHarm with cos(phi0)=-1 and deactivated perturbation trajectory' %trajectory.term.basename)
-                    trajectory.rv = None
-                    trajectory.fc = None
-                    trajectory.active = False
-                    self.valence.modify_term(
-                        trajectory.term.index,
-                        Harmonic, [BendCos(*trajectory.term.get_atoms())], 
-                        trajectory.term.basename.replace('BendAHarm', 'BendCHarm'), 
-                        ['HC_FC_DIAG'], ['kjmol', 'au']
-                    )
-                    self.valence.set_params(trajectory.term.index, fc=0.0, rv0=-1.0)
+                    for term in self.valence.iter_terms(trajectory.term.basename):
+                        traj = self.trajectories[term.index]
+                        traj.rv = None
+                        traj.fc = None
+                        traj.active = False
+                        self.valence.modify_term(
+                            term.index,
+                            Harmonic, [BendCos(*term.get_atoms())], 
+                            term.basename.replace('BendAHarm', 'BendCHarm'), 
+                            ['HC_FC_DIAG'], ['kjmol', 'au']
+                        )
+                        self.valence.set_params(term.index, fc=0.0, rv0=-1.0)
 
 
 

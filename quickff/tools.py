@@ -350,7 +350,7 @@ def get_ei_radii(numbers):
 
 def digits(x,n):
     """
-    returns a string representation of x with exactly n digits if possible.
+        returns a string representation of x with exactly n digits if possible.
     """
     sign = np.sign(x)
     x = float(abs(x))
@@ -368,11 +368,10 @@ def digits(x,n):
             return str(r).lstrip('0')[:n]
     if r==0:
         return str(int(i*sign))[:n]
+    if len(str(i))>=(n-1):
+        return str(int(i*sign))
+    ndig = n - len(str(i))-1
+    if sign<0:
+        return '-%i.%s' %(i, str(r).lstrip('0.')[:ndig])
     else:
-        if len(str(i))>=(n-1):
-            return str(int(i*sign))
-        ndig = n - len(str(i))-1
-        if sign<0:
-            return '-%i.%s' %(i, str(r).lstrip('0.')[:ndig])
-        else:
-            return '%i.%s' %(i, str(r).lstrip('0.')[:ndig])
+        return '%i.%s' %(i, str(r).lstrip('0.')[:ndig])

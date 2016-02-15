@@ -88,14 +88,14 @@ class BaseProgram(object):
         self.valence.iclist.forward()
     
     
-    def update_trajectory_terms(self, trajectories):
+    def update_trajectory_terms(self):
         '''
             Routine to update the Term instances stored in trajectory.term
             in case the trajectories were read from a file and some
             modifications were done to the ValenceFF instance.
         '''
         log.dump('Updating terms of trajectories to current valenceFF terms')
-        for traj in trajectories:
+        for traj in self.perturbation.trajectories:
             index = traj.term.index
             term = self.valence.terms[index]
             assert traj.term.get_atoms()==term.get_atoms(), \
@@ -142,11 +142,11 @@ class BaseProgram(object):
         fn_yaff = self.kwargs.get('fn_yaff', 'pars_cov.txt')
         self.valence.dump_yaff(fn_yaff)
         if self.kwargs.get('plot_traj', False):
-            for trajectory in trajectories:
+            for trajectory in self.perturbation.trajectories:
                 trajectory.plot(self.ai, ffrefs=self.kwargs.get('ffrefs', []), valence=self.valence)
         if self.kwargs.get('xyz_traj', False):
-            for trajectory in trajectories:
-                trajectory.to_xyz()    
+            for trajectory in self.perturbation.trajectories:
+                trajectory.to_xyz()
     
     def do_pt_generate(self):
         '''
@@ -156,25 +156,24 @@ class BaseProgram(object):
             #read if an existing file was specified through fn_traj
             fn_traj = self.kwargs.get('fn_traj', None)
             if fn_traj is not None and os.path.isfile(fn_traj):
-                trajectories = cPickle.load(open(fn_traj, 'r'))
+                self.perturbation.trajectories = cPickle.load(open(fn_traj, 'r'))
                 log.dump('Trajectories read from file %s' %fn_traj)
-                self.update_trajectory_terms(trajectories)
-                return trajectories
+                self.update_trajectory_terms()
+                return
             #configure
             self.reset_system()
             do_terms = [term for term in self.valence.terms if 'PT_ALL' in term.tasks]
-            trajectories = self.perturbation.prepare(do_terms)
+            self.perturbation.prepare(do_terms)
             #compute
             log.dump('Constructing trajectories')
-            trajectories = paracontext.map(self.perturbation.generate, trajectories)
+            paracontext.map(self.perturbation.generate, [term.index for term in do_terms])
             #write the trajectories to the non-existing file fn_traj
             if fn_traj is not None:
                 assert not os.path.isfile(fn_traj)
-                cPickle.dump(trajectories, open(fn_traj, 'w'))
+                cPickle.dump(self.perturbation.trajectories, open(fn_traj, 'w'))
                 log.dump('Trajectories stored to file %s' %fn_traj)
-        return trajectories
         
-    def do_pt_estimate(self, trajectories, do_valence=False):
+    def do_pt_estimate(self, do_valence=False):
         '''
             Estimate force constants and rest values from the perturbation
             trajectories
@@ -193,14 +192,13 @@ class BaseProgram(object):
                 log.dump('Estimating FF parameters from perturbation trajectories')
             ffrefs = self.kwargs.get('ffrefs', [])
             #compute fc and rv from trajectory
-            for traj in trajectories:
+            for traj in self.perturbation.trajectories:
                 if 'active' in traj.__dict__.keys() and not traj.active: continue
-                self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs, do_valence=do_valence)
+                self.perturbation.estimate(traj.term.index, self.ai, ffrefs=ffrefs, do_valence=do_valence)
             #set force field parameters to computed fc and rv
-            for traj in trajectories:
+            for traj in self.perturbation.trajectories:
                 if 'active' in traj.__dict__.keys() and not traj.active: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
-            self.average_pars()
     
     def do_eq_setrv(self, tasks):
         '''
@@ -333,7 +331,7 @@ class DeriveDiagFF(BaseProgram):
     def run(self):
         self.do_eq_setrv(['EQ_RV'])
         self.valence.dump_logger(print_level=3)
-        trajectories = self.do_pt_generate()
+        self.do_pt_generate()
         self.do_pt_estimate(trajectories)
         self.valence.dump_logger(print_level=3)
         self.do_hc_estimatefc(['HC_FC_DIAG'])
@@ -341,19 +339,23 @@ class DeriveDiagFF(BaseProgram):
         self.do_pt_estimate(trajectories, do_valence=True)
         self.do_hc_estimatefc(['HC_FC_DIAG'])
         self.valence.dump_logger(print_level=1)
-        self.make_output()
+        self.make_output(trajectories)
 
 class DeriveNonDiagFF(BaseProgram):
     def run(self):
-        self.do_eq_setrv(['EQ_RV'])
-        self.valence.dump_logger(print_level=3)
-        trajectories = self.do_pt_generate()
-        self.do_pt_estimate(trajectories)
-        self.valence.dump_logger(print_level=3)
-        self.do_cross_init()
-        self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
-        self.valence.dump_logger(print_level=3)
-        self.do_pt_estimate(trajectories, do_valence=True)
-        self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
-        self.valence.dump_logger(print_level=1)
-        self.make_output()
+        with log.section('PROGRAM', 2):
+            self.do_eq_setrv(['EQ_RV'])
+            self.valence.dump_logger(print_level=3)
+            self.do_pt_generate()
+            self.do_pt_estimate()
+            self.valence.dump_logger(print_level=3)
+            self.average_pars()
+            self.do_cross_init()
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
+            self.valence.dump_logger(print_level=3)
+            self.do_pt_estimate(do_valence=True)
+            self.valence.dump_logger(print_level=3)
+            self.average_pars()
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
+            self.valence.dump_logger(print_level=1)
+            self.make_output()

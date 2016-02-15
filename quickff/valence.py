@@ -290,7 +290,7 @@ class ValenceFF(ForcePartValence):
             nbends += 1
         log.dump('Added %i Harmonic bend terms' %nbends)
 
-    def init_dihedral_terms(self):
+    def init_dihedral_terms(self, thresshold=10*deg):
         '''
             Estimate the dihedral potentials from the local topology. The
             dihedral potential will be one of the two following possibilities:
@@ -342,10 +342,11 @@ class ValenceFF(ForcePartValence):
             for m in ms:
                 if np.isnan(m): nan = True
             if nan or None in ms or ms.std()>1e-3:
-                log.dump('WARNING missing dihedral for %s (no multiplicity)' %('.'.join(types)))
+                log.dump('WARNING missing dihedral for %s (m=%s)' %('.'.join(types), str(ms)))
                 continue
             m = int(np.round(ms.mean()))
-            rv = get_restvalue(psi0s, m, thresshold=10*deg)
+            log.dump('%s: %s' %(types, str(psi0s/deg)))
+            rv = get_restvalue(psi0s, m, thresshold=thresshold)
             if rv is not None:
                 #a regular Cosine term is used for the dihedral potential
                 for dihed in diheds:
@@ -591,7 +592,11 @@ class ValenceFF(ForcePartValence):
         '''
         for label in labels:
             value = self.get_params(term.index, only=label)
-            assert not np.isnan(value), '%s of %s is not set' %(label, term.basename)
+            if label=='all':
+                for i, par in enumerate(value):
+                    assert not np.isnan(par), 'Par%i of %s is not set' %(i, term.basename)
+            else:
+                assert not np.isnan(value), '%s of %s is not set' %(label, term.basename)
     
     def dump_logger(self, print_level=1):
         with log.section('', print_level):
