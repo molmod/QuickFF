@@ -352,6 +352,7 @@ def digits(x,n):
     """
         returns a string representation of x with exactly n digits if possible.
     """
+    if len(str(x))==n: return str(x)
     sign = np.sign(x)
     x = float(abs(x))
     if np.isnan(x):

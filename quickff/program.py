@@ -75,9 +75,6 @@ class BaseProgram(object):
             self.system = system
             self.ai = ai
             self.kwargs = kwargs
-            fn_yaff = kwargs.get('fn_yaff', 'pars_cov.txt')
-            assert not os.path.isfile(fn_yaff), \
-                'Output file %s for covalent parameters already exists' %fn_yaff
             self.valence = ValenceFF(system)
             self.perturbation = RelaxedStrain(system, self.valence)
 
@@ -155,6 +152,7 @@ class BaseProgram(object):
         '''
         fn_yaff = self.kwargs.get('fn_yaff', 'pars_cov.txt')
         self.valence.dump_yaff(fn_yaff)
+        self.system.to_file(self.kwargs.get('fn_sys', 'system.chk'))
         with log.section('PLOT', 2, 'Trajectory Plot Energy'):
             if self.kwargs.get('plot_traj', False):
                 for trajectory in self.perturbation.trajectories:
@@ -208,9 +206,11 @@ class BaseProgram(object):
             ffrefs = self.kwargs.get('ffrefs', [])
             #compute fc and rv from trajectory
             for traj in self.perturbation.trajectories:
+                if traj is None: continue
                 self.perturbation.estimate(traj.term.index, self.ai, ffrefs=ffrefs, do_valence=do_valence)
             #set force field parameters to computed fc and rv
             for traj in self.perturbation.trajectories:
+                if traj is None: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
             self.valence.dump_logger(print_level=3)
             self.average_pars()

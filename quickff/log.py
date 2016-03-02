@@ -141,11 +141,11 @@ class Logger(object):
         return Section(self, label, level, timer)
     
     def dump(self, message, new_line=True):
-        assert self.label is not None
-        if not self._active:
-            self._active = True
-            self.print_header()
         if self.section_level<=self.log_level:
+            if not self._active:
+                self._active = True
+                self.print_header()
+            assert self.label is not None
             if new_line and self.add_blank_line:
                 print >> self._f , ''
                 self.add_blank_line = False
