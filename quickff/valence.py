@@ -43,7 +43,7 @@ __all__ = ['ValenceFF']
 
 class Term(object):
     '''
-        A class to store easy-accessible information about a term included in 
+        A class to store easy-accessible information about a term included in
         the valence force field
     '''
     def __init__(self, index, basename, kind, ics, tasks, units,master=None, slaves=None):
@@ -55,10 +55,10 @@ class Term(object):
         self.units = units
         self.master = master
         self.slaves = slaves
-    
+
     def is_master(self):
         return self.master==self.index
-    
+
     def get_atoms(self):
         'Get the ordered list of indexes of the atoms involved'
         atoms = None
@@ -94,7 +94,7 @@ class Term(object):
             raise ValueError('get_atoms not supported for term %s' %self.basename)
         else:
             return atoms
-    
+
     def to_string(self, valence, max_name=38, max_line=72):
         #check if current is master
         assert self.master is None or self.is_master(), \
@@ -168,7 +168,7 @@ class ValenceFF(ForcePartValence):
             self.init_bend_terms()
             self.init_dihedral_terms()
             self.init_oop_terms()
-        
+
     def add_term(self, pot, ics, atypes, tasks, units):
         '''
             Adds new term both to the Yaff vlist object and a new QuickFF
@@ -195,7 +195,7 @@ class ValenceFF(ForcePartValence):
                     suffix = '/b0a' #first bond and angle
                 elif set(ics[0].index_pairs[0])==set(ics[1].index_pairs[1]):
                     suffix = '/b1a' #second bond and angle
-                else:   
+                else:
                     raise ValueError('Incompatible bond/angle given in cross term')
             else:
                 raise ValueError('Incompatible ICs given in cross term')
@@ -225,7 +225,7 @@ class ValenceFF(ForcePartValence):
             args = [None,]*len(units) + ics
         ForcePartValence.add_term(self, pot(*args))
         return term
-    
+
     def modify_term(self, term_index, pot, ics, basename, tasks, units):
         '''
             Modify the term with given index to a new valence term.
@@ -252,7 +252,7 @@ class ValenceFF(ForcePartValence):
             ic_indexes = new.get_ic_indexes(self.iclist)
             for i in xrange(len(ic_indexes)):
                 vterm['ic%i'%i] = ic_indexes[i]
-    
+
     def iter_masters(self, label=None):
         '''
             Iterate over all master terms (whos name possibly contain the given
@@ -262,12 +262,12 @@ class ValenceFF(ForcePartValence):
             if label is None or label.lower() in term.basename.lower():
                 if term.is_master():
                     yield term
-    
+
     def iter_terms(self, label=None):
         for term in self.terms:
             if label is None or label.lower() in term.basename.lower():
                 yield term
-    
+
     def init_bond_terms(self):
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
         #get the bond terms
@@ -294,27 +294,27 @@ class ValenceFF(ForcePartValence):
         '''
             Estimate the dihedral potentials from the local topology. The
             dihedral potential will be one of the two following possibilities:
-            
+
                 The multiplicity m is determined from the local topology, i.e.
                 the number of neighbors of the central two atoms in the dihedral
-                
-                If the equilibrium value of all instances of the torsion are 
-                within `thresshold` of 0 deg or per/2 with per = 180deg/m, 
+
+                If the equilibrium value of all instances of the torsion are
+                within `thresshold` of 0 deg or per/2 with per = 180deg/m,
                 the following potential will be chosen:
-                
-                    0.5*K*(1-cos(m*psi-m*psi0)) with psi0 = 0 or 360/(2*m) 
-                
+
+                    0.5*K*(1-cos(m*psi-m*psi0)) with psi0 = 0 or 360/(2*m)
+
                 If the above is not the case, but one can found a rest value
                 psi0 such that the equilibrium values of all instances of the
                 torsion are within `thresshold` of psi0, psi0-180deg, -psi0 and
                 180deg-psi0, the following potential will be chosen:
-                
+
                     0.5*K*(cos(2*psi)-cos(2*psi0))**2
-                    
+
                     which is equal to a Yaff PolyFour term
-                    
+
                     a0*cos(psi) + a1*cos(psi)^2 + a2*cos(psi)^3 + a3*cos(psi)^4
-                    
+
                     with a0=0, a1=K*-4*cos(psi0)**2, a2=0, a3=K*2
         '''
         #get all dihedrals
@@ -394,7 +394,7 @@ class ValenceFF(ForcePartValence):
                     self.add_term(Harmonic, [SqOopDist(*oop)], types, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/A**4', 'A**2'])
                     nsq += 1
         log.dump('Added %i Harmonic and %i SquareHarmonic out-of-plane distance terms' %(nharm, nsq))
-    
+
     def init_cross_terms(self, specs=None):
         ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
         nbend = 0
@@ -418,26 +418,26 @@ class ValenceFF(ForcePartValence):
             )
             if not skip_angle:
                 #add stretch0-bend
-                self.add_term(Cross, 
+                self.add_term(Cross,
                     [Bond(*bond0), BendAngle(*angle)],
                     types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
                 )
                 #add stretch1-bend
-                self.add_term(Cross, 
+                self.add_term(Cross,
                     [Bond(*bond1), BendAngle(*angle)],
                     types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
                 )
             nbend += 1
         log.dump('Added %i cross terms for angle patterns' %nbend)
-    
+
     def apply_constraints(self, constraints):
         '''
             Routine to apply equality constraints in the force field fitting
-            
+
             **Arguments**
-            
+
             contraints
-                A dictionairy containing master: slaves definitions in which 
+                A dictionairy containing master: slaves definitions in which
                 both master is a string defining the master basename and slaves
                 is a list of strings defining the slave basenames.
         '''
@@ -451,8 +451,8 @@ class ValenceFF(ForcePartValence):
                     slave.master = master.index
                     slave.slaves = []
                     master.slaves.append(slave.index)
-    
-    
+
+
     def calc_energy(self, pos):
         old =  self.system.pos.copy()
         self.system.pos = pos.copy()
@@ -464,7 +464,7 @@ class ValenceFF(ForcePartValence):
         self.dlist.forward()
         self.iclist.forward()
         return energy
-    
+
     def get_hessian_contrib(self, index, fc=None):
         '''
             Get the contribution to the covalent hessian of term with given
@@ -510,7 +510,7 @@ class ValenceFF(ForcePartValence):
         ff = ForceField(self.system, [val])
         hcov = estimate_cart_hessian(ff)
         return hcov
-    
+
     def set_params(self, term_index, fc=None, rv0=None, rv1=None, m=None,
             a0=None, a1=None, a2=None, a3=None):
         term = self.vlist.vtab[term_index]
@@ -540,7 +540,7 @@ class ValenceFF(ForcePartValence):
         else:
             raise NotImplementedError, \
                 'set_params not implemented for Yaff %s term' %term['kind']
-    
+
     def get_params(self, term_index, only='all'):
         term = self.vlist.vtab[term_index]
         if term['kind'] in [0,2]:#['Harmonic', 'Fues']
@@ -577,13 +577,13 @@ class ValenceFF(ForcePartValence):
         '''
             Check whether the given term has all given pars defined in
             labels.
-            
+
             **Arguments**
-            
+
             term
                 An instance of the Term class defining the term that has to be
                 checked
-            
+
             labels
                 A list of strings defining which parameters should be checked.
                 only arguments of the `only` option of Valence.get_params
@@ -596,7 +596,7 @@ class ValenceFF(ForcePartValence):
                     assert not np.isnan(par), 'Par%i of %s is not set' %(i, term.basename)
             else:
                 assert not np.isnan(value), '%s of %s is not set' %(label, term.basename)
-    
+
     def dump_logger(self, print_level=1):
         with log.section('', print_level):
             sequence = [
@@ -669,7 +669,7 @@ class ValenceFF(ForcePartValence):
                 ffatypes[0], ffatypes[1], ffatypes[2], m, K/kjmol, q0/deg
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
-    
+
     def _torsions_to_yaff(self):
         'construct a TORSION section of a yaff parameter file'
         prefix = 'TORSION'
@@ -684,7 +684,7 @@ class ValenceFF(ForcePartValence):
                 K/kjmol, q0/deg
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
-    
+
     def _torsc2harm_to_yaff(self):
         'construct a TORSC2HARM section of a yaff parameter file'
         prefix = 'TORSC2HARM'
@@ -699,7 +699,7 @@ class ValenceFF(ForcePartValence):
             pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3],
                 K/kjmol, cos0
-            )) 
+            ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
     def _opdists_to_yaff(self):
@@ -717,7 +717,7 @@ class ValenceFF(ForcePartValence):
                 K/(kjmol/angstrom**2), q0/angstrom
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
-    
+
     def _sqopdists_to_yaff(self):
         'construct a SQOOPDIST section of a yaff parameter file'
         prefix = 'SQOOPDIST'
@@ -737,7 +737,7 @@ class ValenceFF(ForcePartValence):
         'construct a CROSS section of a yaff parameter file'
         prefix = 'CROSS'
         units = ParameterDefinition(
-            'UNIT', 
+            'UNIT',
             lines=[
                 'KSS kjmol/angstrom**2', 'KBS0 kjmol/(angstrom*rad)',
                 'KBS1 kjmol/(angstrom*rad)', 'R0 angstrom', 'R1 angstrom',

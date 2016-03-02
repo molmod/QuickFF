@@ -38,34 +38,34 @@ class BaseProgram(object):
     def __init__(self, system, ai, **kwargs):
         '''
             **Arguments**
-            
+
             system
                 a Yaff system object defining the system
-            
+
             ai
                 a Reference instance corresponding to the ab initio input data
-            
+
             **Keyword Arguments**
-            
+
             ffrefs
                 a list of Reference objects corresponding to a priori determined
                 contributions to the force field (such as eg. electrostatics
                 or van der Waals contributions)
-            
+
             fn_yaff
                 the name of the file to write the final parameters to in Yaff
                 format. The default is pars.txt.
-            
+
             fn_traj
                 a cPickle filename to read/write the perturbation trajectories
                 from/to. If the file exists, the trajectories are read from the
-                file. If the file does not exist, the trajectories are written 
+                file. If the file does not exist, the trajectories are written
                 to the file.
-            
+
             plot_traj
                 if set to True, all energy contributions along each perturbation
                 trajectory will be plotted using the final force field.
-            
+
             xyz_traj
                 if set to True, each perturbation trajectory will be written to
                 an XYZ file.
@@ -86,8 +86,8 @@ class BaseProgram(object):
         self.system.pos = self.ai.coords0.copy()
         self.valence.dlist.forward()
         self.valence.iclist.forward()
-    
-    
+
+
     def update_trajectory_terms(self):
         '''
             Routine to make self.valence.terms and the term attribute of each
@@ -109,7 +109,7 @@ class BaseProgram(object):
                     break
             if not found: raise ValueError('No trajectory found for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
         self.perturbation.trajectories = new_trajectories
-    
+
     def average_pars(self):
         '''
             Average force field parameters over master and slaves.
@@ -130,7 +130,7 @@ class BaseProgram(object):
                 a0, a1, a2, a3 = pars.mean(axis=0)
                 self.valence.set_params(master.index, a0=a0, a1=a1, a2=a2, a3=a3)
                 for islave in master.slaves:
-                    self.valence.set_params(islave, a0=a0, a1=a1, a2=a2, a3=a3) 
+                    self.valence.set_params(islave, a0=a0, a1=a1, a2=a2, a3=a3)
             elif master.kind==3:#cross
                 fc, rv0, rv1 = pars.mean(axis=0)
                 self.valence.set_params(master.index, fc=fc, rv0=rv0, rv1=rv1)
@@ -144,7 +144,7 @@ class BaseProgram(object):
                     self.valence.set_params(islave, fc=fc, rv0=rv, m=m)
             else:
                 raise NotImplementedError
-    
+
     def make_output(self):
         '''
             Dump Yaff parameters, plot energy contributions along perturbation
@@ -161,7 +161,7 @@ class BaseProgram(object):
             if self.kwargs.get('xyz_traj', False):
                 for trajectory in self.perturbation.trajectories:
                     trajectory.to_xyz()
-    
+
     def do_pt_generate(self):
         '''
             Generate perturbation trajectories.
@@ -186,14 +186,14 @@ class BaseProgram(object):
                 assert not os.path.isfile(fn_traj)
                 cPickle.dump(self.perturbation.trajectories, open(fn_traj, 'w'))
                 log.dump('Trajectories stored to file %s' %fn_traj)
-        
+
     def do_pt_estimate(self, do_valence=False):
         '''
             Estimate force constants and rest values from the perturbation
             trajectories
-            
+
             **Optional Arguments**
-            
+
             do_valence
                 if set to True, the current valence force field will be used to
                 estimate the contribution of all other valence terms.
@@ -214,7 +214,7 @@ class BaseProgram(object):
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
             self.valence.dump_logger(print_level=3)
             self.average_pars()
-    
+
     def do_eq_setrv(self, tasks):
         '''
             Set the rest values to their respective AI equilibrium values.
@@ -235,7 +235,7 @@ class BaseProgram(object):
                         rv = ic['value']%(360.0*deg/m)
                         with log.section('EQSET', 3, timer='Equil Set RV'):
                             log.dump('Set rest value of %s(%s) (eq=%.3f deg) to %.3f deg' %(
-                                term.basename, 
+                                term.basename,
                                 '.'.join([str(at) for at in term.get_atoms()]),
                                 ic['value']/deg, rv/deg
                             ))
@@ -245,13 +245,13 @@ class BaseProgram(object):
                         self.valence.set_params(term.index, rv0=rv)
             self.valence.dump_logger(print_level=3)
             self.average_pars()
-    
+
     def do_hc_estimatefc(self, tasks, logger_level=3):
         '''
             Refine force constants using Hessian Cost function.
-            
+
             **Arguments**
-            
+
             tasks
                 A list of strings identifying which terms should have their
                 force constant estimated from the hessian cost function. Using
@@ -260,9 +260,9 @@ class BaseProgram(object):
                 force constant estimation of the cross terms (flag=HC_FC_CROSS).
                 If the string 'all' is present in tasks, all fc's will be
                 estimated.
-            
+
             **Optional Arguments**
-            
+
             logger_level
         '''
         with log.section('HCEST', 2, timer='HC Estimate FC'):
@@ -291,7 +291,7 @@ class BaseProgram(object):
                     if term.kind==1: self.valence.check_params(term, ['a0', 'a1', 'a2', 'a3'])
                     if term.kind==3: self.valence.check_params(term, ['fc', 'rv0','rv1'])
                     if term.kind==4: self.valence.check_params(term, ['fc', 'rv', 'm'])
-            cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=ffrefs)   
+            cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=ffrefs)
             fcs = cost.estimate()
             for index, fc in zip(term_indices, fcs):
                 master = self.valence.terms[index]
@@ -315,7 +315,7 @@ class BaseProgram(object):
                 if term['kind']!=3: continue
                 rv0, rv1 = None, None
                 for index2 in xrange(self.valence.vlist.nv):
-                    term2 = self.valence.vlist.vtab[index2]               
+                    term2 = self.valence.vlist.vtab[index2]
                     if term2['kind']==3: continue
                     if term['ic0']==term2['ic0']:
                         assert rv0 is None
@@ -326,11 +326,11 @@ class BaseProgram(object):
                 if rv0 is None or rv1 is None:
                     raise ValueError('No rest values found for %s' %self.valence.terms[index].basename)
                 self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-    
+
     def run(self):
         '''
             Sequence of instructions, should be implemented in the inheriting
-            classes. The various inheriting classes distinguish themselves by 
+            classes. The various inheriting classes distinguish themselves by
             means of the instructions implemented in this routine.
         '''
         raise NotImplementedError

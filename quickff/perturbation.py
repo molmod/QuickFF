@@ -46,14 +46,14 @@ class Trajectory(object):
     def __init__(self, term, start, end, numbers, steps=11):
         '''
             **Arguments**
-            
+
             term
                 an instance of the Term class for which the perturbation
                 trajectory will be computed
-            
+
             numbers
                 list of atom numbers required for dumping xyz coords
-            
+
             start
                 a float defining the lower limit of the perturbation value of
                 the given ic. If not given, a standard value is choosen
@@ -65,7 +65,7 @@ class Trajectory(object):
                 according to the kind of internal coordinate.
 
             **Optional Arguments**
-            
+
             steps
                 an integer defining the number of steps in the perturbation
                 trajectory. The default value is 11 steps.
@@ -81,7 +81,7 @@ class Trajectory(object):
         self.active = True
         self.fc = None
         self.rv = None
-    
+
     def plot(self, ai, ffrefs=[], valence=None, fn=None, eunit='kjmol'):
         '''
             Method to plot the energy contributions along a perturbation
@@ -89,23 +89,23 @@ class Trajectory(object):
             coords, fc and rv attributes have been computed and assigned.
 
             **Arguments**
-            
+
             ai
                 an instance of the Reference representing the ab initio input
 
             **Optional Arguments**
-                        
+
             ffrefs
                 a list of Reference instances representing possible a priori
-                determined contributions to the force field (such as eg. 
+                determined contributions to the force field (such as eg.
                 electrostatics and van der Waals)
-            
+
             valence
                 an instance of ValenceFF which will be used to plot the covalent
                 contribution. If not given, only the contribution of the IC
                 corresponding to the trajectory will be plotted using the values
                 of fc and rv
-            
+
             fn
                 a string defining the name of the figure
 
@@ -146,7 +146,7 @@ class Trajectory(object):
         else:
             assert self.fc is not None and self.rv is not None
             data = 0.5*self.fc*(self.qvals - self.rv)**2
-            add_plot(data, 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})            
+            add_plot(data, 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
         #decorate plot
         ax.set_title('%s-%i' %(self.term.basename, self.term.index))
         ax.set_xlabel('%s [%s]' % (self.term.basename.split('/')[0], self.qunit), fontsize=16)
@@ -157,7 +157,7 @@ class Trajectory(object):
         if fn is None:
             fn = 'trajectory-%s-%i.png' %(self.term.basename.replace('/', '-'),self.term.index)
         fig.savefig(fn)
-    
+
     def to_xyz(self, fn=None):
         '''
             Method to write the given trajectory to an XYZ file. This method
@@ -183,11 +183,11 @@ class RelaxedStrain(object):
     def __init__(self, system, valence):
         '''
             **Arguments**
-            
+
             system
                 an instance of the Yaff System class defining the system
-            
-            valence           
+
+            valence
                 an instance of ValenceFF defining the valence force field
         '''
         self.system = system
@@ -230,7 +230,7 @@ class RelaxedStrain(object):
                 ics.append(term2.ics[0])
             self.strains[term.index] = Strain(term.index, self.system, term.ics[0], ics)
             self.trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=11)
-    
+
     def generate(self, index, remove_com=True):
         '''
             Method to calculate the perturbation trajectory, i.e. the trajectory
@@ -243,9 +243,9 @@ class RelaxedStrain(object):
             index
                 index of a Trajectory instance representing the perturbation
                 trajectory
-            
+
             **Optional Arguments**
-            
+
             remove_com
                 if set to True, removes the center of mass translation from the
                 resulting perturbation trajectories [default=True].
@@ -290,17 +290,17 @@ class RelaxedStrain(object):
             index
                 index of a Trajectory instance representing the perturbation
                 trajectory
-            
+
             ai
                 an instance of the Reference representing the ab initio input
 
             **Optional Arguments**
-                        
+
             ffrefs
                 a list of Reference instances representing possible a priori
-                determined contributions to the force field (such as eg. 
+                determined contributions to the force field (such as eg.
                 electrostatics and van der Waals)
-            
+
             do_valence
                 If set to True, the current valence force field (stored in
                 self.valence) will be used to compute the valence contribution
@@ -350,8 +350,8 @@ class RelaxedStrain(object):
                     traj.active = False
                     self.valence.modify_term(
                         term.index,
-                        Harmonic, [BendCos(*term.get_atoms())], 
-                        term.basename.replace('BendAHarm', 'BendCHarm'), 
+                        Harmonic, [BendCos(*term.get_atoms())],
+                        term.basename.replace('BendAHarm', 'BendCHarm'),
                         ['HC_FC_DIAG'], ['kjmol', 'au']
                     )
                     self.valence.set_params(term.index, fc=0.0, rv0=-1.0)
@@ -364,20 +364,20 @@ class Strain(ForceField):
             A class deriving from the Yaff ForceField class to implement the
             strain of a molecular geometry associated with the term defined by
             term_index.
-        
+
             **Arguments**
-            
+
             term_index
                 Integer defining the index of the term in valence.terms for
                 which the current strain is designed.
-            
+
             system
                 A Yaff System instance containing all system information.
-            
+
             cons_ic
                 An instance of Yaff Internal Coordinate representing the
                 constrained term in the strain.
-            
+
             ics
                 A list of Yaff Internal Coordinate instances for which the
                 strain needs to be minimized.
@@ -387,7 +387,7 @@ class Strain(ForceField):
         self.ndof = np.prod(self.coords0.shape)
         part = ForcePartValence(system)
         #construct ordered list of atoms in the constrained ic
-        if cons_ic.kind==0: 
+        if cons_ic.kind==0:
             cons_ic_atoms = cons_ic.index_pairs[0]
         elif cons_ic.kind in [1,2]:
             cons_ic_atoms = [
@@ -409,7 +409,7 @@ class Strain(ForceField):
                 cons_ic.index_pairs[2][0],
                 cons_ic.index_pairs[2][1],
             ]
-        else:      
+        else:
             raise ValueError('IC of kind %i not supported' %cons_ic.kind)
         #add all bonds, bends and diheds that are not constrained
         for bond in system.iter_bonds():

@@ -35,25 +35,25 @@ class HessianFCCost(object):
     def __init__(self, system, ai, valence, fit_indices, ffrefs=[]):
         '''
             **Arguments**
-            
+
             system
                 a Yaff system object
-            
+
             ai
                 an instance of the Reference representing the ab initio input
-            
+
             valence
                 A ValenceFF object containing all valence terms.
-            
+
             fit_indices
                 a list of indices indicating the terms for which the force
                 constants should be determined.
-            
+
             **Optional Arguments**
-                        
+
             ffrefs
                 a list of Reference instances representing possible a priori
-                determined contributions to the force field (such as eg. 
+                determined contributions to the force field (such as eg.
                 electrostatics and van der Waals)
         '''
         #initialization
@@ -92,7 +92,7 @@ class HessianFCCost(object):
                 tmp = np.sum(hcov1*hcov2)
                 self.A[index1,index2] = tmp
                 self.A[index2,index1] = tmp
-    
+
     def estimate(self, init=None, lower=None, upper=None):
         '''
             Estimate the force constants by minimizing the cost function

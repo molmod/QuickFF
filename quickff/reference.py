@@ -23,7 +23,7 @@
 #
 #--
 from yaff.pes.ff import ForceField, ForcePartValence, ForcePartPair
-from yaff.pes.ext import PairPotEI 
+from yaff.pes.ext import PairPotEI
 from yaff.pes.nlist import NeighborList
 from yaff.pes.scaling import Scalings
 from yaff.sampling.harmonic import estimate_cart_hessian
@@ -40,20 +40,20 @@ __all__ = ['SecondOrderTaylor', 'YaffForceField', 'get_ei_ff']
 
 class Reference(object):
     '''
-        Abstract class for a model for reference data. A reference instance 
-        should be able to return energy, gradient and hessian for a given set 
+        Abstract class for a model for reference data. A reference instance
+        should be able to return energy, gradient and hessian for a given set
         of coordinates.
     '''
-    
+
     def __init__(self, name):
         self.name = name
-    
+
     def energy(self, coords):
         raise NotImplementedError
-    
+
     def gradient(self, coords):
         raise NotImplementedError
-    
+
     def hessian(self, coords):
         raise NotImplementedError
 
@@ -62,7 +62,7 @@ class SecondOrderTaylor(Reference):
     '''
         Second-order Taylor expansion model, can be used for the ab initio input.
     '''
-    
+
     def __init__(self, name, coords=None, energy=0.0, grad=None, hess=None, pbc=[0,0,0]):
         with log.section('REF', 2, timer='Initializing'):
             log.dump('Initializing Second order taylor reference for %s' %name)
@@ -74,7 +74,7 @@ class SecondOrderTaylor(Reference):
             self.pbc = pbc
             self.phess0 = self._get_phess()
             super(SecondOrderTaylor, self).__init__(name)
-    
+
     def update(self, coords=None, grad=None, hess=None, pbc=None):
         '''
             Method to update one or more of the attributes. The meaning of the
@@ -130,7 +130,7 @@ class SecondOrderTaylor(Reference):
         else:
             pbc = [0,0,0]
         return cls(name, coords=coords0, energy=energy0, grad=grad0, hess=hess0, pbc=pbc)
-            
+
     def energy(self, coords):
         '''
             Compute the energy for the given positions
@@ -138,7 +138,7 @@ class SecondOrderTaylor(Reference):
         assert np.all(coords.shape==self.coords0.shape)
         ndof = np.prod(self.coords0.shape)
         dx = (coords - self.coords0).reshape([ndof])
-        energy = self.energy0 + np.dot(self.grad0.reshape([ndof]), dx) 
+        energy = self.energy0 + np.dot(self.grad0.reshape([ndof]), dx)
         energy += 0.5*np.dot(dx, np.dot(self.phess0.reshape([ndof,ndof]), dx))
         return energy
 
@@ -171,17 +171,17 @@ class YaffForceField(Reference):
             log.dump('Initializing Yaff force field reference for %s' %name)
             self.ff = ff
             Reference.__init__(self, name)
-    
+
     def energy(self, coords):
         self.ff.update_pos(coords.copy())
         return self.ff.compute()
-    
+
     def gradient(self, coords):
         gpos = np.zeros(coords.shape, float)
         self.ff.update_pos(coords.copy())
         energy = self.ff.compute(gpos=gpos)
         return gpos.reshape(coords.shape)
-    
+
     def hessian(self, coords):
         self.ff.update_pos(coords.copy())
         hess = estimate_cart_hessian(self.ff)
@@ -192,30 +192,30 @@ class YaffForceField(Reference):
 def get_ei_ff(name, system, charges, scales, radii=None, average=True, pbc=[0,0,0]):
     '''
         A routine to construct a Yaff force field for the electrostatics
-        
+
         **Arguments**
-        
+
         name
             A string for the name of the force field. This name will show in
             possible plots visualizing contributions along perturbation
             trajectories
-        
+
         system
             A Yaff System instance representing the system
-        
+
         charges
             A numpy array containing the charge of each separate atom
-        
+
         scales
             A list of 4 floats, representing scale1, scale2, scale3, scale4,
             i.e. the electrostatic scaling factors
-        
+
         **Optional Arguments**
-        
+
         radii
             A numpy array containing the gaussian radii of each separate atom.
             If this argument is omitted, point charges are used.
-        
+
         average
             If set to True, the charges and radii will first be averaged over
             atom types. This is True by default.

@@ -38,7 +38,7 @@ _______________\\///\\\\\\\\/\\\\\\\\/____\\/\\\\\\_____________\\/\\\\\\_______
 __________________\\////\\\\\\//______\\/\\\\\\_____________\\/\\\\\\_______________________
 ______________________\\///\\\\\\\\\\\\___\\/\\\\\\_____________\\/\\\\\\______________________
 _________________________\\//////____\\///______________\\///______________________
-        
+
                             Welcom to QuickFF 2.0
    a Python package to quickly derive force fields from ab initio input data
 
@@ -78,7 +78,7 @@ class Section(object):
         self.old_level = self.logger.section_level
         self.new_level = level
         self.timer_description = timer_description
-    
+
     def __enter__(self):
         if self.new_label!=self.old_label and self.logger.log_level>0:
             self.logger.add_blank_line = True
@@ -87,7 +87,7 @@ class Section(object):
         if self.timer_description is not None:
             self.begin = datetime.datetime.now()
             self.end = None
-    
+
     def __exit__(self, type, value, traceback):
         self.logger.label = self.old_label
         self.logger.section_level = self.old_level
@@ -110,7 +110,7 @@ class Logger(object):
         self.label = None
         self.add_blank_line = False
         self.timetable = []
-    
+
     def set_level(self, level):
         if isinstance(level, int):
             if level>=0 and level<=5:
@@ -124,7 +124,7 @@ class Logger(object):
             else:
                 raise ValueError('String level should be silent, low, medium, high or highest.')
         self.section_level = None
-    
+
     def write_to_file(self, f):
         if isinstance(f, str):
             self._f = open(f, 'w')
@@ -132,14 +132,14 @@ class Logger(object):
             self._f = f
         else:
             raise ValueError('File argument f should be a string representing a filename or a File instance')
-    
+
     def section(self, label, level, timer=None):
         '''
             Construct a section instance for use in with statements to control
             section printing and timing.
         '''
         return Section(self, label, level, timer)
-    
+
     def dump(self, message, new_line=True):
         if self.section_level<=self.log_level:
             if not self._active:
@@ -174,13 +174,13 @@ class Logger(object):
         if self.log_level>0:
             print >> self._f, ''
             print >> self._f, '~'*80
-    
+
     def exit(self):
         if self._active:
             self.print_timetable()
             self.print_footer()
         self.close()
-    
+
     def print_footer(self):
         if self.log_level>0:
             print >> self._f, footer

@@ -121,13 +121,13 @@ def fitpar(xs, ys, rcond=1e-3):
 def boxqp(A, B, bndl, bndu, x0, threshold=1e-9, status=False):
     '''
         Minimize the function
-        
+
                 1/2*xT.A.x - B.x
-        
+
         subject to
-        
+
                 bndl < x < bndu (element-wise)
-        
+
         This minimization is performed using a projected gradient method with
         step lengths computed using the Barzilai-Borwein method.
         See 10.1007/s00211-004-0569-y for a description.
@@ -195,7 +195,7 @@ def guess_ffatypes(system, level):
 
        system
             A yaff system instance
-       
+
        level
             A string used for guessing atom types:
 
@@ -254,7 +254,7 @@ def guess_ffatypes(system, level):
 def term_sort_atypes(ffatypes, indexes, kind):
     '''
         Routine to sort the atoms defined in indexes to give consistent term
-        names. This routine returns the sorted atom indexes as well as the 
+        names. This routine returns the sorted atom indexes as well as the
         corresponding atom types.
     '''
     atypes = [ffatypes[i] for i in indexes]
@@ -324,18 +324,18 @@ def get_ei_radii(numbers):
         Routine to return atomic radii for use in the Gaussian charge
         distribution. These radii are computed according to the procedure of
         Chen et al.:
-        
+
         First the Slater exponent is computed from the hardness using the
         formula of Rappe and Goddard (hardness of Pearson and Parr is used)
-        
+
         Next the gaussian exponent alpha is fitted by minimizing the
         L2-difference between the between the homonuclear Coulomb integral over
         Slater orbitals and over Gaussian orbitals.
     '''
     radii = {
-        'H' : 0.7309*angstrom, 
+        'H' : 0.7309*angstrom,
         'Li': 1.2951*angstrom, 'B' : 1.2020*angstrom, 'C' : 1.1646*angstrom,
-        'N' : 1.1039*angstrom, 'O' : 1.1325*angstrom, 'F' : 1.1097*angstrom, 
+        'N' : 1.1039*angstrom, 'O' : 1.1325*angstrom, 'F' : 1.1097*angstrom,
         'Na': 1.7093*angstrom, 'Al': 1.6744*angstrom, 'Si': 1.6378*angstrom,
         'P' : 1.5730*angstrom, 'S' : 1.6022*angstrom, 'Cl': 1.5789*angstrom,
     }
