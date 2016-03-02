@@ -29,15 +29,15 @@ __all__ = ['log']
 
 
 header = """
-________________/\\\\\\_________/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\___/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\________________
-______________/\\\\\\\\/\\\\\\\\_____\\/\\\\\\///////////___\\/\\\\\///////////________________
-_____________/\\\\\\//\\////\\\\\\___\\/\\\\\\______________\\/\\\\\\__________________________
-_____________/\\\\\\______\\//\\\\\\__\\/\\\\\\\\\\\\\\\\\\\\\\______\\/\\\\\\\\\\\\\\\\\\\\\\_________________
-_____________\\//\\\\\\______/\\\\\\___\\/\\\\\\///////_______\\/\\\\\\///////_________________
-_______________\\///\\\\\\\\/\\\\\\\\/____\\/\\\\\\______________\\/\\\\\\_______________________
-__________________\\////\\\\\\//______\\/\\\\\\______________\\/\\\\\\______________________
-______________________\\///\\\\\\\\\\\\___\\/\\\\\\______________\\/\\\\\\_____________________
-_________________________\\//////____\\///_______________\\///_____________________
+________________/\\\\\\_________/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_________________
+______________/\\\\\\\\/\\\\\\\\_____\\/\\\\\\///////////__\\/\\\\\///////////_________________
+_____________/\\\\\\//\\////\\\\\\___\\/\\\\\\_____________\\/\\\\\\___________________________
+_____________/\\\\\\______\\//\\\\\\__\\/\\\\\\\\\\\\\\\\\\\\\\_____\\/\\\\\\\\\\\\\\\\\\\\\\__________________
+_____________\\//\\\\\\______/\\\\\\___\\/\\\\\\///////______\\/\\\\\\///////__________________
+_______________\\///\\\\\\\\/\\\\\\\\/____\\/\\\\\\_____________\\/\\\\\\________________________
+__________________\\////\\\\\\//______\\/\\\\\\_____________\\/\\\\\\_______________________
+______________________\\///\\\\\\\\\\\\___\\/\\\\\\_____________\\/\\\\\\______________________
+_________________________\\//////____\\///______________\\///______________________
         
                             Welcom to QuickFF 2.0
    a Python package to quickly derive force fields from ab initio input data
@@ -71,25 +71,26 @@ def splitstring(string, length, separators=[' ','/','_']):
 
 
 class Section(object):
-    def __init__(self, logger, new_label, level, timer_description):
+    def __init__(self, logger, label, level, timer_description):
         self.logger = logger
         self.old_label = logger.label
-        self.new_label = new_label
-        self.level = level
+        self.new_label = label
+        self.old_level = self.logger.section_level
+        self.new_level = level
         self.timer_description = timer_description
     
     def __enter__(self):
         if self.new_label!=self.old_label and self.logger.log_level>0:
             self.logger.add_blank_line = True
         self.logger.label = self.new_label
-        self.logger.section_level = self.level
+        self.logger.section_level = self.new_level
         if self.timer_description is not None:
             self.begin = datetime.datetime.now()
             self.end = None
     
     def __exit__(self, type, value, traceback):
         self.logger.label = self.old_label
-        self.logger.section_level = None
+        self.logger.section_level = self.old_level
         if self.timer_description is not None:
             self.end = datetime.datetime.now()
             for i, (description, time) in enumerate(self.logger.timetable):
@@ -122,6 +123,7 @@ class Logger(object):
                 self.log_level = allowed.index(level.lower())
             else:
                 raise ValueError('String level should be silent, low, medium, high or highest.')
+        self.section_level = None
     
     def write_to_file(self, f):
         if isinstance(f, str):

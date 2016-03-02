@@ -189,7 +189,7 @@ class YaffForceField(Reference):
         return hess.reshape([natoms, 3, natoms, 3])
 
 
-def get_ei_ff(name, system, charges, scales, radii=None, average=True):
+def get_ei_ff(name, system, charges, scales, radii=None, average=True, pbc=[0,0,0]):
     '''
         A routine to construct a Yaff force field for the electrostatics
         
@@ -220,6 +220,8 @@ def get_ei_ff(name, system, charges, scales, radii=None, average=True):
             If set to True, the charges and radii will first be averaged over
             atom types. This is True by default.
     '''
+    if not np.array(pbc==0).all():
+        raise NotImplementedError('Periodic system not implemented in get_ei_ff')
     if average:
         qs = {}
         rs = {}

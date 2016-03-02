@@ -342,10 +342,9 @@ class ValenceFF(ForcePartValence):
             for m in ms:
                 if np.isnan(m): nan = True
             if nan or None in ms or ms.std()>1e-3:
-                log.dump('WARNING missing dihedral for %s (m=%s)' %('.'.join(types), str(ms)))
+                log.dump('WARNING missing dihedral for %s (could not determine m from %s)' %('.'.join(types), str(ms)))
                 continue
             m = int(np.round(ms.mean()))
-            log.dump('%s: %s' %(types, str(psi0s/deg)))
             rv = get_restvalue(psi0s, m, thresshold=thresshold)
             if rv is not None:
                 #a regular Cosine term is used for the dihedral potential
@@ -355,7 +354,7 @@ class ValenceFF(ForcePartValence):
                     ncos += 1
             else:
                 #no dihedral potential could be determine, hence it is ignored
-                log.dump('WARNING: missing dihedral for %s (no rest value)' %('.'.join(types)))
+                log.dump('WARNING: missing dihedral for %s (could not determine rest value from %s)' %('.'.join(types), str(psi0s/deg)))
                 continue
         log.dump('Added %i Cosine dihedral terms' %ncos)
 

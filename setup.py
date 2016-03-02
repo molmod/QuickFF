@@ -70,7 +70,7 @@ setup(
     packages=['quickff'],
     cmdclass = {'install_data': my_install_data},
     data_files=find_all_data_files('share'),
-    scripts=['scripts/qff-est.py', 'scripts/qff-traj.py'],
+    scripts=['scripts/qff.py'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',

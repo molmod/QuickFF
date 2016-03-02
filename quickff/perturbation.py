@@ -115,49 +115,48 @@ class Trajectory(object):
                 `MolMod documentation <http://molmod.github.io/molmod/reference/const.html#module-molmod.units>`_.
         '''
         import matplotlib.pyplot as pp
-        with log.section('PLOT', 2, 'Trajectory Plot Energy'):
-            if 'active' in self.__dict__.keys() and not self.active: return
-            fig, ax = pp.subplots()
-            def add_plot(data, prefix, kwargs):
-                pars = fitpar(self.qvals, data, rcond=1e-6)
-                k = 2*pars[0]
-                if k==0: q0 = np.nan
-                else: q0 = -pars[1]/k
-                label = '%s (K=%.0f q0=%.3f)' %(prefix, k/parse_unit(self.kunit), q0/parse_unit(self.qunit))
-                kwargs['label'] = label
-                ax.plot(self.qvals/parse_unit(self.qunit), (data-data[len(self.qvals)/2])/parse_unit(eunit), **kwargs)
-            #ai
-            data = np.array([ai.energy(pos) for pos in self.coords])
-            add_plot(data, 'AI ref', {'linestyle': '--', 'color': 'k', 'linewidth': 4.0})
-            #ffrefs
-            totff = np.zeros([len(self.qvals)], float)
-            colors = ['b', 'g', 'm', 'y', 'c']
-            for i, ffref in enumerate(ffrefs):
-                data = np.array([ffref.energy(pos) for pos in self.coords])
-                totff += data
-                add_plot(data, ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
-            #complete fitted valence model if given
-            if valence is not None:
-                for term in valence.iter_terms():
-                    valence.check_params(term, ['all'])
-                data = np.array([valence.calc_energy(pos) for pos in self.coords])
-                add_plot(data, 'Fitted Valence', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
-                add_plot(totff+data, 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
-            #complete fitted term if valence is not given
-            else:
-                assert self.fc is not None and self.rv is not None
-                data = 0.5*self.fc*(self.qvals - self.rv)**2
-                add_plot(data, 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})            
-            #decorate plot
-            ax.set_title('%s-%i' %(self.term.basename, self.term.index))
-            ax.set_xlabel('%s [%s]' % (self.term.basename.split('/')[0], self.qunit), fontsize=16)
-            ax.set_ylabel('Energy [%s]' %eunit, fontsize=16)
-            ax.grid()
-            ax.legend(loc='upper right', fontsize=16)
-            fig.set_size_inches([8, 8])
-            if fn is None:
-                fn = 'trajectory-%s-%i.png' %(self.term.basename.replace('/', '-'),self.term.index)
-            fig.savefig(fn)
+        if 'active' in self.__dict__.keys() and not self.active: return
+        fig, ax = pp.subplots()
+        def add_plot(data, prefix, kwargs):
+            pars = fitpar(self.qvals, data, rcond=1e-6)
+            k = 2*pars[0]
+            if k==0: q0 = np.nan
+            else: q0 = -pars[1]/k
+            label = '%s (K=%.0f q0=%.3f)' %(prefix, k/parse_unit(self.kunit), q0/parse_unit(self.qunit))
+            kwargs['label'] = label
+            ax.plot(self.qvals/parse_unit(self.qunit), (data-data[len(self.qvals)/2])/parse_unit(eunit), **kwargs)
+        #ai
+        data = np.array([ai.energy(pos) for pos in self.coords])
+        add_plot(data, 'AI ref', {'linestyle': '--', 'color': 'k', 'linewidth': 4.0})
+        #ffrefs
+        totff = np.zeros([len(self.qvals)], float)
+        colors = ['b', 'g', 'm', 'y', 'c']
+        for i, ffref in enumerate(ffrefs):
+            data = np.array([ffref.energy(pos) for pos in self.coords])
+            totff += data
+            add_plot(data, ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
+        #complete fitted valence model if given
+        if valence is not None:
+            for term in valence.iter_terms():
+                valence.check_params(term, ['all'])
+            data = np.array([valence.calc_energy(pos) for pos in self.coords])
+            add_plot(data, 'Fitted Valence', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
+            add_plot(totff+data, 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
+        #complete fitted term if valence is not given
+        else:
+            assert self.fc is not None and self.rv is not None
+            data = 0.5*self.fc*(self.qvals - self.rv)**2
+            add_plot(data, 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})            
+        #decorate plot
+        ax.set_title('%s-%i' %(self.term.basename, self.term.index))
+        ax.set_xlabel('%s [%s]' % (self.term.basename.split('/')[0], self.qunit), fontsize=16)
+        ax.set_ylabel('Energy [%s]' %eunit, fontsize=16)
+        ax.grid()
+        ax.legend(loc='upper right', fontsize=16)
+        fig.set_size_inches([8, 8])
+        if fn is None:
+            fn = 'trajectory-%s-%i.png' %(self.term.basename.replace('/', '-'),self.term.index)
+        fig.savefig(fn)
     
     def to_xyz(self, fn=None):
         '''
@@ -169,15 +168,14 @@ class Trajectory(object):
             fn
                 a string defining the name of the output file
         '''
-        with log.section('XYZ', 2, 'Trajectory Write XYZ'):
-            if 'active' in self.__dict__.keys() and not self.active: return
-            if fn is None:
-                fn = 'trajectory-%s-%i.xyz' %(self.term.basename.replace('/', '-'),self.term.index)
-            f = open(fn, 'w')
-            xyz = XYZWriter(f, [pt[Z].symbol for Z in self.numbers])
-            for frame, coord in enumerate(self.coords):
-                xyz.dump('frame %i' %frame, coord)
-            f.close()
+        if 'active' in self.__dict__.keys() and not self.active: return
+        if fn is None:
+            fn = 'trajectory-%s-%i.xyz' %(self.term.basename.replace('/', '-'),self.term.index)
+        f = open(fn, 'w')
+        xyz = XYZWriter(f, [pt[Z].symbol for Z in self.numbers])
+        for frame, coord in enumerate(self.coords):
+            xyz.dump('frame %i' %frame, coord)
+        f.close()
 
 
 
@@ -253,17 +251,33 @@ class RelaxedStrain(object):
                 resulting perturbation trajectories [default=True].
         '''
         trajectory = self.trajectories[index]
+        if trajectory is None:
+            log.dump('Trajectory of term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
+            return
         strain = self.strains[trajectory.term.index]
         for iq, q in enumerate(trajectory.qvals):
             strain.constrain_value = q
             init = np.zeros([strain.ndof+1], float)
-            sol = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-9)
+            sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-9, full_output=True)
+            if ier==5:
+                #fsolve did not converge, flag this frame for deletion
+                trajectory.qvals[iq] = np.nan
+                continue
             x = strain.coords0 + sol[:self.system.natom*3].reshape((-1,3))
             if remove_com:
                 com = (x.T*self.system.masses).sum(axis=1)/self.system.masses.sum()
                 for i in xrange(self.system.natom):
                     x[i,:] -= com
             trajectory.coords[iq,:,:] = x
+        #delete flagged frames
+        qvals = []
+        coords = []
+        for q, coord in zip(trajectory.qvals, trajectory.coords):
+            if not np.isnan(q):
+                qvals.append(q)
+                coords.append(coord)
+        trajectory.qvals = np.array(qvals)
+        trajectory.coords = np.array(coords)
 
     def estimate(self, index, ai, ffrefs=[], do_valence=False):
         '''
@@ -291,54 +305,56 @@ class RelaxedStrain(object):
                 If set to True, the current valence force field (stored in
                 self.valence) will be used to compute the valence contribution
         '''
-        with log.section('PTEST', 2):
-            trajectory = self.trajectories[index]
-            if 'active' in trajectory.__dict__.keys() and not trajectory.active:
-                log.dump('WARNING: Skipping %s, perturbation trajectory was deactivated.' %trajectory.term.basename)
-                return
-            qs = trajectory.qvals.copy()
-            AIs = np.zeros(len(trajectory.coords))
-            FFs = np.zeros(len(trajectory.coords))
+        trajectory = self.trajectories[index]
+        if trajectory is None:
+            log.dump('WARNING: Trajectory of term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
+            return
+        if 'active' in trajectory.__dict__.keys() and not trajectory.active:
+            log.dump('WARNING: Trajectory of term %i (%s) was deactivated, skipping' %trajectory.term.basename)
+            return
+        qs = trajectory.qvals.copy()
+        AIs = np.zeros(len(trajectory.coords))
+        FFs = np.zeros(len(trajectory.coords))
+        for istep, pos in enumerate(trajectory.coords):
+            eai = ai.energy(pos)
+            AIs[istep] += eai
+            for ref in ffrefs:
+                FFs[istep] += ref.energy(pos)
+        if do_valence:
+            k = self.valence.get_params(trajectory.term.index, only='fc')
+            self.valence.set_params(trajectory.term.index, fc=0.0)
             for istep, pos in enumerate(trajectory.coords):
-                eai = ai.energy(pos)
-                AIs[istep] += eai
-                for ref in ffrefs:
-                    FFs[istep] += ref.energy(pos)
-            if do_valence:
-                k = self.valence.get_params(trajectory.term.index, only='fc')
-                self.valence.set_params(trajectory.term.index, fc=0.0)
-                for istep, pos in enumerate(trajectory.coords):
-                    FFs[istep] += self.valence.calc_energy(pos)
-                self.valence.set_params(trajectory.term.index, fc=k)
-            pars = fitpar(qs, AIs-FFs, rcond=1e-6)
-            if pars[0]!=0.0:
-                trajectory.fc = 2*pars[0]
-                trajectory.rv = -pars[1]/(2*pars[0])
-            else:
-                trajectory.fc = 0.0
-                pars = fitpar(qs, AIs, rcond=1e-6)
-                trajectory.rv = -pars[1]/(2*pars[0])
-            #no negative rest values for all ics except dihedrals and bendcos
-            if trajectory.term.ics[0].kind not in [1,3,4]:
-                if trajectory.rv<0:
-                    trajectory.rv = 0
-                    log.dump('WARNING: rest value of %s was negative, set to zero' %trajectory.term.basename)
-            #no bending angles larger than 180*deg
-            if trajectory.term.ics[0].kind in [2]:
-                if trajectory.rv>180*deg:
-                    log.dump('WARNING: rest value of %s exceeds 180 deg, term set to BendCHarm with cos(phi0)=-1 and deactivated perturbation trajectory' %trajectory.term.basename)
-                    for term in self.valence.iter_terms(trajectory.term.basename):
-                        traj = self.trajectories[term.index]
-                        traj.rv = None
-                        traj.fc = None
-                        traj.active = False
-                        self.valence.modify_term(
-                            term.index,
-                            Harmonic, [BendCos(*term.get_atoms())], 
-                            term.basename.replace('BendAHarm', 'BendCHarm'), 
-                            ['HC_FC_DIAG'], ['kjmol', 'au']
-                        )
-                        self.valence.set_params(term.index, fc=0.0, rv0=-1.0)
+                FFs[istep] += self.valence.calc_energy(pos)
+            self.valence.set_params(trajectory.term.index, fc=k)
+        pars = fitpar(qs, AIs-FFs, rcond=1e-6)
+        if pars[0]!=0.0:
+            trajectory.fc = 2*pars[0]
+            trajectory.rv = -pars[1]/(2*pars[0])
+        else:
+            trajectory.fc = 0.0
+            pars = fitpar(qs, AIs, rcond=1e-6)
+            trajectory.rv = -pars[1]/(2*pars[0])
+        #no negative rest values for all ics except dihedrals and bendcos
+        if trajectory.term.ics[0].kind not in [1,3,4]:
+            if trajectory.rv<0:
+                trajectory.rv = 0
+                log.dump('WARNING: rest value of %s was negative, set to zero' %trajectory.term.basename)
+        #no bending angles larger than 180*deg
+        if trajectory.term.ics[0].kind in [2]:
+            if trajectory.rv>180*deg:
+                log.dump('WARNING: rest value of %s exceeds 180 deg, term set to BendCHarm with cos(phi0)=-1 and deactivated perturbation trajectory' %trajectory.term.basename)
+                for term in self.valence.iter_terms(trajectory.term.basename):
+                    traj = self.trajectories[term.index]
+                    traj.rv = None
+                    traj.fc = None
+                    traj.active = False
+                    self.valence.modify_term(
+                        term.index,
+                        Harmonic, [BendCos(*term.get_atoms())], 
+                        term.basename.replace('BendAHarm', 'BendCHarm'), 
+                        ['HC_FC_DIAG'], ['kjmol', 'au']
+                    )
+                    self.valence.set_params(term.index, fc=0.0, rv0=-1.0)
 
 
 
@@ -437,8 +453,8 @@ class Strain(ForceField):
         #compute constraint gradient
         gconstraint = np.zeros(self.coords0.shape)
         self.constraint.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))
-        self.constraint.compute(gpos=gconstraint)
+        econstraint = self.constraint.compute(gpos=gconstraint)
         #construct gradient
         grad[:self.ndof] = gstrain.reshape((-1,)) + X[self.ndof]*gconstraint.reshape((-1,)) #+ 0.01*X[:self.ndof]
-        grad[self.ndof] = self.constraint.parts[0].vlist.vtab[0]['energy'] + 1.0 - self.constrain_value
+        grad[self.ndof] = econstraint + 1.0 - self.constrain_value #self.constraint.parts[0].vlist.vtab[0]['energy'] + 1.0 - self.constrain_value
         return grad

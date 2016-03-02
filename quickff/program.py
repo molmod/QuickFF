@@ -75,6 +75,9 @@ class BaseProgram(object):
             self.system = system
             self.ai = ai
             self.kwargs = kwargs
+            fn_yaff = kwargs.get('fn_yaff', 'pars_cov.txt')
+            assert not os.path.isfile(fn_yaff), \
+                'Output file %s for covalent parameters already exists' %fn_yaff
             self.valence = ValenceFF(system)
             self.perturbation = RelaxedStrain(system, self.valence)
 
@@ -90,18 +93,25 @@ class BaseProgram(object):
     
     def update_trajectory_terms(self):
         '''
-            Routine to update the Term instances stored in trajectory.term
-            in case the trajectories were read from a file and some
-            modifications were done to the ValenceFF instance.
+            Routine to make self.valence.terms and the term attribute of each
+            trajectory in self.trajectories consistent again. This is usefull
+            if the trajectory were read from a file and the valenceFF instance
+            was modified.
         '''
         log.dump('Updating terms of trajectories to current valenceFF terms')
-        for traj in self.perturbation.trajectories:
-            index = traj.term.index
-            term = self.valence.terms[index]
-            assert traj.term.get_atoms()==term.get_atoms(), \
-                'Term of trajectory %i does not have same atom indices as term %i in valence.terms' %(index, index)
-            traj.term = term
-            if 'PT_ALL' not in term.tasks: traj.active=False
+        new_trajectories = [None,]*len(self.valence.terms)
+        for term in self.valence.iter_terms():
+            if 'PT_ALL' not in term.tasks: continue
+            found = False
+            for traj in self.perturbation.trajectories:
+                if traj.term.get_atoms()==term.get_atoms():
+                    if found: raise ValueError('Found two trajectories for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
+                    traj.term = term
+                    new_trajectories[term.index] = traj
+                    found = True
+                    break
+            if not found: raise ValueError('No trajectory found for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
+        self.perturbation.trajectories = new_trajectories
     
     def average_pars(self):
         '''
@@ -139,14 +149,20 @@ class BaseProgram(object):
                 raise NotImplementedError
     
     def make_output(self):
+        '''
+            Dump Yaff parameters, plot energy contributions along perturbation
+            trajectories and dump perturbation trajectories to XYZ files.
+        '''
         fn_yaff = self.kwargs.get('fn_yaff', 'pars_cov.txt')
         self.valence.dump_yaff(fn_yaff)
-        if self.kwargs.get('plot_traj', False):
-            for trajectory in self.perturbation.trajectories:
-                trajectory.plot(self.ai, ffrefs=self.kwargs.get('ffrefs', []), valence=self.valence)
-        if self.kwargs.get('xyz_traj', False):
-            for trajectory in self.perturbation.trajectories:
-                trajectory.to_xyz()
+        with log.section('PLOT', 2, 'Trajectory Plot Energy'):
+            if self.kwargs.get('plot_traj', False):
+                for trajectory in self.perturbation.trajectories:
+                    trajectory.plot(self.ai, ffrefs=self.kwargs.get('ffrefs', []), valence=self.valence)
+        with log.section('XYZ', 2, 'Trajectory Write XYZ'):
+            if self.kwargs.get('xyz_traj', False):
+                for trajectory in self.perturbation.trajectories:
+                    trajectory.to_xyz()
     
     def do_pt_generate(self):
         '''
@@ -186,19 +202,18 @@ class BaseProgram(object):
         '''
         with log.section('PTEST', 2, timer='PT Estimate'):
             self.reset_system()
-            if do_valence:
-                log.dump('Estimating FF parameters from perturbation trajectories with valence reference')
-            else:
-                log.dump('Estimating FF parameters from perturbation trajectories')
+            message = 'Estimating FF parameters from perturbation trajectories'
+            if do_valence: message += ' with valence reference'
+            log.dump(message)
             ffrefs = self.kwargs.get('ffrefs', [])
             #compute fc and rv from trajectory
             for traj in self.perturbation.trajectories:
-                if 'active' in traj.__dict__.keys() and not traj.active: continue
                 self.perturbation.estimate(traj.term.index, self.ai, ffrefs=ffrefs, do_valence=do_valence)
             #set force field parameters to computed fc and rv
             for traj in self.perturbation.trajectories:
-                if 'active' in traj.__dict__.keys() and not traj.active: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
+            self.valence.dump_logger(print_level=3)
+            self.average_pars()
     
     def do_eq_setrv(self, tasks):
         '''
@@ -209,12 +224,7 @@ class BaseProgram(object):
             log.dump('Setting rest values to AI equilibrium values for tasks %s' %' '.join(tasks))
             for term in self.valence.terms:
                 vterm = self.valence.vlist.vtab[term.index]
-                flagged = False
-                for flag in tasks:
-                    if flag in term.tasks:
-                        flagged = True
-                        break
-                if flagged:
+                if np.array([task in term.tasks for task in tasks]).any():
                     if term.kind==3:#cross term
                         ic0 = self.valence.iclist.ictab[vterm['ic0']]
                         ic1 = self.valence.iclist.ictab[vterm['ic1']]
@@ -233,9 +243,10 @@ class BaseProgram(object):
                     else:
                         rv = self.valence.iclist.ictab[vterm['ic0']]['value']
                         self.valence.set_params(term.index, rv0=rv)
+            self.valence.dump_logger(print_level=3)
             self.average_pars()
     
-    def do_hc_estimatefc(self, tasks):
+    def do_hc_estimatefc(self, tasks, logger_level=3):
         '''
             Refine force constants using Hessian Cost function.
             
@@ -249,6 +260,10 @@ class BaseProgram(object):
                 force constant estimation of the cross terms (flag=HC_FC_CROSS).
                 If the string 'all' is present in tasks, all fc's will be
                 estimated.
+            
+            **Optional Arguments**
+            
+            logger_level
         '''
         with log.section('HCEST', 2, timer='HC Estimate FC'):
             self.reset_system()
@@ -284,6 +299,7 @@ class BaseProgram(object):
                 self.valence.set_params(index, fc=fc)
                 for islave in master.slaves:
                     self.valence.set_params(islave, fc=fc)
+            self.valence.dump_logger(print_level=logger_level)
 
     def do_cross_init(self):
         '''
@@ -322,40 +338,31 @@ class BaseProgram(object):
 
 class MakeTrajectories(BaseProgram):
     def run(self):
-        fn_traj = self.kwargs.get('fn_traj', None)
-        assert fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
-        assert not os.path.isfile(fn_traj), 'Given file %s to store trajectories to already exists!' %fn_traj
-        trajectories = self.do_pt_generate()
+        with log.section('PROGRAM', 2):
+            fn_traj = self.kwargs.get('fn_traj', None)
+            assert fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
+            assert not os.path.isfile(fn_traj), 'Given file %s to store trajectories to already exists!' %fn_traj
+            self.do_pt_generate()
 
 class DeriveDiagFF(BaseProgram):
     def run(self):
-        self.do_eq_setrv(['EQ_RV'])
-        self.valence.dump_logger(print_level=3)
-        self.do_pt_generate()
-        self.do_pt_estimate(trajectories)
-        self.valence.dump_logger(print_level=3)
-        self.do_hc_estimatefc(['HC_FC_DIAG'])
-        self.valence.dump_logger(print_level=3)
-        self.do_pt_estimate(trajectories, do_valence=True)
-        self.do_hc_estimatefc(['HC_FC_DIAG'])
-        self.valence.dump_logger(print_level=1)
-        self.make_output(trajectories)
+        with log.section('PROGRAM', 2):
+            self.do_eq_setrv(['EQ_RV'])
+            self.do_pt_generate()
+            self.do_pt_estimate()
+            self.do_hc_estimatefc(['HC_FC_DIAG'])
+            self.do_pt_estimate(do_valence=True)
+            self.do_hc_estimatefc(['HC_FC_DIAG'], logger_level=1)
+            self.make_output()
 
 class DeriveNonDiagFF(BaseProgram):
     def run(self):
         with log.section('PROGRAM', 2):
             self.do_eq_setrv(['EQ_RV'])
-            self.valence.dump_logger(print_level=3)
             self.do_pt_generate()
             self.do_pt_estimate()
-            self.valence.dump_logger(print_level=3)
-            self.average_pars()
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
-            self.valence.dump_logger(print_level=3)
             self.do_pt_estimate(do_valence=True)
-            self.valence.dump_logger(print_level=3)
-            self.average_pars()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
-            self.valence.dump_logger(print_level=1)
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], logger_level=1)
             self.make_output()
