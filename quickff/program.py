@@ -77,6 +77,7 @@ class BaseProgram(object):
             self.kwargs = kwargs
             self.valence = ValenceFF(system)
             self.perturbation = RelaxedStrain(system, self.valence)
+            self.trajectories = None
 
     def reset_system(self):
         '''
@@ -96,19 +97,22 @@ class BaseProgram(object):
             was modified.
         '''
         log.dump('Updating terms of trajectories to current valenceFF terms')
+        for trajectory in self.trajectories:
+            if trajectory is not None:
+                trajectory.to_xyz()
         new_trajectories = [None,]*len(self.valence.terms)
         for term in self.valence.iter_terms():
             if 'PT_ALL' not in term.tasks: continue
             found = False
-            for traj in self.perturbation.trajectories:
-                if traj.term.get_atoms()==term.get_atoms():
+            for traj in self.trajectories:
+                if traj is not None and traj.term.get_atoms()==term.get_atoms():
                     if found: raise ValueError('Found two trajectories for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
                     traj.term = term
                     new_trajectories[term.index] = traj
                     found = True
                     break
-            if not found: raise ValueError('No trajectory found for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
-        self.perturbation.trajectories = new_trajectories
+            if not found: log.dump('WARNING: No trajectory found for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
+        self.trajectories = new_trajectories
 
     def average_pars(self):
         '''
@@ -155,12 +159,14 @@ class BaseProgram(object):
         self.system.to_file(self.kwargs.get('fn_sys', 'system.chk'))
         with log.section('PLOT', 2, 'Trajectory Plot Energy'):
             if self.kwargs.get('plot_traj', False):
-                for trajectory in self.perturbation.trajectories:
-                    trajectory.plot(self.ai, ffrefs=self.kwargs.get('ffrefs', []), valence=self.valence)
+                for trajectory in self.trajectories:
+                    if trajectory is not None:
+                        trajectory.plot(self.ai, ffrefs=self.kwargs.get('ffrefs', []), valence=self.valence)
         with log.section('XYZ', 2, 'Trajectory Write XYZ'):
             if self.kwargs.get('xyz_traj', False):
-                for trajectory in self.perturbation.trajectories:
-                    trajectory.to_xyz()
+                for trajectory in self.trajectories:
+                    if trajectory is not None:
+                        trajectory.to_xyz()
 
     def do_pt_generate(self):
         '''
@@ -170,21 +176,21 @@ class BaseProgram(object):
             #read if an existing file was specified through fn_traj
             fn_traj = self.kwargs.get('fn_traj', None)
             if fn_traj is not None and os.path.isfile(fn_traj):
-                self.perturbation.trajectories = cPickle.load(open(fn_traj, 'r'))
+                self.trajectories = cPickle.load(open(fn_traj, 'r'))
                 log.dump('Trajectories read from file %s' %fn_traj)
                 self.update_trajectory_terms()
                 return
             #configure
             self.reset_system()
             do_terms = [term for term in self.valence.terms if 'PT_ALL' in term.tasks]
-            self.perturbation.prepare(do_terms)
+            self.trajectories = self.perturbation.prepare(do_terms)
             #compute
             log.dump('Constructing trajectories')
-            paracontext.map(self.perturbation.generate, [term.index for term in do_terms])
+            self.trajectories = paracontext.map(self.perturbation.generate, [traj for traj in self.trajectories if traj is not None])
             #write the trajectories to the non-existing file fn_traj
             if fn_traj is not None:
                 assert not os.path.isfile(fn_traj)
-                cPickle.dump(self.perturbation.trajectories, open(fn_traj, 'w'))
+                cPickle.dump(self.trajectories, open(fn_traj, 'w'))
                 log.dump('Trajectories stored to file %s' %fn_traj)
 
     def do_pt_estimate(self, do_valence=False):
@@ -205,11 +211,11 @@ class BaseProgram(object):
             log.dump(message)
             ffrefs = self.kwargs.get('ffrefs', [])
             #compute fc and rv from trajectory
-            for traj in self.perturbation.trajectories:
+            for traj in self.trajectories:
                 if traj is None: continue
-                self.perturbation.estimate(traj.term.index, self.ai, ffrefs=ffrefs, do_valence=do_valence)
+                self.perturbation.estimate(traj.term.index, self.trajectories, self.ai, ffrefs=ffrefs, do_valence=do_valence)
             #set force field parameters to computed fc and rv
-            for traj in self.perturbation.trajectories:
+            for traj in self.trajectories:
                 if traj is None: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
             self.valence.dump_logger(print_level=3)

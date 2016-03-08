@@ -192,14 +192,15 @@ class RelaxedStrain(object):
         '''
         self.system = system
         self.valence = valence
-        self.strains = [None,]*len(self.valence.terms)
-        self.trajectories = [None,]*len(self.valence.terms)
+        self.strains = None
 
     def prepare(self, do_terms):
         '''
             Method to initialize trajectories and configure everything required
             for the generate method.
         '''
+        self.strains = [None,]*len(self.valence.terms)
+        trajectories = [None,]*len(self.valence.terms)
         for term in do_terms:
             assert term.kind==0, 'Only harmonic terms supported for pert traj'
             ic = self.valence.iclist.ictab[self.valence.vlist.vtab[term.index]['ic0']]
@@ -229,9 +230,10 @@ class RelaxedStrain(object):
                 if term2.kind == 3: continue #not a cross term ic
                 ics.append(term2.ics[0])
             self.strains[term.index] = Strain(term.index, self.system, term.ics[0], ics)
-            self.trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=11)
+            trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=11)
+        return trajectories
 
-    def generate(self, index, remove_com=True):
+    def generate(self, trajectory, remove_com=True):
         '''
             Method to calculate the perturbation trajectory, i.e. the trajectory
             that scans the geometry along the direction of the ic figuring in
@@ -240,8 +242,8 @@ class RelaxedStrain(object):
 
             **Arguments**
 
-            index
-                index of a Trajectory instance representing the perturbation
+            trajectory
+                instance of Trajectory class representing the perturbation
                 trajectory
 
             **Optional Arguments**
@@ -250,11 +252,11 @@ class RelaxedStrain(object):
                 if set to True, removes the center of mass translation from the
                 resulting perturbation trajectories [default=True].
         '''
-        trajectory = self.trajectories[index]
-        if trajectory is None:
-            log.dump('Trajectory of term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
+        index = trajectory.term.index
+        strain = self.strains[index]
+        if strain is None:
+            log.dump('Strain for term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
             return
-        strain = self.strains[trajectory.term.index]
         for iq, q in enumerate(trajectory.qvals):
             strain.constrain_value = q
             init = np.zeros([strain.ndof+1], float)
@@ -278,8 +280,9 @@ class RelaxedStrain(object):
                 coords.append(coord)
         trajectory.qvals = np.array(qvals)
         trajectory.coords = np.array(coords)
+        return trajectory
 
-    def estimate(self, index, ai, ffrefs=[], do_valence=False):
+    def estimate(self, index, trajectories, ai, ffrefs=[], do_valence=False):
         '''
             Method to estimate the FF parameters for the relevant ic from the
             given perturbation trajectory by fitting a harmonic potential to the
@@ -290,6 +293,10 @@ class RelaxedStrain(object):
             index
                 index of a Trajectory instance representing the perturbation
                 trajectory
+
+            trajectories
+                list of Trajectory instances representing all perturbation
+                trajectories
 
             ai
                 an instance of the Reference representing the ab initio input
@@ -305,12 +312,13 @@ class RelaxedStrain(object):
                 If set to True, the current valence force field (stored in
                 self.valence) will be used to compute the valence contribution
         '''
-        trajectory = self.trajectories[index]
+        trajectory = trajectories[index]
+        basename = trajectory.term.basename
         if trajectory is None:
-            log.dump('WARNING: Trajectory of term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
+            log.dump('WARNING: Trajectory of term %i (%s) is not initialized: skipping.' %(index, basename))
             return
         if 'active' in trajectory.__dict__.keys() and not trajectory.active:
-            log.dump('WARNING: Trajectory of term %i (%s) was deactivated, skipping' %trajectory.term.basename)
+            log.dump('WARNING: Trajectory of term %i (%s) was deactivated: skipping' %(index, basename))
             return
         qs = trajectory.qvals.copy()
         AIs = np.zeros(len(trajectory.coords))
@@ -321,29 +329,31 @@ class RelaxedStrain(object):
             for ref in ffrefs:
                 FFs[istep] += ref.energy(pos)
         if do_valence:
-            k = self.valence.get_params(trajectory.term.index, only='fc')
-            self.valence.set_params(trajectory.term.index, fc=0.0)
+            k = self.valence.get_params(index, only='fc')
+            self.valence.set_params(index, fc=0.0)
             for istep, pos in enumerate(trajectory.coords):
                 FFs[istep] += self.valence.calc_energy(pos)
-            self.valence.set_params(trajectory.term.index, fc=k)
+            self.valence.set_params(index, fc=k)
         pars = fitpar(qs, AIs-FFs, rcond=1e-6)
         if pars[0]!=0.0:
             trajectory.fc = 2*pars[0]
             trajectory.rv = -pars[1]/(2*pars[0])
         else:
             trajectory.fc = 0.0
-            pars = fitpar(qs, AIs, rcond=1e-6)
-            trajectory.rv = -pars[1]/(2*pars[0])
+            vterm = self.valence.vlist.vtab[index]
+            ic = self.valence.iclist.ictab[vterm['ic0']]
+            trajectory.rv = ic['value']
+            log.dump('WARNING: force constant of %s is zero: rest value set to AI equilibrium' %basename)
         #no negative rest values for all ics except dihedrals and bendcos
         if trajectory.term.ics[0].kind not in [1,3,4]:
             if trajectory.rv<0:
                 trajectory.rv = 0
-                log.dump('WARNING: rest value of %s was negative, set to zero' %trajectory.term.basename)
+                log.dump('WARNING: rest value of %s was negative: set to zero' %basename)
         #no bending angles larger than 180*deg
         if trajectory.term.ics[0].kind in [2]:
             if trajectory.rv>180*deg:
-                log.dump('WARNING: rest value of %s exceeds 180 deg, term set to BendCHarm with cos(phi0)=-1 and deactivated perturbation trajectory' %trajectory.term.basename)
-                for term in self.valence.iter_terms(trajectory.term.basename):
+                log.dump('WARNING: rest value of %s exceeds 180 deg: term set to BendCHarm with cos(phi0)=-1, deactivated perturbation trajectory' %basename)
+                for term in self.valence.iter_terms(basename):
                     traj = self.trajectories[term.index]
                     traj.rv = None
                     traj.fc = None
