@@ -38,7 +38,7 @@ from yaff.pes.ff import ForcePartPair
 
 from quickff.log import log
 
-__all__ = ['VASPRun', 'read_abinitio']
+__all__ = ['VASPRun', 'read_abinitio', 'make_yaff_ei']
 
 
 class VASPRun(object):
@@ -137,3 +137,32 @@ def read_abinitio(fn):
         pbc = [1,1,1]
     else: raise NotImplementedError
     return numbers, coords, energy, grad, hess, masses, rvecs, pbc
+
+
+def make_yaff_ei(fn, charges, ffatypes, radii=None):
+    f = open(fn, 'w')
+    print >> f, '#Fixed charges'
+    print >> f, '#---------------'
+    print >> f, ''
+    print >> f, 'FIXQ:UNIT Q0 e'
+    print >> f, 'FIXQ:UNIT P e'
+    print >> f, 'FIXQ:UNIT R angstrom'
+    print >> f, 'FIXQ:SCALE 1 1.0'
+    print >> f, 'FIXQ:SCALE 2 1.0'
+    print >> f, 'FIXQ:SCALE 3 1.0'
+    print >> f, 'FIXQ:DIELECTRIC 1.0'
+    print >> f, ''
+    print >> f, '# Atomic parameters'
+    print >> f, '# ----------------------------------------------------'
+    print >> f, '# KEY        label  Q_0A              R_A'
+    print >> f, '# ----------------------------------------------------'
+    done = []
+    for i, (charge, ffatype) in enumerate(zip(charges, ffatypes)):
+        if ffatype in done: continue
+        if radii is not None:
+            radius = radii[i]
+        else:
+            radius = 0.0
+        print >> f, 'FIXQ:ATOM %8s % 13.10f  %12.10f' %(ffatype, charge, radius/angstrom)
+        done.append(ffatype)
+    f.close()

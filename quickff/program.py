@@ -58,7 +58,7 @@ class BaseProgram(object):
             fn_yaff
                 the name of the file to write the final parameters to in Yaff
                 format. The default is *pars.txt*.
-            
+
             fn_sys
                 the name of the file to write the Yaff system to. The default
                 is *system.chk*.
@@ -76,7 +76,7 @@ class BaseProgram(object):
                 tasks attribute will get a trajectory). If ONLY_TRAJ is a list
                 of strings, each string is interpreted as the basename of the
                 term for which a trajectory will be constructed.
-            
+
             plot_traj
                 if set to True, all energy contributions along each perturbation
                 trajectory will be plotted using the final force field.

@@ -32,7 +32,7 @@ import numpy as np, math
 __all__ = [
     'global_translation', 'global_rotation', 'fitpar',
     'boxqp', 'guess_ffatypes', 'term_sort_atypes', 'get_multiplicity',
-    'get_restvalue', 'get_ei_radii', 'digits'
+    'get_restvalue', 'get_ei_radii', 'digits', 'average'
 ]
 
 
@@ -375,3 +375,24 @@ def digits(x,n):
         return '-%i.%s' %(i, str(r).lstrip('0.')[:ndig])
     else:
         return '%i.%s' %(i, str(r).lstrip('0.')[:ndig])
+
+def average(data, ffatypes):
+    '''
+        Average the atomic parameters stored in data over atom of the same atom
+        type.
+    '''
+    data_atypes = {}
+    for value, ffatype in zip(data,ffatypes):
+        if ffatype in data_atypes.keys():
+            data_atypes[ffatype].append(value)
+        else:
+            data_atypes[ffatype] = [value]
+    averaged_data = np.zeros(len(data))
+    printed = []
+    for i, ffatype in enumerate(ffatypes):
+        std = np.array(data_atypes[ffatype]).std()
+        if not std < 1e-2 and ffatype not in printed:
+            print 'WARNING: charge of atom type %s has a large std: %.3e' %(ffatype, std)
+            printed.append(ffatype)
+        averaged_data[i] = np.array(data_atypes[ffatype]).mean()
+    return averaged_data
