@@ -32,7 +32,10 @@ from quickff.log import log
 
 import os, cPickle, numpy as np, datetime
 
-__all__ = ['BaseProgram', 'MakeTrajectories', 'DeriveDiagFF', 'DeriveNonDiagFF']
+__all__ = [
+    'BaseProgram', 'MakeTrajectories', 'PlotTrajectories',
+    'DeriveDiagFF', 'DeriveNonDiagFF'
+]
 
 class BaseProgram(object):
     def __init__(self, system, ai, **kwargs):
@@ -40,10 +43,10 @@ class BaseProgram(object):
             **Arguments**
 
             system
-                a Yaff system object defining the system
+                a Yaff ``System`` object defining the system
 
             ai
-                a Reference instance corresponding to the ab initio input data
+                a ``Reference`` instance corresponding to the ab initio input data
 
             **Keyword Arguments**
 
@@ -54,7 +57,11 @@ class BaseProgram(object):
 
             fn_yaff
                 the name of the file to write the final parameters to in Yaff
-                format. The default is pars.txt.
+                format. The default is *pars.txt*.
+            
+            fn_sys
+                the name of the file to write the Yaff system to. The default
+                is *system.chk*.
 
             fn_traj
                 a cPickle filename to read/write the perturbation trajectories
@@ -62,6 +69,14 @@ class BaseProgram(object):
                 file. If the file does not exist, the trajectories are written
                 to the file.
 
+            only_traj
+                specifier to determine for which terms a perturbation trajectory
+                needs to be constructed. If ONLY_TRAJ is a single string, it is
+                interpreted as a task (only terms that have this task in their
+                tasks attribute will get a trajectory). If ONLY_TRAJ is a list
+                of strings, each string is interpreted as the basename of the
+                term for which a trajectory will be constructed.
+            
             plot_traj
                 if set to True, all energy contributions along each perturbation
                 trajectory will be plotted using the final force field.
@@ -91,28 +106,26 @@ class BaseProgram(object):
 
     def update_trajectory_terms(self):
         '''
-            Routine to make self.valence.terms and the term attribute of each
-            trajectory in self.trajectories consistent again. This is usefull
-            if the trajectory were read from a file and the valenceFF instance
+            Routine to make ``self.valence.terms`` and the term attribute of each
+            trajectory in ``self.trajectories`` consistent again. This is usefull
+            if the trajectory were read from a file and the ``valenceFF`` instance
             was modified.
         '''
         log.dump('Updating terms of trajectories to current valenceFF terms')
-        for trajectory in self.trajectories:
-            if trajectory is not None:
-                trajectory.to_xyz()
-        new_trajectories = [None,]*len(self.valence.terms)
-        for term in self.valence.iter_terms():
-            if 'PT_ALL' not in term.tasks: continue
-            found = False
-            for traj in self.trajectories:
-                if traj is not None and traj.term.get_atoms()==term.get_atoms():
-                    if found: raise ValueError('Found two trajectories for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
-                    traj.term = term
-                    new_trajectories[term.index] = traj
-                    found = True
-                    break
-            if not found: log.dump('WARNING: No trajectory found for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
-        self.trajectories = new_trajectories
+        with log.section('PTUPD', 4):
+            new_trajectories = [None,]*len(self.valence.terms)
+            for term in self.valence.iter_terms():
+                if 'PT_ALL' not in term.tasks:
+                    log.dump('No perturbation trajectory for %s-%i' %(term.basename, term.index))
+                    continue
+                found = False
+                for traj in self.trajectories:
+                    if traj is not None and traj.term.get_atoms()==term.get_atoms():
+                        if found: raise ValueError('Found two trajectories for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
+                        traj.term = term
+                        found = True
+                        break
+                if not found: log.dump('WARNING: No trajectory found for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
 
     def average_pars(self):
         '''
@@ -151,26 +164,44 @@ class BaseProgram(object):
 
     def make_output(self):
         '''
-            Dump Yaff parameters, plot energy contributions along perturbation
-            trajectories and dump perturbation trajectories to XYZ files.
+            Dump Yaff parameters, Yaff system, plot energy contributions along
+            perturbation trajectories and dump perturbation trajectories to XYZ
+            files.
         '''
-        fn_yaff = self.kwargs.get('fn_yaff', 'pars_cov.txt')
-        self.valence.dump_yaff(fn_yaff)
+        self.valence.dump_yaff(self.kwargs.get('fn_yaff', 'pars_cov.txt'))
         self.system.to_file(self.kwargs.get('fn_sys', 'system.chk'))
-        with log.section('PLOT', 2, 'Trajectory Plot Energy'):
+        self.plot_trajectories(do_valence=True)
+
+    def plot_trajectories(self, do_valence=False):
+        '''
+            Plot energy contributions along perturbation trajectories and dump
+            perturbation trajectories to XYZ files.
+        '''
+        with log.section('PLOT', 4, timer='PT plot energy'):
             if self.kwargs.get('plot_traj', False):
+                ffrefs = self.kwargs.get('ffrefs', [])
+                valence = None
+                if do_valence: valence=self.valence
                 for trajectory in self.trajectories:
                     if trajectory is not None:
-                        trajectory.plot(self.ai, ffrefs=self.kwargs.get('ffrefs', []), valence=self.valence)
-        with log.section('XYZ', 2, 'Trajectory Write XYZ'):
+                        trajectory.plot(self.ai, ffrefs=ffrefs, valence=valence)
+        with log.section('XYZ', 4, timer='PT dump XYZ'):
             if self.kwargs.get('xyz_traj', False):
                 for trajectory in self.trajectories:
                     if trajectory is not None:
                         trajectory.to_xyz()
 
-    def do_pt_generate(self):
+    def do_pt_generate(self, do='PT_ALL'):
         '''
             Generate perturbation trajectories.
+
+            **Optional Arguments**
+
+            do
+              List of term basenames for which the perturbation trajectories
+              should be constructed. Can also be a string specifying a task,
+              a trajectory will then be constructed for each term that has this
+              task in its tasks attribute.
         '''
         with log.section('PTGEN', 2, timer='PT Generate'):
             #read if an existing file was specified through fn_traj
@@ -182,11 +213,19 @@ class BaseProgram(object):
                 return
             #configure
             self.reset_system()
-            do_terms = [term for term in self.valence.terms if 'PT_ALL' in term.tasks]
-            self.trajectories = self.perturbation.prepare(do_terms)
+            if isinstance(do, str):
+                do_terms = [term for term in self.valence.terms if do in term.tasks]
+            elif isinstance(do, list):
+                do_terms = []
+                for master in do:
+                    for term in self.valence.iter_terms(master):
+                        do_terms.append(term)
+            else:
+                raise IOError("Invalid value for optional argument 'do', recieved %s" %str(do))
+            trajectories = self.perturbation.prepare(do_terms)
             #compute
             log.dump('Constructing trajectories')
-            self.trajectories = paracontext.map(self.perturbation.generate, [traj for traj in self.trajectories if traj is not None])
+            self.trajectories = paracontext.map(self.perturbation.generate, [traj for traj in trajectories if traj is not None])
             #write the trajectories to the non-existing file fn_traj
             if fn_traj is not None:
                 assert not os.path.isfile(fn_traj)
@@ -213,12 +252,12 @@ class BaseProgram(object):
             #compute fc and rv from trajectory
             for traj in self.trajectories:
                 if traj is None: continue
-                self.perturbation.estimate(traj.term.index, self.trajectories, self.ai, ffrefs=ffrefs, do_valence=do_valence)
+                self.perturbation.estimate(traj, self.trajectories, self.ai, ffrefs=ffrefs, do_valence=do_valence)
             #set force field parameters to computed fc and rv
             for traj in self.trajectories:
                 if traj is None: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
-            self.valence.dump_logger(print_level=3)
+            self.valence.dump_logger(print_level=4)
             self.average_pars()
 
     def do_eq_setrv(self, tasks):
@@ -249,10 +288,10 @@ class BaseProgram(object):
                     else:
                         rv = self.valence.iclist.ictab[vterm['ic0']]['value']
                         self.valence.set_params(term.index, rv0=rv)
-            self.valence.dump_logger(print_level=3)
+            self.valence.dump_logger(print_level=4)
             self.average_pars()
 
-    def do_hc_estimatefc(self, tasks, logger_level=3):
+    def do_hc_estimatefc(self, tasks, logger_level=4):
         '''
             Refine force constants using Hessian Cost function.
 
@@ -270,6 +309,9 @@ class BaseProgram(object):
             **Optional Arguments**
 
             logger_level
+                print level at which the resulting parameters should be dumped to
+                the logger. By default, the parameters will only be dumped at
+                the highest log level.
         '''
         with log.section('HCEST', 2, timer='HC Estimate FC'):
             self.reset_system()
@@ -348,7 +390,19 @@ class MakeTrajectories(BaseProgram):
             fn_traj = self.kwargs.get('fn_traj', None)
             assert fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
             assert not os.path.isfile(fn_traj), 'Given file %s to store trajectories to already exists!' %fn_traj
+            self.do_pt_generate(do=self.kwargs.get('only_traj', 'PT_ALL'))
+
+class PlotTrajectories(BaseProgram):
+    def run(self):
+        with log.section('PROGRAM', 2):
+            fn_traj = self.kwargs.get('fn_traj', None)
+            assert fn_traj is not None, 'The PlotTrajectories program requires a trajectory filename fn_traj!'
+            assert os.path.isfile(fn_traj), 'Given file %s to read trajectories does not exists!' %fn_traj
             self.do_pt_generate()
+            self.do_pt_estimate()
+            self.kwargs['xyz_traj'] = True
+            self.kwargs['plot_traj'] = True
+            self.plot_trajectories()
 
 class DeriveDiagFF(BaseProgram):
     def run(self):

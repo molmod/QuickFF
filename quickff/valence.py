@@ -303,19 +303,6 @@ class ValenceFF(ForcePartValence):
                 the following potential will be chosen:
 
                     0.5*K*(1-cos(m*psi-m*psi0)) with psi0 = 0 or 360/(2*m)
-
-                If the above is not the case, but one can found a rest value
-                psi0 such that the equilibrium values of all instances of the
-                torsion are within `thresshold` of psi0, psi0-180deg, -psi0 and
-                180deg-psi0, the following potential will be chosen:
-
-                    0.5*K*(cos(2*psi)-cos(2*psi0))**2
-
-                    which is equal to a Yaff PolyFour term
-
-                    a0*cos(psi) + a1*cos(psi)^2 + a2*cos(psi)^3 + a3*cos(psi)^4
-
-                    with a0=0, a1=K*-4*cos(psi0)**2, a2=0, a3=K*2
         '''
         #get all dihedrals
         from molmod.ic import dihed_angle
@@ -342,7 +329,9 @@ class ValenceFF(ForcePartValence):
             for m in ms:
                 if np.isnan(m): nan = True
             if nan or None in ms or ms.std()>1e-3:
-                log.dump('WARNING missing dihedral for %s (could not determine m from %s)' %('.'.join(types), str(ms)))
+                ms_string = str(ms)
+                if nan: ms_string = 'nan'
+                log.dump('WARNING missing dihedral for %s (m is %s)' %('.'.join(types), ms_string))
                 continue
             m = int(np.round(ms.mean()))
             rv = get_restvalue(psi0s, m, thresshold=thresshold)

@@ -117,42 +117,53 @@ class Trajectory(object):
         import matplotlib.pyplot as pp
         if 'active' in self.__dict__.keys() and not self.active: return
         fig, ax = pp.subplots()
-        def add_plot(data, prefix, kwargs):
-            pars = fitpar(self.qvals, data, rcond=1e-6)
+        def add_plot(xs, ys, prefix, kwargs):
+            pars = fitpar(xs, ys, rcond=1e-6)
             k = 2*pars[0]
             if k==0: q0 = np.nan
             else: q0 = -pars[1]/k
             label = '%s (K=%.0f q0=%.3f)' %(prefix, k/parse_unit(self.kunit), q0/parse_unit(self.qunit))
             kwargs['label'] = label
-            ax.plot(self.qvals/parse_unit(self.qunit), (data-data[len(self.qvals)/2])/parse_unit(eunit), **kwargs)
+            ax.plot(xs/parse_unit(self.qunit), ys/parse_unit(eunit), **kwargs)
         #ai
         data = np.array([ai.energy(pos) for pos in self.coords])
-        add_plot(data, 'AI ref', {'linestyle': '--', 'color': 'k', 'linewidth': 4.0})
+        index_min = np.where(data==min(data))[0][0]
+        e_max = max(np.ceil(max(data-min(data))/parse_unit(eunit)), 1.0)
+        add_plot(self.qvals, data-data[index_min], 'AI ref', {'linestyle': 'none', 'marker': 'o', 'markerfacecolor': 'k', 'markersize': 12})
         #ffrefs
         totff = np.zeros([len(self.qvals)], float)
         colors = ['b', 'g', 'm', 'y', 'c']
         for i, ffref in enumerate(ffrefs):
             data = np.array([ffref.energy(pos) for pos in self.coords])
             totff += data
-            add_plot(data, ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
+            add_plot(self.qvals, data-data[index_min], ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
         #complete fitted valence model if given
         if valence is not None:
             for term in valence.iter_terms():
                 valence.check_params(term, ['all'])
             data = np.array([valence.calc_energy(pos) for pos in self.coords])
-            add_plot(data, 'Fitted Valence', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
-            add_plot(totff+data, 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
+            add_plot(self.qvals, data-data[index_min], 'Fitted Valence', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
+            add_plot(self.qvals, totff+data-totff[index_min]-data[index_min], 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
         #complete fitted term if valence is not given
         else:
             assert self.fc is not None and self.rv is not None
-            data = 0.5*self.fc*(self.qvals - self.rv)**2
-            add_plot(data, 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
+            start = self.qvals[0]
+            end = self.qvals[-1]
+            step = float((end-start)/100)
+            if step==0:
+                start -= 0.05*start
+                end += 0.05*end
+                step = float((end-start)/100)
+            qs = np.arange(start, end+step, step)
+            data = 0.5*self.fc*(qs - self.rv)**2
+            add_plot(qs, data-min(data), 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
         #decorate plot
         ax.set_title('%s-%i' %(self.term.basename, self.term.index))
         ax.set_xlabel('%s [%s]' % (self.term.basename.split('/')[0], self.qunit), fontsize=16)
         ax.set_ylabel('Energy [%s]' %eunit, fontsize=16)
+        ax.set_ylim([-0.5, e_max])
         ax.grid()
-        ax.legend(loc='upper right', fontsize=16)
+        ax.legend(loc='upper center', fontsize=16)
         fig.set_size_inches([8, 8])
         if fn is None:
             fn = 'trajectory-%s-%i.png' %(self.term.basename.replace('/', '-'),self.term.index)
@@ -261,7 +272,7 @@ class RelaxedStrain(object):
             strain.constrain_value = q
             init = np.zeros([strain.ndof+1], float)
             sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-9, full_output=True)
-            if ier==5:
+            if False:#ier==5:
                 #fsolve did not converge, flag this frame for deletion
                 trajectory.qvals[iq] = np.nan
                 continue
@@ -282,7 +293,7 @@ class RelaxedStrain(object):
         trajectory.coords = np.array(coords)
         return trajectory
 
-    def estimate(self, index, trajectories, ai, ffrefs=[], do_valence=False):
+    def estimate(self, trajectory, trajectories, ai, ffrefs=[], do_valence=False):
         '''
             Method to estimate the FF parameters for the relevant ic from the
             given perturbation trajectory by fitting a harmonic potential to the
@@ -290,9 +301,8 @@ class RelaxedStrain(object):
 
             **Arguments**
 
-            index
-                index of a Trajectory instance representing the perturbation
-                trajectory
+            trajectory
+                a Trajectory instance representing the perturbation trajectory
 
             trajectories
                 list of Trajectory instances representing all perturbation
@@ -312,11 +322,9 @@ class RelaxedStrain(object):
                 If set to True, the current valence force field (stored in
                 self.valence) will be used to compute the valence contribution
         '''
-        trajectory = trajectories[index]
-        basename = trajectory.term.basename
-        if trajectory is None:
-            log.dump('WARNING: Trajectory of term %i (%s) is not initialized: skipping.' %(index, basename))
-            return
+        term = trajectory.term
+        index = term.index
+        basename = term.basename
         if 'active' in trajectory.__dict__.keys() and not trajectory.active:
             log.dump('WARNING: Trajectory of term %i (%s) was deactivated: skipping' %(index, basename))
             return
@@ -345,26 +353,26 @@ class RelaxedStrain(object):
             trajectory.rv = ic['value']
             log.dump('WARNING: force constant of %s is zero: rest value set to AI equilibrium' %basename)
         #no negative rest values for all ics except dihedrals and bendcos
-        if trajectory.term.ics[0].kind not in [1,3,4]:
+        if term.ics[0].kind not in [1,3,4]:
             if trajectory.rv<0:
                 trajectory.rv = 0
                 log.dump('WARNING: rest value of %s was negative: set to zero' %basename)
         #no bending angles larger than 180*deg
-        if trajectory.term.ics[0].kind in [2]:
+        if term.ics[0].kind in [2]:
             if trajectory.rv>180*deg:
                 log.dump('WARNING: rest value of %s exceeds 180 deg: term set to BendCHarm with cos(phi0)=-1, deactivated perturbation trajectory' %basename)
-                for term in self.valence.iter_terms(basename):
-                    traj = self.trajectories[term.index]
-                    traj.rv = None
-                    traj.fc = None
-                    traj.active = False
+                for other_traj in trajectories:
+                    if other_traj is None or not other_traj.term.basename==basename: continue
+                    other_traj.rv = None
+                    other_traj.fc = None
+                    other_traj.active = False
                     self.valence.modify_term(
-                        term.index,
-                        Harmonic, [BendCos(*term.get_atoms())],
-                        term.basename.replace('BendAHarm', 'BendCHarm'),
+                        other_traj.term.index,
+                        Harmonic, [BendCos(*other_traj.term.get_atoms())],
+                        basename.replace('BendAHarm', 'BendCHarm'),
                         ['HC_FC_DIAG'], ['kjmol', 'au']
                     )
-                    self.valence.set_params(term.index, fc=0.0, rv0=-1.0)
+                    self.valence.set_params(other_traj.term.index, fc=0.0, rv0=-1.0)
 
 
 
