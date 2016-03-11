@@ -240,7 +240,7 @@ class RelaxedStrain(object):
                 if term2.index == term.index: continue #not the current term ic
                 if term2.kind == 3: continue #not a cross term ic
                 ics.append(term2.ics[0])
-            self.strains[term.index] = Strain(term.index, self.system, term.ics[0], ics)
+            self.strains[term.index] = Strain(self.system, term.ics[0], ics)
             trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=11)
         return trajectories
 
@@ -270,8 +270,9 @@ class RelaxedStrain(object):
             return
         for iq, q in enumerate(trajectory.qvals):
             strain.constrain_value = q
-            init = np.zeros([strain.ndof+1], float)
+            init = np.random.normal(0.0, 1e-3*angstrom, [strain.ndof+1])#np.zeros([strain.ndof+1], float)
             sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-9, full_output=True)
+            #print iq, q/parse_unit(trajectory.qunit), mesg, infodict['nfev'], infodict['fvec']
             if False:#ier==5:
                 #fsolve did not converge, flag this frame for deletion
                 trajectory.qvals[iq] = np.nan
@@ -377,7 +378,7 @@ class RelaxedStrain(object):
 
 
 class Strain(ForceField):
-    def __init__(self, term_index, system, cons_ic, ics):
+    def __init__(self, system, cons_ic, ics):
         '''
             A class deriving from the Yaff ForceField class to implement the
             strain of a molecular geometry associated with the term defined by
@@ -400,7 +401,6 @@ class Strain(ForceField):
                 A list of Yaff Internal Coordinate instances for which the
                 strain needs to be minimized.
         '''
-        self.term_index = term_index
         self.coords0 = system.pos.copy()
         self.ndof = np.prod(self.coords0.shape)
         part = ForcePartValence(system)
@@ -431,13 +431,13 @@ class Strain(ForceField):
             raise ValueError('IC of kind %i not supported' %cons_ic.kind)
         #add all bonds, bends and diheds that are not constrained
         for bond in system.iter_bonds():
-            if not bond==cons_ic_atoms or bond==cons_ic_atoms[::-1]:
+            if not (list(bond)==list(cons_ic_atoms) or list(bond)==list(cons_ic_atoms[::-1])):
                 part.add_term(Harmonic(1.0, None, Bond(*bond)))
         for angle in system.iter_angles():
-            if not angle==cons_ic_atoms or angle==cons_ic_atoms[::-1]:
+            if not (list(angle)==list(cons_ic_atoms) or list(angle)==list(cons_ic_atoms[::-1])):
                 part.add_term(Harmonic(1.0, None, BendAngle(*angle)))
         for dihed in system.iter_dihedrals():
-            if not dihed==cons_ic_atoms or dihed==cons_ic_atoms[::-1]:
+            if not (list(dihed)==list(cons_ic_atoms) or list(dihed)==list(cons_ic_atoms[::-1])):
                 part.add_term(Harmonic(1.0, None, DihedAngle(*dihed)))
         #set the rest values to the equilibrium values
         part.dlist.forward()

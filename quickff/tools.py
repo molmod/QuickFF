@@ -356,25 +356,25 @@ def digits(x,n):
     if np.isnan(x): return ''
     sign = np.sign(x)
     x = float(abs(x))
-    if abs(x) < 1e-6:
+    if x < 1e-6:
         return "." + "0"*(n-1)
-    if sign<1: n -= 1
+    if sign<0: n -= 1
     i = int(x)
-    r = x-i
+    r = x-int(x)
     if i==0:
         if sign<0:
-            return '-'+str(r).lstrip('0')[:n]
+            return '-'+str(r)[1:1+n]
         else:
-            return str(r).lstrip('0')[:n]
+            return str(r)[1:1+n]
     if r==0:
         return str(int(i*sign))[:n]
     if len(str(i))>=(n-1):
         return str(int(i*sign))
     ndig = n - len(str(i))-1
     if sign<0:
-        return '-%i.%s' %(i, str(r).lstrip('0.')[:ndig])
+        return '-%i.%s' %(i, str(r)[2:2+ndig])
     else:
-        return '%i.%s' %(i, str(r).lstrip('0.')[:ndig])
+        return '%i.%s' %(i, str(r)[2:2+ndig])
 
 def average(data, ffatypes):
     '''
