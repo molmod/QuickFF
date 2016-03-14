@@ -217,24 +217,27 @@ def guess_ffatypes(system, level):
             atypes.append(atype)
     elif level == 'high':
         atypes = []
-        for index, number in enumerate(system.numbers):
-            nind = system.neighs1[index]
-            nsym = sorted([
-                pt[system.numbers[neigh]].symbol.lower() for neigh in nind
+        for index, number in enumerate(self.numbers):
+            nind = self.nlist[index]
+            nsyms = sorted([
+                pt[self.numbers[neigh]].symbol.lower() for neigh in nind
             ])
-            sym = pt[system.numbers[index]].symbol.upper()
-            if len(nsym)==1:
-                atype = '%s1_%s' % (sym, nsym[0])
-            elif len(nsym)==2:
-                atype = '%s2_%s%s' % (sym, nsym[0], nsym[1])
+            sym = pt[self.numbers[index]].symbol.upper()
+            if len(nsyms)==1:
+                atype = '%s1_%s' % (sym, nsyms[0])
+            elif len(nsyms)==2:
+                atype = '%s2_%s%s' % (sym, nsyms[0], nsyms[1])
             else:
                 atype = '%s%i' % (sym, len(nind))
-                num_c = sum([1.0 for sym in nsym if sym == 'c'])
-                num_n = sum([1.0 for sym in nsym if sym == 'n'])
-                num_o = sum([1.0 for sym in nsym if sym == 'o'])
-                if num_c > 0: atype += '_c%i' % num_c
-                if num_n > 0: atype += '_n%i' % num_n
-                if num_o > 0: atype += '_o%i' % num_o
+                neighs = {}
+                for nsym in nsyms:
+                    if nsym=='h': continue
+                    if nsym in neighs.keys(): 
+                        neighs[nsym] += 1
+                    else:
+                        neighs[nsym] = 1
+                for nsym, nnum in neighs.iteritems():
+                    atype += '_%s%i' %(nsym, nnum)
             atypes.append(atype)
     elif level == 'highest':
         atypes = np.array([
