@@ -217,22 +217,21 @@ def guess_ffatypes(system, level):
             atypes.append(atype)
     elif level == 'high':
         atypes = []
-        for index, number in enumerate(self.numbers):
-            nind = self.nlist[index]
+        for index, number in enumerate(system.numbers):
             nsyms = sorted([
-                pt[self.numbers[neigh]].symbol.lower() for neigh in nind
+                pt[system.numbers[neigh]].symbol.lower() for neigh in system.neighs1[index]
             ])
-            sym = pt[self.numbers[index]].symbol.upper()
+            sym = pt[system.numbers[index]].symbol.upper()
             if len(nsyms)==1:
                 atype = '%s1_%s' % (sym, nsyms[0])
             elif len(nsyms)==2:
                 atype = '%s2_%s%s' % (sym, nsyms[0], nsyms[1])
             else:
-                atype = '%s%i' % (sym, len(nind))
+                atype = '%s%i' % (sym, len(system.neighs1[index]))
                 neighs = {}
                 for nsym in nsyms:
                     if nsym=='h': continue
-                    if nsym in neighs.keys(): 
+                    if nsym in neighs.keys():
                         neighs[nsym] += 1
                     else:
                         neighs[nsym] = 1
