@@ -9,7 +9,7 @@ QuickFF Documentation
 Welcome to the website of QuickFF. QuickFF is a Python package developed at the 
 `Center for Molecular Modeling <https://molmod.ugent.be/>`_ (CMM) to quickly 
 derive accurate force fields from ab initio calculations. This website contains
-a information on how to install and use QuickFF. A detailed describtion of the 
+all information on how to install and use QuickFF. A detailed describtion of the 
 methodology used by QuickFF to derive the force fields can be found here.
 
 How to cite QuickFF
@@ -53,6 +53,7 @@ guide.
    :numbered:
 
    ug_script.rst
+   ug_inputei.rst
 
 .. _seclab_tutorials:
    
@@ -79,7 +80,7 @@ Modules of QuickFF:
    :maxdepth: 2
    :numbered:
 
-   rg_quickff.rst
+   rg_module.rst
 
 Scripts of QuickFF:
 
@@ -87,8 +88,7 @@ Scripts of QuickFF:
    :maxdepth: 2 
    :numbered:
    
-   rg_qffest.rst
-   rg_qfftraj.rst
+   rg_scripts.rst
 
 Contact
 =======

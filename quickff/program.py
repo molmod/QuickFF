@@ -38,30 +38,35 @@ __all__ = [
 ]
 
 class BaseProgram(object):
+    '''
+        Base program which implements all possible steps of a force field
+        fitting program. The actual sequence of the steps are defined in the
+        deriving classes.
+    '''
     def __init__(self, system, ai, **kwargs):
         '''
             **Arguments**
 
             system
-                a Yaff ``System`` object defining the system
+                a Yaff `System` object defining the system
 
             ai
-                a ``Reference`` instance corresponding to the ab initio input data
+                a `Reference` instance corresponding to the ab initio input data
 
             **Keyword Arguments**
 
             ffrefs
-                a list of Reference objects corresponding to a priori determined
+                a list of `Reference` objects corresponding to a priori determined
                 contributions to the force field (such as eg. electrostatics
                 or van der Waals contributions)
 
             fn_yaff
                 the name of the file to write the final parameters to in Yaff
-                format. The default is *pars.txt*.
+                format. The default is `pars.txt`.
 
             fn_sys
-                the name of the file to write the Yaff system to. The default
-                is *system.chk*.
+                the name of the file to write the system to. The default is
+                `system.chk`.
 
             fn_traj
                 a cPickle filename to read/write the perturbation trajectories
@@ -385,6 +390,10 @@ class BaseProgram(object):
 
 
 class MakeTrajectories(BaseProgram):
+    '''
+        Construct the perturbation trajectories and store them. This program
+        does not derive the force field.
+    '''
     def run(self):
         with log.section('PROGRAM', 2):
             fn_traj = self.kwargs.get('fn_traj', None)
@@ -393,6 +402,10 @@ class MakeTrajectories(BaseProgram):
             self.do_pt_generate(do=self.kwargs.get('only_traj', 'PT_ALL'))
 
 class PlotTrajectories(BaseProgram):
+    '''
+        Read the perturbation trajectories, dump to XYZ files and plot the 
+        energy contributions.
+    '''
     def run(self):
         with log.section('PROGRAM', 2):
             fn_traj = self.kwargs.get('fn_traj', None)
@@ -405,6 +418,9 @@ class PlotTrajectories(BaseProgram):
             self.plot_trajectories()
 
 class DeriveDiagFF(BaseProgram):
+    '''
+        Derive a diagonal force field, i.e. does not contain cross terms.
+    '''
     def run(self):
         with log.section('PROGRAM', 2):
             self.do_eq_setrv(['EQ_RV'])
@@ -416,6 +432,9 @@ class DeriveDiagFF(BaseProgram):
             self.make_output()
 
 class DeriveNonDiagFF(BaseProgram):
+    '''
+        Derive a non-diagonal force field, i.e. contains cross terms.
+    '''
     def run(self):
         with log.section('PROGRAM', 2):
             self.do_eq_setrv(['EQ_RV'])

@@ -45,6 +45,7 @@ def global_translation(coords):
 
         coords
             a (N,3) numpy array describing the system that has to be translated
+        
     '''
     Natoms = len(coords)
     ones = np.ones(Natoms, float)
@@ -62,9 +63,10 @@ def global_rotation(coords):
         the identity matrix. VRx is a vector of rotation around x-axis.
 
         **Arguments**
-7
+
         coords
             a (N,3) numpy array describing the system that has to be translated
+        
     '''
     Natoms = len(coords)
     com = coords.sum(axis=0)/coords.shape[0]
@@ -108,6 +110,7 @@ def fitpar(xs, ys, rcond=1e-3):
 
         ys
             a (N) numpy array containing the x values of the samples
+        
     '''
     assert len(xs)==len(ys)
     D = np.ones([len(xs), 3], float)
@@ -142,6 +145,7 @@ def boxqp(A, B, bndl, bndu, x0, threshold=1e-9, status=False):
         **Optional Arguments**
             threshold   Criterion to consider the iterations converged
             status      Return also the number of iterations performed
+    
     '''
     # Check that boundaries make sense
     assert np.all(bndl<bndu), "Some lower boundaries are higher than upper boundaries"
@@ -203,6 +207,7 @@ def guess_ffatypes(system, level):
                 * medium:  based on atomic number and number of neighbors
                 * high:    based on atomic number, number of neighbors and atomic number of neighbors
                 * highest: based on index in the molecule
+       
     '''
     if system.ffatypes is not None:
         raise ValueError('Atom types are already defined in the system.')

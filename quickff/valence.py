@@ -159,6 +159,18 @@ class ValenceFF(ForcePartValence):
         parameters need to be estimated.
     '''
     def __init__(self, system, specs=None):
+        '''
+            **Arguments**
+            
+            system
+                an instance of the Yaff System class containing all system
+                properties
+            
+            **Keyword Arguments**
+            
+            specs
+                Not yet implemented
+        '''
         with log.section('VAL', 2, timer='Initializing'):
             log.dump('Initializing valence force field')
             self.system = system
@@ -174,6 +186,28 @@ class ValenceFF(ForcePartValence):
             Adds new term both to the Yaff vlist object and a new QuickFF
             list (self.terms) which holds all information about the term
             for easy access later in QuickFF.
+            
+            **Arguments**
+            
+            pot
+                an instance of ValenceTerm from `yaff.pes.vlist.py` representing
+                the potential chosen for the term
+            
+            ics
+                list of InternalCoordinate instances from `yaff.pes.iclist.py`
+            
+            atypes
+                ordered string of atom types (required to assign name to the
+                term)
+            
+            tasks
+                List of strings defining all tasks that have to be performed for
+                this term. Possible tasks are: PT_ALL, HC_FC_DIAG, HC_FC_CROSS,
+                EQ_RV.
+            
+            units
+                Units for all parameters in this term (ordered in the same
+                way as parameters are stored in `yaff.vlist.vtab`)
         '''
         index = len(self.terms)
         #define the name
@@ -255,8 +289,8 @@ class ValenceFF(ForcePartValence):
 
     def iter_masters(self, label=None):
         '''
-            Iterate over all master terms (whos name possibly contain the given
-            label) in the valence force field
+            Iterate over all master terms in the valence force field. If label
+            is given, only iterate of the terms with the label in its name.
         '''
         for term in self.terms:
             if label is None or label.lower() in term.basename.lower():
@@ -264,11 +298,20 @@ class ValenceFF(ForcePartValence):
                     yield term
 
     def iter_terms(self, label=None):
+        '''
+            Iterate over all terms in the valence force field. If label is
+            given, only iterate over terms with the label its name.
+        '''
         for term in self.terms:
             if label is None or label.lower() in term.basename.lower():
                 yield term
 
     def init_bond_terms(self):
+        '''
+            Initialize all bond terms in the system based on the bonds attribute
+            of the system instance. All bond terms are given harmonic
+            potentials.
+        '''
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
         #get the bond terms
         nbonds = 0
@@ -280,6 +323,11 @@ class ValenceFF(ForcePartValence):
         log.dump('Added %i Harmonic bond terms' %nbonds)
 
     def init_bend_terms(self):
+        '''
+            Initialize all bend terms in the system based on the bends attribute
+            of the system instance. All bend terms are given harmonic
+            potentials.
+        '''
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
         #get the angle terms
         nbends = 0
@@ -292,7 +340,7 @@ class ValenceFF(ForcePartValence):
 
     def init_dihedral_terms(self, thresshold=10*deg):
         '''
-            Estimate the dihedral potentials from the local topology. The
+            Initialize the dihedral potentials from the local topology. The
             dihedral potential will be one of the two following possibilities:
 
                 The multiplicity m is determined from the local topology, i.e.
@@ -348,6 +396,11 @@ class ValenceFF(ForcePartValence):
         log.dump('Added %i Cosine dihedral terms' %ncos)
 
     def init_oop_terms(self, thresshold_zero=5e-2*angstrom):
+        '''
+            Initialize all out-of-plane terms in the system based on the oops
+            attribute of the system instance. All oops are given harmonic
+            potentials.
+        '''
         #get all dihedrals
         from molmod.ic import opbend_dist
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
@@ -385,6 +438,9 @@ class ValenceFF(ForcePartValence):
         log.dump('Added %i Harmonic and %i SquareHarmonic out-of-plane distance terms' %(nharm, nsq))
 
     def init_cross_terms(self, specs=None):
+        '''
+            Initialize cross terms between bonds and bends.
+        '''
         ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
         nbend = 0
         for angle in self.system.iter_angles():
@@ -426,9 +482,9 @@ class ValenceFF(ForcePartValence):
             **Arguments**
 
             contraints
-                A dictionairy containing master: slaves definitions in which
-                both master is a string defining the master basename and slaves
-                is a list of strings defining the slave basenames.
+                A dictionairy containing (master: slaves) definitions in which
+                master is a string defining the master basename and slaves is a
+                list of strings defining the slave basenames.
         '''
         for mastername, slavenames in constraints.iteritems():
             masters = [term for term in self.iter_masters(mastername)]

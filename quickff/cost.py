@@ -32,6 +32,10 @@ import numpy as np
 __all__ = ['HessianFCCost']
 
 class HessianFCCost(object):
+    '''
+        A class to implement the least-square cost function to fit the force
+        field hessian to the ab initio hessian.
+    '''
     def __init__(self, system, ai, valence, fit_indices, ffrefs=[]):
         '''
             **Arguments**
