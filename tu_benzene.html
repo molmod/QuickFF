@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="QuickFF 2.0.1 documentation" href="index.html" />
-    <link rel="next" title="1. quickff.cost – Least-Square cost function for hessian matching" href="rg_module.html" />
+    <link rel="next" title="Tutorial 2 - Water" href="tu_water.html" />
     <link rel="prev" title="2. Generating Yaff parameter file for the electrostatic contribution" href="ug_inputei.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="rg_module.html" title="1. quickff.cost – Least-Square cost function for hessian matching"
+          <a href="tu_water.html" title="Tutorial 2 - Water"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="ug_inputei.html" title="2. Generating Yaff parameter file for the electrostatic contribution"
@@ -54,10 +54,10 @@
             
   <div class="section" id="tutorial-1-benzene">
 <h1>Tutorial 1 - Benzene<a class="headerlink" href="#tutorial-1-benzene" title="Permalink to this headline">¶</a></h1>
-<p>This tutorial will describe in detail the use of QuickFF to generate a force
-field for benzene. This tutorial assumes that the following input files are
-available (examples of such file are provided with the source code in the
-directory <cite>share/systems/benzene</cite>):</p>
+<p>This tutorial will describe in detail the use of QuickFF by means of the command
+line scripts, to generate a force field for benzene. This tutorial assumes that
+the following input files are available (examples of such file are provided with
+the source code in the directory <cite>share/systems/benzene</cite>):</p>
 <ul>
 <li><dl class="first docutils">
 <dt>gaussian.fchk</dt>
@@ -199,11 +199,15 @@ _________________________\//////____\///______________\///______________________
  USER               louis
  MACHINE            Linux molmod91 4.2.0-34-generic #39-Ubuntu SMP Thu Mar 10 
  MACHINE            22:13:01 UTC 2016 x86_64
- TIME               2016-03-24 18:37:51.110196
+ TIME               2016-03-24 23:11:32.000179
  PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
+ NUMPY VERSION      1.8.2
+ SCIPY VERSION      0.14.1
+ MATPLOTLIB VERSION 1.4.2
  CURRENT DIR        /home/louis/build/quickff/doc
- COMMAND LINE       /home/louis/.local/bin/qff.py --ffatypes=low /home/louis/
- COMMAND LINE       build/quickff/share/systems/benzene/gaussian.fchk
+ COMMAND LINE       /home/louis/.local/bin/qff.py --ffatypes=low --suffix=_noei 
+ COMMAND LINE       /home/louis/build/quickff/share/systems/benzene/
+ COMMAND LINE       gaussian.fchk
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -220,7 +224,6 @@ _________________________\//////____\///______________\///______________________
 
  EQSET  Resetting system coordinates to ab initio ref
  EQSET  Setting rest values to AI equilibrium values for tasks EQ_RV
-
  EQSET  Averaging force field parameters over master and slaves
 
  PTGEN  Resetting system coordinates to ab initio ref
@@ -228,7 +231,6 @@ _________________________\//////____\///______________\///______________________
 
  PTEST  Resetting system coordinates to ab initio ref
  PTEST  Estimating FF parameters from perturbation trajectories
-
  PTEST  Averaging force field parameters over master and slaves
 
  CRINI  Resetting system coordinates to ab initio ref
@@ -241,7 +243,6 @@ _________________________\//////____\///______________\///______________________
  PTEST  Resetting system coordinates to ab initio ref
  PTEST  Estimating FF parameters from perturbation trajectories with valence 
  PTEST  reference
-
  PTEST  Averaging force field parameters over master and slaves
 
  HCEST  Resetting system coordinates to ab initio ref
@@ -250,57 +251,57 @@ _________________________\//////____\///______________\///______________________
 
 
         BondHarm/C.C (kjmol/A^2  A)                                             
-            fc =  3975 ± .000    rv = 1.394 ± .000
+            fc =  3975 ± .000    rv = 1.395 ± .000
 
         BondHarm/C.H (kjmol/A^2  A)                                             
             fc =  3385 ± .000    rv = 1.084 ± .000
 
         BendAHarm/C.C.C (kjmol/rad^2  deg)                                      
-            fc = 617.6 ± .000    rv = 120.0 ± .000
+            fc = 618.0 ± .000    rv = 120.0 ± .000
 
         BendAHarm/C.C.H (kjmol/rad^2  deg)                                      
-            fc = 291.7 ± .000    rv = 119.9 ± .000
+            fc = 291.7 ± .000    rv = 120.0 ± .000
 
         Torsion/C.C.C.C (au  kjmol  deg)                                        
-            fc = 32.0 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 32.1 ± .00    rv = .000 ± 0.0    m = 2
 
         Torsion/C.C.C.H (au  kjmol  deg)                                        
             fc = 32.1 ± .00    rv = .000 ± 0.0    m = 2
 
         Torsion/H.C.C.H (au  kjmol  deg)                                        
-            fc = 13.0 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 12.9 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Oopdist/C.C.H.C (kjmol/A^2  A)                                          
             fc = 274.5 ± .000    rv = .0000 ± .000
 
         Cross/C.C.C/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.69 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.59 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.C/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.80 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.71 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.C/bb (kjmol/A^2  A  A)                                        
             fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
 
         Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 63.0 ± .0    rv0 = 1.39 ± .00    rv0 =  119 ± .00
+            fc = 63.1 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc =  144 ± .0    rv0 = 1.08 ± .00    rv0 =  119 ± .00
+            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
-            fc =  120 ± .0    rv0 = 1.39 ± .00    rv0 = 1.08 ± .00
+            fc =  120 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.08 ± 0.0
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.095755
- TIMING Equil Set RV                    0:00:00.007026
- TIMING PT Generate                     0:00:18.295780
- TIMING PT Estimate                     0:00:00.114886
- TIMING HC Estimate FC                  0:00:00.451981
- TIMING PT plot energy                  0:00:00.000013
- TIMING PT dump XYZ                     0:00:00.000005
+ TIMING Initializing                    0:00:00.083628
+ TIMING Equil Set RV                    0:00:00.003216
+ TIMING PT Generate                     0:00:19.937261
+ TIMING PT Estimate                     0:00:00.104559
+ TIMING HC Estimate FC                  0:00:00.418540
+ TIMING PT plot energy                  0:00:00.000020
+ TIMING PT dump XYZ                     0:00:00.000015
 
 __/\\\__________________________________________________________________/\\\____
   \ \\\                                                                 \ \\\
@@ -315,16 +316,336 @@ ____\///__________________________________________________________________\///__
 <dt>Machine environment:</dt>
 <dd><p class="first last">This section contains some general information about the machine environment
 on which you ran the quickff job. It contains the user name, machine info,
-starting time of job, Python version, current directory and the command used
+starting time of job, Python version, Numpy version, Scipy versoin,
+Matplotlib version, current directory and the command used
 to envoke quickff.</p>
 </dd>
 </dl>
 </li>
+<li><dl class="first docutils">
+<dt>Routine sequence:</dt>
+<dd><p class="first last">Every task that is performed will be shown in the log output. For example,
+the line <tt class="docutils literal"><span class="pre">PTGEN</span>&nbsp; <span class="pre">Constructing</span> <span class="pre">trajectories</span></tt> indicates that QuickFF is
+busy constructing the perturbation trajectories. As a second example, the
+line <tt class="docutils literal"><span class="pre">HCEST</span>&nbsp; <span class="pre">Estimating</span> <span class="pre">force</span> <span class="pre">constants</span> <span class="pre">from</span> <span class="pre">Hessian</span> <span class="pre">cost</span> <span class="pre">for</span> <span class="pre">tasks</span>
+<span class="pre">HC_FC_DIAG</span> <span class="pre">HC_FC_CROSS</span></tt> indicates QuickFF is estimating force constants by
+means of a least-square fit of the FF Hessian to the AI Hessian for each
+term for which the task <cite>HC_FC_DIAG</cite> and <cite>HC_FC_CROSS</cite> was selected.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Final force field parameters:</dt>
+<dd><p class="first last">The final FF parameters are shown at the end of the log output.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Timings:</dt>
+<dd><p class="first last">Finally, a summary of the timings for several steps during run of the
+program is provided.</p>
+</dd>
+</dl>
+</li>
 </ul>
+<p>The force field parameters were also written to the Yaff parameters file
+<cite>pars_cov.txt</cite>:</p>
+<div class="highlight-text"><div class="highlight"><pre># BONDHARM
+#---------
+BONDHARM:UNIT  K kjmol/A**2
+BONDHARM:UNIT  R0 A
+
+BONDHARM:PARS         C         H  3.3852787886e+03  1.0848236700e+00
+BONDHARM:PARS         C         C  3.9757022404e+03  1.3950932066e+00
+
+
+# BENDAHARM
+#----------
+BENDAHARM:UNIT  K kjmol/rad**2
+BENDAHARM:UNIT  THETA0 deg
+
+BENDAHARM:PARS         C         C         H  2.9174605403e+02  1.2008740208e+02
+BENDAHARM:PARS         C         C         C  6.1808685629e+02  1.2001581023e+02
+
+
+# TORSION
+#--------
+TORSION:UNIT  A kjmol
+TORSION:UNIT  PHI0 deg
+
+TORSION:PARS         C         C         C         H  2 3.2132227209e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.2934139766e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.2186534537e+01  0.0000000000e+00
+
+
+# OOPDIST
+#--------
+OOPDIST:UNIT  K kjmol/A**2
+OOPDIST:UNIT  D0 A
+
+OOPDIST:PARS         C         C         H         C  2.7459070703e+02  0.0000000000e+00
+
+
+# Cross
+#------
+Cross:UNIT  KSS kjmol/angstrom**2
+Cross:UNIT  KBS0 kjmol/(angstrom*rad)
+Cross:UNIT  KBS1 kjmol/(angstrom*rad)
+Cross:UNIT  R0 angstrom
+Cross:UNIT  R1 angstrom
+Cross:UNIT  THETA0 deg
+
+Cross:PARS         C         C         H   1.2083749971e+02   6.3131315110e+01   1.4420419443e+02  1.3953922223e+00  1.0849239495e+00  1.2003245555e+02
+Cross:PARS         C         C         C   5.9523292703e+02   9.5971601638e+00   9.7141794655e+00  1.3953922223e+00  1.3953922223e+00  1.2002065446e+02
+</pre></div>
+</div>
 </div>
 <div class="section" id="force-field-with-electrostatics">
 <h2>Force field with electrostatics<a class="headerlink" href="#force-field-with-electrostatics" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<ul>
+<li><dl class="first docutils">
+<dt>Generating Yaff input</dt>
+<dd><p class="first">First we need to generate the Yaff input file for the electrostatic
+contribution to the force field. This is done using the script
+<a class="reference internal" href="rg_scripts.html#seclab-rg-scripts-inputei"><em>qff_input-ei.py</em></a>. For this tutorial,
+we will convert the charges given in the dataset <cite>/wpart/he/charges</cite> of the
+file <cite>gaussian_wpart.h5</cite> for the atoms in gaussian.fchk with atom types
+according to the level <cite>medium</cite> and use Gaussian charge distributions:</p>
+<div class="highlight-python"><div class="highlight"><pre>qff-input-ei.py --ffatypes=low --gaussian gaussian.fchk gaussian_wpart.h5 wpart/he
+</pre></div>
+</div>
+<p>This command dumped the following output to the screen, incidating wheter or
+not the atom types are well chosen from the point of view of electrostatics
+(see second remark in <a class="reference internal" href="ug_inputei.html#seclab-ug-tools-inputei"><em>qff-input-ei.py</em></a>):</p>
+<div class="highlight-text"><div class="highlight"><pre>
+</pre></div>
+</div>
+<p>Furthermore, the following Yaff parameter (<cite>pars_ei_wpart_he.txt</cite>) file was written:</p>
+<div class="last highlight-text"><div class="highlight"><pre>#Fixed charges
+#---------------
+
+FIXQ:UNIT Q0 e
+FIXQ:UNIT P e
+FIXQ:UNIT R angstrom
+FIXQ:SCALE 1 1.0
+FIXQ:SCALE 2 1.0
+FIXQ:SCALE 3 1.0
+FIXQ:DIELECTRIC 1.0
+
+# Atomic parameters
+# ----------------------------------------------------
+# KEY        label  Q_0A              R_A
+# ----------------------------------------------------
+FIXQ:ATOM        H  0.0442214368  0.7309000000
+FIXQ:ATOM        C -0.0441535372  1.1646000000
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Constructing the covalent contribution</dt>
+<dd><p class="first">Now, we generate a covalent force field on top of the previously derived
+electrostatic contribution using the qff.py script:</p>
+<div class="highlight-python"><div class="highlight"><pre>qff.py --ffatype=low --ei=pars_ei_wpart_he.txt gaussian.fchk
+</pre></div>
+</div>
+<p>The logging output for this job is:</p>
+<div class="highlight-text"><div class="highlight"><pre>________________/\\\_________/\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\_________________
+______________/\\\\/\\\\_____\/\\\///////////__\/\\\///////////_________________
+_____________/\\\//\////\\\___\/\\\_____________\/\\\___________________________
+_____________/\\\______\//\\\__\/\\\\\\\\\\\_____\/\\\\\\\\\\\__________________
+_____________\//\\\______/\\\___\/\\\///////______\/\\\///////__________________
+_______________\///\\\\/\\\\/____\/\\\_____________\/\\\________________________
+__________________\////\\\//______\/\\\_____________\/\\\_______________________
+______________________\///\\\\\\___\/\\\_____________\/\\\______________________
+_________________________\//////____\///______________\///______________________
+
+                            Welcom to QuickFF 2.0
+   a Python package to quickly derive force fields from ab initio input data
+
+                                 Written by
+     Louis Vanduyfhuys(1)*, Steven Vandenbrande(1) and Toon Verstraelen(1)
+
+         (1) Center for Molecular Modeling, Ghent University Belgium.
+                   * mailto: Louis.Vanduyfhuys@UGent.be
+
+
+ USER               louis
+ MACHINE            Linux molmod91 4.2.0-34-generic #39-Ubuntu SMP Thu Mar 10 
+ MACHINE            22:13:01 UTC 2016 x86_64
+ TIME               2016-03-24 23:11:53.546624
+ PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
+ NUMPY VERSION      1.8.2
+ SCIPY VERSION      0.14.1
+ MATPLOTLIB VERSION 1.4.2
+ CURRENT DIR        /home/louis/build/quickff/doc
+ COMMAND LINE       /home/louis/.local/bin/qff.py --ffatypes=low --suffix=_ei 
+ COMMAND LINE       --ei=pars_ei_wpart_he.txt /home/louis/build/quickff/share/
+ COMMAND LINE       systems/benzene/gaussian.fchk
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ QFF    Initializing system
+ QFF    Initializing Second order taylor reference for ai
+ QFF    Initializing Yaff force field reference for EI
+
+ PROG   Initializing program
+
+ VAL    Initializing valence force field
+ VAL    Added 12 Harmonic bond terms
+ VAL    Added 18 Harmonic bend terms
+ VAL    Added 24 Cosine dihedral terms
+ VAL    Added 6 Harmonic and 0 SquareHarmonic out-of-plane distance terms
+
+ EQSET  Resetting system coordinates to ab initio ref
+ EQSET  Setting rest values to AI equilibrium values for tasks EQ_RV
+ EQSET  Averaging force field parameters over master and slaves
+
+ PTGEN  Resetting system coordinates to ab initio ref
+ PTGEN  Constructing trajectories
+
+ PTEST  Resetting system coordinates to ab initio ref
+ PTEST  Estimating FF parameters from perturbation trajectories
+ PTEST  Averaging force field parameters over master and slaves
+
+ CRINI  Resetting system coordinates to ab initio ref
+ CRINI  Added 18 cross terms for angle patterns
+
+ HCEST  Resetting system coordinates to ab initio ref
+ HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
+ HCEST  CROSS
+
+ PTEST  Resetting system coordinates to ab initio ref
+ PTEST  Estimating FF parameters from perturbation trajectories with valence 
+ PTEST  reference
+ PTEST  Averaging force field parameters over master and slaves
+
+ HCEST  Resetting system coordinates to ab initio ref
+ HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
+ HCEST  CROSS
+
+
+        BondHarm/C.C (kjmol/A^2  A)                                             
+            fc =  3976 ± .000    rv = 1.395 ± .000
+
+        BondHarm/C.H (kjmol/A^2  A)                                             
+            fc =  3385 ± .000    rv = 1.084 ± .000
+
+        BendAHarm/C.C.C (kjmol/rad^2  deg)                                      
+            fc = 618.5 ± .000    rv = 119.9 ± .000
+
+        BendAHarm/C.C.H (kjmol/rad^2  deg)                                      
+            fc = 291.9 ± .000    rv = 120.1 ± .000
+
+        Torsion/C.C.C.C (au  kjmol  deg)                                        
+            fc = 32.3 ± 0.0    rv = .000 ± 0.0    m = 2
+
+        Torsion/C.C.C.H (au  kjmol  deg)                                        
+            fc = 32.1 ± 0.0    rv = .000 ± 0.0    m = 2
+
+        Torsion/H.C.C.H (au  kjmol  deg)                                        
+            fc = 12.8 ± 0.0    rv = .000 ± 0.0    m = 2
+
+        Oopdist/C.C.H.C (kjmol/A^2  A)                                          
+            fc = 275.3 ± .000    rv = .0000 ± .000
+
+        Cross/C.C.C/b0a (kjmol/(A*rad)  A  deg)                                 
+            fc = 9.35 ± .0    rv0 = 1.39 ± 0.0    rv0 =  119 ± 0.0
+
+        Cross/C.C.C/b1a (kjmol/(A*rad)  A  deg)                                 
+            fc = 9.47 ± .0    rv0 = 1.39 ± 0.0    rv0 =  119 ± 0.0
+
+        Cross/C.C.C/bb (kjmol/A^2  A  A)                                        
+            fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
+
+        Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
+            fc = 63.2 ± .0    rv0 = 1.39 ± .00    rv0 =  120 ± 0.0
+
+        Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
+            fc =  144 ± .0    rv0 = 1.08 ± .00    rv0 =  120 ± 0.0
+
+        Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
+            fc =  121 ± .0    rv0 = 1.39 ± .00    rv0 = 1.08 ± .00
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+ TIMING Initializing                    0:00:00.094601
+ TIMING Equil Set RV                    0:00:00.003118
+ TIMING PT Generate                     0:00:21.156632
+ TIMING PT Estimate                     0:00:00.208671
+ TIMING HC Estimate FC                  0:00:00.501894
+ TIMING PT plot energy                  0:00:00.000014
+ TIMING PT dump XYZ                     0:00:00.000006
+
+__/\\\__________________________________________________________________/\\\____
+  \ \\\                                                                 \ \\\
+   \ \\\     End of file. Thanks for using QuickFF! Come back soon!!     \ \\\
+____\///__________________________________________________________________\///__
+</pre></div>
+</div>
+<p>An extra line appeared in the beginning of the log output, i.e.
+<tt class="docutils literal"><span class="pre">QFF</span>&nbsp;&nbsp;&nbsp; <span class="pre">Initializing</span> <span class="pre">Yaff</span> <span class="pre">force</span> <span class="pre">field</span> <span class="pre">reference</span> <span class="pre">for</span> <span class="pre">EI</span></tt>. This indicates
+that an extra reference instance was created to represent the EI
+contribution to the force field. Furthermore, the covalent parameters are
+almost identical compared to the FF without electrostatics. This is indeed
+what we expect due to the charges being so small.</p>
+<p>The force field parameters were also written to the Yaff parameters file
+<cite>pars_cov.txt</cite>:</p>
+<div class="last highlight-text"><div class="highlight"><pre># BONDHARM
+#---------
+BONDHARM:UNIT  K kjmol/A**2
+BONDHARM:UNIT  R0 A
+
+BONDHARM:PARS         C         H  3.3853996154e+03  1.0849057695e+00
+BONDHARM:PARS         C         C  3.9763159228e+03  1.3953440620e+00
+
+
+# BENDAHARM
+#----------
+BENDAHARM:UNIT  K kjmol/rad**2
+BENDAHARM:UNIT  THETA0 deg
+
+BENDAHARM:PARS         C         C         H  2.9190262685e+02  1.2018557298e+02
+BENDAHARM:PARS         C         C         C  6.1850456443e+02  1.1993617631e+02
+
+
+# TORSION
+#--------
+TORSION:UNIT  A kjmol
+TORSION:UNIT  PHI0 deg
+
+TORSION:PARS         C         C         C         H  2 3.2120467843e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.2817001875e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.2365034556e+01  0.0000000000e+00
+
+
+# OOPDIST
+#--------
+OOPDIST:UNIT  K kjmol/A**2
+OOPDIST:UNIT  D0 A
+
+OOPDIST:PARS         C         C         H         C  2.7535448684e+02  0.0000000000e+00
+
+
+# Cross
+#------
+Cross:UNIT  KSS kjmol/angstrom**2
+Cross:UNIT  KBS0 kjmol/(angstrom*rad)
+Cross:UNIT  KBS1 kjmol/(angstrom*rad)
+Cross:UNIT  R0 angstrom
+Cross:UNIT  R1 angstrom
+Cross:UNIT  THETA0 deg
+
+Cross:PARS         C         C         H   1.2114563105e+02   6.3293667297e+01   1.4411986358e+02  1.3958138489e+00  1.0851057674e+00  1.2007631758e+02
+Cross:PARS         C         C         C   5.9529209323e+02   9.3560587304e+00   9.4730907263e+00  1.3958138489e+00  1.3958138489e+00  1.1999670068e+02
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+</ul>
 </div>
 </div>
 
@@ -347,8 +668,8 @@ to envoke quickff.</p>
   <p class="topless"><a href="ug_inputei.html"
                         title="previous chapter">2. Generating Yaff parameter file for the electrostatic contribution</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="rg_module.html"
-                        title="next chapter">1. <tt class="docutils literal"><span class="pre">quickff.cost</span></tt> &#8211; Least-Square cost function for hessian matching</a></p>
+  <p class="topless"><a href="tu_water.html"
+                        title="next chapter">Tutorial 2 - Water</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/tu_benzene.txt"
@@ -381,7 +702,7 @@ to envoke quickff.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="rg_module.html" title="1. quickff.cost – Least-Square cost function for hessian matching"
+          <a href="tu_water.html" title="Tutorial 2 - Water"
              >next</a> |</li>
         <li class="right" >
           <a href="ug_inputei.html" title="2. Generating Yaff parameter file for the electrostatic contribution"

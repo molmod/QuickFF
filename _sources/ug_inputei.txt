@@ -42,7 +42,7 @@ from the output of `Horton <https://theochem.github.io/horton/>`_ using the
     implemented in the routine `get_ei_radii` from the
     :ref:`tools <seclab_rg_modules_tools>` module.
 
-**Important**
+**Remarks**
 
 All electrostatic interactions will be included in the force field, i.e. no
 scaling is applied. This means that atoms that are connected to each other 1, 2 
@@ -52,3 +52,9 @@ corresponding scales in the file. For example: `FIXQ:SCALE 1 0.0` will turn of
 electrostatic interactions for bonded atoms. See also the 
 `Yaff page <http://molmod.github.io/yaff/ug_forcefield.html#prefix-fixq>`_ on 
 the parameter file for electrostatic interactions.
+
+The script might print a WARNING to the screen indicating the for a certain atom
+type the standard deviation of the charges for this atom type is rather high.
+This could indicate that the current atom types are to general, i.e. not
+specific enough for the current chemical configuration. A higher level of atom 
+type specification might then be adequate.

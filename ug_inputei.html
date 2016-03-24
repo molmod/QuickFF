@@ -108,7 +108,7 @@ implemented in the routine <cite>get_ei_radii</cite> from the
 </dl>
 </li>
 </ul>
-<p><strong>Important</strong></p>
+<p><strong>Remarks</strong></p>
 <p>All electrostatic interactions will be included in the force field, i.e. no
 scaling is applied. This means that atoms that are connected to each other 1, 2
 or 3 bonds will also interact electrostatically. To change this behaviour, open
@@ -117,6 +117,11 @@ corresponding scales in the file. For example: <cite>FIXQ:SCALE 1 0.0</cite> wil
 electrostatic interactions for bonded atoms. See also the
 <a class="reference external" href="http://molmod.github.io/yaff/ug_forcefield.html#prefix-fixq">Yaff page</a> on
 the parameter file for electrostatic interactions.</p>
+<p>The script might print a WARNING to the screen indicating the for a certain atom
+type the standard deviation of the charges for this atom type is rather high.
+This could indicate that the current atom types are to general, i.e. not
+specific enough for the current chemical configuration. A higher level of atom
+type specification might then be adequate.</p>
 </div>
 
 
