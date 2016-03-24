@@ -1,10 +1,10 @@
 Tutorial 1 - Benzene
 ####################
 
-This tutorial will describe in detail the use of QuickFF to generate a force
-field for benzene. This tutorial assumes that the following input files are
-available (examples of such file are provided with the source code in the 
-directory `share/systems/benzene`):
+This tutorial will describe in detail the use of QuickFF by means of the command
+line scripts, to generate a force field for benzene. This tutorial assumes that
+the following input files are available (examples of such file are provided with
+the source code in the directory `share/systems/benzene`):
 
 * gaussian.fchk
     A Gaussian Formatted Checkpoint file containing the ab initio equilibrium
@@ -53,7 +53,7 @@ accessed by `qff.py` :option:`--help`)::
 The script will dump all relevant information to the screen, for this tutorial,
 the output is as follows:
 
-.. program-output:: qff.py --ffatypes=low /home/louis/build/quickff/share/systems/benzene/gaussian.fchk
+.. program-output:: qff.py --ffatypes=low --suffix=_noei /home/louis/build/quickff/share/systems/benzene/gaussian.fchk
 
 The logger will dump to following information to the screen (or a file if the
 :option:`--logfile` option was used):
@@ -61,7 +61,8 @@ The logger will dump to following information to the screen (or a file if the
 * Machine environment:
     This section contains some general information about the machine environment
     on which you ran the quickff job. It contains the user name, machine info,
-    starting time of job, Python version, current directory and the command used
+    starting time of job, Python version, Numpy version, Scipy versoin,
+    Matplotlib version, current directory and the command used
     to envoke quickff.
 
 * Routine sequence:
@@ -79,6 +80,11 @@ The logger will dump to following information to the screen (or a file if the
 * Timings:
     Finally, a summary of the timings for several steps during run of the 
     program is provided.
+
+The force field parameters were also written to the Yaff parameters file 
+`pars_cov.txt`:
+
+.. program-output:: cat pars_cov_noei.txt
 
 
 Force field with electrostatics
@@ -112,7 +118,7 @@ Force field with electrostatics
     
     The logging output for this job is:
     
-    .. program-output:: qff.py --ffatypes=low --ei=pars_ei_wpart_he.txt /home/louis/build/quickff/share/systems/benzene/gaussian.fchk
+    .. program-output:: qff.py --ffatypes=low --suffix=_ei --ei=pars_ei_wpart_he.txt /home/louis/build/quickff/share/systems/benzene/gaussian.fchk
     
     An extra line appeared in the beginning of the log output, i.e. 
     ``QFF    Initializing Yaff force field reference for EI``. This indicates
@@ -120,3 +126,8 @@ Force field with electrostatics
     contribution to the force field. Furthermore, the covalent parameters are
     almost identical compared to the FF without electrostatics. This is indeed
     what we expect due to the charges being so small.
+    
+    The force field parameters were also written to the Yaff parameters file 
+    `pars_cov.txt`:
+
+    .. program-output:: cat pars_cov_ei.txt

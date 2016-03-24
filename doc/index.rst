@@ -67,6 +67,7 @@ in the User Guide:
    :maxdepth: 2
 
    tu_benzene.rst
+   tu_water.rst
 
 
 Reference Guide
