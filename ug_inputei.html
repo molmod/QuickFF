@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>2. Generating Yaff parameter file for the electrostatic contribution &mdash; QuickFF 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="QuickFF 2.0.1 documentation" href="index.html" />
+    <link rel="next" title="Tutorial 1 - Benzene" href="tu_benzene.html" />
+    <link rel="prev" title="1. Running QuickFF using qff.py" href="ug_script.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tu_benzene.html" title="Tutorial 1 - Benzene"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ug_script.html" title="1. Running QuickFF using qff.py"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="generating-yaff-parameter-file-for-the-electrostatic-contribution">
+<span id="seclab-ug-tools-inputei"></span><span id="seclab-ug-tools"></span><h1>2. Generating Yaff parameter file for the electrostatic contribution<a class="headerlink" href="#generating-yaff-parameter-file-for-the-electrostatic-contribution" title="Permalink to this headline">¶</a></h1>
+<p>A Yaff force field file for the electrostatic contribution can be constructed
+from the output of <a class="reference external" href="https://theochem.github.io/horton/">Horton</a> using the
+<a class="reference internal" href="rg_scripts.html#seclab-rg-scripts-inputei"><em>qff-input-ei.py</em></a> script:</p>
+<div class="highlight-python"><div class="highlight"><pre>qff-input-ei.py [options] fn_sys fn_wpart path
+</pre></div>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">fn_sys</span></tt></dt>
+<dd><p class="first last">a file containing the system information. Any file type accepted by the
+main script <a class="reference internal" href="rg_scripts.html#seclab-rg-scripts-qff"><em>qff.py</em></a> is also accepted here
+(see <a class="reference internal" href="ug_script.html#seclab-inputfiles"><em>input files</em></a>).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">fn_wpart</span></tt></dt>
+<dd><p class="first last">is a <a class="reference external" href="https://theochem.github.io/horton/">Horton</a>: HDF5 file containing
+the charges of each atom. The charges in this file should have the same
+ordering as the atoms in the system file <cite>fn_sys</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">path</span></tt></dt>
+<dd><p class="first last">is the path in the HDF5 file which contains a dataset <cite>charges</cite>. In other
+words, the file <cite>fn_wpart</cite> should contain a dataset <cite>/path/charges</cite>
+containing the charges for each atom in the system.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Options</strong></p>
+<ul>
+<li><dl class="first docutils">
+<dt>Force field atom types (<em class="xref std std-option">--ffatypes=LEVEL</em>):</dt>
+<dd><p class="first last">Determine the force field atom types according to the given level (see
+<a class="reference internal" href="ug_script.html#seclab-ug-atype-estimator"><em>automatic estimation of atom types</em></a>). By
+default, the atom types are assumed to be defined in <cite>fn_sys</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Gaussian distributed charges (<em class="xref std std-option">--gaussian</em>):</dt>
+<dd><p class="first last">Treat the atomic charges as Gaussian charge distributions with atomic radii
+determined according to the precedure of
+<a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0009261407002618">Chen et al.</a>,
+implemented in the routine <cite>get_ei_radii</cite> from the
+<a class="reference internal" href="rg_module.html#seclab-rg-modules-tools"><em>tools</em></a> module.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Important</strong></p>
+<p>All electrostatic interactions will be included in the force field, i.e. no
+scaling is applied. This means that atoms that are connected to each other 1, 2
+or 3 bonds will also interact electrostatically. To change this behaviour, open
+the resulting Yaff parameter file after applying this script, and change the
+corresponding scales in the file. For example: <cite>FIXQ:SCALE 1 0.0</cite> will turn of
+electrostatic interactions for bonded atoms. See also the
+<a class="reference external" href="http://molmod.github.io/yaff/ug_forcefield.html#prefix-fixq">Yaff page</a> on
+the parameter file for electrostatic interactions.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ug_script.html"
+                        title="previous chapter">1. Running QuickFF using qff.py</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tu_benzene.html"
+                        title="next chapter">Tutorial 1 - Benzene</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/ug_inputei.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tu_benzene.html" title="Tutorial 1 - Benzene"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ug_script.html" title="1. Running QuickFF using qff.py"
+             >previous</a> |</li>
+        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

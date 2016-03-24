@@ -1,0 +1,334 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>quickff.reference &mdash; QuickFF 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="QuickFF 2.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for quickff.reference</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c"># QuickFF is a code to quickly derive accurate force fields from ab initio input.</span>
+<span class="c"># Copyright (C) 2012 - 2016 Louis Vanduyfhuys &lt;Louis.Vanduyfhuys@UGent.be&gt;</span>
+<span class="c"># Steven Vandenbrande &lt;Steven.Vandenbrande@UGent.be&gt;,</span>
+<span class="c"># Toon Verstraelen &lt;Toon.Verstraelen@UGent.be&gt;, Center for Molecular Modeling</span>
+<span class="c"># (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise</span>
+<span class="c"># stated.</span>
+<span class="c">#</span>
+<span class="c"># This file is part of QuickFF.</span>
+<span class="c">#</span>
+<span class="c"># QuickFF is free software; you can redistribute it and/or</span>
+<span class="c"># modify it under the terms of the GNU General Public License</span>
+<span class="c"># as published by the Free Software Foundation; either version 3</span>
+<span class="c"># of the License, or (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># QuickFF is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with this program; if not, see &lt;http://www.gnu.org/licenses/&gt;</span>
+<span class="c">#</span>
+<span class="c">#--</span>
+<span class="kn">from</span> <span class="nn">yaff.pes.ff</span> <span class="kn">import</span> <span class="n">ForceField</span><span class="p">,</span> <span class="n">ForcePartValence</span><span class="p">,</span> <span class="n">ForcePartPair</span>
+<span class="kn">from</span> <span class="nn">yaff.pes.ext</span> <span class="kn">import</span> <span class="n">PairPotEI</span>
+<span class="kn">from</span> <span class="nn">yaff.pes.nlist</span> <span class="kn">import</span> <span class="n">NeighborList</span>
+<span class="kn">from</span> <span class="nn">yaff.pes.scaling</span> <span class="kn">import</span> <span class="n">Scalings</span>
+<span class="kn">from</span> <span class="nn">yaff.sampling.harmonic</span> <span class="kn">import</span> <span class="n">estimate_cart_hessian</span>
+
+<span class="kn">from</span> <span class="nn">quickff.tools</span> <span class="kn">import</span> <span class="n">global_translation</span><span class="p">,</span> <span class="n">global_rotation</span>
+<span class="kn">from</span> <span class="nn">quickff.log</span> <span class="kn">import</span> <span class="n">log</span>
+
+<span class="kn">from</span> <span class="nn">molmod.units</span> <span class="kn">import</span> <span class="n">angstrom</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;SecondOrderTaylor&#39;</span><span class="p">,</span> <span class="s">&#39;YaffForceField&#39;</span><span class="p">,</span> <span class="s">&#39;get_ei_ff&#39;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">Reference</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Abstract class for a model for reference data. A reference instance</span>
+<span class="sd">        should be able to return energy, gradient and hessian for a given set</span>
+<span class="sd">        of coordinates.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+
+<div class="viewcode-block" id="SecondOrderTaylor"><a class="viewcode-back" href="../../rg_module.html#quickff.reference.SecondOrderTaylor">[docs]</a><span class="k">class</span> <span class="nc">SecondOrderTaylor</span><span class="p">(</span><span class="n">Reference</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Second-order Taylor expansion model, can be used for the ab initio input.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;Initializing Second order taylor reference for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coords0</span> <span class="o">=</span> <span class="n">coords</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy0</span> <span class="o">=</span> <span class="n">energy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad0</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hess0</span> <span class="o">=</span> <span class="n">hess</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pbc</span><span class="p">)</span><span class="o">==</span><span class="n">pbc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> <span class="n">pbc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s">&quot;PBC should be either all 0 or all 1&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbc</span> <span class="o">=</span> <span class="n">pbc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phess0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_phess</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SecondOrderTaylor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SecondOrderTaylor.update"><a class="viewcode-back" href="../../rg_module.html#quickff.reference.SecondOrderTaylor.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Method to update one or more of the attributes. The meaning of the</span>
+<span class="sd">            optional arguments is the same as with the constructor __init__</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">pbc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pbc</span><span class="p">)</span><span class="o">==</span><span class="n">pbc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> <span class="n">pbc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s">&quot;PBC should be either all 0 or all 1&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pbc</span> <span class="o">==</span> <span class="n">pbc</span>
+        <span class="k">if</span> <span class="n">coords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">coords</span><span class="o">.</span><span class="n">shape</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coords0</span> <span class="o">=</span> <span class="n">coords</span>
+        <span class="k">if</span> <span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad0</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">grad</span><span class="o">.</span><span class="n">shape</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grad0</span> <span class="o">=</span> <span class="n">grad</span>
+        <span class="k">if</span> <span class="n">hess</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hess0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">hess0</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">hess</span><span class="o">.</span><span class="n">shape</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hess0</span> <span class="o">=</span> <span class="n">hess</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phess0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_phess</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">_get_phess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Constuct a hessian from which the translational and rotational</span>
+<span class="sd">            degrees of freedom have been projected out.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">hess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hess0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)])</span>
+        <span class="n">VTx</span><span class="p">,</span> <span class="n">VTy</span><span class="p">,</span> <span class="n">VTz</span> <span class="o">=</span> <span class="n">global_translation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="p">)</span>
+        <span class="n">VRx</span><span class="p">,</span> <span class="n">VRy</span><span class="p">,</span> <span class="n">VRz</span> <span class="o">=</span> <span class="n">global_rotation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbc</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">VTx</span><span class="p">,</span> <span class="n">VTy</span><span class="p">,</span> <span class="n">VTz</span><span class="p">,</span> <span class="n">VRx</span><span class="p">,</span> <span class="n">VRy</span><span class="p">,</span> <span class="n">VRz</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">nproj</span> <span class="o">=</span> <span class="mi">6</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbc</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">VTx</span><span class="p">,</span> <span class="n">VTy</span><span class="p">,</span> <span class="n">VTz</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">nproj</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">proj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">[:,</span> <span class="n">nproj</span><span class="p">:],</span> <span class="n">U</span><span class="p">[:,</span> <span class="n">nproj</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">PHP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hess</span><span class="p">,</span> <span class="n">proj</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">PHP</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">])</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_other_model</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">coords0</span><span class="p">):</span>
+        <span class="n">energy0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">coords0</span><span class="p">)</span>
+        <span class="n">grad0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">coords0</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">hess0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">coords0</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s">&#39; (Harmonic)&#39;</span>
+        <span class="k">if</span> <span class="s">&#39;rvecs&#39;</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">ff</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="n">pbc</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pbc</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords0</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="n">energy0</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="n">grad0</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="n">hess0</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="n">pbc</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SecondOrderTaylor.energy"><a class="viewcode-back" href="../../rg_module.html#quickff.reference.SecondOrderTaylor.energy">[docs]</a>    <span class="k">def</span> <span class="nf">energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Compute the energy for the given positions</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">ndof</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">coords</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">ndof</span><span class="p">])</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad0</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">ndof</span><span class="p">]),</span> <span class="n">dx</span><span class="p">)</span>
+        <span class="n">energy</span> <span class="o">+=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phess0</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">ndof</span><span class="p">,</span><span class="n">ndof</span><span class="p">]),</span> <span class="n">dx</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">energy</span>
+</div>
+<div class="viewcode-block" id="SecondOrderTaylor.gradient"><a class="viewcode-back" href="../../rg_module.html#quickff.reference.SecondOrderTaylor.gradient">[docs]</a>    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Compute the gradient for the given positions</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">ndof</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">coords</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">ndof</span><span class="p">])</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad0</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">ndof</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phess0</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">ndof</span><span class="p">,</span><span class="n">ndof</span><span class="p">]),</span> <span class="n">dx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">grad</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SecondOrderTaylor.hessian"><a class="viewcode-back" href="../../rg_module.html#quickff.reference.SecondOrderTaylor.hessian">[docs]</a>    <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Compute the hessian for the given positions</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">phess0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="YaffForceField"><a class="viewcode-back" href="../../rg_module.html#quickff.reference.YaffForceField">[docs]</a><span class="k">class</span> <span class="nc">YaffForceField</span><span class="p">(</span><span class="n">Reference</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        A model object based on a YAFF force field. Such a model can be used</span>
+<span class="sd">        to account for non-covalent interactions or residual covalent</span>
+<span class="sd">        interactions.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">ff</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;Initializing Yaff force field reference for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ff</span> <span class="o">=</span> <span class="n">ff</span>
+        <span class="n">Reference</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ff</span><span class="o">.</span><span class="n">update_pos</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ff</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+        <span class="n">gpos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ff</span><span class="o">.</span><span class="n">update_pos</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ff</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">gpos</span><span class="o">=</span><span class="n">gpos</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">gpos</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ff</span><span class="o">.</span><span class="n">update_pos</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="n">hess</span> <span class="o">=</span> <span class="n">estimate_cart_hessian</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ff</span><span class="p">)</span>
+        <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hess</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">natoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">natoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="get_ei_ff"><a class="viewcode-back" href="../../rg_module.html#quickff.reference.get_ei_ff">[docs]</a><span class="k">def</span> <span class="nf">get_ei_ff</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">scales</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        A routine to construct a Yaff force field for the electrostatics</span>
+
+<span class="sd">        **Arguments**</span>
+
+<span class="sd">        name</span>
+<span class="sd">            A string for the name of the force field. This name will show in</span>
+<span class="sd">            possible plots visualizing contributions along perturbation</span>
+<span class="sd">            trajectories</span>
+
+<span class="sd">        system</span>
+<span class="sd">            A Yaff System instance representing the system</span>
+
+<span class="sd">        charges</span>
+<span class="sd">            A numpy array containing the charge of each separate atom</span>
+
+<span class="sd">        scales</span>
+<span class="sd">            A list of 4 floats, representing scale1, scale2, scale3, scale4,</span>
+<span class="sd">            i.e. the electrostatic scaling factors</span>
+
+<span class="sd">        **Optional Arguments**</span>
+
+<span class="sd">        radii</span>
+<span class="sd">            A numpy array containing the gaussian radii of each separate atom.</span>
+<span class="sd">            If this argument is omitted, point charges are used.</span>
+
+<span class="sd">        average</span>
+<span class="sd">            If set to True, the charges and radii will first be averaged over</span>
+<span class="sd">            atom types. This is True by default.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pbc</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Periodic system not implemented in get_ei_ff&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">average</span><span class="p">:</span>
+        <span class="n">qs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">rs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">ffatypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">ffatype_ids</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">atype</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">atype</span> <span class="ow">in</span> <span class="n">qs</span><span class="p">:</span> <span class="n">qs</span><span class="p">[</span><span class="n">atype</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">charges</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span> <span class="n">qs</span><span class="p">[</span><span class="n">atype</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">charges</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">radii</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">atype</span> <span class="ow">in</span> <span class="n">rs</span><span class="p">:</span> <span class="n">rs</span><span class="p">[</span><span class="n">atype</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">radii</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span> <span class="n">rs</span><span class="p">[</span><span class="n">atype</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">radii</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">atype</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">):</span>
+            <span class="n">charges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">qs</span><span class="p">[</span><span class="n">atype</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">radii</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">radii</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rs</span><span class="p">[</span><span class="n">atype</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">pair_pot</span> <span class="o">=</span> <span class="n">PairPotEI</span><span class="p">(</span><span class="n">charges</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">50</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">radii</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">))</span>
+    <span class="n">nlist</span> <span class="o">=</span> <span class="n">NeighborList</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">scalings</span> <span class="o">=</span> <span class="n">Scalings</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">scale1</span><span class="o">=</span><span class="n">scales</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">scale2</span><span class="o">=</span><span class="n">scales</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale3</span><span class="o">=</span><span class="n">scales</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">scale4</span><span class="o">=</span><span class="n">scales</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">ForcePartPair</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">nlist</span><span class="p">,</span> <span class="n">scalings</span><span class="p">,</span> <span class="n">pair_pot</span><span class="p">)</span>
+    <span class="n">ff</span> <span class="o">=</span> <span class="n">ForceField</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="p">[</span><span class="n">part</span><span class="p">],</span> <span class="n">nlist</span><span class="o">=</span><span class="n">nlist</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">YaffForceField</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ff</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

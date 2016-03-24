@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>QuickFF Documentation &mdash; QuickFF 1.0 documentation</title>
+    <title>QuickFF Documentation &mdash; QuickFF 2.0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0',
+        VERSION:     '2.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 1.0 documentation" href="#" />
+    <link rel="top" title="QuickFF 2.0.1 documentation" href="#" />
     <link rel="next" title="1. Dependencies" href="ig_dependencies.html" /> 
   </head>
   <body>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="ig_dependencies.html" title="1. Dependencies"
              accesskey="N">next</a> |</li>
-        <li><a href="#">QuickFF 1.0 documentation</a> &raquo;</li> 
+        <li><a href="#">QuickFF 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -53,13 +53,13 @@
 <p>Welcome to the website of QuickFF. QuickFF is a Python package developed at the
 <a class="reference external" href="https://molmod.ugent.be/">Center for Molecular Modeling</a> (CMM) to quickly
 derive accurate force fields from ab initio calculations. This website contains
-a information on how to install and use QuickFF. A detailed describtion of the
+all information on how to install and use QuickFF. A detailed describtion of the
 methodology used by QuickFF to derive the force fields can be found here.</p>
 <div class="section" id="how-to-cite-quickff">
 <h2>How to cite QuickFF<a class="headerlink" href="#how-to-cite-quickff" title="Permalink to this headline">¶</a></h2>
 <p>If you used QuickFF in your research, please refer to QuickFF as follows:</p>
 <p>L. Vanduyfhuys, S. Vandenbrande, T. Verstraelen, R. Schmid, M. Waroquier,
-V. Van Speybroeck, <em>J. Comput. Chem.</em>, 2015, in press</p>
+V. Van Speybroeck, <em>J. Comput. Chem.</em>, 2015, 36, 13, 1015–1027</p>
 <p>You can acces the paper through the following link:</p>
 <p><a class="reference external" href="http://dx.doi.org/10.1002/jcc.23877">http://dx.doi.org/10.1002/jcc.23877</a></p>
 </div>
@@ -74,7 +74,8 @@ in hearing from your installation adventures.</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ig_dependencies.html">1. Dependencies</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="ig_dependencies.html#molmod-dependency">1.1. MolMod dependency</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ig_dependencies.html#external-dependencies">1.2. External dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ig_dependencies.html#yaff-dependency">1.2. Yaff dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ig_dependencies.html#external-dependencies">1.3. External dependencies</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ig_download.html">2. Download QuickFF</a><ul>
@@ -93,24 +94,17 @@ as a Python library in an external script. Both usages are described in this
 guide.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="ug_script.html">1. Running QuickFF using qff-est.py</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ug_script.html#input-files">1.1. Input files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ug_script.html#automatic-estimation-of-atom-types">1.2. Automatic estimation of atom types</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ug_script.html#internal-coordinates-in-the-valence-model">1.3. Internal Coordinates in the valence model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ug_script.html#electrostatic-interactions">1.4. Electrostatic interactions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ug_script.html#van-der-waals-interactions">1.5. Van der Waals interactions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ug_script.html#parallel-quickff">1.6. Parallel QuickFF</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ug_script.html#miscellanous-options">1.7. Miscellanous options</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ug_script.html#output">1.8. Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ug_script.html">1. Running QuickFF using qff.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ug_script.html#mandatory-input-files">1.1. Mandatory input files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug_script.html#optional-input-files">1.2. Optional input files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug_script.html#automatic-estimation-of-atom-types">1.3. Automatic estimation of atom types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug_script.html#miscellanous-options">1.4. Miscellanous options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug_script.html#output">1.5. Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug_script.html#logging">1.6. Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug_script.html#parallel-quickff">1.7. Parallel QuickFF</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="ug_library.html">2. Importing QuickFF as a library</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ug_library.html#defining-the-system">2.1. Defining the system</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ug_library.html#defining-the-model-and-program">2.2. Defining the model and program</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ug_library.html#constructing-the-force-field">2.3. Constructing the force field</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ug_library.html#generating-output">2.4. Generating output</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="ug_inputei.html">2. Generating Yaff parameter file for the electrostatic contribution</a></li>
 </ul>
 </div>
 </div>
@@ -134,25 +128,20 @@ in the User Guide:</p>
 <p>Modules of QuickFF:</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="rg_system.html">1. Module <tt class="docutils literal"><span class="pre">quickff.system</span></tt> &#8211; Representation of molecular systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_model.html">2. Module <tt class="docutils literal"><span class="pre">quickff.model</span></tt> &#8211; Definition of the force field model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_program.html">3. Module <tt class="docutils literal"><span class="pre">quickff.program</span></tt> &#8211; Management of the entire program</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_perturbation.html">4. Module <tt class="docutils literal"><span class="pre">quickff.perturbation</span></tt> &#8211; Perturbation trajectories</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_cost.html">5. Module <tt class="docutils literal"><span class="pre">quickff.cost</span></tt> &#8211; Cost function for force constant refinement</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_refdata.html">6. Module <tt class="docutils literal"><span class="pre">quickff.refdata</span></tt> &#8211; Ab initio reference data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_terms.html">7. Module <tt class="docutils literal"><span class="pre">quickff.terms</span></tt> &#8211; Terms in the covalent force field</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_uff.html">8. Module <tt class="docutils literal"><span class="pre">quickff.uff</span></tt> &#8211; UFF van der Waals parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_ic.html">9. Module <tt class="docutils literal"><span class="pre">quickff.ic</span></tt> &#8211; Internal coordinate definitions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_evaluators.html">10. Module <tt class="docutils literal"><span class="pre">quickff.evaluators</span></tt> &#8211; Evaluators of observables on perturbation trajectories</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_fftable.html">11. Module <tt class="docutils literal"><span class="pre">quickff.fftable</span></tt> &#8211; Table to store FF parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_tools.html">12. Module <tt class="docutils literal"><span class="pre">quickff.tools</span></tt> &#8211; Some mathematical and numerical tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_module.html">1. <tt class="docutils literal"><span class="pre">quickff.cost</span></tt> &#8211; Least-Square cost function for hessian matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_module.html#module-quickff.io">2. <tt class="docutils literal"><span class="pre">quickff.io</span></tt> &#8211; Input/Ouput methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_module.html#module-quickff.perturbation">3. <tt class="docutils literal"><span class="pre">quickff.perturbation</span></tt> &#8211; Perturbation trajectories for internal coordinates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_module.html#module-quickff.program">4. <tt class="docutils literal"><span class="pre">quickff.program</span></tt> &#8211; Program classes implementing a sequence of fitting steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_module.html#module-quickff.reference">5. <tt class="docutils literal"><span class="pre">quickff.reference</span></tt> &#8211; Representation of the ab initio reference data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_module.html#module-quickff.tools">6. <tt class="docutils literal"><span class="pre">quickff.tools</span></tt> &#8211; Various convenient tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_module.html#module-quickff.valence">7. <tt class="docutils literal"><span class="pre">quickff.valence</span></tt> &#8211; ValenceFF class storing all valence ff terms</a></li>
 </ul>
 </div>
 <p>Scripts of QuickFF:</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="rg_qffest.html">1. Script <tt class="docutils literal"><span class="pre">qff-est.py</span></tt> &#8211; Main script to run QuickFF calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_qfftraj.html">2. Script <tt class="docutils literal"><span class="pre">qff-traj.py</span></tt> &#8211; generate single perturbation trajectory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_scripts.html">1. Script <tt class="docutils literal"><span class="pre">qff.py</span></tt> &#8211; Main script to run QuickFF calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_scripts.html#script-qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">2. Script <tt class="docutils literal"><span class="pre">qff-input-ei.py</span></tt> &#8211; generate Yaff parameter file for electrostatics</a></li>
 </ul>
 </div>
 </div>
@@ -229,12 +218,12 @@ in the User Guide:</p>
         <li class="right" >
           <a href="ig_dependencies.html" title="1. Dependencies"
              >next</a> |</li>
-        <li><a href="#">QuickFF 1.0 documentation</a> &raquo;</li> 
+        <li><a href="#">QuickFF 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2015, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+        &copy; Copyright 2016, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

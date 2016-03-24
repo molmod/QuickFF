@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>quickff.perturbation &mdash; QuickFF 1.0 documentation</title>
+    <title>quickff.perturbation &mdash; QuickFF 2.0.1 documentation</title>
     
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.0',
+        VERSION:     '2.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 1.0 documentation" href="../../index.html" />
+    <link rel="top" title="QuickFF 2.0.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 1.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -49,7 +49,7 @@
   <h1>Source code for quickff.perturbation</h1><div class="highlight"><pre>
 <span class="c"># -*- coding: utf-8 -*-</span>
 <span class="c"># QuickFF is a code to quickly derive accurate force fields from ab initio input.</span>
-<span class="c"># Copyright (C) 2012 - 2015 Louis Vanduyfhuys &lt;Louis.Vanduyfhuys@UGent.be&gt;</span>
+<span class="c"># Copyright (C) 2012 - 2016 Louis Vanduyfhuys &lt;Louis.Vanduyfhuys@UGent.be&gt;</span>
 <span class="c"># Steven Vandenbrande &lt;Steven.Vandenbrande@UGent.be&gt;,</span>
 <span class="c"># Toon Verstraelen &lt;Toon.Verstraelen@UGent.be&gt;, Center for Molecular Modeling</span>
 <span class="c"># (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise</span>
@@ -72,257 +72,36 @@
 <span class="c">#</span>
 <span class="c">#--</span>
 
-<span class="kn">from</span> <span class="nn">molmod.units</span> <span class="kn">import</span> <span class="n">angstrom</span><span class="p">,</span> <span class="n">deg</span><span class="p">,</span> <span class="n">parse_unit</span>
-<span class="kn">from</span> <span class="nn">molmod.periodic</span> <span class="kn">import</span> <span class="n">periodic</span> <span class="k">as</span> <span class="n">pt</span>
 <span class="kn">from</span> <span class="nn">molmod.io.xyz</span> <span class="kn">import</span> <span class="n">XYZWriter</span>
+<span class="kn">from</span> <span class="nn">molmod.units</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">molmod.periodic</span> <span class="kn">import</span> <span class="n">periodic</span> <span class="k">as</span> <span class="n">pt</span>
 
-<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">yaff.pes.ff</span> <span class="kn">import</span> <span class="n">ForceField</span><span class="p">,</span> <span class="n">ForcePartValence</span>
+<span class="kn">from</span> <span class="nn">yaff.pes.vlist</span> <span class="kn">import</span> <span class="n">Chebychev1</span><span class="p">,</span> <span class="n">Harmonic</span>
+<span class="kn">from</span> <span class="nn">yaff.pes.iclist</span> <span class="kn">import</span> <span class="n">Bond</span><span class="p">,</span> <span class="n">BendAngle</span><span class="p">,</span> <span class="n">BendCos</span><span class="p">,</span> <span class="n">DihedAngle</span><span class="p">,</span> <span class="n">OopDist</span>
 
 <span class="kn">from</span> <span class="nn">quickff.tools</span> <span class="kn">import</span> <span class="n">fitpar</span>
-<span class="kn">from</span> <span class="nn">quickff.evaluators</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">quickff.log</span> <span class="kn">import</span> <span class="n">log</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;BasePertTheory&#39;</span><span class="p">,</span> <span class="s">&#39;RelaxedGeoPertTheory&#39;</span><span class="p">]</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">scipy.optimize</span><span class="o">,</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s">&#39;ignore&#39;</span><span class="p">,</span> <span class="s">&#39;The iteration is not making good progress&#39;</span><span class="p">)</span>
 
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Trajectory&#39;</span><span class="p">,</span> <span class="s">&#39;RelaxedStrain&#39;</span><span class="p">]</span>
 
-<div class="viewcode-block" id="BasePertTheory"><a class="viewcode-back" href="../../rg_perturbation.html#quickff.perturbation.BasePertTheory">[docs]</a><span class="k">class</span> <span class="nc">BasePertTheory</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Trajectory"><a class="viewcode-back" href="../../rg_module.html#quickff.perturbation.Trajectory">[docs]</a><span class="k">class</span> <span class="nc">Trajectory</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">       Base class to generate and analyze the perturbation trajectories of an</span>
-<span class="sd">       ic.</span>
+<span class="sd">        A class to store a perturbation trajectory</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">numbers</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">11</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            **Arguments**</span>
 
-<span class="sd">            system</span>
-<span class="sd">                an instance of the System class</span>
+<span class="sd">            term</span>
+<span class="sd">                an instance of the Term class for which the perturbation</span>
+<span class="sd">                trajectory will be computed</span>
 
-<span class="sd">            model</span>
-<span class="sd">                an instance of the Model class</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">system</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
-
-<div class="viewcode-block" id="BasePertTheory.generate"><a class="viewcode-back" href="../../rg_perturbation.html#quickff.perturbation.BasePertTheory.generate">[docs]</a>    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ic</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">11</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            This method should be implemented in derived classes.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
-</div>
-<div class="viewcode-block" id="BasePertTheory.analyze"><a class="viewcode-back" href="../../rg_perturbation.html#quickff.perturbation.BasePertTheory.analyze">[docs]</a>    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">,</span> <span class="n">evaluators</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            A method to analyze the perturbation trajectory, i.e. apply all</span>
-<span class="sd">            evaluators to the trajectory and return an array of values along</span>
-<span class="sd">            the trajectory for each evaluator given.</span>
-
-<span class="sd">            **Arguments**</span>
-
-<span class="sd">            trajectory</span>
-<span class="sd">                A (F, N, 3) numpy array defining the perturbation trajectory.</span>
-<span class="sd">                It contains F frames of (N,3)-dimensional geometry arrays.</span>
-
-<span class="sd">            evaluators</span>
-<span class="sd">                A list of evaluators that is to be applied to the trajectory.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">evaluators</span><span class="p">))]</span>
-        <span class="k">for</span> <span class="n">dx</span> <span class="ow">in</span> <span class="n">trajectory</span><span class="p">:</span>
-            <span class="n">coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">coords</span> <span class="o">+</span> <span class="n">dx</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">evaluator</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">evaluators</span><span class="p">):</span>
-                <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">coords</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
-</div>
-<div class="viewcode-block" id="BasePertTheory.write"><a class="viewcode-back" href="../../rg_perturbation.html#quickff.perturbation.BasePertTheory.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            Method to write the given trajectory to a file</span>
-
-<span class="sd">            **Arguments**</span>
-
-<span class="sd">            trajectory</span>
-<span class="sd">                a (F,N,3) numpy array defining the perturbation trajectory.</span>
-<span class="sd">                It contains F frames of (N,3)-dimensional geometry arrays.</span>
-
-<span class="sd">            filename</span>
-<span class="sd">                a string defining the name of the output file</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">_f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
-        <span class="n">xyz</span> <span class="o">=</span> <span class="n">XYZWriter</span><span class="p">(</span><span class="n">_f</span><span class="p">,</span> <span class="p">[</span><span class="n">pt</span><span class="p">[</span><span class="n">Z</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">Z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">])</span>
-        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">dx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">trajectory</span><span class="p">):</span>
-            <span class="n">coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">coords</span> <span class="o">+</span> <span class="n">dx</span>
-            <span class="n">xyz</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;frame </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">idx</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
-        <span class="n">_f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</div>
-<div class="viewcode-block" id="BasePertTheory.plot"><a class="viewcode-back" href="../../rg_perturbation.html#quickff.perturbation.BasePertTheory.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ic</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">eunit</span><span class="o">=</span><span class="s">&#39;kjmol&#39;</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            Method to plot the energy contributions along a perturbation</span>
-<span class="sd">            trajectory associated to a given ic.</span>
-
-<span class="sd">            **Arguments**</span>
-
-<span class="sd">            ic</span>
-<span class="sd">                an instance of the class :class:`quickff.ic.IC` defining for</span>
-<span class="sd">                which ic the plot will be made.</span>
-
-<span class="sd">            trajectory</span>
-<span class="sd">                a (F,N,3) numpy array defining the perturbation trajectory</span>
-<span class="sd">                associated to the given ic. It contains F frames of</span>
-<span class="sd">                (N,3)-dimensional geometry arrays.</span>
-
-<span class="sd">            filename</span>
-<span class="sd">                a string defining the name of the figure</span>
-
-<span class="sd">            **Optional Arguments**</span>
-
-<span class="sd">            eunit</span>
-<span class="sd">                a string describing the conversion of the unit of energy. More</span>
-<span class="sd">                info regarding possible strings can be found in the</span>
-<span class="sd">                `MolMod documentation &lt;http://molmod.github.io/molmod/reference/const.html#module-molmod.units&gt;`_.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">pp</span>
-        <span class="n">evaluators</span> <span class="o">=</span> <span class="p">[</span><span class="n">eval_ic</span><span class="p">(</span><span class="n">ic</span><span class="p">),</span> <span class="n">eval_energy</span><span class="p">(</span><span class="s">&#39;ai&#39;</span><span class="p">),</span> <span class="n">eval_energy</span><span class="p">(</span><span class="s">&#39;ei&#39;</span><span class="p">),</span> <span class="n">eval_energy</span><span class="p">(</span><span class="s">&#39;vdw&#39;</span><span class="p">)]</span>
-        <span class="n">qs</span><span class="p">,</span> <span class="n">tot</span><span class="p">,</span> <span class="n">ei</span><span class="p">,</span> <span class="n">vdw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">evaluators</span><span class="p">)</span>
-        <span class="n">label</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">obs</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s">&#39;ai&#39;</span><span class="p">,</span> <span class="s">&#39;ei&#39;</span><span class="p">,</span> <span class="s">&#39;vdw&#39;</span><span class="p">,</span> <span class="s">&#39;cov&#39;</span><span class="p">],</span> <span class="p">[</span><span class="n">tot</span><span class="p">,</span> <span class="n">ei</span><span class="p">,</span> <span class="n">vdw</span><span class="p">,</span> <span class="n">tot</span><span class="o">-</span><span class="n">ei</span><span class="o">-</span><span class="n">vdw</span><span class="p">]):</span>
-            <span class="n">pars</span> <span class="o">=</span> <span class="n">fitpar</span><span class="p">(</span><span class="n">qs</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
-            <span class="n">k</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
-                <span class="n">q0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">label</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;(K=</span><span class="si">%.0f</span><span class="s"> q0=</span><span class="si">%.3f</span><span class="s">)&#39;</span> <span class="o">%</span><span class="p">(</span>
-                    <span class="n">k</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">ic</span><span class="o">.</span><span class="n">kunit</span><span class="p">),</span>
-                    <span class="n">q0</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">ic</span><span class="o">.</span><span class="n">qunit</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">label</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;(K=0.0 q0=None)&#39;</span>
-            <span class="k">if</span> <span class="n">name</span><span class="o">==</span><span class="s">&#39;cov&#39;</span><span class="p">:</span>
-                <span class="n">cov</span> <span class="o">=</span> <span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">qs</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">qs</span><span class="o">+</span><span class="n">pars</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-            <span class="n">qs</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">ic</span><span class="o">.</span><span class="n">qunit</span><span class="p">),</span> <span class="n">tot</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">eunit</span><span class="p">),</span>
-            <span class="s">&#39;k--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;AI total </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">label</span><span class="p">[</span><span class="s">&#39;ai&#39;</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-            <span class="n">qs</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">ic</span><span class="o">.</span><span class="n">qunit</span><span class="p">),</span> <span class="n">ei</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">eunit</span><span class="p">),</span>
-            <span class="s">&#39;b--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;FF elec  </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">label</span><span class="p">[</span><span class="s">&#39;ei&#39;</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-            <span class="n">qs</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">ic</span><span class="o">.</span><span class="n">qunit</span><span class="p">),</span> <span class="n">vdw</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">eunit</span><span class="p">),</span>
-            <span class="s">&#39;g--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;FF vdW   </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">label</span><span class="p">[</span><span class="s">&#39;vdw&#39;</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-            <span class="n">qs</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">ic</span><span class="o">.</span><span class="n">qunit</span><span class="p">),</span> <span class="n">cov</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">eunit</span><span class="p">),</span>
-            <span class="s">&#39;r-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;FF cov   </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">label</span><span class="p">[</span><span class="s">&#39;cov&#39;</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">ic</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> [</span><span class="si">%s</span><span class="s">]&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ic</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ic</span><span class="o">.</span><span class="n">qunit</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">&#39;Energy [</span><span class="si">%s</span><span class="s">]&#39;</span> <span class="o">%</span><span class="n">eunit</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s">&#39;best&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">([</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-</div>
-<div class="viewcode-block" id="BasePertTheory.estimate"><a class="viewcode-back" href="../../rg_perturbation.html#quickff.perturbation.BasePertTheory.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ic</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            Method to estimate the FF parameters for the given ic from the given</span>
-<span class="sd">            perturbation trajectory by fitting a harmonic potential to the</span>
-<span class="sd">            covalent energy along the trajectory.</span>
-
-<span class="sd">            **Arguments**</span>
-
-<span class="sd">            ic</span>
-<span class="sd">                an instance of the class :class:`quickff.ic.IC` defining for</span>
-<span class="sd">                which ic the FF parameters will be estimated</span>
-
-<span class="sd">            trajectory</span>
-<span class="sd">                a (F,N,3) numpy array defining the perturbation trajectory</span>
-<span class="sd">                associated to the given ic. It contains F frames of</span>
-<span class="sd">                (N,3)-dimensional geometry arrays.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">evaluators</span> <span class="o">=</span> <span class="p">[</span><span class="n">eval_ic</span><span class="p">(</span><span class="n">ic</span><span class="p">),</span> <span class="n">eval_energy</span><span class="p">(</span><span class="s">&#39;ai&#39;</span><span class="p">),</span> <span class="n">eval_energy</span><span class="p">(</span><span class="s">&#39;ei&#39;</span><span class="p">),</span> <span class="n">eval_energy</span><span class="p">(</span><span class="s">&#39;vdw&#39;</span><span class="p">)]</span>
-        <span class="n">qs</span><span class="p">,</span> <span class="n">tot</span><span class="p">,</span> <span class="n">ei</span><span class="p">,</span> <span class="n">vdw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">evaluators</span><span class="p">)</span>
-        <span class="n">pars</span> <span class="o">=</span> <span class="n">fitpar</span><span class="p">(</span><span class="n">qs</span><span class="p">,</span> <span class="n">tot</span><span class="o">-</span><span class="n">ei</span><span class="o">-</span><span class="n">vdw</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
-        <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-
-</div></div>
-<div class="viewcode-block" id="RelaxedGeoPertTheory"><a class="viewcode-back" href="../../rg_perturbation.html#quickff.perturbation.RelaxedGeoPertTheory">[docs]</a><span class="k">class</span> <span class="nc">RelaxedGeoPertTheory</span><span class="p">(</span><span class="n">BasePertTheory</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Class for generating relaxed perturbation trajectories. These</span>
-<span class="sd">        trajectories are constructed as an array of geometries that are</span>
-<span class="sd">        perturbed in the direction of a given ic and relaxed in all other</span>
-<span class="sd">        directions. The relaxation is implemented as the minimization of the</span>
-<span class="sd">        strain due to all other ics.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            **Arguments**</span>
-
-<span class="sd">            system</span>
-<span class="sd">                an instance of the System class</span>
-
-<span class="sd">            model</span>
-<span class="sd">                an instance of the Model class</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">BasePertTheory</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
-
-<div class="viewcode-block" id="RelaxedGeoPertTheory.get_strain_matrix"><a class="viewcode-back" href="../../rg_perturbation.html#quickff.perturbation.RelaxedGeoPertTheory.get_strain_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_strain_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ic</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            Method to calculate the strain matrix.</span>
-
-<span class="sd">            If sandwiched between a geometry perturbation vector, this</span>
-<span class="sd">            represents the weighted sum of the deviations of the ics</span>
-<span class="sd">            from their equilibrium values, except for the ic given in args.</span>
-
-<span class="sd">            **Arguments**</span>
-
-<span class="sd">            ic</span>
-<span class="sd">                an instance of the class :class:`quickff.ic.IC` defining which</span>
-<span class="sd">                ic is to be excluded from the strain cost.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">ndofs</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">natoms</span>
-        <span class="n">strain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">ndofs</span><span class="p">,</span> <span class="n">ndofs</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">icname</span><span class="p">,</span> <span class="n">ics</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">ics</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()):</span>
-            <span class="k">if</span> <span class="n">ic</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">Gq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ic0</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span> <span class="k">for</span> <span class="n">ic0</span> <span class="ow">in</span> <span class="n">ics</span><span class="p">])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">Gq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ic0</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span> <span class="k">for</span> <span class="n">ic0</span> <span class="ow">in</span> <span class="n">ics</span> <span class="k">if</span> <span class="n">ic0</span><span class="o">.</span><span class="n">name</span><span class="o">!=</span><span class="n">ic</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Gq</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">Gq</span><span class="p">)</span>
-                <span class="n">svals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">S</span> <span class="k">if</span> <span class="n">s</span> <span class="o">&gt;</span> <span class="mf">1e-6</span><span class="p">])</span>
-                <span class="n">rank</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">svals</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">rank</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">S2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">svals</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-                    <span class="n">V</span>  <span class="o">=</span> <span class="n">Vt</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="p">:</span><span class="n">rank</span><span class="p">]</span>
-                    <span class="n">Vo</span> <span class="o">=</span> <span class="n">Vt</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">rank</span><span class="p">:]</span>
-                    <span class="n">strain</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">S2</span><span class="p">,</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span><span class="p">))</span> \
-                            <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Vo</span><span class="p">,</span> <span class="n">Vo</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="n">ndofs</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c">#if the gradient of the current ic is zero in equilibrium,</span>
-                    <span class="c">#use the second order contribution to the Taylor expansion</span>
-                    <span class="c">#of the ic (without the square)</span>
-                    <span class="k">print</span> <span class="s">&#39;    WARNING: </span><span class="si">%s</span><span class="s"> &#39;</span>  <span class="o">%</span> <span class="n">icname</span> <span class="o">+</span> <span class="s">&#39;gradient is zero,&#39;</span> <span class="o">+</span>\
-                          <span class="s">&#39;using second order Taylor to estimate strain&#39;</span>
-                    <span class="n">Hq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">ndofs</span><span class="p">,</span> <span class="n">ndofs</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">ic0</span> <span class="ow">in</span> <span class="n">ics</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">ic</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">ic0</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">ic</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-                            <span class="n">Hq</span> <span class="o">+=</span> <span class="n">ic0</span><span class="o">.</span><span class="n">hess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-                    <span class="n">S</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Hq</span><span class="p">)</span>
-                    <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mf">1.0</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">S</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-6</span><span class="p">])</span>
-                    <span class="n">rank</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
-                    <span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:,</span> <span class="p">:</span><span class="n">rank</span><span class="p">]</span>
-                    <span class="n">strain</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">strain</span>
-</div>
-<div class="viewcode-block" id="RelaxedGeoPertTheory.generate"><a class="viewcode-back" href="../../rg_perturbation.html#quickff.perturbation.RelaxedGeoPertTheory.generate">[docs]</a>    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ic</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">11</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            Method to calculate the perturbation trajectory, i.e. the trajectory</span>
-<span class="sd">            that arises when the geometry is perturbed in the direction of ic</span>
-<span class="sd">            and relaxed in all other directions.</span>
-
-<span class="sd">            **Arguments**</span>
-
-<span class="sd">            ic</span>
-<span class="sd">                an instance of the class :class:`quickff.ic.IC` that defines</span>
-<span class="sd">                for which ic the perturbation trajectory will be calculated.</span>
-
-<span class="sd">            **Optional Arguments**</span>
+<span class="sd">            numbers</span>
+<span class="sd">                list of atom numbers required for dumping xyz coords</span>
 
 <span class="sd">            start</span>
 <span class="sd">                a float defining the lower limit of the perturbation value of</span>
@@ -334,58 +113,418 @@
 <span class="sd">                the given ic. If not given, a standard value is choosen</span>
 <span class="sd">                according to the kind of internal coordinate.</span>
 
+<span class="sd">            **Optional Arguments**</span>
+
 <span class="sd">            steps</span>
 <span class="sd">                an integer defining the number of steps in the perturbation</span>
 <span class="sd">                trajectory. The default value is 11 steps.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">ndofs</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">natoms</span>
-        <span class="c">#initialization</span>
-        <span class="n">q0</span> <span class="o">=</span> <span class="n">ic</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ic</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;bond&#39;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">start</span> <span class="o">=</span> <span class="n">q0</span> <span class="o">-</span> <span class="mf">0.05</span><span class="o">*</span><span class="n">angstrom</span>
-            <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>   <span class="n">end</span>   <span class="o">=</span> <span class="n">q0</span> <span class="o">+</span> <span class="mf">0.05</span><span class="o">*</span><span class="n">angstrom</span>
-        <span class="k">elif</span> <span class="n">ic</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;angle&#39;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>   <span class="n">start</span> <span class="o">=</span> <span class="n">q0</span> <span class="o">-</span> <span class="mi">5</span><span class="o">*</span><span class="n">deg</span>
-            <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>       <span class="n">end</span> <span class="o">=</span> <span class="n">q0</span> <span class="o">+</span> <span class="mi">5</span><span class="o">*</span><span class="n">deg</span>
-            <span class="k">if</span> <span class="n">end</span> <span class="o">&gt;</span> <span class="mf">180.0</span><span class="o">*</span><span class="n">deg</span><span class="p">:</span>   <span class="n">end</span> <span class="o">=</span> <span class="mf">179.0</span><span class="o">*</span><span class="n">deg</span>
-            <span class="k">if</span> <span class="n">q0</span> <span class="o">==</span> <span class="mf">180.0</span><span class="o">*</span><span class="n">deg</span><span class="p">:</span>   <span class="n">end</span> <span class="o">=</span> <span class="mf">180.0</span><span class="o">*</span><span class="n">deg</span>
-        <span class="k">elif</span> <span class="n">ic</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;dihed&#39;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">start</span> <span class="o">=</span> <span class="n">q0</span> <span class="o">-</span> <span class="mi">5</span><span class="o">*</span><span class="n">deg</span>
-            <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>          <span class="n">end</span> <span class="o">=</span> <span class="n">q0</span> <span class="o">+</span> <span class="mi">5</span><span class="o">*</span><span class="n">deg</span>
-            <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">180.0</span><span class="o">*</span><span class="n">deg</span><span class="p">:</span> <span class="n">start</span> <span class="o">=</span> <span class="o">-</span><span class="mf">180.0</span><span class="o">*</span><span class="n">deg</span>
-            <span class="k">if</span> <span class="n">end</span> <span class="o">&gt;</span> <span class="mf">180.0</span><span class="o">*</span><span class="n">deg</span><span class="p">:</span>      <span class="n">end</span> <span class="o">=</span> <span class="mf">180.0</span><span class="o">*</span><span class="n">deg</span>
-        <span class="k">elif</span> <span class="n">ic</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;opdist&#39;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">start</span> <span class="o">=</span> <span class="n">q0</span> <span class="o">-</span> <span class="mf">0.05</span><span class="o">*</span><span class="n">angstrom</span>
-            <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>     <span class="n">end</span> <span class="o">=</span> <span class="n">q0</span> <span class="o">+</span> <span class="mf">0.05</span><span class="o">*</span><span class="n">angstrom</span>
-        <span class="n">qarray</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="p">(</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">steps</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
-        <span class="n">trajectory</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">steps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">natoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
-        <span class="c">#Define cost function that needs to be minimized</span>
-        <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_strain_matrix</span><span class="p">(</span><span class="n">ic</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">chi</span><span class="p">(</span><span class="n">dx</span><span class="p">):</span>
-            <span class="k">return</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dx</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">dx</span><span class="p">))</span>
-        <span class="c">#Guess delta_x first time</span>
-        <span class="n">guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ndofs</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">iq</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">qarray</span><span class="p">):</span>
-            <span class="c">#Only use if the minimum is located in 180*deg</span>
-            <span class="k">if</span> <span class="n">ic</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;angle&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">q</span> <span class="o">==</span> <span class="mi">180</span><span class="o">*</span><span class="n">deg</span> <span class="ow">and</span> <span class="n">q0</span> <span class="o">==</span> <span class="mi">180</span><span class="o">*</span><span class="n">deg</span><span class="p">:</span>
-                <span class="n">trajectory</span><span class="p">[</span><span class="n">iq</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">natoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">term</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Perturbation trajectory only implemented for Harmonic terms&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">term</span> <span class="o">=</span> <span class="n">term</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numbers</span> <span class="o">=</span> <span class="n">numbers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qunit</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">units</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kunit</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">units</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qvals</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="p">(</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">steps</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">steps</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">),</span> <span class="mi">3</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rv</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="Trajectory.plot"><a class="viewcode-back" href="../../rg_module.html#quickff.perturbation.Trajectory.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ai</span><span class="p">,</span> <span class="n">ffrefs</span><span class="o">=</span><span class="p">[],</span> <span class="n">valence</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">eunit</span><span class="o">=</span><span class="s">&#39;kjmol&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Method to plot the energy contributions along a perturbation</span>
+<span class="sd">            trajectory associated to a given ic. This method assumes that the</span>
+<span class="sd">            coords, fc and rv attributes have been computed and assigned.</span>
+
+<span class="sd">            **Arguments**</span>
+
+<span class="sd">            ai</span>
+<span class="sd">                an instance of the Reference representing the ab initio input</span>
+
+<span class="sd">            **Optional Arguments**</span>
+
+<span class="sd">            ffrefs</span>
+<span class="sd">                a list of Reference instances representing possible a priori</span>
+<span class="sd">                determined contributions to the force field (such as eg.</span>
+<span class="sd">                electrostatics and van der Waals)</span>
+
+<span class="sd">            valence</span>
+<span class="sd">                an instance of ValenceFF which will be used to plot the covalent</span>
+<span class="sd">                contribution. If not given, only the contribution of the IC</span>
+<span class="sd">                corresponding to the trajectory will be plotted using the values</span>
+<span class="sd">                of fc and rv</span>
+
+<span class="sd">            fn</span>
+<span class="sd">                a string defining the name of the figure</span>
+
+<span class="sd">            eunit</span>
+<span class="sd">                a string describing the conversion of the unit of energy. More</span>
+<span class="sd">                info regarding possible strings can be found in the</span>
+<span class="sd">                `MolMod documentation &lt;http://molmod.github.io/molmod/reference/const.html#module-molmod.units&gt;`_.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">pp</span>
+        <span class="k">if</span> <span class="s">&#39;active&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">:</span> <span class="k">return</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="k">def</span> <span class="nf">add_plot</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">pars</span> <span class="o">=</span> <span class="n">fitpar</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">k</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">q0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="k">else</span><span class="p">:</span> <span class="n">q0</span> <span class="o">=</span> <span class="o">-</span><span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">k</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> (K=</span><span class="si">%.0f</span><span class="s"> q0=</span><span class="si">%.3f</span><span class="s">)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">k</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kunit</span><span class="p">),</span> <span class="n">q0</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qunit</span><span class="p">))</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xs</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qunit</span><span class="p">),</span> <span class="n">ys</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">eunit</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c">#ai</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ai</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">])</span>
+        <span class="n">index_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data</span><span class="o">==</span><span class="nb">min</span><span class="p">(</span><span class="n">data</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">e_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">data</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">data</span><span class="p">))</span><span class="o">/</span><span class="n">parse_unit</span><span class="p">(</span><span class="n">eunit</span><span class="p">)),</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">add_plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qvals</span><span class="p">,</span> <span class="n">data</span><span class="o">-</span><span class="n">data</span><span class="p">[</span><span class="n">index_min</span><span class="p">],</span> <span class="s">&#39;AI ref&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;linestyle&#39;</span><span class="p">:</span> <span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="s">&#39;marker&#39;</span><span class="p">:</span> <span class="s">&#39;o&#39;</span><span class="p">,</span> <span class="s">&#39;markerfacecolor&#39;</span><span class="p">:</span> <span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="s">&#39;markersize&#39;</span><span class="p">:</span> <span class="mi">12</span><span class="p">})</span>
+        <span class="c">#ffrefs</span>
+        <span class="n">totff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qvals</span><span class="p">)],</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;g&#39;</span><span class="p">,</span> <span class="s">&#39;m&#39;</span><span class="p">,</span> <span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ffref</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ffrefs</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ffref</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">])</span>
+            <span class="n">totff</span> <span class="o">+=</span> <span class="n">data</span>
+            <span class="n">add_plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qvals</span><span class="p">,</span> <span class="n">data</span><span class="o">-</span><span class="n">data</span><span class="p">[</span><span class="n">index_min</span><span class="p">],</span> <span class="n">ffref</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;linestyle&#39;</span><span class="p">:</span> <span class="s">&#39;:&#39;</span><span class="p">,</span> <span class="s">&#39;color&#39;</span><span class="p">:</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&#39;linewidth&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">})</span>
+        <span class="c">#complete fitted valence model if given</span>
+        <span class="k">if</span> <span class="n">valence</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">valence</span><span class="o">.</span><span class="n">iter_terms</span><span class="p">():</span>
+                <span class="n">valence</span><span class="o">.</span><span class="n">check_params</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;all&#39;</span><span class="p">])</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">valence</span><span class="o">.</span><span class="n">calc_energy</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">])</span>
+            <span class="n">add_plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qvals</span><span class="p">,</span> <span class="n">data</span><span class="o">-</span><span class="n">data</span><span class="p">[</span><span class="n">index_min</span><span class="p">],</span> <span class="s">&#39;Fitted Valence&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;linestyle&#39;</span><span class="p">:</span> <span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="s">&#39;color&#39;</span><span class="p">:</span> <span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="s">&#39;linewidth&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">})</span>
+            <span class="n">add_plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qvals</span><span class="p">,</span> <span class="n">totff</span><span class="o">+</span><span class="n">data</span><span class="o">-</span><span class="n">totff</span><span class="p">[</span><span class="n">index_min</span><span class="p">]</span><span class="o">-</span><span class="n">data</span><span class="p">[</span><span class="n">index_min</span><span class="p">],</span> <span class="s">&#39;Total FF&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;linestyle&#39;</span><span class="p">:</span> <span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="s">&#39;color&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.4</span><span class="p">],</span> <span class="s">&#39;linewidth&#39;</span><span class="p">:</span><span class="mf">3.0</span><span class="p">})</span>
+        <span class="c">#complete fitted term if valence is not given</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">fc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qvals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qvals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">step</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">-=</span> <span class="mf">0.05</span><span class="o">*</span><span class="n">start</span>
+                <span class="n">end</span> <span class="o">+=</span> <span class="mf">0.05</span><span class="o">*</span><span class="n">end</span>
+                <span class="n">step</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span>
+            <span class="n">qs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="o">+</span><span class="n">step</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">fc</span><span class="o">*</span><span class="p">(</span><span class="n">qs</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">rv</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">add_plot</span><span class="p">(</span><span class="n">qs</span><span class="p">,</span> <span class="n">data</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="s">&#39;Fitted Term&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;linestyle&#39;</span><span class="p">:</span> <span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="s">&#39;color&#39;</span><span class="p">:</span> <span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="s">&#39;linewidth&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">})</span>
+        <span class="c">#decorate plot</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">-</span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> [</span><span class="si">%s</span><span class="s">]&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">qunit</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">&#39;Energy [</span><span class="si">%s</span><span class="s">]&#39;</span> <span class="o">%</span><span class="n">eunit</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">e_max</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s">&#39;upper center&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">([</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">fn</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="s">&#39;trajectory-</span><span class="si">%s</span><span class="s">-</span><span class="si">%i</span><span class="s">.png&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Trajectory.to_xyz"><a class="viewcode-back" href="../../rg_module.html#quickff.perturbation.Trajectory.to_xyz">[docs]</a>    <span class="k">def</span> <span class="nf">to_xyz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Method to write the given trajectory to an XYZ file. This method</span>
+<span class="sd">            assumes that the coords attribute has been assigned.</span>
+
+<span class="sd">            **Optional Arguments**</span>
+
+<span class="sd">            fn</span>
+<span class="sd">                a string defining the name of the output file</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="s">&#39;active&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">:</span> <span class="k">return</span>
+        <span class="k">if</span> <span class="n">fn</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="s">&#39;trajectory-</span><span class="si">%s</span><span class="s">-</span><span class="si">%i</span><span class="s">.xyz&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">XYZWriter</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="n">pt</span><span class="p">[</span><span class="n">Z</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">Z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">numbers</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">frame</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">):</span>
+            <span class="n">xyz</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;frame </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">frame</span><span class="p">,</span> <span class="n">coord</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+</div></div>
+<span class="k">class</span> <span class="nc">RelaxedStrain</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">valence</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            **Arguments**</span>
+
+<span class="sd">            system</span>
+<span class="sd">                an instance of the Yaff System class defining the system</span>
+
+<span class="sd">            valence</span>
+<span class="sd">                an instance of ValenceFF defining the valence force field</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">system</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valence</span> <span class="o">=</span> <span class="n">valence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strains</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_terms</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Method to initialize trajectories and configure everything required</span>
+<span class="sd">            for the generate method.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strains</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">terms</span><span class="p">)</span>
+        <span class="n">trajectories</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">terms</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">do_terms</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">term</span><span class="o">.</span><span class="n">kind</span><span class="o">==</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;Only harmonic terms supported for pert traj&#39;</span>
+            <span class="n">ic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iclist</span><span class="o">.</span><span class="n">ictab</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">vlist</span><span class="o">.</span><span class="n">vtab</span><span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">][</span><span class="s">&#39;ic0&#39;</span><span class="p">]]</span>
+            <span class="n">kunit</span><span class="p">,</span> <span class="n">qunit</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">units</span>
+            <span class="k">if</span> <span class="n">ic</span><span class="p">[</span><span class="s">&#39;kind&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">start</span><span class="o">=</span><span class="n">ic</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span><span class="o">-</span><span class="mf">0.05</span><span class="o">*</span><span class="n">angstrom</span>
+                <span class="n">end</span><span class="o">=</span><span class="n">ic</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span><span class="o">+</span><span class="mf">0.05</span><span class="o">*</span><span class="n">angstrom</span>
+                <span class="k">if</span> <span class="n">start</span><span class="o">&lt;</span><span class="mf">0.0</span><span class="p">:</span> <span class="n">start</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">elif</span> <span class="n">ic</span><span class="p">[</span><span class="s">&#39;kind&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+                <span class="n">start</span><span class="o">=</span><span class="n">ic</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span><span class="o">-</span><span class="mi">5</span><span class="o">*</span><span class="n">deg</span>
+                <span class="n">end</span><span class="o">=</span><span class="n">ic</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">5</span><span class="o">*</span><span class="n">deg</span>
+                <span class="k">if</span> <span class="n">start</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">*</span><span class="n">deg</span><span class="p">:</span> <span class="n">start</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="k">if</span> <span class="n">end</span><span class="o">&gt;</span><span class="mi">180</span><span class="o">*</span><span class="n">deg</span><span class="p">:</span> <span class="n">end</span><span class="o">=</span><span class="mi">180</span><span class="o">*</span><span class="n">deg</span>
+            <span class="k">elif</span> <span class="n">ic</span><span class="p">[</span><span class="s">&#39;kind&#39;</span><span class="p">]</span>  <span class="ow">in</span> <span class="p">[</span><span class="mi">10</span><span class="p">]:</span>
+                <span class="n">start</span><span class="o">=-</span><span class="mf">0.01</span><span class="o">*</span><span class="n">angstrom</span>
+                <span class="n">end</span><span class="o">=</span><span class="mf">0.01</span><span class="o">*</span><span class="n">angstrom</span>
+            <span class="k">elif</span> <span class="n">ic</span><span class="p">[</span><span class="s">&#39;kind&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">11</span><span class="p">]:</span>
+                <span class="n">start</span><span class="o">=</span><span class="n">ic</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span><span class="o">-</span><span class="mf">0.01</span><span class="o">*</span><span class="n">angstrom</span><span class="o">**</span><span class="mi">2</span>
+                <span class="n">end</span><span class="o">=</span><span class="n">ic</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span><span class="o">+</span><span class="mf">0.01</span><span class="o">*</span><span class="n">angstrom</span><span class="o">**</span><span class="mi">2</span>
+                <span class="k">if</span> <span class="n">start</span><span class="o">&lt;</span><span class="mf">0.0</span><span class="p">:</span> <span class="n">start</span><span class="o">=</span><span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+            <span class="c">#collect all other ics</span>
+            <span class="n">ics</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">term2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">terms</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">term2</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">:</span> <span class="k">continue</span> <span class="c">#not the current term ic</span>
+                <span class="k">if</span> <span class="n">term2</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span> <span class="k">continue</span> <span class="c">#not a cross term ic</span>
+                <span class="n">ics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term2</span><span class="o">.</span><span class="n">ics</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">strains</span><span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">Strain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span> <span class="n">term</span><span class="o">.</span><span class="n">ics</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ics</span><span class="p">)</span>
+            <span class="n">trajectories</span><span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">Trajectory</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">trajectories</span>
+
+    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">,</span> <span class="n">remove_com</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Method to calculate the perturbation trajectory, i.e. the trajectory</span>
+<span class="sd">            that scans the geometry along the direction of the ic figuring in</span>
+<span class="sd">            the term with the given index (should be a diagonal term). This</span>
+<span class="sd">            method should be implemented in the derived classes.</span>
+
+<span class="sd">            **Arguments**</span>
+
+<span class="sd">            trajectory</span>
+<span class="sd">                instance of Trajectory class representing the perturbation</span>
+<span class="sd">                trajectory</span>
+
+<span class="sd">            **Optional Arguments**</span>
+
+<span class="sd">            remove_com</span>
+<span class="sd">                if set to True, removes the center of mass translation from the</span>
+<span class="sd">                resulting perturbation trajectories [default=True].</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">strain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strains</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">strain</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;Strain for term </span><span class="si">%i</span><span class="s"> (</span><span class="si">%s</span><span class="s">) is not initialized, skipping.&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">terms</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">basename</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">iq</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">trajectory</span><span class="o">.</span><span class="n">qvals</span><span class="p">):</span>
+            <span class="n">strain</span><span class="o">.</span><span class="n">constrain_value</span> <span class="o">=</span> <span class="n">q</span>
+            <span class="n">init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1e-3</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="p">[</span><span class="n">strain</span><span class="o">.</span><span class="n">ndof</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="c">#np.zeros([strain.ndof+1], float)</span>
+            <span class="n">sol</span><span class="p">,</span> <span class="n">infodict</span><span class="p">,</span> <span class="n">ier</span><span class="p">,</span> <span class="n">mesg</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">fsolve</span><span class="p">(</span><span class="n">strain</span><span class="o">.</span><span class="n">gradient</span><span class="p">,</span> <span class="n">init</span><span class="p">,</span> <span class="n">xtol</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">full_output</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="c">#print iq, q/parse_unit(trajectory.qunit), mesg, infodict[&#39;nfev&#39;], infodict[&#39;fvec&#39;]</span>
+            <span class="k">if</span> <span class="bp">False</span><span class="p">:</span><span class="c">#ier==5:</span>
+                <span class="c">#fsolve did not converge, flag this frame for deletion</span>
+                <span class="n">trajectory</span><span class="o">.</span><span class="n">qvals</span><span class="p">[</span><span class="n">iq</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
                 <span class="k">continue</span>
-            <span class="c">#Define the constraint under which the cost function needs</span>
-            <span class="c">#to be minimized</span>
-            <span class="n">constraints</span> <span class="o">=</span> <span class="p">({</span>
-                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;eq&#39;</span><span class="p">,</span>
-                <span class="s">&#39;fun&#39;</span> <span class="p">:</span> <span class="k">lambda</span> <span class="n">dx</span><span class="p">:</span> <span class="n">ic</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">coords</span> <span class="o">+</span> <span class="n">dx</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span> <span class="o">-</span> <span class="n">q</span><span class="p">,</span>
-                <span class="s">&#39;jac&#39;</span> <span class="p">:</span> <span class="k">lambda</span> <span class="n">dx</span><span class="p">:</span> <span class="n">ic</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">coords</span> <span class="o">+</span> <span class="n">dx</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))),</span>
-            <span class="p">},)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
-                <span class="n">chi</span><span class="p">,</span> <span class="n">guess</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;SLSQP&#39;</span><span class="p">,</span>
-                <span class="n">constraints</span><span class="o">=</span><span class="n">constraints</span><span class="p">,</span>
-                <span class="n">tol</span><span class="o">=</span><span class="mf">1e-9</span>
-            <span class="p">)</span>
-            <span class="n">trajectory</span><span class="p">[</span><span class="n">iq</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
-            <span class="c">#Use the result just found as the new guess to ensure continuity</span>
-            <span class="n">guess</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span>
-        <span class="k">return</span> <span class="n">trajectory</span></div></div>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">strain</span><span class="o">.</span><span class="n">coords0</span> <span class="o">+</span> <span class="n">sol</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">natom</span><span class="o">*</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">remove_com</span><span class="p">:</span>
+                <span class="n">com</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">masses</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">masses</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">natom</span><span class="p">):</span>
+                    <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">-=</span> <span class="n">com</span>
+            <span class="n">trajectory</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">iq</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="c">#delete flagged frames</span>
+        <span class="n">qvals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">q</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">trajectory</span><span class="o">.</span><span class="n">qvals</span><span class="p">,</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">coords</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">q</span><span class="p">):</span>
+                <span class="n">qvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+                <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
+        <span class="n">trajectory</span><span class="o">.</span><span class="n">qvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">qvals</span><span class="p">)</span>
+        <span class="n">trajectory</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">trajectory</span>
+
+    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">,</span> <span class="n">trajectories</span><span class="p">,</span> <span class="n">ai</span><span class="p">,</span> <span class="n">ffrefs</span><span class="o">=</span><span class="p">[],</span> <span class="n">do_valence</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Method to estimate the FF parameters for the relevant ic from the</span>
+<span class="sd">            given perturbation trajectory by fitting a harmonic potential to the</span>
+<span class="sd">            covalent energy along the trajectory.</span>
+
+<span class="sd">            **Arguments**</span>
+
+<span class="sd">            trajectory</span>
+<span class="sd">                a Trajectory instance representing the perturbation trajectory</span>
+
+<span class="sd">            trajectories</span>
+<span class="sd">                list of Trajectory instances representing all perturbation</span>
+<span class="sd">                trajectories</span>
+
+<span class="sd">            ai</span>
+<span class="sd">                an instance of the Reference representing the ab initio input</span>
+
+<span class="sd">            **Optional Arguments**</span>
+
+<span class="sd">            ffrefs</span>
+<span class="sd">                a list of Reference instances representing possible a priori</span>
+<span class="sd">                determined contributions to the force field (such as eg.</span>
+<span class="sd">                electrostatics and van der Waals)</span>
+
+<span class="sd">            do_valence</span>
+<span class="sd">                If set to True, the current valence force field (stored in</span>
+<span class="sd">                self.valence) will be used to compute the valence contribution</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">term</span> <span class="o">=</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">term</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">basename</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">basename</span>
+        <span class="k">if</span> <span class="s">&#39;active&#39;</span> <span class="ow">in</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;WARNING: Trajectory of term </span><span class="si">%i</span><span class="s"> (</span><span class="si">%s</span><span class="s">) was deactivated: skipping&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">basename</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">qs</span> <span class="o">=</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">qvals</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">AIs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trajectory</span><span class="o">.</span><span class="n">coords</span><span class="p">))</span>
+        <span class="n">FFs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trajectory</span><span class="o">.</span><span class="n">coords</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">istep</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">trajectory</span><span class="o">.</span><span class="n">coords</span><span class="p">):</span>
+            <span class="n">eai</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+            <span class="n">AIs</span><span class="p">[</span><span class="n">istep</span><span class="p">]</span> <span class="o">+=</span> <span class="n">eai</span>
+            <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">ffrefs</span><span class="p">:</span>
+                <span class="n">FFs</span><span class="p">[</span><span class="n">istep</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ref</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">do_valence</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">get_params</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="s">&#39;fc&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">istep</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">trajectory</span><span class="o">.</span><span class="n">coords</span><span class="p">):</span>
+                <span class="n">FFs</span><span class="p">[</span><span class="n">istep</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">calc_energy</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="n">fitpar</span><span class="p">(</span><span class="n">qs</span><span class="p">,</span> <span class="n">AIs</span><span class="o">-</span><span class="n">FFs</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">trajectory</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">trajectory</span><span class="o">.</span><span class="n">rv</span> <span class="o">=</span> <span class="o">-</span><span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">trajectory</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">vterm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">vlist</span><span class="o">.</span><span class="n">vtab</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">ic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iclist</span><span class="o">.</span><span class="n">ictab</span><span class="p">[</span><span class="n">vterm</span><span class="p">[</span><span class="s">&#39;ic0&#39;</span><span class="p">]]</span>
+            <span class="n">trajectory</span><span class="o">.</span><span class="n">rv</span> <span class="o">=</span> <span class="n">ic</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;WARNING: force constant of </span><span class="si">%s</span><span class="s"> is zero: rest value set to AI equilibrium&#39;</span> <span class="o">%</span><span class="n">basename</span><span class="p">)</span>
+        <span class="c">#no negative rest values for all ics except dihedrals and bendcos</span>
+        <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">ics</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">rv</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">trajectory</span><span class="o">.</span><span class="n">rv</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;WARNING: rest value of </span><span class="si">%s</span><span class="s"> was negative: set to zero&#39;</span> <span class="o">%</span><span class="n">basename</span><span class="p">)</span>
+        <span class="c">#no bending angles larger than 180*deg</span>
+        <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">ics</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">rv</span><span class="o">&gt;</span><span class="mi">180</span><span class="o">*</span><span class="n">deg</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;WARNING: rest value of </span><span class="si">%s</span><span class="s"> exceeds 180 deg: term set to BendCHarm with cos(phi0)=-1, deactivated perturbation trajectory&#39;</span> <span class="o">%</span><span class="n">basename</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">other_traj</span> <span class="ow">in</span> <span class="n">trajectories</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">other_traj</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">other_traj</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="o">==</span><span class="n">basename</span><span class="p">:</span> <span class="k">continue</span>
+                    <span class="n">other_traj</span><span class="o">.</span><span class="n">rv</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="n">other_traj</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="n">other_traj</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="bp">False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">modify_term</span><span class="p">(</span>
+                        <span class="n">other_traj</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                        <span class="n">Harmonic</span><span class="p">,</span> <span class="p">[</span><span class="n">BendCos</span><span class="p">(</span><span class="o">*</span><span class="n">other_traj</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">())],</span>
+                        <span class="n">basename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;BendAHarm&#39;</span><span class="p">,</span> <span class="s">&#39;BendCHarm&#39;</span><span class="p">),</span>
+                        <span class="p">[</span><span class="s">&#39;HC_FC_DIAG&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;kjmol&#39;</span><span class="p">,</span> <span class="s">&#39;au&#39;</span><span class="p">]</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">other_traj</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rv0</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">)</span>
+
+
+
+<span class="k">class</span> <span class="nc">Strain</span><span class="p">(</span><span class="n">ForceField</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">cons_ic</span><span class="p">,</span> <span class="n">ics</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            A class deriving from the Yaff ForceField class to implement the</span>
+<span class="sd">            strain of a molecular geometry associated with the term defined by</span>
+<span class="sd">            term_index.</span>
+
+<span class="sd">            **Arguments**</span>
+
+<span class="sd">            term_index</span>
+<span class="sd">                Integer defining the index of the term in valence.terms for</span>
+<span class="sd">                which the current strain is designed.</span>
+
+<span class="sd">            system</span>
+<span class="sd">                A Yaff System instance containing all system information.</span>
+
+<span class="sd">            cons_ic</span>
+<span class="sd">                An instance of Yaff Internal Coordinate representing the</span>
+<span class="sd">                constrained term in the strain.</span>
+
+<span class="sd">            ics</span>
+<span class="sd">                A list of Yaff Internal Coordinate instances for which the</span>
+<span class="sd">                strain needs to be minimized.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coords0</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ndof</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="n">ForcePartValence</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+        <span class="c">#construct ordered list of atoms in the constrained ic</span>
+        <span class="k">if</span> <span class="n">cons_ic</span><span class="o">.</span><span class="n">kind</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">cons_ic_atoms</span> <span class="o">=</span> <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">cons_ic</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="n">cons_ic_atoms</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">cons_ic</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]:</span>
+            <span class="n">cons_ic_atoms</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">cons_ic</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">]:</span>
+            <span class="n">cons_ic_atoms</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">cons_ic</span><span class="o">.</span><span class="n">index_pairs</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;IC of kind </span><span class="si">%i</span><span class="s"> not supported&#39;</span> <span class="o">%</span><span class="n">cons_ic</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span>
+        <span class="c">#add all bonds, bends and diheds that are not constrained</span>
+        <span class="k">for</span> <span class="n">bond</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">iter_bonds</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span><span class="o">==</span><span class="nb">list</span><span class="p">(</span><span class="n">cons_ic_atoms</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">list</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span><span class="o">==</span><span class="nb">list</span><span class="p">(</span><span class="n">cons_ic_atoms</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])):</span>
+                <span class="n">part</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="n">Harmonic</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">Bond</span><span class="p">(</span><span class="o">*</span><span class="n">bond</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">angle</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">iter_angles</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">==</span><span class="nb">list</span><span class="p">(</span><span class="n">cons_ic_atoms</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">list</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">==</span><span class="nb">list</span><span class="p">(</span><span class="n">cons_ic_atoms</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])):</span>
+                <span class="n">part</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="n">Harmonic</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">BendAngle</span><span class="p">(</span><span class="o">*</span><span class="n">angle</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">dihed</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">iter_dihedrals</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">dihed</span><span class="p">)</span><span class="o">==</span><span class="nb">list</span><span class="p">(</span><span class="n">cons_ic_atoms</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">list</span><span class="p">(</span><span class="n">dihed</span><span class="p">)</span><span class="o">==</span><span class="nb">list</span><span class="p">(</span><span class="n">cons_ic_atoms</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])):</span>
+                <span class="n">part</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="n">Harmonic</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">DihedAngle</span><span class="p">(</span><span class="o">*</span><span class="n">dihed</span><span class="p">)))</span>
+        <span class="c">#set the rest values to the equilibrium values</span>
+        <span class="n">part</span><span class="o">.</span><span class="n">dlist</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+        <span class="n">part</span><span class="o">.</span><span class="n">iclist</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">iterm</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">vlist</span><span class="o">.</span><span class="n">nv</span><span class="p">):</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">vlist</span><span class="o">.</span><span class="n">vtab</span><span class="p">[</span><span class="n">iterm</span><span class="p">]</span>
+            <span class="n">ic</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">iclist</span><span class="o">.</span><span class="n">ictab</span><span class="p">[</span><span class="n">term</span><span class="p">[</span><span class="s">&#39;ic0&#39;</span><span class="p">]]</span>
+            <span class="n">term</span><span class="p">[</span><span class="s">&#39;par1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ic</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span>
+        <span class="n">ForceField</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="p">[</span><span class="n">part</span><span class="p">])</span>
+        <span class="c">#Abuse the Chebychev1 polynomial to simply get the value of q-1 and</span>
+        <span class="c">#implement the contraint</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="n">ForcePartValence</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+        <span class="n">part</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="n">Chebychev1</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span><span class="n">cons_ic</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constraint</span> <span class="o">=</span> <span class="n">ForceField</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="p">[</span><span class="n">part</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constraint_value</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Compute the gradient of the strain wrt Cartesian coordinates of the</span>
+<span class="sd">            system. For every ic that needs to be constrained, a Lagrange multiplier</span>
+<span class="sd">            is included.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c">#small check</span>
+        <span class="k">assert</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span>  <span class="bp">self</span><span class="o">.</span><span class="n">ndof</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="c">#initialize return value</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">),))</span>
+        <span class="c">#compute strain gradient</span>
+        <span class="n">gstrain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_pos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span> <span class="o">+</span> <span class="n">X</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">ndof</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">gpos</span><span class="o">=</span><span class="n">gstrain</span><span class="p">)</span>
+        <span class="c">#compute constraint gradient</span>
+        <span class="n">gconstraint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">update_pos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span> <span class="o">+</span> <span class="n">X</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">ndof</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)))</span>
+        <span class="n">econstraint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">gpos</span><span class="o">=</span><span class="n">gconstraint</span><span class="p">)</span>
+        <span class="c">#construct gradient</span>
+        <span class="n">grad</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">ndof</span><span class="p">]</span> <span class="o">=</span> <span class="n">gstrain</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ndof</span><span class="p">]</span><span class="o">*</span><span class="n">gconstraint</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span> <span class="c">#+ 0.01*X[:self.ndof]</span>
+        <span class="n">grad</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ndof</span><span class="p">]</span> <span class="o">=</span> <span class="n">econstraint</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">constrain_value</span> <span class="c">#self.constraint.parts[0].vlist.vtab[0][&#39;energy&#39;] + 1.0 - self.constrain_value</span>
+        <span class="k">return</span> <span class="n">grad</span>
 </pre></div>
 
           </div>
@@ -419,13 +558,13 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 1.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2015, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+        &copy; Copyright 2016, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

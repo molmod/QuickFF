@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial 1 - Benzene &mdash; QuickFF 1.0 documentation</title>
+    <title>Tutorial 1 - Benzene &mdash; QuickFF 2.0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0',
+        VERSION:     '2.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,9 +23,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 1.0 documentation" href="index.html" />
-    <link rel="next" title="1. Module quickff.system – Representation of molecular systems" href="rg_system.html" />
-    <link rel="prev" title="2. Importing QuickFF as a library" href="ug_library.html" /> 
+    <link rel="top" title="QuickFF 2.0.1 documentation" href="index.html" />
+    <link rel="next" title="1. quickff.cost – Least-Square cost function for hessian matching" href="rg_module.html" />
+    <link rel="prev" title="2. Generating Yaff parameter file for the electrostatic contribution" href="ug_inputei.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,12 +38,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="rg_system.html" title="1. Module quickff.system – Representation of molecular systems"
+          <a href="rg_module.html" title="1. quickff.cost – Least-Square cost function for hessian matching"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="ug_library.html" title="2. Importing QuickFF as a library"
+          <a href="ug_inputei.html" title="2. Generating Yaff parameter file for the electrostatic contribution"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">QuickFF 1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -55,7 +55,7 @@
   <div class="section" id="tutorial-1-benzene">
 <h1>Tutorial 1 - Benzene<a class="headerlink" href="#tutorial-1-benzene" title="Permalink to this headline">¶</a></h1>
 <p>This tutorial will describe in detail the use of QuickFF to generate a force
-field for benzene. This tutorial assumes that the following to input files are
+field for benzene. This tutorial assumes that the following input files are
 available (examples of such file are provided with the source code in the
 directory <cite>share/systems/benzene</cite>):</p>
 <ul>
@@ -165,216 +165,158 @@ be found in the path <cite>/wpart/hi/charges</cite>.</p>
 </ul>
 <div class="section" id="covalent-force-field-without-non-bonding-terms">
 <h2>Covalent force field without non-bonding terms<a class="headerlink" href="#covalent-force-field-without-non-bonding-terms" title="Permalink to this headline">¶</a></h2>
-<p>As a first example, we will derive a force field containing only covalent terms,
-i.e. harmonic bonds, harmonic bends, single-cosine dihedrals and harmonic
-out-of-plane distances. No electrostatic nor van der Waals interactions will be
-included in the force field. Furthermore, we use the <a class="reference internal" href="ug_script.html#seclab-ug-atype-estimator"><em>built-in feature</em></a> to automatically determine atom types according to
+<p>As a first example, we will derive a force field containing only covalent terms.
+No electrostatic nor van der Waals interactions will be included in the force
+field. Furthermore, we use the <a class="reference internal" href="ug_script.html#seclab-ug-atype-estimator"><em>built-in feature</em></a> to automatically determine atom types according to
 the level <cite>low</cite> (for benzene it does not make any difference which level is
-chosen). This can very easily be done using the <a class="reference internal" href="rg_qffest.html#seclab-rg-qffest"><em>qff-est.py</em></a> script (documentation on the available options can be
-accessed by <cite>qff-est.py</cite> <em class="xref std std-option">--help</em>):</p>
-<div class="highlight-python"><div class="highlight"><pre>qff-est.py --ei-model=Zero --vdw-model=Zero --atypes-level=low --ic-ids=all gaussian.fchk
+chosen). This can very easily be done using the <a class="reference internal" href="rg_scripts.html#seclab-rg-scripts-qff"><em>qff.py</em></a> script (documentation on the available options can be
+accessed by <cite>qff.py</cite> <em class="xref std std-option">--help</em>):</p>
+<div class="highlight-python"><div class="highlight"><pre>qff.py --ffatypes=low gaussian.fchk
 </pre></div>
 </div>
-<p>Note that the option <em class="xref std std-option">--vdw-model=Zero</em> is not necessary here, because
-<cite>Zero</cite> is the default value. The same applies for the option
-<em class="xref std std-option">--ic-ids=all</em>. The script will dump all relevant information to the
-screen, for this tutorial, the output is as follows:</p>
-<div class="highlight-text"><div class="highlight"><pre>____________/\\\________________________________________________________/\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\______________
-__________/\\\\/\\\\_______________________________________/\\\_________\/\\\///////////__\/\\\///////////______________
-_________/\\\//\////\\\_________________/\\\_______________\/\\\_________\/\\\_____________\/\\\________________________
-_________/\\\______\//\\\__/\\\____/\\\_\///______/\\\\\\\\_\/\\\\\\\\____\/\\\\\\\\\\\_____\/\\\\\\\\\\\_______________
-_________\//\\\______/\\\__\/\\\___\/\\\__/\\\___/\\\//////__\/\\\////\\\__\/\\\///////______\/\\\///////_______________
-___________\///\\\\/\\\\/___\/\\\___\/\\\_\/\\\__/\\\_________\/\\\\\\\\/___\/\\\_____________\/\\\_____________________
-______________\////\\\//_____\/\\\___\/\\\_\/\\\_\//\\\________\/\\\///\\\___\/\\\_____________\/\\\____________________
-__________________\///\\\\\\__\//\\\\\\\\\__\/\\\__\///\\\\\\\\_\/\\\_\///\\\_\/\\\_____________\/\\\___________________
-_____________________\//////____\/////////___\///_____\////////__\///____\///__\///______________\///___________________
+<p>The script will dump all relevant information to the screen, for this tutorial,
+the output is as follows:</p>
+<div class="highlight-text"><div class="highlight"><pre>________________/\\\_________/\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\_________________
+______________/\\\\/\\\\_____\/\\\///////////__\/\\\///////////_________________
+_____________/\\\//\////\\\___\/\\\_____________\/\\\___________________________
+_____________/\\\______\//\\\__\/\\\\\\\\\\\_____\/\\\\\\\\\\\__________________
+_____________\//\\\______/\\\___\/\\\///////______\/\\\///////__________________
+_______________\///\\\\/\\\\/____\/\\\_____________\/\\\________________________
+__________________\////\\\//______\/\\\_____________\/\\\_______________________
+______________________\///\\\\\\___\/\\\_____________\/\\\______________________
+_________________________\//////____\///______________\///______________________
 
-    Welcom to QuickFF 1.0 - a Python package to quickly derive force fields from ab initio input data
+                            Welcom to QuickFF 2.0
+   a Python package to quickly derive force fields from ab initio input data
 
-                                                Written by
-                    Louis Vanduyfhuys(1)*, Steven Vandenbrande(1) and Toon Verstraelen(1)
+                                 Written by
+     Louis Vanduyfhuys(1)*, Steven Vandenbrande(1) and Toon Verstraelen(1)
 
-(1) Center for Molecular Modeling, Ghent University Belgium.
-* mailto: Louis.Vanduyfhuys@UGent.be
-
-
-User:           louis
-Machine info:   Linux molmod91 3.13.0-46-generic #77-Ubuntu SMP Mon Mar 2 18:23:39 UTC 2015 x86_64
-Time:           2015-03-06 10:18:42.412763
-Python version: 2.7.6 (default, Mar 22 2014, 22:59:56) [GCC 4.8.2]
-Numpy version:  1.8.2
-Scipy version:  0.13.3
-Current Dir:    /home/louis/build/quickff/doc
-Command line:   /home/louis/.local/bin/qff-est.py --ei-model=Zero --vdw-model=Zero --atypes-level=low --ic-ids=all /home/louis/build/quickff/share/systems/benzene/gaussian.fchk
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-System information:
-
-    ----------------------------------------------------------------------------------------------
-      index   symbol   ffatype       charge [e]     radius [A]    epsilon [kJ/mol]    sigma [A]   
-    ----------------------------------------------------------------------------------------------
-      0       H        H                0.000         0.000           0.000           0.000
-      1       C        C                0.000         0.000           0.000           0.000
-      2       C        C                0.000         0.000           0.000           0.000
-      3       C        C                0.000         0.000           0.000           0.000
-      4       C        C                0.000         0.000           0.000           0.000
-      5       C        C                0.000         0.000           0.000           0.000
-      6       C        C                0.000         0.000           0.000           0.000
-      7       H        H                0.000         0.000           0.000           0.000
-      8       H        H                0.000         0.000           0.000           0.000
-      9       H        H                0.000         0.000           0.000           0.000
-      10      H        H                0.000         0.000           0.000           0.000
-      11      H        H                0.000         0.000           0.000           0.000
-    ----------------------------------------------------------------------------------------------
-
-Model information:
-
-    AI Total project Rot/Trans =  True
-    AI Total kind = AbInitio (Harmonic)
-    FF Electrostatic scales = 0.00 0.00 1.00
-    FF Electrostatic kind = Zero
-    FF van der Waals scales = 0.00 0.00 1.00
-    FF van der Waals kind = Zero
-    FF Covalent kind = TermList
-    FF Covalent term icnames:
-
-        angle/C.C.C           angle/C.C.H           bond/C.C              bond/C.H          
-        dihed/C.C.C.C         dihed/C.C.C.H         dihed/H.C.C.H         opdist/C.C.H.C    
-    
-
-Determine dihedral potentials
-
-    dihed/C.C.C.C      0.5*K*[1 - cos(2(psi -   0.0))]
-    dihed/C.C.C.H      0.5*K*[1 - cos(2(psi -   0.0))]
-    dihed/H.C.C.H      0.5*K*[1 - cos(2(psi -   0.0))]
-
-Determine the coordinates of the perturbation trajectories
-
-    angle/C.C.C      will generate 6 trajectories
-    angle/C.C.H      will generate 12 trajectories
-    bond/C.C         will generate 6 trajectories
-    bond/C.H         will generate 6 trajectories
-    opdist/C.C.H.C   will generate 6 trajectories
-
-Estimating all pars for bonds, bends and opdists
-
-    angle/C.C.C        K =  1762.835 ±     0.114 kjmol/rad**2       q0 =   120.040 ±     0.002 deg            
-    angle/C.C.H        K =   759.562 ±     0.300 kjmol/rad**2       q0 =   120.014 ±     0.002 deg            
-    bond/C.C           K =  4623.046 ±     0.463 kjmol/A**2         q0 =     1.395 ±     0.000 A              
-    bond/C.H           K =  3328.471 ±     0.048 kjmol/A**2         q0 =     1.084 ±     0.000 A              
-    opdist/C.C.H.C     K =  1228.761 ±     1.465 kjmol/A**2         q0 =     0.000 ±     0.000 A              
-
-Refining force constants using a Hessian LSQ cost
-
-    angle/C.C.C        K =   492.017 ±     0.000 kjmol/rad**2       q0 =   120.040 ±     0.000 deg            
-    angle/C.C.H        K =   330.847 ±     0.000 kjmol/rad**2       q0 =   120.014 ±     0.000 deg            
-    bond/C.C           K =  3201.036 ±     0.000 kjmol/A**2         q0 =     1.395 ±     0.000 A              
-    bond/C.H           K =  3310.686 ±     0.000 kjmol/A**2         q0 =     1.084 ±     0.000 A              
-    dihed/C.C.C.C      K =    32.071 ±     0.000 kjmol              q0 =     0.000 ±     0.000 deg            
-    dihed/C.C.C.H      K =    31.980 ±     0.000 kjmol              q0 =     0.000 ±     0.000 deg            
-    dihed/H.C.C.H      K =    12.964 ±     0.000 kjmol              q0 =     0.000 ±     0.000 deg            
-    opdist/C.C.H.C     K =   274.037 ±     0.000 kjmol/A**2         q0 =     0.000 ±     0.000 A              
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Time:           2015-03-06 10:18:51.419668
+         (1) Center for Molecular Modeling, Ghent University Belgium.
+                   * mailto: Louis.Vanduyfhuys@UGent.be
 
 
-__/\\\__________________________________________________________________________________________________________/\\\____
-  \ \\\                                                                                                         \ \\\
-   \ \\\                        End of file. Thanks for using QuickFF! Come back soon!!                          \ \\\
-____\///__________________________________________________________________________________________________________\///__
+ USER               louis
+ MACHINE            Linux molmod91 4.2.0-34-generic #39-Ubuntu SMP Thu Mar 10 
+ MACHINE            22:13:01 UTC 2016 x86_64
+ TIME               2016-03-24 18:36:39.207123
+ PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
+ CURRENT DIR        /home/louis/build/quickff/doc
+ COMMAND LINE       /home/louis/.local/bin/qff.py --ffatypes=low /home/louis/
+ COMMAND LINE       build/quickff/share/systems/benzene/gaussian.fchk
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ QFF    Initializing system
+ QFF    Initializing Second order taylor reference for ai
+
+ PROG   Initializing program
+
+ VAL    Initializing valence force field
+ VAL    Added 12 Harmonic bond terms
+ VAL    Added 18 Harmonic bend terms
+ VAL    Added 24 Cosine dihedral terms
+ VAL    Added 6 Harmonic and 0 SquareHarmonic out-of-plane distance terms
+
+ EQSET  Resetting system coordinates to ab initio ref
+ EQSET  Setting rest values to AI equilibrium values for tasks EQ_RV
+
+ EQSET  Averaging force field parameters over master and slaves
+
+ PTGEN  Resetting system coordinates to ab initio ref
+ PTGEN  Constructing trajectories
+
+ PTEST  Resetting system coordinates to ab initio ref
+ PTEST  Estimating FF parameters from perturbation trajectories
+
+ PTEST  Averaging force field parameters over master and slaves
+
+ CRINI  Resetting system coordinates to ab initio ref
+ CRINI  Added 18 cross terms for angle patterns
+
+ HCEST  Resetting system coordinates to ab initio ref
+ HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
+ HCEST  CROSS
+
+ PTEST  Resetting system coordinates to ab initio ref
+ PTEST  Estimating FF parameters from perturbation trajectories with valence 
+ PTEST  reference
+
+ PTEST  Averaging force field parameters over master and slaves
+
+ HCEST  Resetting system coordinates to ab initio ref
+ HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
+ HCEST  CROSS
+
+
+        BondHarm/C.C (kjmol/A^2  A)                                             
+            fc =  3975 ± .000    rv = 1.395 ± .000
+
+        BondHarm/C.H (kjmol/A^2  A)                                             
+            fc =  3385 ± .000    rv = 1.084 ± .000
+
+        BendAHarm/C.C.C (kjmol/rad^2  deg)                                      
+            fc = 618.5 ± .000    rv = 120.0 ± .000
+
+        BendAHarm/C.C.H (kjmol/rad^2  deg)                                      
+            fc = 291.8 ± .000    rv = 120.0 ± .000
+
+        Torsion/C.C.C.C (au  kjmol  deg)                                        
+            fc = 32.1 ± 0.0    rv = .000 ± 0.0    m = 2
+
+        Torsion/C.C.C.H (au  kjmol  deg)                                        
+            fc = 32.1 ± .00    rv = .000 ± 0.0    m = 2
+
+        Torsion/H.C.C.H (au  kjmol  deg)                                        
+            fc = 12.8 ± 0.0    rv = .000 ± 0.0    m = 2
+
+        Oopdist/C.C.H.C (kjmol/A^2  A)                                          
+            fc = 277.0 ± .000    rv = .0000 ± .000
+
+        Cross/C.C.C/b0a (kjmol/(A*rad)  A  deg)                                 
+            fc = 9.53 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+
+        Cross/C.C.C/b1a (kjmol/(A*rad)  A  deg)                                 
+            fc = 9.64 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+
+        Cross/C.C.C/bb (kjmol/A^2  A  A)                                        
+            fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
+
+        Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
+            fc = 63.1 ± .0    rv0 = 1.39 ± .00    rv0 =  120 ± .00
+
+        Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
+            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± .00
+
+        Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
+            fc =  120 ± .0    rv0 = 1.39 ± .00    rv0 = 1.08 ± 0.0
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+ TIMING Initializing                    0:00:00.094545
+ TIMING Equil Set RV                    0:00:00.006975
+ TIMING PT Generate                     0:00:19.210069
+ TIMING PT Estimate                     0:00:00.114188
+ TIMING HC Estimate FC                  0:00:00.459711
+ TIMING PT plot energy                  0:00:00.000012
+ TIMING PT dump XYZ                     0:00:00.000006
+
+__/\\\__________________________________________________________________/\\\____
+  \ \\\                                                                 \ \\\
+   \ \\\     End of file. Thanks for using QuickFF! Come back soon!!     \ \\\
+____\///__________________________________________________________________\///__
 </pre></div>
 </div>
-<p>This output contains all relevant information concerning: the machine
-environment, molecular system, model and resulting force field. Let&#8217;s break down
-the output in these 4 components (as the first 18 lines are a simple header, we
-will ignore them in this tutorial):</p>
+<p>The logger will dump to following information to the screen (or a file if the
+<em class="xref std std-option">--logfile</em> option was used):</p>
 <ul>
 <li><dl class="first docutils">
 <dt>Machine environment:</dt>
 <dd><p class="first last">This section contains some general information about the machine environment
 on which you ran the quickff job. It contains the user name, machine info,
-starting time of job, Python, Numpy and Scipy version, current directory and
-the command used to envoke quickff.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>System information:</dt>
-<dd><p class="first last">This section contains relevant information about the molecular system, this
-includes atom number, atom type, charge, charge radius, van der Waals
-epsilon and van der Waals sigma parameters for every atom in the system.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>Model information:</dt>
-<dd><p class="first">This section contains relevant information about ab initio model used as
-training data and the resulting force field model. The following entries
-can be recognized:</p>
-<ul class="last">
-<li><dl class="first docutils">
-<dt>AI Total project Rot/Trans =  True</dt>
-<dd><p class="first last">The rotational and translational degrees of freedom are projected out
-of the ab initio Hessian before it is introduced in the Taylor expansion</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>AI Total kind = AbInitio (Harmonic)</dt>
-<dd><p class="first last">The ab initio energy is approximated as a second order Taylor expansion,
-i.e. a harmonic energy expression</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>FF Electrostatic scales = 0.00 0.00 1.00</dt>
-<dd><p class="first last">1-2 and 1-3 electrostatic interactions are rescaled with a factor 0.00,
-i.e. they are switched of, and 1-4 electrostatic interactions are
-rescaled with a factor 1.00, i.e. they are all fully accounted for.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>FF Electrostatic kind = Zero</dt>
-<dd><p class="first last">The electrostatic interactions in the force field are modeled by means
-of a Zero model. This means that they are completely neglected
-(disregarding the van der Waals scales values).</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>FF van der Waals scales = 0.00 0.00 1.00</dt>
-<dd><p class="first last">1-2 and 1-3 van der Waals interactions are rescaled by a factor of 0.00,
-hence, they are switched off. 1-4 interactions are fully accounted for.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>FF van der Waals kind = Zero</dt>
-<dd><p class="first last">The van der Waals interactions in the force field are modeled by means
-of a Zero model. This means that they are completely neglected
-(disregarding the van der Waals scales values).</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>FF Covalent kind = TermList</dt>
-<dd><p class="first last">The covalent part of the force field is modeled by means of a list of
-covalent force field terms. One for each kind of internal coordinates.
-See <cite>FF Covalent term icnames</cite> for a complete list of these terms.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>FF Covalent term icnames:</dt>
-<dd><p class="first last">A list of all covalent terms included in the force field.</p>
-</dd>
-</dl>
-</li>
-</ul>
+starting time of job, Python version, current directory and the command used
+to envoke quickff.</p>
 </dd>
 </dl>
 </li>
@@ -382,137 +324,7 @@ See <cite>FF Covalent term icnames</cite> for a complete list of these terms.</p
 </div>
 <div class="section" id="force-field-with-electrostatics">
 <h2>Force field with electrostatics<a class="headerlink" href="#force-field-with-electrostatics" title="Permalink to this headline">¶</a></h2>
-<p>As a second example, we will derive a force field containing covalent terms and
-electrostatic interactions. We wish to include the electrostatic interactions
-between all atom pairs. This means we will use an ei-scale of 1.0 for 1-2, 1-3
-and 1-4 atom pairs (i.e. <em class="xref std std-option">--ei-scales=1.0,1.0,1.0</em>). The charges will be
-taken from the Hirshfeld-I path (<cite>/wpart/hi</cite>, see beginning of this section) in
-the gaussian_wpart.h5 file. No van der Waals interactions will be included in
-the force field. Furthermore, we again use the <a class="reference internal" href="ug_script.html#seclab-ug-atype-estimator"><em>built-in feature</em></a> to automatically determine atom types according to
-the level <cite>low</cite>. This time, the required command is:</p>
-<div class="highlight-python"><div class="highlight"><pre>qff-est.py --ei-model=HarmPoint --ei-path=/wpart/hi --ei-scales=1.0,1.0,1.0 --vdw-model=Zero --atypes-level=low --ic-ids=all gaussian.fchk gaussian_wpart.h5
-</pre></div>
-</div>
-<p>Again, some options are not necessary (<em class="xref std std-option">--vdw-model=Zero</em> and
-<em class="xref std std-option">--ic-ids=all</em>), because their value matches the default value. The
-output of the script this time is as follows:</p>
-<div class="highlight-text"><div class="highlight"><pre>____________/\\\________________________________________________________/\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\______________
-__________/\\\\/\\\\_______________________________________/\\\_________\/\\\///////////__\/\\\///////////______________
-_________/\\\//\////\\\_________________/\\\_______________\/\\\_________\/\\\_____________\/\\\________________________
-_________/\\\______\//\\\__/\\\____/\\\_\///______/\\\\\\\\_\/\\\\\\\\____\/\\\\\\\\\\\_____\/\\\\\\\\\\\_______________
-_________\//\\\______/\\\__\/\\\___\/\\\__/\\\___/\\\//////__\/\\\////\\\__\/\\\///////______\/\\\///////_______________
-___________\///\\\\/\\\\/___\/\\\___\/\\\_\/\\\__/\\\_________\/\\\\\\\\/___\/\\\_____________\/\\\_____________________
-______________\////\\\//_____\/\\\___\/\\\_\/\\\_\//\\\________\/\\\///\\\___\/\\\_____________\/\\\____________________
-__________________\///\\\\\\__\//\\\\\\\\\__\/\\\__\///\\\\\\\\_\/\\\_\///\\\_\/\\\_____________\/\\\___________________
-_____________________\//////____\/////////___\///_____\////////__\///____\///__\///______________\///___________________
-
-    Welcom to QuickFF 1.0 - a Python package to quickly derive force fields from ab initio input data
-
-                                                Written by
-                    Louis Vanduyfhuys(1)*, Steven Vandenbrande(1) and Toon Verstraelen(1)
-
-(1) Center for Molecular Modeling, Ghent University Belgium.
-* mailto: Louis.Vanduyfhuys@UGent.be
-
-
-User:           louis
-Machine info:   Linux molmod91 3.13.0-46-generic #77-Ubuntu SMP Mon Mar 2 18:23:39 UTC 2015 x86_64
-Time:           2015-03-06 10:18:51.851408
-Python version: 2.7.6 (default, Mar 22 2014, 22:59:56) [GCC 4.8.2]
-Numpy version:  1.8.2
-Scipy version:  0.13.3
-Current Dir:    /home/louis/build/quickff/doc
-Command line:   /home/louis/.local/bin/qff-est.py --ei-model=HarmPoint --ei-path=/wpart/hi --ei-scales=1.0,1.0,1.0 --vdw-model=Zero --atypes-level=low --ic-ids=all /home/louis/build/quickff/share/systems/benzene/gaussian.fchk /home/louis/build/quickff/share/systems/benzene/gaussian_wpart.h5
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-System information:
-
-    ----------------------------------------------------------------------------------------------
-      index   symbol   ffatype       charge [e]     radius [A]    epsilon [kJ/mol]    sigma [A]   
-    ----------------------------------------------------------------------------------------------
-      0       H        H                0.094         0.000           0.000           0.000
-      1       C        C               -0.094         0.000           0.000           0.000
-      2       C        C               -0.094         0.000           0.000           0.000
-      3       C        C               -0.094         0.000           0.000           0.000
-      4       C        C               -0.094         0.000           0.000           0.000
-      5       C        C               -0.094         0.000           0.000           0.000
-      6       C        C               -0.094         0.000           0.000           0.000
-      7       H        H                0.094         0.000           0.000           0.000
-      8       H        H                0.094         0.000           0.000           0.000
-      9       H        H                0.094         0.000           0.000           0.000
-      10      H        H                0.094         0.000           0.000           0.000
-      11      H        H                0.094         0.000           0.000           0.000
-    ----------------------------------------------------------------------------------------------
-
-Model information:
-
-    AI Total project Rot/Trans =  True
-    AI Total kind = AbInitio (Harmonic)
-    FF Electrostatic scales = 1.00 1.00 1.00
-    FF Electrostatic kind = CoulombPoint (Harmonic)
-    FF van der Waals scales = 0.00 0.00 1.00
-    FF van der Waals kind = Zero
-    FF Covalent kind = TermList
-    FF Covalent term icnames:
-
-        angle/C.C.C           angle/C.C.H           bond/C.C              bond/C.H          
-        dihed/C.C.C.C         dihed/C.C.C.H         dihed/H.C.C.H         opdist/C.C.H.C    
-    
-
-Determine dihedral potentials
-
-    dihed/C.C.C.C      0.5*K*[1 - cos(2(psi -   0.0))]
-    dihed/C.C.C.H      0.5*K*[1 - cos(2(psi -   0.0))]
-    dihed/H.C.C.H      0.5*K*[1 - cos(2(psi -   0.0))]
-
-Determine the coordinates of the perturbation trajectories
-
-    angle/C.C.C      will generate 6 trajectories
-    angle/C.C.H      will generate 12 trajectories
-    bond/C.C         will generate 6 trajectories
-    bond/C.H         will generate 6 trajectories
-    opdist/C.C.H.C   will generate 6 trajectories
-
-Estimating all pars for bonds, bends and opdists
-
-    angle/C.C.C        K =  1760.054 ±     0.112 kjmol/rad**2       q0 =   120.040 ±     0.002 deg            
-    angle/C.C.H        K =   768.131 ±     0.301 kjmol/rad**2       q0 =   120.014 ±     0.002 deg            
-    bond/C.C           K =  4614.252 ±     0.481 kjmol/A**2         q0 =     1.393 ±     0.000 A              
-    bond/C.H           K =  3351.612 ±     0.094 kjmol/A**2         q0 =     1.089 ±     0.000 A              
-    opdist/C.C.H.C     K =  1228.147 ±     1.459 kjmol/A**2         q0 =     0.000 ±     0.000 A              
-
-Refining force constants using a Hessian LSQ cost
-
-    angle/C.C.C        K =   490.585 ±     0.000 kjmol/rad**2       q0 =   120.040 ±     0.000 deg            
-    angle/C.C.H        K =   332.442 ±     0.000 kjmol/rad**2       q0 =   120.014 ±     0.000 deg            
-    bond/C.C           K =  3193.326 ±     0.000 kjmol/A**2         q0 =     1.393 ±     0.000 A              
-    bond/C.H           K =  3330.807 ±     0.000 kjmol/A**2         q0 =     1.089 ±     0.000 A              
-    dihed/C.C.C.C      K =    32.070 ±     0.000 kjmol              q0 =     0.000 ±     0.000 deg            
-    dihed/C.C.C.H      K =    32.140 ±     0.000 kjmol              q0 =     0.000 ±     0.000 deg            
-    dihed/H.C.C.H      K =    13.355 ±     0.000 kjmol              q0 =     0.000 ±     0.000 deg            
-    opdist/C.C.H.C     K =   272.582 ±     0.000 kjmol/A**2         q0 =     0.000 ±     0.000 A              
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Time:           2015-03-06 10:19:00.610710
-
-
-__/\\\__________________________________________________________________________________________________________/\\\____
-  \ \\\                                                                                                         \ \\\
-   \ \\\                        End of file. Thanks for using QuickFF! Come back soon!!                          \ \\\
-____\///__________________________________________________________________________________________________________\///__
-</pre></div>
-</div>
-<p>In the model information section, we now see an entry:</p>
-<div class="highlight-python"><div class="highlight"><pre>FF Electrostatic kind = CoulombPoint (Harmonic)
-</pre></div>
-</div>
-<p>This means that the electrostatic interactions in the force field are modeled by
-means of Coulomb interactions between point charges. However, the Coulombic
-energy expression is Taylor-expanded up to second order. This drastically
-speeds up de processing of the perturbation trajectories without losing
-accuracy.</p>
+<p>TODO</p>
 </div>
 </div>
 
@@ -532,11 +344,11 @@ accuracy.</p>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="ug_library.html"
-                        title="previous chapter">2. Importing QuickFF as a library</a></p>
+  <p class="topless"><a href="ug_inputei.html"
+                        title="previous chapter">2. Generating Yaff parameter file for the electrostatic contribution</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="rg_system.html"
-                        title="next chapter">1. Module <tt class="docutils literal"><span class="pre">quickff.system</span></tt> &#8211; Representation of molecular systems</a></p>
+  <p class="topless"><a href="rg_module.html"
+                        title="next chapter">1. <tt class="docutils literal"><span class="pre">quickff.cost</span></tt> &#8211; Least-Square cost function for hessian matching</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/tu_benzene.txt"
@@ -569,17 +381,17 @@ accuracy.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="rg_system.html" title="1. Module quickff.system – Representation of molecular systems"
+          <a href="rg_module.html" title="1. quickff.cost – Least-Square cost function for hessian matching"
              >next</a> |</li>
         <li class="right" >
-          <a href="ug_library.html" title="2. Importing QuickFF as a library"
+          <a href="ug_inputei.html" title="2. Generating Yaff parameter file for the electrostatic contribution"
              >previous</a> |</li>
-        <li><a href="index.html">QuickFF 1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2015, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+        &copy; Copyright 2016, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

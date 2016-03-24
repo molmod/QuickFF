@@ -1,0 +1,219 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>1. Script qff.py – Main script to run QuickFF calculation &mdash; QuickFF 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="QuickFF 2.0.1 documentation" href="index.html" />
+    <link rel="prev" title="1. quickff.cost – Least-Square cost function for hessian matching" href="rg_module.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_module.html" title="1. quickff.cost – Least-Square cost function for hessian matching"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="script-qff-py-main-script-to-run-quickff-calculation">
+<span id="seclab-rg-scripts-qff"></span><span id="seclab-rg-scripts"></span><h1>1. Script <tt class="docutils literal"><span class="pre">qff.py</span></tt> &#8211; Main script to run QuickFF calculation<a class="headerlink" href="#script-qff-py-main-script-to-run-quickff-calculation" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-text"><div class="highlight"><pre>Usage: qff.py [options] fn1 [fn2 [...]]
+
+This script will apply QuickFF to derive a covalent force field for the given
+system. The arguments fn1, fn2, ... represent all input files that specify the
+system and the ab initio reference data. Files later in the list overwrite
+earlier files
+
+Options:
+  -h, --help            show this help message and exit
+  --scoop               Flag to enable parallelisation using SCOOP. With
+                        SCOOP, the command to run QuickFF is slightly
+                        different, the absolute path to quickff.py should be
+                        used. For example, to run on 4 cores: python -m scoop
+                        -n4 /path/to/%prog --scoop [options] fns
+                        [default=False]
+  -s, --silent          Swith of all logging completely, overwrites all other
+                        verbosity options. [default=False]
+  -v, --verbose         Increases verbosity, is overwriten if SILENT is
+                        switched on. [default=False]
+  -l LOGFILE, --logfile=LOGFILE
+                        Redirect logger output to a file with the given name.
+                        [default=none]
+
+  General:
+    General specifications of the program
+
+    -m PROGRAM_MODE, --program-mode=PROGRAM_MODE
+                        Specify the program mode which defines the set of
+                        instructions that will be executed. Allowed strings
+                        are the names of the program classes defined in
+                        quickff/program.py, which are: MakeTrajectories,
+                        PlotTrajectories, DeriveDiagFF, DeriveNonDiagFF (case
+                        sensitive). [default=DeriveNonDiagFF]
+    --fn-traj=FN_TRAJ   Name for the file to read/write the perturbation
+                        trajectories from/to. If the given file exists, the
+                        trajectories are read from the file. Otherwise, the
+                        trajectories are written to the given file.
+                        [default=none]
+    --only-traj=ONLY_TRAJ
+                        Construct the perturbation trajectory only for the
+                        terms with the given basenames. This options is only
+                        applied in the MakeTrajectories program.
+    -e, --ener-traj     Plot the various energy contributions along the
+                        perturbation trajectories to. [default=False]
+    -x, --xyz-traj      Write the perturbation trajectories in XYZ format.
+                        [default=False]
+    --suffix=SUFFIX     Suffix that will be added to all output files.
+                        [default=&#39;&#39;]
+
+  Force Field:
+    All options related to the definition and derivation of the force
+    field.
+
+    --ei=EI             A Yaff parameters file defining the electrostatic
+                        contribution of the force field. [default=none]
+    --vdw=VDW           A Yaff parameters file defining the van der Waals
+                        contribution of the force field. [default=none]
+    --covres=COVRES     A Yaff parameters file defining a residual
+                        contribution to the covalent part of the force field.
+                        [default=none]
+
+  System:
+    All options related to the definition of the system.
+
+    --ffatypes=FFATYPES
+                        Assign atom types in the system, through either on of
+                        three possible routines. If FFATYPES is a string equal
+                        to either low,medium, high or highest, atom types will
+                        be assigned through the automatic built-in detection
+                        (see documentation). If FFATYPES is a different
+                        string, it is assumed to be the name of a file
+                        containing a list of atype names and Yaff ATSELECT
+                        rules to defined the atom types. If FFATYPES is None,
+                        the atom types are assumed to be defined in the input
+                        files. [default=none]
+</pre></div>
+</div>
+</div>
+<div class="section" id="script-qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">
+<span id="seclab-rg-scripts-inputei"></span><h1>2. Script <tt class="docutils literal"><span class="pre">qff-input-ei.py</span></tt> &#8211; generate Yaff parameter file for electrostatics<a class="headerlink" href="#script-qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-text"><div class="highlight"><pre>Usage: qff-input-ei.py [options] fn_sys fn_hdf5 path
+
+This script will read the atomic charges from the input arguments and make the
+Yaff parameters file for use with the QuickFF option --ei. fn_sys is any file
+from which the system can be extracted (MolMod CHK, Gaussian FCHK, XYZ, ...).
+Path represents the path to the charges, which are assumed to be stored in the
+file fn_hdf5 in the dataset /path/charges.
+
+Options:
+  -h, --help           show this help message and exit
+  --ffatypes=FFATYPES  Assign atom types in the system, through either on of
+                       three possible routines. If FFATYPES is a string equal
+                       to either low,medium, high or highest, atom types will
+                       be assigned through the automatic built-in detection
+                       (see documentation). If FFATYPES is a different string,
+                       it is assumed to be the name of a file containing a
+                       list of atype names and Yaff ATSELECT rules to defined
+                       the atom types. If FFATYPES is None, the atom types are
+                       assumed to be defined in the input files.
+                       [default=none]
+  --gaussian           Use gaussian smeared charges. The radii are taken from
+                       the dataset /path/radii if it exists, otherwise the
+                       radii are estimated according to the procedure of Chen
+                       et al. See ``quickff.tools.get_ei_radii`` for more
+                       info.
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">1. Script <tt class="docutils literal"><span class="pre">qff.py</span></tt> &#8211; Main script to run QuickFF calculation</a></li>
+<li><a class="reference internal" href="#script-qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">2. Script <tt class="docutils literal"><span class="pre">qff-input-ei.py</span></tt> &#8211; generate Yaff parameter file for electrostatics</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rg_module.html"
+                        title="previous chapter">1. <tt class="docutils literal"><span class="pre">quickff.cost</span></tt> &#8211; Least-Square cost function for hessian matching</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/rg_scripts.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_module.html" title="1. quickff.cost – Least-Square cost function for hessian matching"
+             >previous</a> |</li>
+        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
