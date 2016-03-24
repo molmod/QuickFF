@@ -24,6 +24,7 @@
 #--
 
 import os, sys, datetime, getpass, atexit
+import numpy, scipy, matplotlib
 
 __all__ = ['log']
 
@@ -168,6 +169,9 @@ class Logger(object):
         with self.section('MACHINE', 1): self.dump(' '.join(os.uname()), new_line=False)
         with self.section('TIME', 1): self.dump(datetime.datetime.now().isoformat().replace('T', ' '), new_line=False)
         with self.section('PYTHON VERSION', 1): self.dump(sys.version.replace('\n', ''), new_line=False)
+        with self.section('NUMPY VERSION', 1): self.dump(numpy.__version__, new_line=False)
+        with self.section('SCIPY VERSION', 1): self.dump(scipy.__version__, new_line=False)
+        with self.section('MATPLOTLIB VERSION', 1): self.dump(matplotlib.__version__, new_line=False)
         with self.section('CURRENT DIR', 1): self.dump(os.getcwd(), new_line=False)
         with self.section('COMMAND LINE', 1): self.dump(' '.join(sys.argv), new_line=False)
         self.mll = mll

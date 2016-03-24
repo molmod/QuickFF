@@ -33,6 +33,7 @@ The following software must be installed:
 
 * Python >= 2.7 (including the development files): http://www.python.org/
 * Numpy >= 1.0: http://numpy.scipy.org/
+* Scipy >= 0.14: http://www.scipy.org/
 * h5py >= 2.0.0: http://code.google.com/p/h5py/
 * matplotlib >= 1.0.0: http://matplotlib.sourceforge.net/
 

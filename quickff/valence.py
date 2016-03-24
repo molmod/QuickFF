@@ -643,6 +643,7 @@ class ValenceFF(ForcePartValence):
                 assert not np.isnan(value), '%s of %s is not set' %(label, term.basename)
 
     def dump_logger(self, print_level=1):
+        if log.log_level<print_level: return
         with log.section('', print_level):
             sequence = [
                 'bondharm',

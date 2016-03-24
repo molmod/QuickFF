@@ -64,8 +64,59 @@ The logger will dump to following information to the screen (or a file if the
     starting time of job, Python version, current directory and the command used
     to envoke quickff.
 
+* Routine sequence:
+    Every task that is performed will be shown in the log output. For example, 
+    the line ``PTGEN  Constructing trajectories`` indicates that QuickFF is 
+    busy constructing the perturbation trajectories. As a second example, the
+    line ``HCEST  Estimating force constants from Hessian cost for tasks
+    HC_FC_DIAG HC_FC_CROSS`` indicates QuickFF is estimating force constants by
+    means of a least-square fit of the FF Hessian to the AI Hessian for each
+    term for which the task `HC_FC_DIAG` and `HC_FC_CROSS` was selected.
+    
+* Final force field parameters:
+    The final FF parameters are shown at the end of the log output.
+
+* Timings:
+    Finally, a summary of the timings for several steps during run of the 
+    program is provided.
+
 
 Force field with electrostatics
 ===============================
 
-TODO
+* Generating Yaff input
+    First we need to generate the Yaff input file for the electrostatic
+    contribution to the force field. This is done using the script 
+    :ref:`qff_input-ei.py <seclab_rg_scripts_inputei>`. For this tutorial,
+    we will convert the charges given in the dataset `/wpart/he/charges` of the
+    file `gaussian_wpart.h5` for the atoms in gaussian.fchk with atom types
+    according to the level `medium` and use Gaussian charge distributions::
+    
+        qff-input-ei.py --ffatypes=low --gaussian gaussian.fchk gaussian_wpart.h5 wpart/he
+    
+    This command dumped the following output to the screen, incidating wheter or
+    not the atom types are well chosen from the point of view of electrostatics
+    (see second remark in :ref:`qff-input-ei.py <seclab_ug_tools_inputei>`):
+    
+    .. program-output:: qff-input-ei.py --ffatypes=low --gaussian /home/louis/build/quickff/share/systems/benzene/gaussian.fchk /home/louis/build/quickff/share/systems/benzene/gaussian_wpart.h5 wpart/he
+    
+    Furthermore, the following Yaff parameter (`pars_ei_wpart_he.txt`) file was written:
+    
+    .. program-output:: cat pars_ei_wpart_he.txt
+    
+* Constructing the covalent contribution
+    Now, we generate a covalent force field on top of the previously derived
+    electrostatic contribution using the qff.py script::
+    
+        qff.py --ffatype=low --ei=pars_ei_wpart_he.txt gaussian.fchk
+    
+    The logging output for this job is:
+    
+    .. program-output:: qff.py --ffatypes=low --ei=pars_ei_wpart_he.txt /home/louis/build/quickff/share/systems/benzene/gaussian.fchk
+    
+    An extra line appeared in the beginning of the log output, i.e. 
+    ``QFF    Initializing Yaff force field reference for EI``. This indicates
+    that an extra reference instance was created to represent the EI 
+    contribution to the force field. Furthermore, the covalent parameters are
+    almost identical compared to the FF without electrostatics. This is indeed
+    what we expect due to the charges being so small.

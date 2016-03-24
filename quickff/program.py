@@ -173,8 +173,14 @@ class BaseProgram(object):
             perturbation trajectories and dump perturbation trajectories to XYZ
             files.
         '''
-        self.valence.dump_yaff(self.kwargs.get('fn_yaff', 'pars_cov.txt'))
-        self.system.to_file(self.kwargs.get('fn_sys', 'system.chk'))
+        fn_yaff = self.kwargs.get('fn_yaff', None)
+        if fn_yaff is None:
+            fn_yaff = 'pars_cov%s.txt' %(self.kwargs.get('suffix', ''))
+        self.valence.dump_yaff(fn_yaff)
+        fn_sys = self.kwargs.get('fn_sys', None)
+        if fn_sys is None:
+            fn_sys = 'system%s.chk' %(self.kwargs.get('suffix', ''))
+        self.system.to_file(fn_sys)
         self.plot_trajectories(do_valence=True)
 
     def plot_trajectories(self, do_valence=False):
