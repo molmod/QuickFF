@@ -86,6 +86,8 @@ def main():
 
         for module in sorted(modules):
             full = package + '.' + module
+            print >> f, '.. _seclab_rg_%s_%s:'
+            print >> f
             underline('``%s`` -- %s' % (full, get_first_docline(full)), '=', f)
             print >> f, '.. automodule::', full
             print >> f, '    :members:'
@@ -96,8 +98,8 @@ def main():
         fn_rst = 'rg_%s.rst' % package.replace('.', '_')
         fns_rst.append(fn_rst)
         write_if_changed(fn_rst, f.getvalue())
-    fns_rst.append('rg_qffest.rst')
-    fns_rst.append('rg_qfftraj.rst')
+    fns_rst.append('rg_qff.rst')
+    fns_rst.append('rg_qffinputei.rst')
 
 
     # Remove other rst files
