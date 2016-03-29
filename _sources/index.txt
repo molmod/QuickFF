@@ -6,14 +6,14 @@
 QuickFF Documentation
 #####################
 
-Welcome to the website of QuickFF. QuickFF is a Python package developed at the 
+Welcome to QuickFF! QuickFF is a Python package developed at the 
 `Center for Molecular Modeling <https://molmod.ugent.be/>`_ (CMM) to quickly 
 derive accurate force fields from ab initio calculations. This website contains
 all information on how to install and use QuickFF. A detailed description of the 
 methodology used by QuickFF to derive the force fields can be found here.
 
 How to cite QuickFF
-===================
+*******************
 
 If you used QuickFF in your research, please refer to QuickFF as follows:
 
@@ -25,7 +25,7 @@ You can acces the paper through the following link:
 http://dx.doi.org/10.1002/jcc.23877
 
 Installation Guide
-==================
+*******************
 
 QuickFF is developed and tested on modern Linux environments. The
 installation instructions below are given for a Linux system only. If you want
@@ -37,12 +37,11 @@ in hearing from your installation adventures.
    :maxdepth: 2
    :numbered:
    
-   ig_dependencies.rst
-   ig_download.rst
-   ig_installation.rst
+   ig.rst
+
 
 User Guide
-==========
+**********
 
 QuickFF can be used in two ways: by means of a single command or by importing it
 as a Python library in an external script. Both usages are described in this 
@@ -53,29 +52,35 @@ guide.
    :numbered:
 
    ug_script.rst
+   ug_lib.rst
    ug_inputei.rst
 
 .. _seclab_tutorials:
    
 Tutorials
-=========
+*********
 
 A small list of examples illustrating the basic use of QuickFF as is described
 in the User Guide:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    tu_benzene.rst
    tu_water.rst
+   tu_biphenyl.rst
 
 
 Reference Guide
-===============
+***************
 
 A reference guide generated from the documentation strings in the source code.
 
-Modules of QuickFF:
+Modules
+=======
+
+An overview is provived of all modules included in QuickFF. The information 
+below is based on the documentation provided in the source code.
 
 .. toctree::
    :maxdepth: 2
@@ -83,7 +88,12 @@ Modules of QuickFF:
 
    rg_module.rst
 
-Scripts of QuickFF:
+Scripts
+=======
+
+An overview is provided of the scripts in QuickFF as well as their basic usage
+and options. The information below can also be obtained by running the script
+with the :option:`--help` option.
 
 .. toctree::
    :maxdepth: 2 
@@ -92,13 +102,13 @@ Scripts of QuickFF:
    rg_scripts.rst
 
 Contact
-=======
+*******
 
 For support and bug reports, please contact us at `louis.vanduyfhuys@ugent.be 
 <louis.vanduyfhuys@ugent.be>`_.
 
 Indices and tables
-==================
+******************
 
 * :ref:`genindex`
 * :ref:`modindex`

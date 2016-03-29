@@ -4,21 +4,21 @@
     the docstrings in the source code.
 
 ``quickff.cost`` -- Least-Square cost function for hessian matching
-####################################################################
+-------------------------------------------------------------------
 
 .. automodule:: quickff.cost
     :members:
 
 
 ``quickff.io`` -- Input/Ouput methods
-######################################
+-------------------------------------
 
 .. automodule:: quickff.io
     :members:
 
 
 ``quickff.perturbation`` -- Perturbation trajectories for internal coordinates
-###############################################################################
+------------------------------------------------------------------------------
 
 .. automodule:: quickff.perturbation
     :members:
@@ -26,14 +26,14 @@
 .. _seclab_rg_modules_program:
 
 ``quickff.program`` -- Program classes implementing a sequence of fitting steps
-################################################################################
+-------------------------------------------------------------------------------
 
 .. automodule:: quickff.program
     :members:
 
 
 ``quickff.reference`` -- Representation of the ab initio reference data
-########################################################################
+-----------------------------------------------------------------------
 
 .. automodule:: quickff.reference
     :members:
@@ -41,13 +41,13 @@
 .. _seclab_rg_modules_tools:
 
 ``quickff.tools`` -- Various convenient tools
-##############################################
+---------------------------------------------
 
 .. automodule:: quickff.tools
     :members:
 
 ``quickff.valence`` -- ValenceFF class storing all valence ff terms
-####################################################################
+-------------------------------------------------------------------
 
 .. automodule:: quickff.valence
     :members:

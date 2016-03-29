@@ -100,7 +100,7 @@ Force field with electrostatics
     
         qff-input-ei.py --ffatypes=low --gaussian gaussian.fchk gaussian_wpart.h5 wpart/he
     
-    This command dumped the following output to the screen, incidating wheter or
+    This command dumped the following output to the screen, indicating wheter or
     not the atom types are well chosen from the point of view of electrostatics
     (see second remark in :ref:`qff-input-ei.py <seclab_ug_tools_inputei>`):
     

@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>2. Importing QuickFF as a library &mdash; QuickFF 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="QuickFF 2.0.1 documentation" href="index.html" />
+    <link rel="next" title="3. Generating Yaff parameter file for the electrostatic contribution" href="ug_inputei.html" />
+    <link rel="prev" title="1. Running QuickFF using qff.py" href="ug_script.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ug_inputei.html" title="3. Generating Yaff parameter file for the electrostatic contribution"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ug_script.html" title="1. Running QuickFF using qff.py"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="importing-quickff-as-a-library">
+<span id="seclab-ug-lib"></span><h1>2. Importing QuickFF as a library<a class="headerlink" href="#importing-quickff-as-a-library" title="Permalink to this headline">¶</a></h1>
+<p>QuickFF can also be treated as library of classes and methods that is imported
+in a script written by the user. This procedure allows more control over the
+core features of QuickFF and also allows more complex force fields. In this
+User Guide, we will show how to write a custom script for deriving a force field
+using QuickFF. This User Guide will be abstract, i.e. no specific system will
+be illustrated, the <a class="reference internal" href="index.html#seclab-tutorials"><em>tutorials</em></a> will include examples of
+specific systems, such as <a class="reference internal" href="tu_water.html#seclab-tu-water"><em>water</em></a> and
+<a class="reference internal" href="tu_biphenyl.html#seclab-tu-biphenyl"><em>biphenyl</em></a>.</p>
+<div class="section" id="define-the-system">
+<h2>2.1. Define the system<a class="headerlink" href="#define-the-system" title="Permalink to this headline">¶</a></h2>
+<p>First we need to define an instance of the
+<a class="reference external" href="http://molmod.github.io/yaff/ug_system.html">Yaff System class</a> to define the
+molecular system:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#importing libraries</span>
+<span class="kn">from</span> <span class="nn">yaff</span> <span class="kn">import</span> <span class="n">System</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">molmod.units</span> <span class="kn">import</span> <span class="n">kjmol</span><span class="p">,</span> <span class="n">angstrom</span>
+<span class="kn">from</span> <span class="nn">quickff.reference</span> <span class="kn">import</span> <span class="n">SecondOrderTaylor</span>
+<span class="c">#initialize system</span>
+<span class="n">numbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.37</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],[</span><span class="mf">0.37</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]])</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">rvecs</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, we assumed a non-periodic system for a hydrogen molecule oriented along
+the x-axis and a H-H bond length of 0.74 angstrom.</p>
+</div>
+<div class="section" id="define-the-ab-initio-reference">
+<h2>2.2. Define the ab initio reference<a class="headerlink" href="#define-the-ab-initio-reference" title="Permalink to this headline">¶</a></h2>
+<p>Second, we define the ab initio geometry, gradient and Hessian in equilibrium:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#initialize numpy arrays</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+<span class="n">hess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="o">...</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+<span class="c">#initialize the ab initio reference</span>
+<span class="n">ai</span> <span class="o">=</span> <span class="n">SecondOrderTaylor</span><span class="p">(</span><span class="s">&#39;ai&#39;</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="n">energy</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="n">hess</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="define-force-field-reference-objects">
+<h2>2.3. Define force field reference objects<a class="headerlink" href="#define-force-field-reference-objects" title="Permalink to this headline">¶</a></h2>
+<p>Next, we define an extra reference object for each force field reference we
+want to include. Suppose we want to take an a priori derived electrostatic
+contribution into account. If a Yaff parameter file <cite>pars_ei.txt</cite> is at hand for
+the EI contribution, we can add it as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">yaff.pes.ff</span> <span class="kn">import</span> <span class="n">ForceField</span>
+<span class="kn">from</span> <span class="nn">quickff.reference</span> <span class="kn">import</span> <span class="n">YaffForceField</span>
+<span class="n">ff</span> <span class="o">=</span> <span class="n">ForceField</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="s">&#39;pars_ei.txt&#39;</span><span class="p">,</span> <span class="n">rcut</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="n">angstrom</span><span class="p">)</span>
+<span class="n">ei</span> <span class="o">=</span> <span class="n">YaffForceField</span><span class="p">(</span><span class="s">&#39;ei&#39;</span><span class="p">,</span> <span class="n">ff</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The keyword argument <cite>rcut</cite> represents the cutoff for the electrostatic
+interactions, which was given a high enough value to include all interactions
+of our gas-phase system. Instead of reading the electrostatic force field (<cite>ff</cite>
+in the code block above) from a given parameter file, one can also define it
+using Yaff as a library. For more information see page in the Yaff manual on
+<a class="reference external" href="http://molmod.github.io/yaff/ug_forcefield.html#beyond-force-field-parameter-files">Beyond force field parameter files</a>.</p>
+</div>
+<div class="section" id="define-the-program-and-run-it">
+<h2>2.4. Define the program and run it<a class="headerlink" href="#define-the-program-and-run-it" title="Permalink to this headline">¶</a></h2>
+<p>Finally, one has to define a program, which is a sequence of routines of the
+BaseProgram class (see <a class="reference internal" href="rg_module.html#seclab-rg-modules-program"><em>Reference Guide</em></a> for
+more information). For our example of a single hydrogen molecule, one could get
+an accurate estimate of both the bond rest value and its force constant from the
+perturbation trajectories without force constant refinement:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">quickff.program</span> <span class="kn">import</span> <span class="n">BaseProgram</span>
+<span class="k">class</span> <span class="nc">CustomProgram</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_estimate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_output</span><span class="p">()</span>
+
+<span class="n">program</span> <span class="o">=</span> <span class="n">CustomProgram</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">ai</span><span class="p">,</span> <span class="n">ffrefs</span><span class="o">=</span><span class="p">[</span><span class="n">ei</span><span class="p">])</span>
+<span class="n">program</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The arguments of the initializer of CustomProgram, both mandatory and keyword
+arguments, are the same as the BaseProgram class (see
+<a class="reference internal" href="rg_module.html#seclab-rg-modules-program"><em>Reference Guide</em></a> for more information).</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">2. Importing QuickFF as a library</a><ul>
+<li><a class="reference internal" href="#define-the-system">2.1. Define the system</a></li>
+<li><a class="reference internal" href="#define-the-ab-initio-reference">2.2. Define the ab initio reference</a></li>
+<li><a class="reference internal" href="#define-force-field-reference-objects">2.3. Define force field reference objects</a></li>
+<li><a class="reference internal" href="#define-the-program-and-run-it">2.4. Define the program and run it</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ug_script.html"
+                        title="previous chapter">1. Running QuickFF using qff.py</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ug_inputei.html"
+                        title="next chapter">3. Generating Yaff parameter file for the electrostatic contribution</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/ug_lib.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ug_inputei.html" title="3. Generating Yaff parameter file for the electrostatic contribution"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ug_script.html" title="1. Running QuickFF using qff.py"
+             >previous</a> |</li>
+        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -3,7 +3,7 @@
 Running QuickFF using qff.py
 ############################
 
-T   he most straightforward use of QuickFF is by means of a single command using 
+The most straightforward use of QuickFF is by means of a single command using 
 the :ref:`qff.py <seclab_rg_scripts_qff>` script. The basic usage of this script
 is as follows::
 

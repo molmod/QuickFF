@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="QuickFF 2.0.1 documentation" href="#" />
-    <link rel="next" title="1. Dependencies" href="ig_dependencies.html" /> 
+    <link rel="next" title="1. Dependencies" href="ig.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,7 +37,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="ig_dependencies.html" title="1. Dependencies"
+          <a href="ig.html" title="1. Dependencies"
              accesskey="N">next</a> |</li>
         <li><a href="#">QuickFF 2.0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -50,7 +50,7 @@
             
   <div class="section" id="quickff-documentation">
 <h1>QuickFF Documentation<a class="headerlink" href="#quickff-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Welcome to the website of QuickFF. QuickFF is a Python package developed at the
+<p>Welcome to QuickFF! QuickFF is a Python package developed at the
 <a class="reference external" href="https://molmod.ugent.be/">Center for Molecular Modeling</a> (CMM) to quickly
 derive accurate force fields from ab initio calculations. This website contains
 all information on how to install and use QuickFF. A detailed description of the
@@ -72,18 +72,18 @@ have a minimal computer geek status to get it working. We are always interested
 in hearing from your installation adventures.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="ig_dependencies.html">1. Dependencies</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ig_dependencies.html#molmod-dependency">1.1. MolMod dependency</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ig_dependencies.html#yaff-dependency">1.2. Yaff dependency</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ig_dependencies.html#external-dependencies">1.3. External dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ig.html">1. Dependencies</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#molmod-dependency">1.1. MolMod dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#yaff-dependency">1.2. Yaff dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#external-dependencies">1.3. External dependencies</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="ig_download.html">2. Download QuickFF</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ig_download.html#stable-release">2.1. Stable release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ig_download.html#latest-development-version-experts-only">2.2. Latest development version (experts only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ig.html#downloading-quickff">2. Downloading QuickFF</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#stable-release">2.1. Stable release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#latest-development-version-experts-only">2.2. Latest development version (experts only)</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="ig_installation.html">3. Installing QuickFF</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ig.html#installing-quickff">3. Installing QuickFF</a></li>
 </ul>
 </div>
 </div>
@@ -104,7 +104,14 @@ guide.</p>
 <li class="toctree-l2"><a class="reference internal" href="ug_script.html#parallel-quickff">1.7. Parallel QuickFF</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="ug_inputei.html">2. Generating Yaff parameter file for the electrostatic contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ug_lib.html">2. Importing QuickFF as a library</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ug_lib.html#define-the-system">2.1. Define the system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug_lib.html#define-the-ab-initio-reference">2.2. Define the ab initio reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug_lib.html#define-force-field-reference-objects">2.3. Define force field reference objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug_lib.html#define-the-program-and-run-it">2.4. Define the program and run it</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ug_inputei.html">3. Generating Yaff parameter file for the electrostatic contribution</a></li>
 </ul>
 </div>
 </div>
@@ -114,19 +121,19 @@ guide.</p>
 in the User Guide:</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tu_benzene.html">Tutorial 1 - Benzene</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tu_benzene.html#covalent-force-field-without-non-bonding-terms">Covalent force field without non-bonding terms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tu_benzene.html#force-field-with-electrostatics">Force field with electrostatics</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="tu_benzene.html">Tutorial 1 - Benzene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tu_water.html">Tutorial 2 - Water</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tu_biphenyl.html">Tutorial 3 - Biphenyl</a></li>
 </ul>
 </div>
 </div>
 <div class="section" id="reference-guide">
 <h2>Reference Guide<a class="headerlink" href="#reference-guide" title="Permalink to this headline">¶</a></h2>
 <p>A reference guide generated from the documentation strings in the source code.</p>
-<p>Modules of QuickFF:</p>
+<div class="section" id="modules">
+<h3>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h3>
+<p>An overview is provived of all modules included in QuickFF. The information
+below is based on the documentation provided in the source code.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="rg_module.html">1. <tt class="docutils literal"><span class="pre">quickff.cost</span></tt> &#8211; Least-Square cost function for hessian matching</a></li>
@@ -138,12 +145,18 @@ in the User Guide:</p>
 <li class="toctree-l1"><a class="reference internal" href="rg_module.html#module-quickff.valence">7. <tt class="docutils literal"><span class="pre">quickff.valence</span></tt> &#8211; ValenceFF class storing all valence ff terms</a></li>
 </ul>
 </div>
-<p>Scripts of QuickFF:</p>
+</div>
+<div class="section" id="scripts">
+<h3>Scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h3>
+<p>An overview is provided of the scripts in QuickFF as well as their basic usage
+and options. The information below can also be obtained by running the script
+with the <em class="xref std std-option">--help</em> option.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="rg_scripts.html">1. Script <tt class="docutils literal"><span class="pre">qff.py</span></tt> &#8211; Main script to run QuickFF calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rg_scripts.html#script-qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">2. Script <tt class="docutils literal"><span class="pre">qff-input-ei.py</span></tt> &#8211; generate Yaff parameter file for electrostatics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_scripts.html">1. <tt class="docutils literal"><span class="pre">qff.py</span></tt> &#8211; Main script to run QuickFF calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rg_scripts.html#qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">2. <tt class="docutils literal"><span class="pre">qff-input-ei.py</span></tt> &#8211; generate Yaff parameter file for electrostatics</a></li>
 </ul>
+</div>
 </div>
 </div>
 <div class="section" id="contact">
@@ -174,6 +187,8 @@ in the User Guide:</p>
 <li><a class="reference internal" href="#user-guide">User Guide</a></li>
 <li><a class="reference internal" href="#tutorials">Tutorials</a></li>
 <li><a class="reference internal" href="#reference-guide">Reference Guide</a><ul>
+<li><a class="reference internal" href="#modules">Modules</a></li>
+<li><a class="reference internal" href="#scripts">Scripts</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#contact">Contact</a></li>
@@ -183,7 +198,7 @@ in the User Guide:</p>
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="ig_dependencies.html"
+  <p class="topless"><a href="ig.html"
                         title="next chapter">1. Dependencies</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
@@ -217,7 +232,7 @@ in the User Guide:</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="ig_dependencies.html" title="1. Dependencies"
+          <a href="ig.html" title="1. Dependencies"
              >next</a> |</li>
         <li><a href="#">QuickFF 2.0.1 documentation</a> &raquo;</li> 
       </ul>
