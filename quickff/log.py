@@ -114,7 +114,7 @@ class Logger(object):
 
     def set_level(self, level):
         if isinstance(level, int):
-            if level>=0 and level<=5:
+            if level>=0 and level<=4:
                 self.log_level = level
             else:
                 raise ValueError('Integer level should be between 0 and 4 (boundaries included).')
