@@ -7,8 +7,7 @@ QuickFF can also be treated as library of classes and methods that is imported
 in a script written by the user. This procedure allows more control over the
 core features of QuickFF and also allows more complex force fields. In this
 User Guide, we will show how to write a custom script for deriving a force field
-using QuickFF. This User Guide will be abstract, i.e. no specific system will 
-be illustrated, the :ref:`tutorials <seclab_tutorials>` will include examples of
+using QuickFF. The :ref:`tutorials <seclab_tutorials>` will include examples of
 specific systems, such as :ref:`water <seclab_tu_water>` and 
 :ref:`biphenyl <seclab_tu_biphenyl>`.
 
@@ -19,24 +18,23 @@ First we need to define an instance of the
 `Yaff System class <http://molmod.github.io/yaff/ug_system.html>`_ to define the
 molecular system::
 
-    #importing libraries
+    from molmod.units import angstrom
     from yaff import System
     import numpy as np
-    from molmod.units import kjmol, angstrom
-    from quickff.reference import SecondOrderTaylor
     #initialize system
     numbers = np.array([1,1])
     coords = np.array([[-0.37*angstrom,0.0,0.0],[0.37*angstrom,0.0,0.0]])
     system = System(numbers, coords, rvecs=None)
 
-Here, we assumed a non-periodic system for a hydrogen molecule oriented along
-the x-axis and a H-H bond length of 0.74 angstrom.
+Here, we considered a (non-periodic) hydrogen molecule oriented along the 
+x-axis and a H-H bond length of 0.74 angstrom.
 
 Define the ab initio reference
 ==============================
 
 Second, we define the ab initio geometry, gradient and Hessian in equilibrium::
 
+    from quickff.reference import SecondOrderTaylor
     #initialize numpy arrays
     energy = 0.0
     grad = np.zeros([2,3], float)
@@ -86,3 +84,48 @@ perturbation trajectories without force constant refinement::
 The arguments of the initializer of CustomProgram, both mandatory and keyword
 arguments, are the same as the BaseProgram class (see
 :ref:`Reference Guide  <seclab_rg_modules_program>` for more information).
+
+Logging
+=======
+
+Controlling the amount of logging can be done at the beginning of your custom
+script as follows::
+
+    from quickff.log import log
+    log.set_level(level)
+
+In the second line of code, `level` should be either the string `silent`, `low`,
+`medium`, `high` or `highest`, or an integer withing the range 0-5 (0 
+corresponds to `silent`, 5 corresponds to `highest`). One can introduce custom
+logging sections in the script as follows::
+
+    with log.section(key, print_level, timer=timer_description):
+        #insert code here
+        ...
+        #dump string to logger
+        log.dump(string)
+
+The meaning of the various variables is:
+
+* **key**: A short description of the section. This will be repeated in the begining of each line dumped to the logger under that section.
+
+* **print_level**: the minimum level that should be assigned to the logger (through the use of `log.set_level`) to actually print the strings passed through `log.dump`.
+
+* **timer_description**: The description of this section that will be used in the timings of each section. If `None` is given, no timing will be included for this section.
+
+* **string**: a string that will be dumped to the logger
+
+For example, the code below::
+
+    with log.section('TEST', 2, timer='Testing the logger'):
+        log.dump('This is a test')
+
+will generate the following line in the log output if `log.level` is set to `medium` or higher::
+
+     TEST   This is a test
+
+and the following line at the end of the log output (actual timing below is not
+representative)::
+
+     TIMING Testing the logger              0:00:00.000001
+
