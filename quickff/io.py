@@ -139,7 +139,8 @@ def read_abinitio(fn):
     return numbers, coords, energy, grad, hess, masses, rvecs, pbc
 
 
-def make_yaff_ei(fn, charges, ffatypes, radii=None):
+def make_yaff_ei(fn, charges, bcis=None, radii=None):
+    assert charges is not None or bcis is not None, 'Either charges or bcis should be parsed'
     f = open(fn, 'w')
     print >> f, '#Fixed charges'
     print >> f, '#---------------'
@@ -152,17 +153,48 @@ def make_yaff_ei(fn, charges, ffatypes, radii=None):
     print >> f, 'FIXQ:SCALE 3 1.0'
     print >> f, 'FIXQ:DIELECTRIC 1.0'
     print >> f, ''
-    print >> f, '# Atomic parameters'
-    print >> f, '# ----------------------------------------------------'
-    print >> f, '# KEY        label  Q_0A              R_A'
-    print >> f, '# ----------------------------------------------------'
-    done = []
-    for i, (charge, ffatype) in enumerate(zip(charges, ffatypes)):
-        if ffatype in done: continue
-        if radii is not None:
-            radius = radii[i]
+    if charges is not None or radii is not None:
+        print >> f, '# Atomic parameters'
+        print >> f, '# ----------------------------------------------------'
+        print >> f, '# KEY        label  Q_0A              R_A'
+        print >> f, '# ----------------------------------------------------'
+        if charges is not None:
+            ffatypes = charges.keys()
         else:
-            radius = 0.0
-        print >> f, 'FIXQ:ATOM %8s % 13.10f  %12.10f' %(ffatype, charge, radius/angstrom)
-        done.append(ffatype)
+            ffatypes = radii.keys()
+        for ffatype in ffatypes:
+            charge, radius = 0.0, 0.0
+            if charges is not None: charge = charges[ffatype]
+            if radii is not None: radius = radii[ffatype]
+            print >> f, 'FIXQ:ATOM %8s % 13.10f  %12.10f' %(ffatype, charge, radius/angstrom)
+    if bcis is not None:
+        print >> f, '# Bond parameters'
+        print >> f, '# ----------------------------------------------------'
+        print >> f, '# KEY         label0   label1           P_AB          '
+        print >> f, '# ----------------------------------------------------'
+        for key, bci in bcis.iteritems():
+            ffatype1, ffatype2 = key.split('.')
+            print >> f, 'FIXQ:BOND  %8s  %8s  % 12.10f' %(ffatype1, ffatype2, bci)
     f.close()
+
+
+def read_bci_constraints(fn):
+    '''
+        Read constraints for a charge to bci fit. The constraints should be
+        written to a file in the following format:
+        
+            master0: slave00,slave01,slave02
+            master1: slave10,slave11,slave12
+        
+        There should be a new line for each master and format is insensitive
+        towards spaces (: and , serve as seperators). Lines starting with #
+        are ignored (i.e. # is the comment identifier).
+    '''
+    constraints = {}
+    with open(fn, 'r') as f:
+        for line in f.readlines():
+            if line.startswith('#'): continue
+            master, suffix = line.split(':')
+            slaves = suffix.split(',')
+            constraints[master.strip()] = [slave.strip() for slave in slaves]
+    return constraints

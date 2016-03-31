@@ -330,7 +330,7 @@ def get_ei_radii(numbers):
     '''
         Routine to return atomic radii for use in the Gaussian charge
         distribution. These radii are computed according to the procedure of
-        Chen et al.:
+        Chen and Slater:
 
         First the Slater exponent is computed from the hardness using the
         formula of Rappe and Goddard (hardness of Pearson and Parr is used)
@@ -345,6 +345,11 @@ def get_ei_radii(numbers):
         'N' : 1.1039*angstrom, 'O' : 1.1325*angstrom, 'F' : 1.1097*angstrom,
         'Na': 1.7093*angstrom, 'Al': 1.6744*angstrom, 'Si': 1.6378*angstrom,
         'P' : 1.5730*angstrom, 'S' : 1.6022*angstrom, 'Cl': 1.5789*angstrom,
+        #Could not compute Ga due to missing Taylor expansion in to compute 
+        #the electrostatic interaction between two ns-STO densities with n=5
+        #Therefore, the Br to Cl ratio (both elements reported in Chen and 
+        #Slater) is extrapolated to Al-Ga
+        'Ga': 2.1325*angstrom,
     }
     values = np.zeros(len(numbers), float)
     for i, number in enumerate(numbers):
@@ -383,10 +388,29 @@ def digits(x,n):
     else:
         return '%i.%s' %(i, str(r)[2:2+ndig])
 
-def average(data, ffatypes):
+def average(data, ffatypes, fmt='full'):
     '''
-        Average the atomic parameters stored in data over atom of the same atom
+        Average the atomic parameters stored in data over atoms of the same atom
         type.
+        
+        **Arguments**
+        
+        data
+            a list or numpy array containing the data
+        
+        ffatypes
+            a listor numpy array containing the atom types. Should have equal
+            length as data
+        
+        **Keywork arguments**
+        
+        fmt
+            Should be either full or dict. In case of full, the result will be
+            returned as an numpy array of equal length as data and ffatypes. In
+            case of dict, the result will be returned as a dictionairy of the 
+            following format:
+            
+                {ffatype0: value0, ffatype1: value1, ...}
     '''
     data_atypes = {}
     for value, ffatype in zip(data,ffatypes):
@@ -394,12 +418,119 @@ def average(data, ffatypes):
             data_atypes[ffatype].append(value)
         else:
             data_atypes[ffatype] = [value]
-    averaged_data = np.zeros(len(data))
-    printed = []
-    for i, ffatype in enumerate(ffatypes):
-        std = np.array(data_atypes[ffatype]).std()
-        if not std < 1e-2 and ffatype not in printed:
-            print 'WARNING: charge of atom type %s has a large std: %.3e' %(ffatype, std)
-            printed.append(ffatype)
-        averaged_data[i] = np.array(data_atypes[ffatype]).mean()
+    if fmt=='full':
+        averaged_data = np.zeros(len(data))
+        printed = []
+        for i, ffatype in enumerate(ffatypes):
+            std = np.array(data_atypes[ffatype]).std()
+            if not std < 1e-2 and ffatype not in printed:
+                print 'WARNING: charge of atom type %s has a large std: %.3e' %(ffatype, std)
+                printed.append(ffatype)
+            averaged_data[i] = np.array(data_atypes[ffatype]).mean()
+    elif fmt=='dict':
+        averaged_data = {}
+        for ffatype, values in data_atypes.iteritems():
+            averaged_data[ffatype] = np.array(values).mean()
+    else:
+        raise IOError('Format %s not supported, should be full or dict' %fmt)
     return averaged_data
+
+def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
+    '''
+        Transform atomic charges to bond charge increments, by definition 2 
+        bci's between different pairs of atoms but with identical pairs of 
+        atom types will be equal. Bci's will be returned as a dictionairy
+        containing tuples of the format (ffatype0.ffatype1, bci_value)
+        
+        **Arguments**
+        
+        charges
+            a (N,) list or numpy array containing the charges
+        
+        ffatypes
+            a (N,) list or numpy array with the atom type of each atom in the 
+            system
+        
+        bonds
+            a (B,2) list or numpy array for each bond in the system
+        
+        **Keyword Arguments**
+        
+        constraints
+            a dictionairy of format (master, [slave0, slave1, ...])
+        
+        verbose
+            increase verbosity
+    '''
+    assert len(charges)==len(ffatypes)
+    #construct list of bond types and signs, the signs are related to the 
+    #direction of the bci of a certain bond. We want that bonds of type
+    #A.B have a bci with equal magnitude as a bond of type B.A. Therefore, we
+    #only store the bci of A.B (alphabetically) and also store a sign, which is
+    #1.0 for bond A.B and -1 for bond B.A
+    btypes = ['',]*len(bonds)
+    signs = np.zeros([len(bonds)], float)
+    for i, bond in enumerate(bonds):
+        ffatype0, ffatype1 = ffatypes[bond[0]], ffatypes[bond[1]]
+        if ffatype0<ffatype1:
+            btypes[i] = '%s.%s' %(ffatype0,ffatype1)
+            signs[i] = 1.0
+        else:
+            btypes[i] = '%s.%s' %(ffatype1,ffatype0)
+            signs[i] = -1.0
+    #decompile constraints
+    slaves = {}
+    for m, s in constraints.iteritems():
+        m = '.'.join(sorted(m.split('.')[::-1]))
+        for slave in s:
+            slave = '.'.join(sorted(slave.split('.')[::-1]))
+            assert slave not in slaves, \
+                'Slave %s has multiple masters in constraints' %slave
+            slaves[slave] = m
+    masters = []
+    for btype in btypes:
+        if btype in slaves : continue
+        if btype in masters: continue
+        masters.append(btype)
+    for index, master in enumerate(masters):
+        assert not master in slaves, 'master %s encountered in slaves' %master
+    for slave in slaves:
+        assert not slave in masters, 'slave %s encountered in masters' %slave
+    #construct the matrix to convert bci's to charges
+    #matrix[i,n] is the contribution to charge i from bci n
+    #bci p_AB is a charge transfer from B to A, hence qA+=p_AB and qB-=p_AB
+    matrix = np.zeros([len(charges), len(masters)], float)   
+    for i, (btype, bond, sign) in enumerate(zip(btypes, bonds, signs)):
+        if btype in masters:
+            index = masters.index(btype)
+        elif btype in slaves.keys():
+            index = masters.index(slaves[btype])
+        else:
+            raise ValueError('No master found for bond %s of type %s' %(bond, btype))
+        matrix[bond[0],index] +=  sign
+        matrix[bond[1],index] += -sign
+    #solve the set of equations q=M.t with q the full array of atomic charges
+    #and t the array of bci masters
+    bcis, res, rank, svals = np.linalg.lstsq(matrix, charges, rcond=1e-6)
+    if verbose:
+        print 'Fitting SQ to charges:'
+        print '    sing vals = ', svals
+        if min(svals)>0:
+            print '    cond numb = ', max(svals)/min(svals)
+        else:
+            print '    cond numb = inf'            
+        print 'Averaged Atomic Charges'
+        charge_atypes = average(charges, ffatypes, 'dict')
+        for ffatype, aq in charge_atypes.iteritems():
+            print '  %4s    % .3f' %(ffatype, aq)
+        print 'Fitted Split Charges'
+        for btype, sq in zip(masters, bcis):
+            print '  %10s    % .3f' %(btype, sq)
+        print 'Atomic Charges from Split Charges'
+        aq2 = np.dot(matrix, bcis)
+        for ffatype, aq in average(aq2, ffatypes, 'dict').iteritems():
+            print '  %4s    % .3f' %(ffatype, aq)
+    result = dict((btype, bci) for btype, bci in zip(masters, bcis))
+    for slave, master in slaves.iteritems():
+        result[slave] = result[master]
+    return result
