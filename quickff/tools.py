@@ -472,39 +472,41 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     signs = np.zeros([len(bonds)], float)
     for i, bond in enumerate(bonds):
         ffatype0, ffatype1 = ffatypes[bond[0]], ffatypes[bond[1]]
-        if ffatype0<ffatype1:
+        if ffatype0.lower()<ffatype1.lower():
             btypes[i] = '%s.%s' %(ffatype0,ffatype1)
             signs[i] = 1.0
         else:
             btypes[i] = '%s.%s' %(ffatype1,ffatype0)
             signs[i] = -1.0
     #decompile constraints
-    slaves = {}
+    masterof = {}
     for m, s in constraints.iteritems():
-        m = '.'.join(sorted(m.split('.')[::-1]))
+        types = m.split('.')
+        if types[0].lower()>=types[1].lower(): m = '.'.join(types[::-1])
         for slave in s:
-            slave = '.'.join(sorted(slave.split('.')[::-1]))
-            assert slave not in slaves, \
+            types = slave.split('.')
+            if types[0].lower()>=types[1].lower(): slave = '.'.join(types[::-1])
+            assert slave not in masterof.keys(), \
                 'Slave %s has multiple masters in constraints' %slave
-            slaves[slave] = m
-    masters = []
+            masterof[slave] = m
+    masterlist = []
     for btype in btypes:
-        if btype in slaves : continue
-        if btype in masters: continue
-        masters.append(btype)
-    for index, master in enumerate(masters):
-        assert not master in slaves, 'master %s encountered in slaves' %master
-    for slave in slaves:
-        assert not slave in masters, 'slave %s encountered in masters' %slave
+        if btype in masterof.keys() : continue
+        if btype in masterlist: continue
+        masterlist.append(btype)
+    for master in masterlist:
+        assert not master in masterof.keys(), 'master %s encountered in slaves' %master
+    for slave in masterof.keys():
+        assert not slave in masterlist, 'slave %s encountered in masters' %slave
     #construct the matrix to convert bci's to charges
     #matrix[i,n] is the contribution to charge i from bci n
     #bci p_AB is a charge transfer from B to A, hence qA+=p_AB and qB-=p_AB
-    matrix = np.zeros([len(charges), len(masters)], float)   
+    matrix = np.zeros([len(charges), len(masterlist)], float)   
     for i, (btype, bond, sign) in enumerate(zip(btypes, bonds, signs)):
-        if btype in masters:
-            index = masters.index(btype)
-        elif btype in slaves.keys():
-            index = masters.index(slaves[btype])
+        if btype in masterlist:
+            index = masterlist.index(btype)
+        elif btype in masterof.keys():
+            index = masterlist.index(masterof[btype])
         else:
             raise ValueError('No master found for bond %s of type %s' %(bond, btype))
         matrix[bond[0],index] +=  sign
@@ -524,13 +526,13 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
         for ffatype, aq in charge_atypes.iteritems():
             print '  %4s    % .3f' %(ffatype, aq)
         print 'Fitted Split Charges'
-        for btype, sq in zip(masters, bcis):
+        for btype, sq in zip(masterlist, bcis):
             print '  %10s    % .3f' %(btype, sq)
         print 'Atomic Charges from Split Charges'
         aq2 = np.dot(matrix, bcis)
         for ffatype, aq in average(aq2, ffatypes, 'dict').iteritems():
             print '  %4s    % .3f' %(ffatype, aq)
-    result = dict((btype, bci) for btype, bci in zip(masters, bcis))
-    for slave, master in slaves.iteritems():
+    result = dict((btype, bci) for btype, bci in zip(masterlist, bcis))
+    for slave, master in masterof.iteritems():
         result[slave] = result[master]
     return result
