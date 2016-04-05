@@ -129,14 +129,11 @@ def parse():
     system = OptionGroup(parser, 'System', 'All options related to the definition of the system.')
     system.add_option(
         '--ffatypes', default=None,
-        help='Assign atom types in the system, through either on of three '
-             'possible routines. If FFATYPES is a string equal to either '
-             'low,medium, high or highest, atom types will be assigned through '
-             'the automatic built-in detection (see documentation). If FFATYPES '
-             'is a different string, it is assumed to be the name of a file '
-             'containing a list of atype names and Yaff ATSELECT rules to '
-             'defined the atom types. If FFATYPES is None, the atom types are '
-             'assumed to be defined in the input files. [default=%default]'
+        help='Assign atom types in the system. If FFATYPES is a string equal to '
+             'either low,medium, high or highest, atom types will be assigned '
+             'through the automatic built-in detection (see documentation). If '
+             'FFATYPES is None, the atom types are assumed to be defined in the '
+             'input files. [default=%default]'
     )
     parser.add_option_group(system)
     options, args = parser.parse_args()
