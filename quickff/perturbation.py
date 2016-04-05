@@ -241,7 +241,7 @@ class RelaxedStrain(object):
                 if term2.kind == 3: continue #not a cross term ic
                 ics.append(term2.ics[0])
             self.strains[term.index] = Strain(self.system, term.ics[0], ics)
-            trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=11)
+            trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=9)
         return trajectories
 
     def generate(self, trajectory, remove_com=True):
@@ -270,9 +270,11 @@ class RelaxedStrain(object):
             return
         for iq, q in enumerate(trajectory.qvals):
             strain.constrain_value = q
-            init = np.random.normal(0.0, 1e-3*angstrom, [strain.ndof+1])#np.zeros([strain.ndof+1], float)
+            if iq==0:
+                init = np.zeros([strain.ndof+1], float)
+            else:
+                init = sol.copy()
             sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-9, full_output=True)
-            #print iq, q/parse_unit(trajectory.qunit), mesg, infodict['nfev'], infodict['fvec']
             if False:#ier==5:
                 #fsolve did not converge, flag this frame for deletion
                 trajectory.qvals[iq] = np.nan
