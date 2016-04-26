@@ -30,6 +30,9 @@ from quickff.cost import HessianFCCost
 from quickff.paracontext import paracontext
 from quickff.log import log
 
+from yaff.pes.vlist import Cosine, Harmonic
+from yaff.pes.iclist import BendAngle, BendCos
+
 import os, cPickle, numpy as np, datetime
 
 __all__ = [
@@ -263,12 +266,14 @@ class BaseProgram(object):
             #compute fc and rv from trajectory
             for traj in self.trajectories:
                 if traj is None: continue
-                self.perturbation.estimate(traj, self.trajectories, self.ai, ffrefs=ffrefs, do_valence=do_valence)
+                self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs, do_valence=do_valence)
             #set force field parameters to computed fc and rv
             for traj in self.trajectories:
                 if traj is None: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
             self.valence.dump_logger(print_level=4)
+            self.do_squarebend()
+            self.do_bendcharm()
             self.average_pars()
 
     def do_eq_setrv(self, tasks):
@@ -385,7 +390,98 @@ class BaseProgram(object):
                 if rv0 is None or rv1 is None:
                     raise ValueError('No rest values found for %s' %self.valence.terms[index].basename)
                 self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-
+    
+    def do_squarebend(self, thresshold=10*deg):
+        '''
+            Identify bend patterns in which 4 atoms of type A surround a central
+            atom of type B with A-B-A angles of 90/180 degrees. A simple
+            harmonic pattern will not be adequate since a rest value of 90 and
+            180 degrees is possible for the same A-B-A term. Therefore, a
+            cosine term with multiplicity of 4 is used:
+           
+                  V = K/2*[1-cos(4*theta)]
+            
+            To identify the patterns, it is assumed that the rest values have 
+            already been estimated from the perturbation trajectories. For each
+            master and slave of a BENDAHARM term, its rest value is computed and
+            checked if it lies either the interval [90-thresshold,90+thresshold]
+            or [180-thresshold,180]. If this is the case, the new cosine term
+            is used.
+            
+            **Optional arguments**
+            
+            thresshold
+                the (half) the width of the interval around 180 deg (90 degrees)
+                to check if a square BA4
+        '''
+        with log.section('SQBEND', 2):
+            for master in self.valence.iter_masters(label='BendAHarm'):
+                rvs = np.zeros([len(master.slaves)+1], float)
+                rvs[0] = self.valence.get_params(master.index, only='rv')
+                for i, islave in enumerate(master.slaves):
+                    rvs[1+i] = self.valence.get_params(islave, only='rv')
+                n90 = 0
+                n180 = 0
+                nother = 0
+                for rv in rvs:
+                    if 90*deg-thresshold<=rv and rv<=90*deg+thresshold: n90 += 1
+                    elif 180*deg-thresshold<=rv and rv<=180*deg+thresshold: n180 += 1
+                    else: nother += 1
+                if nother==0 and n90>0 and n180>0:
+                    log.dump('%s has rest values around 90 deg and 180 deg, converted to BendCos with m=4' %master.basename)
+                    #modify master and slaves
+                    indices = [master.index]
+                    for slave in master.slaves: indices.append(slave)
+                    for index in indices:
+                        term = self.valence.terms[index]
+                        self.valence.modify_term(
+                            index,
+                            Cosine, [BendAngle(*term.get_atoms())],
+                            term.basename.replace('BendAHarm', 'BendCos'),
+                            ['HC_FC_DIAG'], ['au', 'kjmol', 'deg']
+                        )
+                        self.valence.set_params(index, rv0=0.0, m=4)
+                        for traj in self.trajectories:
+                            if traj.term.index==index:
+                                traj.active = False
+                                traj.fc = None
+                                traj.rv = None
+    
+    def do_bendcharm(self, thresshold=2*deg):
+        '''
+            No Harmonic bend can have a rest value equal to are large than 
+            180 deg - thresshold. If a master (or its slaves) has such a rest 
+            value, convert master and all slaves to BendCharm with
+            cos(phis0)=-1.
+        '''
+        with log.section('BNDCHRM', 2):
+            for master in self.valence.iter_masters(label='BendAHarm'):
+                indices = [master.index]
+                for slave in master.slaves: indices.append(slave)
+                found = False
+                for index in indices:
+                    rv = self.valence.get_params(index, only='rv')
+                    if rv>=180.0*deg-thresshold:
+                        found = True
+                        break
+                if found:
+                    log.dump('%s has rest value > 180-%.0f deg, converted to BendCHarm with cos(phi0)=-1' %(master.basename, thresshold/deg))
+                    for index in indices:
+                        term = self.valence.terms[index]
+                        self.valence.modify_term(
+                            index,
+                            Harmonic, [BendCos(*term.get_atoms())],
+                            term.basename.replace('BendAHarm', 'BendCHarm'),
+                            ['HC_FC_DIAG'], ['kjmol', 'au']
+                        )
+                        self.valence.set_params(index, fc=0.0, rv0=-1.0)
+                        for traj in self.trajectories:
+                            if traj.term.index==index:
+                                traj.rv = None
+                                traj.fc = None
+                                traj.active = False
+                        
+        
     def run(self):
         '''
             Sequence of instructions, should be implemented in the inheriting

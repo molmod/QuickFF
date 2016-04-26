@@ -76,7 +76,8 @@ class Trajectory(object):
         self.numbers = numbers
         self.qunit = term.units[1]
         self.kunit = term.units[0]
-        self.qvals = start + (end-start)/(steps-1)*np.array(range(steps), float)
+        self.targets = start + (end-start)/(steps-1)*np.array(range(steps), float)
+        self.values = np.zeros(steps, float)
         self.coords = np.zeros([steps, len(numbers), 3], float)
         self.active = True
         self.fc = None
@@ -129,34 +130,39 @@ class Trajectory(object):
         data = np.array([ai.energy(pos) for pos in self.coords])
         index_min = np.where(data==min(data))[0][0]
         e_max = max(np.ceil(max(data-min(data))/parse_unit(eunit)), 1.0)
-        add_plot(self.qvals, data-data[index_min], 'AI ref', {'linestyle': 'none', 'marker': 'o', 'markerfacecolor': 'k', 'markersize': 12})
+        add_plot(self.targets, data-data[index_min], 'AI ref', {'linestyle': 'none', 'marker': 'o', 'markerfacecolor': 'k', 'markersize': 12})
         #ffrefs
-        totff = np.zeros([len(self.qvals)], float)
+        totff = np.zeros([len(self.targets)], float)
         colors = ['b', 'g', 'm', 'y', 'c']
         for i, ffref in enumerate(ffrefs):
             data = np.array([ffref.energy(pos) for pos in self.coords])
             totff += data
-            add_plot(self.qvals, data-data[index_min], ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
+            add_plot(self.targets, data-data[index_min], ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
         #complete fitted valence model if given
         if valence is not None:
             for term in valence.iter_terms():
                 valence.check_params(term, ['all'])
+            k = valence.get_params(self.term.index, only='fc')
+            valence.set_params(self.term.index, fc=0.0)
             data = np.array([valence.calc_energy(pos) for pos in self.coords])
-            add_plot(self.qvals, data-data[index_min], 'Fitted Valence', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
-            add_plot(self.qvals, totff+data-totff[index_min]-data[index_min], 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
-        #complete fitted term if valence is not given
-        else:
-            assert self.fc is not None and self.rv is not None
-            start = self.qvals[0]
-            end = self.qvals[-1]
+            valence.set_params(self.term.index, fc=k)
+            totff += data
+            add_plot(self.targets, data-data[index_min], 'Fitted Valence', {'linestyle': '--', 'color': 'r', 'linewidth':2.0})
+        #PT fitted term
+        fc = valence.get_params(self.term.index, only='fc')
+        rv = valence.get_params(self.term.index, only='rv')
+        start = self.targets[0]
+        end = self.targets[-1]
+        step = float((end-start)/100)
+        if step==0:
+            start -= 0.05*start
+            end += 0.05*end
             step = float((end-start)/100)
-            if step==0:
-                start -= 0.05*start
-                end += 0.05*end
-                step = float((end-start)/100)
-            qs = np.arange(start, end+step, step)
-            data = 0.5*self.fc*(qs - self.rv)**2
-            add_plot(qs, data-min(data), 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
+        qs = np.arange(start, end+step, step)
+        data = 0.5*fc*(qs - rv)**2
+        add_plot(qs, data-min(data), 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
+        totff += 0.5*fc*(self.targets - rv)**2
+        add_plot(self.targets, totff-totff[index_min], 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
         #decorate plot
         ax.set_title('%s-%i' %(self.term.basename, self.term.index))
         ax.set_xlabel('%s [%s]' % (self.term.basename.split('/')[0], self.qunit), fontsize=16)
@@ -268,35 +274,36 @@ class RelaxedStrain(object):
         if strain is None:
             log.dump('Strain for term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
             return
-        for iq, q in enumerate(trajectory.qvals):
-            strain.constrain_value = q
-            if iq==0:
-                init = np.zeros([strain.ndof+1], float)
-            else:
-                init = sol.copy()
-            sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-9, full_output=True)
-            if False:#ier==5:
+        for iq, target in enumerate(trajectory.targets):
+            strain.constrain_target = target
+            init = np.zeros([strain.ndof+1], float)
+            sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3*angstrom, full_output=True)
+            if ier==5:
                 #fsolve did not converge, flag this frame for deletion
-                trajectory.qvals[iq] = np.nan
+                trajectory.targets[iq] = np.nan
                 continue
             x = strain.coords0 + sol[:self.system.natom*3].reshape((-1,3))
+            trajectory.values[iq] = strain.constrain_value
             if remove_com:
                 com = (x.T*self.system.masses).sum(axis=1)/self.system.masses.sum()
                 for i in xrange(self.system.natom):
                     x[i,:] -= com
             trajectory.coords[iq,:,:] = x
         #delete flagged frames
-        qvals = []
+        targets = []
+        values = []
         coords = []
-        for q, coord in zip(trajectory.qvals, trajectory.coords):
-            if not np.isnan(q):
-                qvals.append(q)
+        for target, value, coord in zip(trajectory.targets, trajectory.values, trajectory.coords):
+            if not np.isnan(target):
+                targets.append(target)
+                values.append(value)
                 coords.append(coord)
-        trajectory.qvals = np.array(qvals)
+        trajectory.targets = np.array(targets)
+        trajectory.values = np.array(values)
         trajectory.coords = np.array(coords)
         return trajectory
 
-    def estimate(self, trajectory, trajectories, ai, ffrefs=[], do_valence=False):
+    def estimate(self, trajectory, ai, ffrefs=[], do_valence=False):
         '''
             Method to estimate the FF parameters for the relevant ic from the
             given perturbation trajectory by fitting a harmonic potential to the
@@ -306,10 +313,6 @@ class RelaxedStrain(object):
 
             trajectory
                 a Trajectory instance representing the perturbation trajectory
-
-            trajectories
-                list of Trajectory instances representing all perturbation
-                trajectories
 
             ai
                 an instance of the Reference representing the ab initio input
@@ -329,9 +332,9 @@ class RelaxedStrain(object):
         index = term.index
         basename = term.basename
         if 'active' in trajectory.__dict__.keys() and not trajectory.active:
-            log.dump('WARNING: Trajectory of term %i (%s) was deactivated: skipping' %(index, basename))
+            log.dump('Trajectory of %s was deactivated: skipping' %(basename))
             return
-        qs = trajectory.qvals.copy()
+        qs = trajectory.values.copy()
         AIs = np.zeros(len(trajectory.coords))
         FFs = np.zeros(len(trajectory.coords))
         for istep, pos in enumerate(trajectory.coords):
@@ -354,28 +357,13 @@ class RelaxedStrain(object):
             vterm = self.valence.vlist.vtab[index]
             ic = self.valence.iclist.ictab[vterm['ic0']]
             trajectory.rv = ic['value']
-            log.dump('WARNING: force constant of %s is zero: rest value set to AI equilibrium' %basename)
+            log.dump('force constant of %s is zero: rest value set to AI equilibrium' %basename)
         #no negative rest values for all ics except dihedrals and bendcos
         if term.ics[0].kind not in [1,3,4]:
             if trajectory.rv<0:
                 trajectory.rv = 0
-                log.dump('WARNING: rest value of %s was negative: set to zero' %basename)
-        #no bending angles larger than 180*deg
-        if term.ics[0].kind in [2]:
-            if trajectory.rv>180*deg:
-                log.dump('WARNING: rest value of %s exceeds 180 deg: term set to BendCHarm with cos(phi0)=-1, deactivated perturbation trajectory' %basename)
-                for other_traj in trajectories:
-                    if other_traj is None or not other_traj.term.basename==basename: continue
-                    other_traj.rv = None
-                    other_traj.fc = None
-                    other_traj.active = False
-                    self.valence.modify_term(
-                        other_traj.term.index,
-                        Harmonic, [BendCos(*other_traj.term.get_atoms())],
-                        basename.replace('BendAHarm', 'BendCHarm'),
-                        ['HC_FC_DIAG'], ['kjmol', 'au']
-                    )
-                    self.valence.set_params(other_traj.term.index, fc=0.0, rv0=-1.0)
+                log.dump('rest value of %s was negative: set to zero' %basename)
+
 
 
 
@@ -454,7 +442,8 @@ class Strain(ForceField):
         part = ForcePartValence(system)
         part.add_term(Chebychev1(-2.0,cons_ic))
         self.constraint = ForceField(system, [part])
-        self.constraint_value = None
+        self.constrain_target = None
+        self.constrain_value = None
 
     def gradient(self, X):
         '''
@@ -473,8 +462,8 @@ class Strain(ForceField):
         #compute constraint gradient
         gconstraint = np.zeros(self.coords0.shape)
         self.constraint.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))
-        econstraint = self.constraint.compute(gpos=gconstraint)
+        self.constrain_value = self.constraint.compute(gpos=gconstraint) + 1.0
         #construct gradient
         grad[:self.ndof] = gstrain.reshape((-1,)) + X[self.ndof]*gconstraint.reshape((-1,)) #+ 0.01*X[:self.ndof]
-        grad[self.ndof] = econstraint + 1.0 - self.constrain_value #self.constraint.parts[0].vlist.vtab[0]['energy'] + 1.0 - self.constrain_value
+        grad[self.ndof] = self.constrain_value - self.constrain_target #self.constraint.parts[0].vlist.vtab[0]['energy'] + 1.0 - self.constrain_value
         return grad

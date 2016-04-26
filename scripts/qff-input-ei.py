@@ -70,8 +70,10 @@ def parse():
     parser.add_option(
         '--bci-constraints', default=None,
         help='A file containing constraints for the charge to bci fit in a '
-             'master: [slave0, slave1, ...] format. A new line should be used '
+             'master: slave0,slave1,...: sign format. A new line should be used '
              'for each master and the format is insensitive towards spaces.'
+             'Sign should be 1.0 or -1.0 indicating wheter or not a sign switch '
+             'should be introduced when mapping the slaves to the master.'
     )
     parser.add_option(
         '-o', '--output', default=None,

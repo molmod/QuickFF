@@ -302,7 +302,7 @@ def get_multiplicity(n1, n2):
     else:                          return None
 
 
-def get_restvalue(values, m, thresshold=5*deg):
+def get_restvalue(values, m, thresshold=15*deg):
     '''
         Get a rest value of 0.0, 360/(2*m) or None depending on the given
         equilbrium values
@@ -457,7 +457,7 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
         **Keyword Arguments**
         
         constraints
-            a dictionairy of format (master, [slave0, slave1, ...])
+            a dictionairy of format (master, [(slave0,sign0), (slave1,sign1), ...])
         
         verbose
             increase verbosity
@@ -483,12 +483,12 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     for m, s in constraints.iteritems():
         types = m.split('.')
         if types[0].lower()>=types[1].lower(): m = '.'.join(types[::-1])
-        for slave in s:
+        for slave, sign in s:
             types = slave.split('.')
             if types[0].lower()>=types[1].lower(): slave = '.'.join(types[::-1])
             assert slave not in masterof.keys(), \
                 'Slave %s has multiple masters in constraints' %slave
-            masterof[slave] = m
+            masterof[slave] = (m, sign)
     masterlist = []
     for btype in btypes:
         if btype in masterof.keys() : continue
@@ -497,6 +497,7 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     for master in masterlist:
         assert not master in masterof.keys(), 'master %s encountered in slaves' %master
     for slave in masterof.keys():
+        print slave, masterof[slave]
         assert not slave in masterlist, 'slave %s encountered in masters' %slave
     #construct the matrix to convert bci's to charges
     #matrix[i,n] is the contribution to charge i from bci n
@@ -505,12 +506,14 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     for i, (btype, bond, sign) in enumerate(zip(btypes, bonds, signs)):
         if btype in masterlist:
             index = masterlist.index(btype)
+            sign_switch = 1.0
         elif btype in masterof.keys():
-            index = masterlist.index(masterof[btype])
+            master, sign_switch = masterof[btype]
+            index = masterlist.index(master)
         else:
             raise ValueError('No master found for bond %s of type %s' %(bond, btype))
-        matrix[bond[0],index] +=  sign
-        matrix[bond[1],index] += -sign
+        matrix[bond[0],index] +=  sign*sign_switch
+        matrix[bond[1],index] += -sign*sign_switch
     #solve the set of equations q=M.t with q the full array of atomic charges
     #and t the array of bci masters
     bcis, res, rank, svals = np.linalg.lstsq(matrix, charges, rcond=1e-6)
@@ -533,6 +536,6 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
         for ffatype, aq in average(aq2, ffatypes, 'dict').iteritems():
             print '  %4s    % .3f' %(ffatype, aq)
     result = dict((btype, bci) for btype, bci in zip(masterlist, bcis))
-    for slave, master in masterof.iteritems():
-        result[slave] = result[master]
+    for slave, (master, sign) in masterof.iteritems():
+        result[slave] = result[master]*sign
     return result

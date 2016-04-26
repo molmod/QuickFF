@@ -337,8 +337,8 @@ class ValenceFF(ForcePartValence):
             self.add_term(Harmonic, [BendAngle(*angle)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
             nbends += 1
         log.dump('Added %i Harmonic bend terms' %nbends)
-
-    def init_dihedral_terms(self, thresshold=10*deg):
+    
+    def init_dihedral_terms(self, thresshold=15*deg):
         '''
             Initialize the dihedral potentials from the local topology. The
             dihedral potential will be one of the two following possibilities:

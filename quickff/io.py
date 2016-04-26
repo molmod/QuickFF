@@ -183,18 +183,24 @@ def read_bci_constraints(fn):
         Read constraints for a charge to bci fit. The constraints should be
         written to a file in the following format:
         
-            master0: slave00,slave01,slave02
-            master1: slave10,slave11,slave12
+            master0: slave00,slave01,slave02: sign
+            master1: slave10,slave11,slave12: sign
         
         There should be a new line for each master and format is insensitive
         towards spaces (: and , serve as seperators). Lines starting with #
-        are ignored (i.e. # is the comment identifier).
+        are ignored (i.e. # is the comment identifier). Sign indicates if a
+        sign switch should be introduced when mapping the slave bci to the
+        master bci.
     '''
     constraints = {}
     with open(fn, 'r') as f:
         for line in f.readlines():
             if line.startswith('#'): continue
-            master, suffix = line.split(':')
-            slaves = suffix.split(',')
-            constraints[master.strip()] = [slave.strip() for slave in slaves]
+            master, suffix, sign = line.split(':')
+            slaves = [(slave.strip(), float(sign)) for slave in suffix.split(',')]
+            label = master.strip()
+            if label in constraints.keys():
+                for slave in slaves: constraints[label].append(slave)
+            else:
+                constraints[label] = slaves
     return constraints
