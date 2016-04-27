@@ -351,7 +351,7 @@
     <span class="k">else</span><span class="p">:</span>                          <span class="k">return</span> <span class="bp">None</span>
 
 </div>
-<div class="viewcode-block" id="get_restvalue"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.get_restvalue">[docs]</a><span class="k">def</span> <span class="nf">get_restvalue</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">5</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
+<div class="viewcode-block" id="get_restvalue"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.get_restvalue">[docs]</a><span class="k">def</span> <span class="nf">get_restvalue</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">15</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Get a rest value of 0.0, 360/(2*m) or None depending on the given</span>
 <span class="sd">        equilbrium values</span>
@@ -379,7 +379,7 @@
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Routine to return atomic radii for use in the Gaussian charge</span>
 <span class="sd">        distribution. These radii are computed according to the procedure of</span>
-<span class="sd">        Chen et al.:</span>
+<span class="sd">        Chen and Slater:</span>
 
 <span class="sd">        First the Slater exponent is computed from the hardness using the</span>
 <span class="sd">        formula of Rappe and Goddard (hardness of Pearson and Parr is used)</span>
@@ -394,6 +394,11 @@
         <span class="s">&#39;N&#39;</span> <span class="p">:</span> <span class="mf">1.1039</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;O&#39;</span> <span class="p">:</span> <span class="mf">1.1325</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;F&#39;</span> <span class="p">:</span> <span class="mf">1.1097</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
         <span class="s">&#39;Na&#39;</span><span class="p">:</span> <span class="mf">1.7093</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;Al&#39;</span><span class="p">:</span> <span class="mf">1.6744</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;Si&#39;</span><span class="p">:</span> <span class="mf">1.6378</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
         <span class="s">&#39;P&#39;</span> <span class="p">:</span> <span class="mf">1.5730</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;S&#39;</span> <span class="p">:</span> <span class="mf">1.6022</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;Cl&#39;</span><span class="p">:</span> <span class="mf">1.5789</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
+        <span class="c">#Could not compute Ga due to missing Taylor expansion in to compute </span>
+        <span class="c">#the electrostatic interaction between two ns-STO densities with n=5</span>
+        <span class="c">#Therefore, the Br to Cl ratio (both elements reported in Chen and </span>
+        <span class="c">#Slater) is extrapolated to Al-Ga</span>
+        <span class="s">&#39;Ga&#39;</span><span class="p">:</span> <span class="mf">2.1325</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">numbers</span><span class="p">):</span>
@@ -432,10 +437,29 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="s">&#39;</span><span class="si">%i</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">ndig</span><span class="p">])</span>
 </div>
-<div class="viewcode-block" id="average"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.average">[docs]</a><span class="k">def</span> <span class="nf">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">):</span>
+<div class="viewcode-block" id="average"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.average">[docs]</a><span class="k">def</span> <span class="nf">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&#39;full&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Average the atomic parameters stored in data over atom of the same atom</span>
+<span class="sd">        Average the atomic parameters stored in data over atoms of the same atom</span>
 <span class="sd">        type.</span>
+<span class="sd">        </span>
+<span class="sd">        **Arguments**</span>
+<span class="sd">        </span>
+<span class="sd">        data</span>
+<span class="sd">            a list or numpy array containing the data</span>
+<span class="sd">        </span>
+<span class="sd">        ffatypes</span>
+<span class="sd">            a listor numpy array containing the atom types. Should have equal</span>
+<span class="sd">            length as data</span>
+<span class="sd">        </span>
+<span class="sd">        **Keywork arguments**</span>
+<span class="sd">        </span>
+<span class="sd">        fmt</span>
+<span class="sd">            Should be either full or dict. In case of full, the result will be</span>
+<span class="sd">            returned as an numpy array of equal length as data and ffatypes. In</span>
+<span class="sd">            case of dict, the result will be returned as a dictionairy of the </span>
+<span class="sd">            following format:</span>
+<span class="sd">            </span>
+<span class="sd">                {ffatype0: value0, ffatype1: value1, ...}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">data_atypes</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">ffatype</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">ffatypes</span><span class="p">):</span>
@@ -443,15 +467,127 @@
             <span class="n">data_atypes</span><span class="p">[</span><span class="n">ffatype</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">data_atypes</span><span class="p">[</span><span class="n">ffatype</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
-    <span class="n">averaged_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
-    <span class="n">printed</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ffatype</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">):</span>
-        <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_atypes</span><span class="p">[</span><span class="n">ffatype</span><span class="p">])</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">std</span> <span class="o">&lt;</span> <span class="mf">1e-2</span> <span class="ow">and</span> <span class="n">ffatype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">printed</span><span class="p">:</span>
-            <span class="k">print</span> <span class="s">&#39;WARNING: charge of atom type </span><span class="si">%s</span><span class="s"> has a large std: </span><span class="si">%.3e</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
-            <span class="n">printed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ffatype</span><span class="p">)</span>
-        <span class="n">averaged_data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_atypes</span><span class="p">[</span><span class="n">ffatype</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">averaged_data</span></div>
+    <span class="k">if</span> <span class="n">fmt</span><span class="o">==</span><span class="s">&#39;full&#39;</span><span class="p">:</span>
+        <span class="n">averaged_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+        <span class="n">printed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ffatype</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">):</span>
+            <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_atypes</span><span class="p">[</span><span class="n">ffatype</span><span class="p">])</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">std</span> <span class="o">&lt;</span> <span class="mf">1e-2</span> <span class="ow">and</span> <span class="n">ffatype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">printed</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&#39;WARNING: charge of atom type </span><span class="si">%s</span><span class="s"> has a large std: </span><span class="si">%.3e</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+                <span class="n">printed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ffatype</span><span class="p">)</span>
+            <span class="n">averaged_data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_atypes</span><span class="p">[</span><span class="n">ffatype</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">fmt</span><span class="o">==</span><span class="s">&#39;dict&#39;</span><span class="p">:</span>
+        <span class="n">averaged_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">data_atypes</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">averaged_data</span><span class="p">[</span><span class="n">ffatype</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&#39;Format </span><span class="si">%s</span><span class="s"> not supported, should be full or dict&#39;</span> <span class="o">%</span><span class="n">fmt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">averaged_data</span>
+</div>
+<span class="k">def</span> <span class="nf">charges_to_bcis</span><span class="p">(</span><span class="n">charges</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="n">bonds</span><span class="p">,</span> <span class="n">constraints</span><span class="o">=</span><span class="p">{},</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Transform atomic charges to bond charge increments, by definition 2 </span>
+<span class="sd">        bci&#39;s between different pairs of atoms but with identical pairs of </span>
+<span class="sd">        atom types will be equal. Bci&#39;s will be returned as a dictionairy</span>
+<span class="sd">        containing tuples of the format (ffatype0.ffatype1, bci_value)</span>
+<span class="sd">        </span>
+<span class="sd">        **Arguments**</span>
+<span class="sd">        </span>
+<span class="sd">        charges</span>
+<span class="sd">            a (N,) list or numpy array containing the charges</span>
+<span class="sd">        </span>
+<span class="sd">        ffatypes</span>
+<span class="sd">            a (N,) list or numpy array with the atom type of each atom in the </span>
+<span class="sd">            system</span>
+<span class="sd">        </span>
+<span class="sd">        bonds</span>
+<span class="sd">            a (B,2) list or numpy array for each bond in the system</span>
+<span class="sd">        </span>
+<span class="sd">        **Keyword Arguments**</span>
+<span class="sd">        </span>
+<span class="sd">        constraints</span>
+<span class="sd">            a dictionairy of format (master, [(slave0,sign0), (slave1,sign1), ...])</span>
+<span class="sd">        </span>
+<span class="sd">        verbose</span>
+<span class="sd">            increase verbosity</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">charges</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">)</span>
+    <span class="c">#construct list of bond types and signs, the signs are related to the </span>
+    <span class="c">#direction of the bci of a certain bond. We want that bonds of type</span>
+    <span class="c">#A.B have a bci with equal magnitude as a bond of type B.A. Therefore, we</span>
+    <span class="c">#only store the bci of A.B (alphabetically) and also store a sign, which is</span>
+    <span class="c">#1.0 for bond A.B and -1 for bond B.A</span>
+    <span class="n">btypes</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">,]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">bonds</span><span class="p">)</span>
+    <span class="n">signs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">bonds</span><span class="p">)],</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bond</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bonds</span><span class="p">):</span>
+        <span class="n">ffatype0</span><span class="p">,</span> <span class="n">ffatype1</span> <span class="o">=</span> <span class="n">ffatypes</span><span class="p">[</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">ffatypes</span><span class="p">[</span><span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">ffatype0</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">&lt;</span><span class="n">ffatype1</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="n">btypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype0</span><span class="p">,</span><span class="n">ffatype1</span><span class="p">)</span>
+            <span class="n">signs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">btypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype1</span><span class="p">,</span><span class="n">ffatype0</span><span class="p">)</span>
+            <span class="n">signs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="c">#decompile constraints</span>
+    <span class="n">masterof</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">constraints</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">&gt;=</span><span class="n">types</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">m</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">slave</span><span class="p">,</span> <span class="n">sign</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">&gt;=</span><span class="n">types</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">slave</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">assert</span> <span class="n">slave</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> \
+                <span class="s">&#39;Slave </span><span class="si">%s</span><span class="s"> has multiple masters in constraints&#39;</span> <span class="o">%</span><span class="n">slave</span>
+            <span class="n">masterof</span><span class="p">[</span><span class="n">slave</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">sign</span><span class="p">)</span>
+    <span class="n">masterlist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">btype</span> <span class="ow">in</span> <span class="n">btypes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">btype</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">:</span> <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">btype</span> <span class="ow">in</span> <span class="n">masterlist</span><span class="p">:</span> <span class="k">continue</span>
+        <span class="n">masterlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">btype</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">master</span> <span class="ow">in</span> <span class="n">masterlist</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">master</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="s">&#39;master </span><span class="si">%s</span><span class="s"> encountered in slaves&#39;</span> <span class="o">%</span><span class="n">master</span>
+    <span class="k">for</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">print</span> <span class="n">slave</span><span class="p">,</span> <span class="n">masterof</span><span class="p">[</span><span class="n">slave</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">masterlist</span><span class="p">,</span> <span class="s">&#39;slave </span><span class="si">%s</span><span class="s"> encountered in masters&#39;</span> <span class="o">%</span><span class="n">slave</span>
+    <span class="c">#construct the matrix to convert bci&#39;s to charges</span>
+    <span class="c">#matrix[i,n] is the contribution to charge i from bci n</span>
+    <span class="c">#bci p_AB is a charge transfer from B to A, hence qA+=p_AB and qB-=p_AB</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">charges</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">masterlist</span><span class="p">)],</span> <span class="nb">float</span><span class="p">)</span>   
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">btype</span><span class="p">,</span> <span class="n">bond</span><span class="p">,</span> <span class="n">sign</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">btypes</span><span class="p">,</span> <span class="n">bonds</span><span class="p">,</span> <span class="n">signs</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">btype</span> <span class="ow">in</span> <span class="n">masterlist</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">masterlist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">btype</span><span class="p">)</span>
+            <span class="n">sign_switch</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">elif</span> <span class="n">btype</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">master</span><span class="p">,</span> <span class="n">sign_switch</span> <span class="o">=</span> <span class="n">masterof</span><span class="p">[</span><span class="n">btype</span><span class="p">]</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">masterlist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">master</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;No master found for bond </span><span class="si">%s</span><span class="s"> of type </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">bond</span><span class="p">,</span> <span class="n">btype</span><span class="p">))</span>
+        <span class="n">matrix</span><span class="p">[</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">index</span><span class="p">]</span> <span class="o">+=</span>  <span class="n">sign</span><span class="o">*</span><span class="n">sign_switch</span>
+        <span class="n">matrix</span><span class="p">[</span><span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">index</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="n">sign</span><span class="o">*</span><span class="n">sign_switch</span>
+    <span class="c">#solve the set of equations q=M.t with q the full array of atomic charges</span>
+    <span class="c">#and t the array of bci masters</span>
+    <span class="n">bcis</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">svals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;Fitting SQ to charges:&#39;</span>
+        <span class="k">print</span> <span class="s">&#39;    sing vals = &#39;</span><span class="p">,</span> <span class="n">svals</span>
+        <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">svals</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;    cond numb = &#39;</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">svals</span><span class="p">)</span><span class="o">/</span><span class="nb">min</span><span class="p">(</span><span class="n">svals</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;    cond numb = inf&#39;</span>            
+        <span class="k">print</span> <span class="s">&#39;Averaged Atomic Charges&#39;</span>
+        <span class="n">charge_atypes</span> <span class="o">=</span> <span class="n">average</span><span class="p">(</span><span class="n">charges</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="s">&#39;dict&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">aq</span> <span class="ow">in</span> <span class="n">charge_atypes</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">print</span> <span class="s">&#39;  </span><span class="si">%4s</span><span class="s">    </span><span class="si">% .3f</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype</span><span class="p">,</span> <span class="n">aq</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39;Fitted Split Charges&#39;</span>
+        <span class="k">for</span> <span class="n">btype</span><span class="p">,</span> <span class="n">sq</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">masterlist</span><span class="p">,</span> <span class="n">bcis</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s">&#39;  </span><span class="si">%10s</span><span class="s">    </span><span class="si">% .3f</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">btype</span><span class="p">,</span> <span class="n">sq</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39;Atomic Charges from Split Charges&#39;</span>
+        <span class="n">aq2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">bcis</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">aq</span> <span class="ow">in</span> <span class="n">average</span><span class="p">(</span><span class="n">aq2</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="s">&#39;dict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">print</span> <span class="s">&#39;  </span><span class="si">%4s</span><span class="s">    </span><span class="si">% .3f</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype</span><span class="p">,</span> <span class="n">aq</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">btype</span><span class="p">,</span> <span class="n">bci</span><span class="p">)</span> <span class="k">for</span> <span class="n">btype</span><span class="p">,</span> <span class="n">bci</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">masterlist</span><span class="p">,</span> <span class="n">bcis</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">slave</span><span class="p">,</span> <span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">sign</span><span class="p">)</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">slave</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">master</span><span class="p">]</span><span class="o">*</span><span class="n">sign</span>
+    <span class="k">return</span> <span class="n">result</span>
 </pre></div>
 
           </div>

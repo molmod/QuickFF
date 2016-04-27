@@ -197,9 +197,9 @@ _________________________\//////____\///______________\///______________________
 
 
  USER               louis
- MACHINE            Linux molmod91 4.2.0-34-generic #39-Ubuntu SMP Thu Mar 10 
- MACHINE            22:13:01 UTC 2016 x86_64
- TIME               2016-03-29 18:03:01.884333
+ MACHINE            Linux molmod91 4.2.0-35-generic #40-Ubuntu SMP Tue Mar 15 
+ MACHINE            22:15:45 UTC 2016 x86_64
+ TIME               2016-04-27 15:20:27.495850
  PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
  NUMPY VERSION      1.8.2
  SCIPY VERSION      0.14.1
@@ -231,6 +231,7 @@ _________________________\//////____\///______________\///______________________
 
  PTEST  Resetting system coordinates to ab initio ref
  PTEST  Estimating FF parameters from perturbation trajectories
+
  PTEST  Averaging force field parameters over master and slaves
 
  CRINI  Resetting system coordinates to ab initio ref
@@ -243,6 +244,7 @@ _________________________\//////____\///______________\///______________________
  PTEST  Resetting system coordinates to ab initio ref
  PTEST  Estimating FF parameters from perturbation trajectories with valence 
  PTEST  reference
+
  PTEST  Averaging force field parameters over master and slaves
 
  HCEST  Resetting system coordinates to ab initio ref
@@ -257,51 +259,51 @@ _________________________\//////____\///______________\///______________________
             fc =  3385 ± .000    rv = 1.084 ± .000
 
         BendAHarm/C.C.C (kjmol/rad^2  deg)                                      
-            fc = 617.9 ± .000    rv = 120.1 ± .000
+            fc = 617.5 ± .000    rv = 119.9 ± .000
 
         BendAHarm/C.C.H (kjmol/rad^2  deg)                                      
-            fc = 291.4 ± .000    rv = 120.1 ± .000
+            fc = 291.1 ± .000    rv = 119.9 ± .000
 
         Torsion/C.C.C.C (au  kjmol  deg)                                        
-            fc = 32.0 ± .00    rv = .000 ± 0.0    m = 2
+            fc = 32.1 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Torsion/C.C.C.H (au  kjmol  deg)                                        
-            fc = 32.0 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 31.9 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Torsion/H.C.C.H (au  kjmol  deg)                                        
             fc = 12.9 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Oopdist/C.C.H.C (kjmol/A^2  A)                                          
-            fc = 271.9 ± .000    rv = .0000 ± .000
+            fc = 276.1 ± .000    rv = .0000 ± .000
 
         Cross/C.C.C/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.52 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.45 ± .0    rv0 = 1.39 ± 0.0    rv0 =  119 ± 0.0
 
         Cross/C.C.C/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.64 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.57 ± .0    rv0 = 1.39 ± 0.0    rv0 =  119 ± 0.0
 
         Cross/C.C.C/bb (kjmol/A^2  A  A)                                        
             fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
 
         Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 63.1 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 63.1 ± .0    rv0 = 1.39 ± .00    rv0 =  119 ± 0.0
 
         Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± 0.0
+            fc =  144 ± .0    rv0 = 1.08 ± .00    rv0 =  119 ± 0.0
 
         Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
-            fc =  120 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.08 ± 0.0
+            fc =  120 ± .0    rv0 = 1.39 ± .00    rv0 = 1.08 ± .00
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.060731
- TIMING Equil Set RV                    0:00:00.001910
- TIMING PT Generate                     0:00:13.329597
- TIMING PT Estimate                     0:00:00.064398
- TIMING HC Estimate FC                  0:00:00.287148
- TIMING PT plot energy                  0:00:00.000012
- TIMING PT dump XYZ                     0:00:00.000005
+ TIMING Initializing                    0:00:00.061250
+ TIMING Equil Set RV                    0:00:00.001961
+ TIMING PT Generate                     0:00:08.926649
+ TIMING PT Estimate                     0:00:00.054649
+ TIMING HC Estimate FC                  0:00:00.300273
+ TIMING PT plot energy                  0:00:00.000008
+ TIMING PT dump XYZ                     0:00:00.000004
 
 __/\\\__________________________________________________________________/\\\____
   \ \\\                                                                 \ \\\
@@ -355,8 +357,8 @@ program is provided.</p>
 BONDHARM:UNIT  K kjmol/A**2
 BONDHARM:UNIT  R0 A
 
-BONDHARM:PARS         C         H  3.3852582135e+03  1.0845415565e+00
-BONDHARM:PARS         C         C  3.9756922970e+03  1.3949619705e+00
+BONDHARM:PARS         C         H  3.3852897337e+03  1.0844556002e+00
+BONDHARM:PARS         C         C  3.9754477622e+03  1.3947545633e+00
 
 
 # BENDAHARM
@@ -364,8 +366,8 @@ BONDHARM:PARS         C         C  3.9756922970e+03  1.3949619705e+00
 BENDAHARM:UNIT  K kjmol/rad**2
 BENDAHARM:UNIT  THETA0 deg
 
-BENDAHARM:PARS         C         C         H  2.9144841326e+02  1.2012023303e+02
-BENDAHARM:PARS         C         C         C  6.1796501624e+02  1.2011142877e+02
+BENDAHARM:PARS         C         C         H  2.9115083921e+02  1.1998417528e+02
+BENDAHARM:PARS         C         C         C  6.1759561502e+02  1.1998453630e+02
 
 
 # TORSION
@@ -373,9 +375,9 @@ BENDAHARM:PARS         C         C         C  6.1796501624e+02  1.2011142877e+02
 TORSION:UNIT  A kjmol
 TORSION:UNIT  PHI0 deg
 
-TORSION:PARS         C         C         C         H  2 3.2066671998e+01  0.0000000000e+00
-TORSION:PARS         H         C         C         H  2 1.2950389391e+01  0.0000000000e+00
-TORSION:PARS         C         C         C         C  2 3.2081485403e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         H  2 3.1987377454e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.2932975226e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.2117055362e+01  0.0000000000e+00
 
 
 # OOPDIST
@@ -383,7 +385,7 @@ TORSION:PARS         C         C         C         C  2 3.2081485403e+01  0.0000
 OOPDIST:UNIT  K kjmol/A**2
 OOPDIST:UNIT  D0 A
 
-OOPDIST:PARS         C         C         H         C  2.7194192880e+02  0.0000000000e+00
+OOPDIST:PARS         C         C         H         C  2.7611600550e+02  0.0000000000e+00
 
 
 # Cross
@@ -395,8 +397,8 @@ Cross:UNIT  R0 angstrom
 Cross:UNIT  R1 angstrom
 Cross:UNIT  THETA0 deg
 
-Cross:PARS         C         C         H   1.2083496723e+02   6.3180394361e+01   1.4422169282e+02  1.3951907582e+00  1.0846558172e+00  1.2005097992e+02
-Cross:PARS         C         C         C   5.9522852771e+02   9.5290802835e+00   9.6460831060e+00  1.3951907582e+00  1.3951907582e+00  1.2005174754e+02
+Cross:PARS         C         C         H   1.2083315811e+02   6.3143810789e+01   1.4429029720e+02  1.3948185313e+00  1.0845109209e+00  1.1998005783e+02
+Cross:PARS         C         C         C   5.9516210252e+02   9.4567046094e+00   9.5737379994e+00  1.3948185313e+00  1.3948185313e+00  1.1999397066e+02
 </pre></div>
 </div>
 </div>
@@ -472,9 +474,9 @@ _________________________\//////____\///______________\///______________________
 
 
  USER               louis
- MACHINE            Linux molmod91 4.2.0-34-generic #39-Ubuntu SMP Thu Mar 10 
- MACHINE            22:13:01 UTC 2016 x86_64
- TIME               2016-03-29 18:03:16.311796
+ MACHINE            Linux molmod91 4.2.0-35-generic #40-Ubuntu SMP Tue Mar 15 
+ MACHINE            22:15:45 UTC 2016 x86_64
+ TIME               2016-04-27 15:20:37.488111
  PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
  NUMPY VERSION      1.8.2
  SCIPY VERSION      0.14.1
@@ -507,6 +509,7 @@ _________________________\//////____\///______________\///______________________
 
  PTEST  Resetting system coordinates to ab initio ref
  PTEST  Estimating FF parameters from perturbation trajectories
+
  PTEST  Averaging force field parameters over master and slaves
 
  CRINI  Resetting system coordinates to ab initio ref
@@ -519,6 +522,7 @@ _________________________\//////____\///______________\///______________________
  PTEST  Resetting system coordinates to ab initio ref
  PTEST  Estimating FF parameters from perturbation trajectories with valence 
  PTEST  reference
+
  PTEST  Averaging force field parameters over master and slaves
 
  HCEST  Resetting system coordinates to ab initio ref
@@ -533,50 +537,50 @@ _________________________\//////____\///______________\///______________________
             fc =  3385 ± .000    rv = 1.084 ± .000
 
         BendAHarm/C.C.C (kjmol/rad^2  deg)                                      
-            fc = 617.8 ± .000    rv = 119.9 ± .000
+            fc = 617.4 ± .000    rv = 119.9 ± .000
 
         BendAHarm/C.C.H (kjmol/rad^2  deg)                                      
-            fc = 291.6 ± .000    rv = 120.0 ± .000
+            fc = 291.3 ± .000    rv = 119.9 ± .000
 
         Torsion/C.C.C.C (au  kjmol  deg)                                        
-            fc = 32.2 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 32.1 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Torsion/C.C.C.H (au  kjmol  deg)                                        
-            fc = 32.0 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 32.0 ± .00    rv = .000 ± 0.0    m = 2
 
         Torsion/H.C.C.H (au  kjmol  deg)                                        
-            fc = 12.9 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 13.0 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Oopdist/C.C.H.C (kjmol/A^2  A)                                          
             fc = 275.1 ± .000    rv = .0000 ± .000
 
         Cross/C.C.C/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.39 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.39 ± .0    rv0 = 1.39 ± 0.0    rv0 =  119 ± 0.0
 
         Cross/C.C.C/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.50 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.51 ± .0    rv0 = 1.39 ± 0.0    rv0 =  119 ± 0.0
 
         Cross/C.C.C/bb (kjmol/A^2  A  A)                                        
             fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
 
         Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 63.2 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± .00
+            fc = 63.1 ± .0    rv0 = 1.39 ± .00    rv0 =  119 ± 0.0
 
         Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± .00
+            fc =  144 ± .0    rv0 = 1.08 ± .00    rv0 =  119 ± 0.0
 
         Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
-            fc =  121 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.08 ± 0.0
+            fc =  121 ± .0    rv0 = 1.39 ± .00    rv0 = 1.08 ± .00
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.060638
- TIMING Equil Set RV                    0:00:00.001924
- TIMING PT Generate                     0:00:13.304123
- TIMING PT Estimate                     0:00:00.232996
- TIMING HC Estimate FC                  0:00:00.399454
- TIMING PT plot energy                  0:00:00.000011
+ TIMING Initializing                    0:00:00.060621
+ TIMING Equil Set RV                    0:00:00.001965
+ TIMING PT Generate                     0:00:08.906024
+ TIMING PT Estimate                     0:00:00.107104
+ TIMING HC Estimate FC                  0:00:00.301295
+ TIMING PT plot energy                  0:00:00.000009
  TIMING PT dump XYZ                     0:00:00.000004
 
 __/\\\__________________________________________________________________/\\\____
@@ -598,8 +602,8 @@ what we expect due to the charges being so small.</p>
 BONDHARM:UNIT  K kjmol/A**2
 BONDHARM:UNIT  R0 A
 
-BONDHARM:PARS         C         H  3.3854354308e+03  1.0848568505e+00
-BONDHARM:PARS         C         C  3.9759862804e+03  1.3949777153e+00
+BONDHARM:PARS         C         H  3.3854669943e+03  1.0848193510e+00
+BONDHARM:PARS         C         C  3.9757312044e+03  1.3947110849e+00
 
 
 # BENDAHARM
@@ -607,8 +611,8 @@ BONDHARM:PARS         C         C  3.9759862804e+03  1.3949777153e+00
 BENDAHARM:UNIT  K kjmol/rad**2
 BENDAHARM:UNIT  THETA0 deg
 
-BENDAHARM:PARS         C         C         H  2.9162141142e+02  1.2006557886e+02
-BENDAHARM:PARS         C         C         C  6.1786265396e+02  1.1996969401e+02
+BENDAHARM:PARS         C         C         H  2.9139594127e+02  1.1998390376e+02
+BENDAHARM:PARS         C         C         C  6.1740254389e+02  1.1998428341e+02
 
 
 # TORSION
@@ -616,9 +620,9 @@ BENDAHARM:PARS         C         C         C  6.1786265396e+02  1.1996969401e+02
 TORSION:UNIT  A kjmol
 TORSION:UNIT  PHI0 deg
 
-TORSION:PARS         C         C         C         H  2 3.2065339228e+01  0.0000000000e+00
-TORSION:PARS         H         C         C         H  2 1.2941585336e+01  0.0000000000e+00
-TORSION:PARS         C         C         C         C  2 3.2220648190e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         H  2 3.2018892406e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.3020138691e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.2129632156e+01  0.0000000000e+00
 
 
 # OOPDIST
@@ -626,7 +630,7 @@ TORSION:PARS         C         C         C         C  2 3.2220648190e+01  0.0000
 OOPDIST:UNIT  K kjmol/A**2
 OOPDIST:UNIT  D0 A
 
-OOPDIST:PARS         C         C         H         C  2.7519490773e+02  0.0000000000e+00
+OOPDIST:PARS         C         C         H         C  2.7510215102e+02  0.0000000000e+00
 
 
 # Cross
@@ -638,8 +642,8 @@ Cross:UNIT  R0 angstrom
 Cross:UNIT  R1 angstrom
 Cross:UNIT  THETA0 deg
 
-Cross:PARS         C         C         H   1.2112664767e+02   6.3216371215e+01   1.4422487114e+02  1.3952127021e+00  1.0849370445e+00  1.2002688063e+02
-Cross:PARS         C         C         C   5.9516619638e+02   9.3916213439e+00   9.5086482105e+00  1.3952127021e+00  1.3952127021e+00  1.2000637490e+02
+Cross:PARS         C         C         H   1.2111623625e+02   6.3158275380e+01   1.4430425863e+02  1.3947873338e+00  1.0848706006e+00  1.1997978488e+02
+Cross:PARS         C         C         C   5.9507695556e+02   9.3965103213e+00   9.5135438921e+00  1.3947873338e+00  1.3947873338e+00  1.1999371082e+02
 </pre></div>
 </div>
 </dd>

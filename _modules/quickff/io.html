@@ -188,7 +188,8 @@
     <span class="k">return</span> <span class="n">numbers</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">energy</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">hess</span><span class="p">,</span> <span class="n">masses</span><span class="p">,</span> <span class="n">rvecs</span><span class="p">,</span> <span class="n">pbc</span>
 
 </div>
-<span class="k">def</span> <span class="nf">make_yaff_ei</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">make_yaff_ei</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">bcis</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">charges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">bcis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;Either charges or bcis should be parsed&#39;</span>
     <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
     <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;#Fixed charges&#39;</span>
     <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;#---------------&#39;</span>
@@ -201,20 +202,57 @@
     <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;FIXQ:SCALE 3 1.0&#39;</span>
     <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;FIXQ:DIELECTRIC 1.0&#39;</span>
     <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
-    <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# Atomic parameters&#39;</span>
-    <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ----------------------------------------------------&#39;</span>
-    <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# KEY        label  Q_0A              R_A&#39;</span>
-    <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ----------------------------------------------------&#39;</span>
-    <span class="n">done</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">charge</span><span class="p">,</span> <span class="n">ffatype</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">charges</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">)):</span>
-        <span class="k">if</span> <span class="n">ffatype</span> <span class="ow">in</span> <span class="n">done</span><span class="p">:</span> <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">radii</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">radius</span> <span class="o">=</span> <span class="n">radii</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">charges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">radii</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# Atomic parameters&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ----------------------------------------------------&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# KEY        label  Q_0A              R_A&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ----------------------------------------------------&#39;</span>
+        <span class="k">if</span> <span class="n">charges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">ffatypes</span> <span class="o">=</span> <span class="n">charges</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">radius</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;FIXQ:ATOM </span><span class="si">%8s</span><span class="s"> </span><span class="si">% 13.10f</span><span class="s">  </span><span class="si">%12.10f</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype</span><span class="p">,</span> <span class="n">charge</span><span class="p">,</span> <span class="n">radius</span><span class="o">/</span><span class="n">angstrom</span><span class="p">)</span>
-        <span class="n">done</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ffatype</span><span class="p">)</span>
+            <span class="n">ffatypes</span> <span class="o">=</span> <span class="n">radii</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">ffatype</span> <span class="ow">in</span> <span class="n">ffatypes</span><span class="p">:</span>
+            <span class="n">charge</span><span class="p">,</span> <span class="n">radius</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+            <span class="k">if</span> <span class="n">charges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">charge</span> <span class="o">=</span> <span class="n">charges</span><span class="p">[</span><span class="n">ffatype</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">radii</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">radius</span> <span class="o">=</span> <span class="n">radii</span><span class="p">[</span><span class="n">ffatype</span><span class="p">]</span>
+            <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;FIXQ:ATOM </span><span class="si">%8s</span><span class="s"> </span><span class="si">% 13.10f</span><span class="s">  </span><span class="si">%12.10f</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype</span><span class="p">,</span> <span class="n">charge</span><span class="p">,</span> <span class="n">radius</span><span class="o">/</span><span class="n">angstrom</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bcis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# Bond parameters&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ----------------------------------------------------&#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# KEY         label0   label1           P_AB          &#39;</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;# ----------------------------------------------------&#39;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">bci</span> <span class="ow">in</span> <span class="n">bcis</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">ffatype1</span><span class="p">,</span> <span class="n">ffatype2</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+            <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#39;FIXQ:BOND  </span><span class="si">%8s</span><span class="s">  </span><span class="si">%8s</span><span class="s">  </span><span class="si">% 12.10f</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype1</span><span class="p">,</span> <span class="n">ffatype2</span><span class="p">,</span> <span class="n">bci</span><span class="p">)</span>
     <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">read_bci_constraints</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Read constraints for a charge to bci fit. The constraints should be</span>
+<span class="sd">        written to a file in the following format:</span>
+<span class="sd">        </span>
+<span class="sd">            master0: slave00,slave01,slave02: sign</span>
+<span class="sd">            master1: slave10,slave11,slave12: sign</span>
+<span class="sd">        </span>
+<span class="sd">        There should be a new line for each master and format is insensitive</span>
+<span class="sd">        towards spaces (: and , serve as seperators). Lines starting with #</span>
+<span class="sd">        are ignored (i.e. # is the comment identifier). Sign indicates if a</span>
+<span class="sd">        sign switch should be introduced when mapping the slave bci to the</span>
+<span class="sd">        master bci.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">constraints</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;#&#39;</span><span class="p">):</span> <span class="k">continue</span>
+            <span class="n">master</span><span class="p">,</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">sign</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)</span>
+            <span class="n">slaves</span> <span class="o">=</span> <span class="p">[(</span><span class="n">slave</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="nb">float</span><span class="p">(</span><span class="n">sign</span><span class="p">))</span> <span class="k">for</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">suffix</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)]</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">master</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">constraints</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">slaves</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">slave</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">constraints</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">slaves</span>
+    <span class="k">return</span> <span class="n">constraints</span>
 </pre></div>
 
           </div>

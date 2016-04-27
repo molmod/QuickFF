@@ -115,16 +115,12 @@ Options:
     All options related to the definition of the system.
 
     --ffatypes=FFATYPES
-                        Assign atom types in the system, through either on of
-                        three possible routines. If FFATYPES is a string equal
-                        to either low,medium, high or highest, atom types will
-                        be assigned through the automatic built-in detection
-                        (see documentation). If FFATYPES is a different
-                        string, it is assumed to be the name of a file
-                        containing a list of atype names and Yaff ATSELECT
-                        rules to defined the atom types. If FFATYPES is None,
-                        the atom types are assumed to be defined in the input
-                        files. [default=none]
+                        Assign atom types in the system. If FFATYPES is a
+                        string equal to either low,medium, high or highest,
+                        atom types will be assigned through the automatic
+                        built-in detection (see documentation). If FFATYPES is
+                        None, the atom types are assumed to be defined in the
+                        input files. [default=none]
 </pre></div>
 </div>
 </div>
@@ -139,22 +135,37 @@ Path represents the path to the charges, which are assumed to be stored in the
 file fn_hdf5 in the dataset /path/charges.
 
 Options:
-  -h, --help           show this help message and exit
-  --ffatypes=FFATYPES  Assign atom types in the system, through either on of
-                       three possible routines. If FFATYPES is a string equal
-                       to either low,medium, high or highest, atom types will
-                       be assigned through the automatic built-in detection
-                       (see documentation). If FFATYPES is a different string,
-                       it is assumed to be the name of a file containing a
-                       list of atype names and Yaff ATSELECT rules to defined
-                       the atom types. If FFATYPES is None, the atom types are
-                       assumed to be defined in the input files.
-                       [default=none]
-  --gaussian           Use gaussian smeared charges. The radii are taken from
-                       the dataset /path/radii if it exists, otherwise the
-                       radii are estimated according to the procedure of Chen
-                       et al. See ``quickff.tools.get_ei_radii`` for more
-                       info.
+  -h, --help            show this help message and exit
+  --ffatypes=FFATYPES   Assign atom types in the system. If FFATYPES is a
+                        string equal to either low,medium, high or highest,
+                        atom types will be assigned through the automatic
+                        built-in detection (see documentation). If FFATYPES is
+                        None, the atom types are assumed to be defined in the
+                        input files. [default=none]
+  --gaussian            Use gaussian smeared charges. The radii are taken from
+                        the dataset /path/radii if it exists, otherwise the
+                        radii are estimated according to the procedure of Chen
+                        et al. See ``quickff.tools.get_ei_radii`` for more
+                        info.
+  --bci                 Convert averaged atomic charges to bond charge
+                        increments, i.e. charge transfers along the chemical
+                        bonds in the system. In this way, one is certain of
+                        ending up with a globally neutral system even if bcis
+                        from different systems are combined. This option
+                        requires the definition of bonds, if the bonds cannot
+                        be read from the system file, they will be estimated
+                        from the interatomic distances using the detect_bonds
+                        routine in the Yaff System class. [default=False]
+  --bci-constraints=BCI_CONSTRAINTS
+                        A file containing constraints for the charge to bci
+                        fit in a master: slave0,slave1,...: sign format. A new
+                        line should be used for each master and the format is
+                        insensitive towards spaces.Sign should be 1.0 or -1.0
+                        indicating wheter or not a sign switch should be
+                        introduced when mapping the slaves to the master.
+  -o OUTPUT, --output=OUTPUT
+                        Name of the Yaff file to write the parameters to.
+                        [default=pars_ei_${PATH}.txt]
 </pre></div>
 </div>
 </div>

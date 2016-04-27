@@ -244,6 +244,15 @@ an XYZ file.</dd>
 </dd></dl>
 
 <dl class="method">
+<dt id="quickff.program.BaseProgram.do_bendcharm">
+<tt class="descname">do_bendcharm</tt><big>(</big><em>thresshold=0.03490658503988659</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_bendcharm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_bendcharm" title="Permalink to this definition">¶</a></dt>
+<dd><p>No Harmonic bend can have a rest value equal to are large than 
+180 deg - thresshold. If a master (or its slaves) has such a rest 
+value, convert master and all slaves to BendCharm with
+cos(phis0)=-1.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="quickff.program.BaseProgram.do_cross_init">
 <tt class="descname">do_cross_init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_cross_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_cross_init" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the rest values of cross terms to the rest values of the
@@ -305,6 +314,30 @@ estimate the contribution of all other valence terms.</dd>
 should be constructed. Can also be a string specifying a task,
 a trajectory will then be constructed for each term that has this
 task in its tasks attribute.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_squarebend">
+<tt class="descname">do_squarebend</tt><big>(</big><em>thresshold=0.17453292519943295</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_squarebend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_squarebend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identify bend patterns in which 4 atoms of type A surround a central
+atom of type B with A-B-A angles of 90/180 degrees. A simple
+harmonic pattern will not be adequate since a rest value of 90 and
+180 degrees is possible for the same A-B-A term. Therefore, a
+cosine term with multiplicity of 4 is used:</p>
+<blockquote>
+<div>V = K/2*[1-cos(4*theta)]</div></blockquote>
+<p>To identify the patterns, it is assumed that the rest values have 
+already been estimated from the perturbation trajectories. For each
+master and slave of a BENDAHARM term, its rest value is computed and
+checked if it lies either the interval [90-thresshold,90+thresshold]
+or [180-thresshold,180]. If this is the case, the new cosine term
+is used.</p>
+<p><strong>Optional arguments</strong></p>
+<dl class="docutils">
+<dt>thresshold</dt>
+<dd>the (half) the width of the interval around 180 deg (90 degrees)
+to check if a square BA4</dd>
 </dl>
 </dd></dl>
 
@@ -705,7 +738,7 @@ corresponding atom types.</p>
 
 <dl class="function">
 <dt id="quickff.tools.get_restvalue">
-<tt class="descclassname">quickff.tools.</tt><tt class="descname">get_restvalue</tt><big>(</big><em>values</em>, <em>m</em>, <em>thresshold=0.08726646259971647</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#get_restvalue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.get_restvalue" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">get_restvalue</tt><big>(</big><em>values</em>, <em>m</em>, <em>thresshold=0.2617993877991494</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#get_restvalue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.get_restvalue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a rest value of 0.0, 360/(2*m) or None depending on the given
 equilbrium values</p>
 </dd></dl>
@@ -715,7 +748,7 @@ equilbrium values</p>
 <tt class="descclassname">quickff.tools.</tt><tt class="descname">get_ei_radii</tt><big>(</big><em>numbers</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#get_ei_radii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.get_ei_radii" title="Permalink to this definition">¶</a></dt>
 <dd><p>Routine to return atomic radii for use in the Gaussian charge
 distribution. These radii are computed according to the procedure of
-Chen et al.:</p>
+Chen and Slater:</p>
 <p>First the Slater exponent is computed from the hardness using the
 formula of Rappe and Goddard (hardness of Pearson and Parr is used)</p>
 <p>Next the gaussian exponent alpha is fitted by minimizing the
@@ -731,9 +764,28 @@ Slater orbitals and over Gaussian orbitals.</p>
 
 <dl class="function">
 <dt id="quickff.tools.average">
-<tt class="descclassname">quickff.tools.</tt><tt class="descname">average</tt><big>(</big><em>data</em>, <em>ffatypes</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.average" title="Permalink to this definition">¶</a></dt>
-<dd><p>Average the atomic parameters stored in data over atom of the same atom
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">average</tt><big>(</big><em>data</em>, <em>ffatypes</em>, <em>fmt='full'</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Average the atomic parameters stored in data over atoms of the same atom
 type.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>data</dt>
+<dd>a list or numpy array containing the data</dd>
+<dt>ffatypes</dt>
+<dd>a listor numpy array containing the atom types. Should have equal
+length as data</dd>
+</dl>
+<p><strong>Keywork arguments</strong></p>
+<dl class="docutils">
+<dt>fmt</dt>
+<dd><p class="first">Should be either full or dict. In case of full, the result will be
+returned as an numpy array of equal length as data and ffatypes. In
+case of dict, the result will be returned as a dictionairy of the 
+following format:</p>
+<blockquote class="last">
+<div>{ffatype0: value0, ffatype1: value1, ...}</div></blockquote>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -843,7 +895,7 @@ potentials.</p>
 
 <dl class="method">
 <dt id="quickff.valence.ValenceFF.init_dihedral_terms">
-<tt class="descname">init_dihedral_terms</tt><big>(</big><em>thresshold=0.17453292519943295</em><big>)</big><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_dihedral_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_dihedral_terms" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">init_dihedral_terms</tt><big>(</big><em>thresshold=0.2617993877991494</em><big>)</big><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_dihedral_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_dihedral_terms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize the dihedral potentials from the local topology. The
 dihedral potential will be one of the two following possibilities:</p>
 <blockquote>
