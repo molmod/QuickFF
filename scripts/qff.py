@@ -206,7 +206,7 @@ def main():
             else:
                 raise AssertionError('No atom types defined')
         #construct ab initio reference
-        ai = SecondOrderTaylor('ai', coords=coords, energy=energy, grad=grad, hess=hess)
+        ai = SecondOrderTaylor('ai', coords=system.pos, energy=energy, grad=grad, hess=hess)
         #detect a priori defined contributions to the force field
         refs = []
         if options.ei is not None:
