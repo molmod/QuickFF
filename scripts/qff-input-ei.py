@@ -26,20 +26,21 @@
 
 from quickff.tools import guess_ffatypes, get_ei_radii, average, charges_to_bcis
 from quickff.io import read_abinitio, make_yaff_ei, read_bci_constraints
+from molmod.io.chk import load_chk
 from yaff import System
 from optparse import OptionParser
 
 import h5py
 
 def parse():
-    usage = '%prog [options] fn_sys fn_hdf5 path'
+    usage = '%prog [options] fn_sys fn_in path'
     description  = 'This script will read the atomic charges from the input '
     description += 'arguments and make the Yaff parameters file for use with '
     description += 'the QuickFF option --ei. fn_sys is any file from which the '
     description += 'system can be extracted (MolMod CHK, Gaussian FCHK, XYZ, '
     description += '...). Path represents the path to the charges, which are '
-    description += 'assumed to be stored in the file fn_hdf5 in the dataset '
-    description += '/path/charges.'
+    description += 'assumed to be stored in either a HDF5 file fn_in in the dataset '
+    description += '/path/charges or in a MolMod CHK file under the label `path`.'
     parser = OptionParser(usage=usage, description=description)
     parser.add_option(
         '--ffatypes', default=None,
@@ -51,9 +52,10 @@ def parse():
     )
     parser.add_option(
         '--gaussian', default=False, action='store_true',
-        help='Use gaussian smeared charges. The radii are taken from the '
-             'dataset /path/radii if it exists, otherwise the radii are '
-             'estimated according to the procedure of Chen et al. See '
+        help='Use gaussian smeared charges. The radii are taken from the input '
+             'file fn_in (from dataset /path/radii for HDF5 file or from label '
+             '`radii` for CHK file) if the data is present, otherwise the radii '
+             'are estimated according to the procedure of Chen et al. See '
              '``quickff.tools.get_ei_radii`` for more info.'
     )
     parser.add_option(
@@ -86,7 +88,7 @@ def parse():
 
 def main():
     options, args = parse()
-    fn_sys, fn_hdf5, path = args
+    fn_sys, fn_in, path = args
     if fn_sys.endswith('.fchk'):
         numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn_sys)
         system = System(numbers, coords, rvecs=None, charges=None, radii=None, masses=masses)
@@ -96,15 +98,29 @@ def main():
     if options.ffatypes is not None:
         guess_ffatypes(system, options.ffatypes)
     ffatypes = [system.ffatypes[i] for i in system.ffatype_ids]
-    h5 = h5py.File(fn_hdf5)
-    if not path in h5 or 'charges' not in h5[path]:
-        raise IOError('Given file %s does not contain dataset %s/charges' %(fn_hdf5, path))
-    radii = None
-    if options.gaussian:
-        if 'radii' in h5[path]:
-            radii = average(h5['%s/radii' %path][:], ffatypes, fmt='dict')
+    if fn_in.endswith('.h5'):
+        h5 = h5py.File(fn_in)
+        if not path in h5 or 'charges' not in h5[path]:
+            raise IOError('Given HDF5 file %s does not contain dataset %s/charges' %(fn_in, path))
+        charges = average(h5['%s/charges' %path][:], ffatypes, fmt='full')
+        radii = None
+        if options.gaussian:
+            if 'radii' in h5[path]:
+                radii = average(h5['%s/radii' %path][:], ffatypes, fmt='dict')
+            else:
+                radii = average(get_ei_radii(system.numbers), ffatypes, fmt='dict')
+    elif fn_in.endswith('.chk'):
+        sample = load_chk(fn_in)
+        if path in sample.keys():
+            charges = sample[path]
         else:
-            radii = average(get_ei_radii(system.numbers), ffatypes, fmt='dict')
+            raise IOError('Given CHK file %s does not contain dataset with label %s' %(fn_in, path))
+        radii = None
+        if options.gaussian:
+            if 'radii' in sample.keys():
+                radii = average(sample['radii'], ffatypes, fmt='dict')
+    else:
+        raise IOError('Invalid extension, fn_in should be a HDF5 or a CHK file.')
     if options.output is None:
         fn_out = 'pars_ei_%s.txt' %path.replace('/', '_')
     else:
@@ -113,11 +129,10 @@ def main():
         constraints = {}
         if options.bci_constraints is not None:
             constraints = read_bci_constraints(options.bci_constraints)
-        charges = average(h5['%s/charges' %path][:], ffatypes, fmt='full')
         bcis = charges_to_bcis(charges, ffatypes, system.bonds, constraints=constraints)
         make_yaff_ei(fn_out, None, bcis=bcis, radii=radii)
     else:
-        charges = average(h5['%s/charges' %path][:], ffatypes, fmt='dict')
+        charges = average(charges, ffatypes, fmt='dict')
         make_yaff_ei(fn_out, charges, radii=radii)
 
 if __name__=='__main__':
