@@ -108,7 +108,7 @@ class Logger(object):
         self.mll = max_label_length
         self.ll = line_length
         self._active = False
-        self.label = None
+        self.label = 'QFF'
         self.add_blank_line = False
         self.timetable = []
 
