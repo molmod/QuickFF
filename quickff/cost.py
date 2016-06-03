@@ -112,7 +112,5 @@ class HessianFCCost(object):
             assert self.upper is not None, 'No upper limit fcs defined'
             upper = self.upper.copy()
         U, S, Vt = np.linalg.svd(self.A)
-        #print '  Singular Values of cost.A: ', S
-        #print ' Vt=', Vt
         x = boxqp(self.A, self.B, lower, upper, init)
         return x

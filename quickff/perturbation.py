@@ -76,6 +76,7 @@ class Trajectory(object):
         self.numbers = numbers
         self.qunit = term.units[1]
         self.kunit = term.units[0]
+        self.step = (end-start)/(steps-1)
         self.targets = start + (end-start)/(steps-1)*np.array(range(steps), float)
         self.values = np.zeros(steps, float)
         self.coords = np.zeros([steps, len(numbers), 3], float)
@@ -128,46 +129,38 @@ class Trajectory(object):
             ax.plot(xs/parse_unit(self.qunit), ys/parse_unit(eunit), **kwargs)
         #ai
         data = np.array([ai.energy(pos) for pos in self.coords])
-        index_min = np.where(data==min(data))[0][0]
         e_max = max(np.ceil(max(data-min(data))/parse_unit(eunit)), 1.0)
-        add_plot(self.targets, data-data[index_min], 'AI ref', {'linestyle': 'none', 'marker': 'o', 'markerfacecolor': 'k', 'markersize': 12})
+        add_plot(self.values, data-min(data), 'AI ref', {'linestyle': 'none', 'marker': 'o', 'markerfacecolor': 'k', 'markersize': 12})
         #ffrefs
-        totff = np.zeros([len(self.targets)], float)
+        totff = np.zeros([len(self.coords)], float)
         colors = ['b', 'g', 'm', 'y', 'c']
         for i, ffref in enumerate(ffrefs):
             data = np.array([ffref.energy(pos) for pos in self.coords])
             totff += data
-            add_plot(self.targets, data-data[index_min], ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
-        #complete fitted valence model if given
+            add_plot(self.values, data-min(data), ffref.name, {'linestyle': ':', 'color': colors[i], 'linewidth': 2.0})
+        #residual valence model if given
         if valence is not None:
             for term in valence.iter_terms():
                 valence.check_params(term, ['all'])
-            k = valence.get_params(self.term.index, only='fc')
-            valence.set_params(self.term.index, fc=0.0)
-            data = np.array([valence.calc_energy(pos) for pos in self.coords])
-            valence.set_params(self.term.index, fc=k)
+            fc = valence.get_params(self.term.index, only='fc')
+            rv = valence.get_params(self.term.index, only='rv')
+            data = np.array([valence.calc_energy(pos) for pos in self.coords]) - 0.5*fc*(self.values-rv)**2
             totff += data
-            add_plot(self.targets, data-data[index_min], 'Fitted Valence', {'linestyle': '--', 'color': 'r', 'linewidth':2.0})
-        #PT fitted term
-        fc = valence.get_params(self.term.index, only='fc')
-        rv = valence.get_params(self.term.index, only='rv')
-        start = self.targets[0]
-        end = self.targets[-1]
-        step = float((end-start)/100)
-        if step==0:
-            start -= 0.05*start
-            end += 0.05*end
-            step = float((end-start)/100)
-        qs = np.arange(start, end+step, step)
-        data = 0.5*fc*(qs - rv)**2
-        add_plot(qs, data-min(data), 'Fitted Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
-        totff += 0.5*fc*(self.targets - rv)**2
-        add_plot(self.targets, totff-totff[index_min], 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
+            add_plot(self.values, data-min(data), 'Residual Valence', {'linestyle': '--', 'color': 'r', 'linewidth':2.0})
+        else:
+            fc = self.fc
+            rv = self.rv
+        #plot contribution of current term
+        data = 0.5*fc*(self.values-rv)**2
+        totff += data
+        add_plot(self.values, data-min(data), 'PT Term', {'linestyle': '-', 'color': 'r', 'linewidth':2.0})
+        add_plot(self.values, totff-min(totff), 'Total FF', {'linestyle': '-', 'color': [0.4,0.4,0.4], 'linewidth':3.0})
         #decorate plot
+        ax.set_xlim([(min(self.values)-self.step)/parse_unit(self.qunit), (max(self.values)+self.step)/parse_unit(self.qunit)])
         ax.set_title('%s-%i' %(self.term.basename, self.term.index))
         ax.set_xlabel('%s [%s]' % (self.term.basename.split('/')[0], self.qunit), fontsize=16)
         ax.set_ylabel('Energy [%s]' %eunit, fontsize=16)
-        ax.set_ylim([-0.5, e_max])
+        ax.set_ylim([-0.2, e_max])
         ax.grid()
         ax.legend(loc='upper center', fontsize=16)
         fig.set_size_inches([8, 8])
@@ -223,12 +216,12 @@ class RelaxedStrain(object):
             ic = self.valence.iclist.ictab[self.valence.vlist.vtab[term.index]['ic0']]
             kunit, qunit = term.units
             if ic['kind'] in [0]:
-                start=ic['value']-0.05*angstrom
-                end=ic['value']+0.05*angstrom
+                start=ic['value']-0.02*angstrom
+                end=ic['value']+0.02*angstrom
                 if start<0.0: start = 0.0
             elif ic['kind'] in [2]:
-                start=ic['value']-5*deg
-                end=ic['value']+5*deg
+                start=ic['value']-2*deg
+                end=ic['value']+2*deg
                 if start<0*deg: start = 0.0
                 if end>180*deg: end=180*deg
             elif ic['kind']  in [10]:
@@ -243,11 +236,11 @@ class RelaxedStrain(object):
             #collect all other ics
             ics = []
             for term2 in self.valence.terms:
-                if term2.index == term.index: continue #not the current term ic
+                #if term2.index == term.index: continue #not the current term ic
                 if term2.kind == 3: continue #not a cross term ic
                 ics.append(term2.ics[0])
             self.strains[term.index] = Strain(self.system, term.ics[0], ics)
-            trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=9)
+            trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=7)
         return trajectories
 
     def generate(self, trajectory, remove_com=True):
@@ -271,22 +264,28 @@ class RelaxedStrain(object):
         '''
         index = trajectory.term.index
         strain = self.strains[index]
+        natom = self.system.natom
         if strain is None:
             log.dump('Strain for term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
             return
+        q0 = self.valence.iclist.ictab[self.valence.vlist.vtab[index]['ic0']]['value']
+        diag = np.ones([strain.ndof+1], float)
+        diag[:strain.ndof] *= 0.1*angstrom
+        diag[strain.ndof] *= abs(q0-trajectory.targets[0])
         for iq, target in enumerate(trajectory.targets):
             strain.constrain_target = target
             init = np.zeros([strain.ndof+1], float)
-            sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3*angstrom, full_output=True)
+            sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
             if ier==5:
                 #fsolve did not converge, flag this frame for deletion
+                log.dump('Trajectory of frame %i (target=%.3f) for %s(atoms=%s) did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
                 trajectory.targets[iq] = np.nan
                 continue
-            x = strain.coords0 + sol[:self.system.natom*3].reshape((-1,3))
+            x = strain.coords0 + sol[:3*natom].reshape((-1,3))
             trajectory.values[iq] = strain.constrain_value
             if remove_com:
                 com = (x.T*self.system.masses).sum(axis=1)/self.system.masses.sum()
-                for i in xrange(self.system.natom):
+                for i in xrange(natom):
                     x[i,:] -= com
             trajectory.coords[iq,:,:] = x
         #delete flagged frames
@@ -337,38 +336,35 @@ class RelaxedStrain(object):
         qs = trajectory.values.copy()
         AIs = np.zeros(len(trajectory.coords))
         FFs = np.zeros(len(trajectory.coords))
+        RESs = np.zeros(len(trajectory.coords))
         for istep, pos in enumerate(trajectory.coords):
-            eai = ai.energy(pos)
-            AIs[istep] += eai
+            AIs[istep] = ai.energy(pos)
             for ref in ffrefs:
                 FFs[istep] += ref.energy(pos)
         if do_valence:
-            k = self.valence.get_params(index, only='fc')
-            self.valence.set_params(index, fc=0.0)
+            fc = self.valence.get_params(index, only='fc')
+            rv = self.valence.get_params(index, only='rv')
             for istep, pos in enumerate(trajectory.coords):
-                FFs[istep] += self.valence.calc_energy(pos)
-            self.valence.set_params(index, fc=k)
-        pars = fitpar(qs, AIs-FFs, rcond=1e-6)
+                RESs[istep] += self.valence.calc_energy(pos) - 0.5*fc*(qs[istep]-rv)**2
+        pars = fitpar(qs, AIs-FFs-RESs-min(AIs-FFs-RESs), rcond=-1)
         if pars[0]!=0.0:
-            trajectory.fc = 2*pars[0]
-            trajectory.rv = -pars[1]/(2*pars[0])
+            trajectory.fc = 2.0*pars[0]
+            trajectory.rv = -pars[1]/(2.0*pars[0])
         else:
             trajectory.fc = 0.0
-            vterm = self.valence.vlist.vtab[index]
-            ic = self.valence.iclist.ictab[vterm['ic0']]
-            trajectory.rv = ic['value']
-            log.dump('force constant of %s is zero: rest value set to AI equilibrium' %basename)
+            trajectory.rv = qs[len(qs)/2]
+            log.dump('force constant of %s is zero: rest value set to middle value' %basename)
         #no negative rest values for all ics except dihedrals and bendcos
-        if term.ics[0].kind not in [1,3,4]:
+        if term.ics[0].kind not in [1,3,4,11]:
             if trajectory.rv<0:
-                trajectory.rv = 0
+                trajectory.rv = 0.0
                 log.dump('rest value of %s was negative: set to zero' %basename)
 
 
 
 
 class Strain(ForceField):
-    def __init__(self, system, cons_ic, ics):
+    def __init__(self, system, cons_ic, ics, cart_penalty=1.0*angstrom):
         '''
             A class deriving from the Yaff ForceField class to implement the
             strain of a molecular geometry associated with the term defined by
@@ -390,45 +386,21 @@ class Strain(ForceField):
             ics
                 A list of Yaff Internal Coordinate instances for which the
                 strain needs to be minimized.
+            
+            cart_penalty
+                Magnitude of an extra term added to the strain that penalises
+                a deviation of the cartesian coordinates of each atom with
+                respect to the equilibrium coordinates. This penalty is equal
+                to norm(R-R_eq)**2/(2.0*3*Natoms*cart_penalty**2) and prevents
+                global translations, global rotations as well as rotations of
+                molecular fragments far from the IC under consideration.
         '''
         self.coords0 = system.pos.copy()
         self.ndof = np.prod(self.coords0.shape)
+        self.cart_penalty = cart_penalty
         part = ForcePartValence(system)
-        #construct ordered list of atoms in the constrained ic
-        if cons_ic.kind==0:
-            cons_ic_atoms = cons_ic.index_pairs[0]
-        elif cons_ic.kind in [1,2]:
-            cons_ic_atoms = [
-                cons_ic.index_pairs[0][1],
-                cons_ic.index_pairs[1][0],
-                cons_ic.index_pairs[1][1],
-            ]
-        elif cons_ic.kind in [3,4]:
-            cons_ic_atoms = [
-                cons_ic.index_pairs[0][1],
-                cons_ic.index_pairs[1][0],
-                cons_ic.index_pairs[1][1],
-                cons_ic.index_pairs[2][1],
-            ]
-        elif cons_ic.kind in [10,11]:
-            cons_ic_atoms = [
-                cons_ic.index_pairs[0][0],
-                cons_ic.index_pairs[0][1],
-                cons_ic.index_pairs[2][0],
-                cons_ic.index_pairs[2][1],
-            ]
-        else:
-            raise ValueError('IC of kind %i not supported' %cons_ic.kind)
-        #add all bonds, bends and diheds that are not constrained
-        for bond in system.iter_bonds():
-            if not (list(bond)==list(cons_ic_atoms) or list(bond)==list(cons_ic_atoms[::-1])):
-                part.add_term(Harmonic(1.0, None, Bond(*bond)))
-        for angle in system.iter_angles():
-            if not (list(angle)==list(cons_ic_atoms) or list(angle)==list(cons_ic_atoms[::-1])):
-                part.add_term(Harmonic(1.0, None, BendAngle(*angle)))
-        for dihed in system.iter_dihedrals():
-            if not (list(dihed)==list(cons_ic_atoms) or list(dihed)==list(cons_ic_atoms[::-1])):
-                part.add_term(Harmonic(1.0, None, DihedAngle(*dihed)))
+        for ic in ics:
+            part.add_term(Harmonic(1.0, None, ic))
         #set the rest values to the equilibrium values
         part.dlist.forward()
         part.iclist.forward()
@@ -444,6 +416,7 @@ class Strain(ForceField):
         self.constraint = ForceField(system, [part])
         self.constrain_target = None
         self.constrain_value = None
+        self.value = None
 
     def gradient(self, X):
         '''
@@ -458,12 +431,14 @@ class Strain(ForceField):
         #compute strain gradient
         gstrain = np.zeros(self.coords0.shape)
         self.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))
-        self.compute(gpos=gstrain)
+        self.value = self.compute(gpos=gstrain)
         #compute constraint gradient
         gconstraint = np.zeros(self.coords0.shape)
         self.constraint.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))
         self.constrain_value = self.constraint.compute(gpos=gconstraint) + 1.0
         #construct gradient
-        grad[:self.ndof] = gstrain.reshape((-1,)) + X[self.ndof]*gconstraint.reshape((-1,)) #+ 0.01*X[:self.ndof]
-        grad[self.ndof] = self.constrain_value - self.constrain_target #self.constraint.parts[0].vlist.vtab[0]['energy'] + 1.0 - self.constrain_value
+        grad[:self.ndof] = gstrain.reshape((-1,)) + X[self.ndof]*gconstraint.reshape((-1,))
+        grad[self.ndof] = self.constrain_value - self.constrain_target
+        #cartesian penalty, i.e. extra penalty for deviation w.r.t. cartesian equilibrium coords
+        grad[:self.ndof] += X[:self.ndof]/(self.ndof*self.cart_penalty**2)
         return grad

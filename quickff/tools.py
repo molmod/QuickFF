@@ -95,7 +95,7 @@ def global_rotation(coords):
     return VRx, VRy, VRz
 
 
-def fitpar(xs, ys, rcond=1e-3):
+def fitpar(xs, ys, rcond=-1):
     '''
         Fit a parabola to the samples (xs, ys):
 
@@ -115,9 +115,10 @@ def fitpar(xs, ys, rcond=1e-3):
     assert len(xs)==len(ys)
     D = np.ones([len(xs), 3], float)
     for i, x in enumerate(xs):
-        D[i, 0] = x**2
+        D[i, 0] = 0.1*x**2
         D[i, 1] = x
-    sol = np.linalg.lstsq(D, ys, rcond=rcond)[0]
+    sol, res, rank, svals = np.linalg.lstsq(D, ys, rcond=rcond)
+    sol[0] *= 0.1
     return sol
 
 

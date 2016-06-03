@@ -31,7 +31,7 @@ from quickff.paracontext import paracontext
 from quickff.log import log
 
 from yaff.pes.vlist import Cosine, Harmonic
-from yaff.pes.iclist import BendAngle, BendCos
+from yaff.pes.iclist import BendAngle, BendCos, OopDist
 
 import os, cPickle, numpy as np, datetime
 
@@ -121,16 +121,15 @@ class BaseProgram(object):
         '''
         log.dump('Updating terms of trajectories to current valenceFF terms')
         with log.section('PTUPD', 4):
-            new_trajectories = [None,]*len(self.valence.terms)
-            for term in self.valence.iter_terms():
-                if 'PT_ALL' not in term.tasks:
-                    log.dump('No perturbation trajectory for %s-%i' %(term.basename, term.index))
-                    continue
+            for traj in self.trajectories:
                 found = False
-                for traj in self.trajectories:
-                    if traj is not None and traj.term.get_atoms()==term.get_atoms():
+                for term in self.valence.iter_terms():
+                    if traj.term.get_atoms()==term.get_atoms():
                         if found: raise ValueError('Found two trajectories for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
                         traj.term = term
+                        if 'PT_ALL' not in term.tasks: 
+                            log.dump('PT_ALL not in tasks of %s-%i, deactivated PT' %(term.basename, term.index))
+                            traj.active = False
                         found = True
                         break
                 if not found: log.dump('WARNING: No trajectory found for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
@@ -246,7 +245,7 @@ class BaseProgram(object):
                 cPickle.dump(self.trajectories, open(fn_traj, 'w'))
                 log.dump('Trajectories stored to file %s' %fn_traj)
 
-    def do_pt_estimate(self, do_valence=False):
+    def do_pt_estimate(self, do_valence=False, plot=False):
         '''
             Estimate force constants and rest values from the perturbation
             trajectories
@@ -256,6 +255,10 @@ class BaseProgram(object):
             do_valence
                 if set to True, the current valence force field will be used to
                 estimate the contribution of all other valence terms.
+            
+            plot
+                if set to True, plots the energy contributions immediately
+                after estimating them (before averaging).
         '''
         with log.section('PTEST', 2, timer='PT Estimate'):
             self.reset_system()
@@ -267,13 +270,17 @@ class BaseProgram(object):
             for traj in self.trajectories:
                 if traj is None: continue
                 self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs, do_valence=do_valence)
+            #plot trajectories if needed
+            if plot: self.plot_trajectories(do_valence=do_valence)
             #set force field parameters to computed fc and rv
             for traj in self.trajectories:
                 if traj is None: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
+            #output
             self.valence.dump_logger(print_level=4)
             self.do_squarebend()
             self.do_bendcharm()
+            #self.do_sqoopdist_to_oopdist()
             self.average_pars()
 
     def do_eq_setrv(self, tasks):
@@ -480,8 +487,35 @@ class BaseProgram(object):
                                 traj.rv = None
                                 traj.fc = None
                                 traj.active = False
-                        
-        
+
+    def do_sqoopdist_to_oopdist(self,thresshold=1e-4*angstrom):
+        '''
+            Transform a SqOopdist term with a rest value that has been set to
+            zero, to a term Oopdist (harmonic in Oopdist instead of square of
+            Oopdist) with a rest value of 0.0 A.
+        '''
+        with log.section('SQOOP', 2):
+            for master in self.valence.iter_masters(label='SqOopdist'):
+                indices = [master.index]
+                for slave in master.slaves: indices.append(slave)
+                found = False
+                for index in indices:
+                    rv = self.valence.get_params(index, only='rv')
+                    if rv<=thresshold:
+                        found = True
+                        break
+                if found:
+                    log.dump('%s has rest value <= %.0f A^2, converted to Oopdist with d0=0' %(master.basename, thresshold/angstrom))
+                    for index in indices:
+                        term = self.valence.terms[index]
+                        self.valence.modify_term(
+                            index,
+                            Harmonic, [OopDist(*term.get_atoms())],
+                            term.basename.replace('SqOopdist', 'Oopdist'),
+                            ['HC_FC_DIAG'], ['kjmol/A**2', 'A']
+                        )
+                        self.valence.set_params(index, fc=0.0, rv0=0.0)
+
     def run(self):
         '''
             Sequence of instructions, should be implemented in the inheriting

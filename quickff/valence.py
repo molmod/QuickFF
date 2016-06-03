@@ -503,11 +503,12 @@ class ValenceFF(ForcePartValence):
         self.system.pos = pos.copy()
         self.dlist.forward()
         self.iclist.forward()
-        self.vlist.forward()
-        energy = self.compute()
+        energy = self.vlist.forward()
+        #energy = self.compute()
         self.system.pos = old
         self.dlist.forward()
         self.iclist.forward()
+        self.vlist.forward()
         return energy
 
     def get_hessian_contrib(self, index, fc=None):
