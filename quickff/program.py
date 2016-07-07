@@ -37,7 +37,7 @@ import os, cPickle, numpy as np, datetime
 
 __all__ = [
     'BaseProgram', 'MakeTrajectories', 'PlotTrajectories',
-    'DeriveDiagFF', 'DeriveNonDiagFF'
+    'DeriveDiagFF', 'DeriveNonDiagFF', 'DeriveNonDiagFFNoQRef',
 ]
 
 class BaseProgram(object):
@@ -579,5 +579,18 @@ class DeriveNonDiagFF(BaseProgram):
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
             self.do_pt_estimate(do_valence=True)
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], logger_level=1)
+            self.make_output()
+
+class DeriveNonDiagFFNoQRef(BaseProgram):
+    '''
+        Derive a non-diagonal force field, i.e. contains cross terms.
+    '''
+    def run(self):
+        with log.section('PROGRAM', 2):
+            self.do_eq_setrv(['EQ_RV'])
+            self.do_pt_generate()
+            self.do_pt_estimate()
+            self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], logger_level=1)
             self.make_output()
