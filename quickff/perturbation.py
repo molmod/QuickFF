@@ -144,7 +144,11 @@ class Trajectory(object):
                 valence.check_params(term, ['all'])
             fc = valence.get_params(self.term.index, only='fc')
             rv = valence.get_params(self.term.index, only='rv')
-            data = np.array([valence.calc_energy(pos) for pos in self.coords]) - 0.5*fc*(self.values-rv)**2
+            valence.set_params(self.term.index, fc=0.0)
+            valence.set_params(self.term.index, rv0=0.0)
+            data = np.array([valence.calc_energy(pos) for pos in self.coords]) #- 0.5*fc*(self.values-rv)**2
+            valence.set_params(self.term.index, fc=fc)
+            valence.set_params(self.term.index, rv0=rv)
             totff += data
             add_plot(self.values, data-min(data), 'Residual Valence', {'linestyle': '--', 'color': 'r', 'linewidth':2.0})
         else:
@@ -344,8 +348,12 @@ class RelaxedStrain(object):
         if do_valence:
             fc = self.valence.get_params(index, only='fc')
             rv = self.valence.get_params(index, only='rv')
+            self.valence.set_params(index, fc=0.0)
+            self.valence.set_params(index, rv0=0.0)
             for istep, pos in enumerate(trajectory.coords):
-                RESs[istep] += self.valence.calc_energy(pos) - 0.5*fc*(qs[istep]-rv)**2
+                RESs[istep] += self.valence.calc_energy(pos) #- 0.5*fc*(qs[istep]-rv)**2
+            self.valence.set_params(index, fc=fc)
+            self.valence.set_params(index, rv0=rv)
         pars = fitpar(qs, AIs-FFs-RESs-min(AIs-FFs-RESs), rcond=-1)
         if pars[0]!=0.0:
             trajectory.fc = 2.0*pars[0]
