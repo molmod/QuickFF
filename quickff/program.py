@@ -301,7 +301,7 @@ class BaseProgram(object):
                         ic = self.valence.iclist.ictab[vterm['ic0']]
                         m = self.valence.get_params(term.index, only='m')
                         rv = ic['value']%(360.0*deg/m)
-                        with log.section('EQSET', 3, timer='Equil Set RV'):
+                        with log.section('EQSET', 4, timer='Equil Set RV'):
                             log.dump('Set rest value of %s(%s) (eq=%.3f deg) to %.3f deg' %(
                                 term.basename,
                                 '.'.join([str(at) for at in term.get_atoms()]),
@@ -378,7 +378,7 @@ class BaseProgram(object):
             corresponding diagonal terms. The force constants are initialized
             to zero.
         '''
-        with log.section('CRINI', 2):
+        with log.section('VAL', 2, 'Initializing'):
             self.reset_system()
             self.valence.init_cross_terms()
             for index in xrange(self.valence.vlist.nv):
@@ -421,7 +421,7 @@ class BaseProgram(object):
                 the (half) the width of the interval around 180 deg (90 degrees)
                 to check if a square BA4
         '''
-        with log.section('SQBEND', 2):
+        with log.section('SQBEND', 4):
             for master in self.valence.iter_masters(label='BendAHarm'):
                 rvs = np.zeros([len(master.slaves)+1], float)
                 rvs[0] = self.valence.get_params(master.index, only='rv')
@@ -461,7 +461,7 @@ class BaseProgram(object):
             value, convert master and all slaves to BendCharm with
             cos(phis0)=-1.
         '''
-        with log.section('BNDCHRM', 2):
+        with log.section('BNDCHRM', 4):
             for master in self.valence.iter_masters(label='BendAHarm'):
                 indices = [master.index]
                 for slave in master.slaves: indices.append(slave)
@@ -494,7 +494,7 @@ class BaseProgram(object):
             zero, to a term Oopdist (harmonic in Oopdist instead of square of
             Oopdist) with a rest value of 0.0 A.
         '''
-        with log.section('SQOOP', 2):
+        with log.section('SQOOP', 4):
             for master in self.valence.iter_masters(label='SqOopdist'):
                 indices = [master.index]
                 for slave in master.slaves: indices.append(slave)

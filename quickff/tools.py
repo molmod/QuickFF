@@ -303,28 +303,68 @@ def get_multiplicity(n1, n2):
     else:                          return None
 
 
-def get_restvalue(values, m, thresshold=15*deg):
+def get_restvalue(values, m, thresshold=20*deg, mode=1):
     '''
         Get a rest value of 0.0, 360/(2*m) or None depending on the given
-        equilbrium values
+        equilbrium values.
+        
+        For mode=0, the rest value is:
+        
+            0, if all 'values modulo per' are in the interval
+            [0,thresshold] U [per-thresshold,per]
+            
+            per/2, if all 'values modulo per' are in the interval
+            [per/2-thresshold,per/2+thresshold]
+            
+            None, in all other cases
+        
+        For mode=1, the rest value is determined as follows:
+        
+            first the values are folded in the interval [0,per/2] by first
+            taking the module with per and then mirroring values in [per/2,per]
+            on [0,per/2]. Next, the mean and std of the folded values are 
+            computed. If the std is larger then the thresshold, the values are
+            considered to be too scattered and no rest value can be computed
+            (None is returned). If the std is small enough, the rest value will
+            be determined based on the mean. If the mean is close enough to 0,
+            the rest value will be 0. If the mean is close enough to per/2, the
+            rest value will be per/2. In all other cases no rest value will be
+            computed and None is returned.        
+            
     '''
     rv = None
     per = 360*deg/m
-    for value in values:
-        x = value % per
-        if abs(x)<=thresshold or abs(per-x)<thresshold:
-            if rv is not None and rv!=0.0:
+    if mode==0:
+        for value in values:
+            x = value % per
+            if abs(x)<=thresshold or abs(per-x)<thresshold:
+                if rv is not None and rv!=0.0:
+                    return None
+                elif rv is None:
+                    rv = 0.0
+            elif abs(x-per/2.0)<thresshold:
+                if rv is not None and rv!=per/2.0:
+                    return None
+                elif rv is None:
+                    rv = per/2.0
+            else:
                 return None
-            elif rv is None:
-                rv = 0.0
-        elif abs(x-per/2.0)<thresshold:
-            if rv is not None and rv!=per/2.0:
-                return None
-            elif rv is None:
-                rv = per/2.0
-        else:
-            return None
-    return rv
+        return rv
+    elif mode==1:
+        folded = np.zeros(len(values), float)
+        for i, value in enumerate(values):
+            new = value % per
+            if new>0.5*per: folded[i] = per - new
+            else:           folded[i] = new
+        mean = folded.mean()
+        std = folded.std()
+        assert 0.0<=mean and mean<=0.5*per
+        if std<thresshold:
+            if mean<=0.25*per: rv=0.0
+            elif 0.5*per-mean<=0.25*per: rv=0.5*per
+        return rv
+    else:
+        raise NotImplementedError('Mode %i in get_restvalue is not supported' %mode)
 
 
 def get_ei_radii(numbers):

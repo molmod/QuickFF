@@ -266,45 +266,46 @@ class RelaxedStrain(object):
                 if set to True, removes the center of mass translation from the
                 resulting perturbation trajectories [default=True].
         '''
-        index = trajectory.term.index
-        strain = self.strains[index]
-        natom = self.system.natom
-        if strain is None:
-            log.dump('Strain for term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
-            return
-        q0 = self.valence.iclist.ictab[self.valence.vlist.vtab[index]['ic0']]['value']
-        diag = np.ones([strain.ndof+1], float)
-        diag[:strain.ndof] *= 0.1*angstrom
-        diag[strain.ndof] *= abs(q0-trajectory.targets[0])
-        for iq, target in enumerate(trajectory.targets):
-            strain.constrain_target = target
-            init = np.zeros([strain.ndof+1], float)
-            sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
-            if ier==5:
-                #fsolve did not converge, flag this frame for deletion
-                log.dump('Trajectory of frame %i (target=%.3f) for %s(atoms=%s) did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
-                trajectory.targets[iq] = np.nan
-                continue
-            x = strain.coords0 + sol[:3*natom].reshape((-1,3))
-            trajectory.values[iq] = strain.constrain_value
-            if remove_com:
-                com = (x.T*self.system.masses).sum(axis=1)/self.system.masses.sum()
-                for i in xrange(natom):
-                    x[i,:] -= com
-            trajectory.coords[iq,:,:] = x
-        #delete flagged frames
-        targets = []
-        values = []
-        coords = []
-        for target, value, coord in zip(trajectory.targets, trajectory.values, trajectory.coords):
-            if not np.isnan(target):
-                targets.append(target)
-                values.append(value)
-                coords.append(coord)
-        trajectory.targets = np.array(targets)
-        trajectory.values = np.array(values)
-        trajectory.coords = np.array(coords)
-        return trajectory
+        with log.section('PTGEN', 4, timer='PT Generate'):
+            index = trajectory.term.index
+            strain = self.strains[index]
+            natom = self.system.natom
+            if strain is None:
+                log.dump('Strain for term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
+                return
+            q0 = self.valence.iclist.ictab[self.valence.vlist.vtab[index]['ic0']]['value']
+            diag = np.ones([strain.ndof+1], float)
+            diag[:strain.ndof] *= 0.1*angstrom
+            diag[strain.ndof] *= abs(q0-trajectory.targets[0])
+            for iq, target in enumerate(trajectory.targets):
+                strain.constrain_target = target
+                init = np.zeros([strain.ndof+1], float)
+                sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
+                if ier==5:
+                    #fsolve did not converge, flag this frame for deletion
+                    log.dump('Trajectory of frame %i (target=%.3f) for %s(atoms=%s) did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
+                    trajectory.targets[iq] = np.nan
+                    continue
+                x = strain.coords0 + sol[:3*natom].reshape((-1,3))
+                trajectory.values[iq] = strain.constrain_value
+                if remove_com:
+                    com = (x.T*self.system.masses).sum(axis=1)/self.system.masses.sum()
+                    for i in xrange(natom):
+                        x[i,:] -= com
+                trajectory.coords[iq,:,:] = x
+            #delete flagged frames
+            targets = []
+            values = []
+            coords = []
+            for target, value, coord in zip(trajectory.targets, trajectory.values, trajectory.coords):
+                if not np.isnan(target):
+                    targets.append(target)
+                    values.append(value)
+                    coords.append(coord)
+            trajectory.targets = np.array(targets)
+            trajectory.values = np.array(values)
+            trajectory.coords = np.array(coords)
+            return trajectory
 
     def estimate(self, trajectory, ai, ffrefs=[], do_valence=False):
         '''
@@ -331,42 +332,45 @@ class RelaxedStrain(object):
                 If set to True, the current valence force field (stored in
                 self.valence) will be used to compute the valence contribution
         '''
-        term = trajectory.term
-        index = term.index
-        basename = term.basename
-        if 'active' in trajectory.__dict__.keys() and not trajectory.active:
-            log.dump('Trajectory of %s was deactivated: skipping' %(basename))
-            return
-        qs = trajectory.values.copy()
-        AIs = np.zeros(len(trajectory.coords))
-        FFs = np.zeros(len(trajectory.coords))
-        RESs = np.zeros(len(trajectory.coords))
-        for istep, pos in enumerate(trajectory.coords):
-            AIs[istep] = ai.energy(pos)
-            for ref in ffrefs:
-                FFs[istep] += ref.energy(pos)
-        if do_valence:
-            fc = self.valence.get_params(index, only='fc')
-            rv = self.valence.get_params(index, only='rv')
-            self.valence.set_params(index, fc=0.0)
-            self.valence.set_params(index, rv0=0.0)
+        with log.section('PTEST', 4, timer='PT Estimate'):
+            term = trajectory.term
+            index = term.index
+            basename = term.basename
+            if 'active' in trajectory.__dict__.keys() and not trajectory.active:
+                log.dump('Trajectory of %s was deactivated: skipping' %(basename))
+                return
+            qs = trajectory.values.copy()
+            AIs = np.zeros(len(trajectory.coords))
+            FFs = np.zeros(len(trajectory.coords))
+            RESs = np.zeros(len(trajectory.coords))
             for istep, pos in enumerate(trajectory.coords):
-                RESs[istep] += self.valence.calc_energy(pos) #- 0.5*fc*(qs[istep]-rv)**2
-            self.valence.set_params(index, fc=fc)
-            self.valence.set_params(index, rv0=rv)
-        pars = fitpar(qs, AIs-FFs-RESs-min(AIs-FFs-RESs), rcond=-1)
-        if pars[0]!=0.0:
-            trajectory.fc = 2.0*pars[0]
-            trajectory.rv = -pars[1]/(2.0*pars[0])
-        else:
-            trajectory.fc = 0.0
-            trajectory.rv = qs[len(qs)/2]
-            log.dump('force constant of %s is zero: rest value set to middle value' %basename)
-        #no negative rest values for all ics except dihedrals and bendcos
-        if term.ics[0].kind not in [1,3,4,11]:
-            if trajectory.rv<0:
-                trajectory.rv = 0.0
-                log.dump('rest value of %s was negative: set to zero' %basename)
+                AIs[istep] = ai.energy(pos)
+                for ref in ffrefs:
+                    FFs[istep] += ref.energy(pos)
+            if do_valence:
+                fc = self.valence.get_params(index, only='fc')
+                rv = self.valence.get_params(index, only='rv')
+                self.valence.set_params(index, fc=0.0)
+                self.valence.set_params(index, rv0=0.0)
+                for istep, pos in enumerate(trajectory.coords):
+                    RESs[istep] += self.valence.calc_energy(pos) #- 0.5*fc*(qs[istep]-rv)**2
+                self.valence.set_params(index, fc=fc)
+                self.valence.set_params(index, rv0=rv)
+            #print qs
+            #print (AIs-FFs-RESs)/kjmol
+            pars = fitpar(qs, AIs-FFs-RESs-min(AIs-FFs-RESs), rcond=-1)
+            if pars[0]!=0.0:
+                trajectory.fc = 2.0*pars[0]
+                trajectory.rv = -pars[1]/(2.0*pars[0])
+            else:
+                trajectory.fc = 0.0
+                trajectory.rv = qs[len(qs)/2]
+                log.dump('force constant of %s is zero: rest value set to middle value' %basename)
+            #no negative rest values for all ics except dihedrals and bendcos
+            if term.ics[0].kind not in [1,3,4,11]:
+                if trajectory.rv<0:
+                    trajectory.rv = 0.0
+                    log.dump('rest value of %s was negative: set to zero' %basename)
 
 
 

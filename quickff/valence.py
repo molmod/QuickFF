@@ -312,14 +312,15 @@ class ValenceFF(ForcePartValence):
             of the system instance. All bond terms are given harmonic
             potentials.
         '''
-        ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
-        #get the bond terms
-        nbonds = 0
-        for bond in self.system.iter_bonds():
-            bond, types = term_sort_atypes(ffatypes, bond, 'bond')
-            units = ['kjmol/A**2', 'A']
-            self.add_term(Harmonic, [Bond(*bond)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
-            nbonds += 1
+        with log.section('VAL', 4, 'Initializing'):
+            ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
+            #get the bond terms
+            nbonds = 0
+            for bond in self.system.iter_bonds():
+                bond, types = term_sort_atypes(ffatypes, bond, 'bond')
+                units = ['kjmol/A**2', 'A']
+                self.add_term(Harmonic, [Bond(*bond)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
+                nbonds += 1
         log.dump('Added %i Harmonic bond terms' %nbonds)
 
     def init_bend_terms(self):
@@ -328,17 +329,18 @@ class ValenceFF(ForcePartValence):
             of the system instance. All bend terms are given harmonic
             potentials.
         '''
-        ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
-        #get the angle terms
-        nbends = 0
-        for angle in self.system.iter_angles():
-            angle, types = term_sort_atypes(ffatypes, angle, 'angle')
-            units = ['kjmol/rad**2', 'deg']
-            self.add_term(Harmonic, [BendAngle(*angle)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
-            nbends += 1
+        with log.section('VAL', 4, 'Initializing'):
+            ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
+            #get the angle terms
+            nbends = 0
+            for angle in self.system.iter_angles():
+                angle, types = term_sort_atypes(ffatypes, angle, 'angle')
+                units = ['kjmol/rad**2', 'deg']
+                self.add_term(Harmonic, [BendAngle(*angle)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
+                nbends += 1
         log.dump('Added %i Harmonic bend terms' %nbends)
     
-    def init_dihedral_terms(self, thresshold=15*deg):
+    def init_dihedral_terms(self, thresshold=20*deg):
         '''
             Initialize the dihedral potentials from the local topology. The
             dihedral potential will be one of the two following possibilities:
@@ -352,47 +354,57 @@ class ValenceFF(ForcePartValence):
 
                     0.5*K*(1-cos(m*psi-m*psi0)) with psi0 = 0 or 360/(2*m)
         '''
-        #get all dihedrals
-        from molmod.ic import dihed_angle
-        ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
-        dihedrals = {}
-        for dihedral in self.system.iter_dihedrals():
-            dihedral, types = term_sort_atypes(ffatypes, dihedral, 'dihedral')
-            if types in dihedrals.keys():
-                dihedrals[types].append(dihedral)
-            else:
-                dihedrals[types] = [dihedral]
-        #loop over all distinct dihedral types
-        ncos = 0
-        for types, diheds in dihedrals.iteritems():
-            psi0s = np.zeros(len(diheds), float)
-            ms = np.zeros(len(diheds), float)
-            for i, dihed in enumerate(diheds):
-                rs = np.array([self.system.pos[j] for j in dihed])
-                psi0s[i] = dihed_angle(rs)[0]
-                n1 = len(self.system.neighs1[dihed[1]])
-                n2 = len(self.system.neighs1[dihed[2]])
-                ms[i] = get_multiplicity(n1, n2)
-            nan = False
-            for m in ms:
-                if np.isnan(m): nan = True
-            if nan or None in ms or ms.std()>1e-3:
-                ms_string = str(ms)
-                if nan: ms_string = 'nan'
-                log.dump('WARNING missing dihedral for %s (m is %s)' %('.'.join(types), ms_string))
-                continue
-            m = int(np.round(ms.mean()))
-            rv = get_restvalue(psi0s, m, thresshold=thresshold)
-            if rv is not None:
-                #a regular Cosine term is used for the dihedral potential
-                for dihed in diheds:
-                    term = self.add_term(Cosine, [DihedAngle(*dihed)], types, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
-                    self.set_params(term.index, rv0=rv, m=m)
-                    ncos += 1
-            else:
-                #no dihedral potential could be determine, hence it is ignored
-                log.dump('WARNING: missing dihedral for %s (could not determine rest value from %s)' %('.'.join(types), str(psi0s/deg)))
-                continue
+        with log.section('VAL', 4, 'Initializing'):
+            #get all dihedrals
+            from molmod.ic import dihed_angle, _dihed_angle_low
+            ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
+            dihedrals = {}
+            for dihedral in self.system.iter_dihedrals():
+                dihedral, types = term_sort_atypes(ffatypes, dihedral, 'dihedral')
+                if types in dihedrals.keys():
+                    dihedrals[types].append(dihedral)
+                else:
+                    dihedrals[types] = [dihedral]
+            #loop over all distinct dihedral types
+            ncos = 0
+            for types, diheds in dihedrals.iteritems():
+                psi0s = np.zeros(len(diheds), float)
+                ms = np.zeros(len(diheds), float)
+                for i, dihed in enumerate(diheds):
+                    if self.system.cell.nvec>0:
+                        d10 = self.system.pos[dihed[0]] - self.system.pos[dihed[1]]
+                        d12 = self.system.pos[dihed[2]] - self.system.pos[dihed[1]]
+                        d23 = self.system.pos[dihed[3]] - self.system.pos[dihed[2]]
+                        self.system.cell.mic(d10)
+                        self.system.cell.mic(d12)
+                        self.system.cell.mic(d23)
+                        psi0s[i] = _dihed_angle_low(d10, d12, d23, 0)[0]
+                    else:
+                        rs = np.array([self.system.pos[j] for j in dihed])
+                        psi0s[i] = dihed_angle(rs)[0]
+                    n1 = len(self.system.neighs1[dihed[1]])
+                    n2 = len(self.system.neighs1[dihed[2]])
+                    ms[i] = get_multiplicity(n1, n2)
+                nan = False
+                for m in ms:
+                    if np.isnan(m): nan = True
+                if nan or None in ms or ms.std()>1e-3:
+                    ms_string = str(ms)
+                    if nan: ms_string = 'nan'
+                    log.dump('WARNING missing dihedral for %s (m is %s)' %('.'.join(types), ms_string))
+                    continue
+                m = int(np.round(ms.mean()))
+                rv = get_restvalue(psi0s, m, thresshold=thresshold, mode=1)
+                if rv is not None:
+                    #a regular Cosine term is used for the dihedral potential
+                    for dihed in diheds:
+                        term = self.add_term(Cosine, [DihedAngle(*dihed)], types, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
+                        self.set_params(term.index, rv0=rv, m=m)
+                        ncos += 1
+                else:
+                    #no dihedral potential could be determine, hence it is ignored
+                    log.dump('WARNING: missing dihedral for %s (could not determine rest value from %s)' %('.'.join(types), str(psi0s/deg)))
+                    continue
         log.dump('Added %i Cosine dihedral terms' %ncos)
 
     def init_oop_terms(self, thresshold_zero=5e-2*angstrom):
@@ -401,78 +413,90 @@ class ValenceFF(ForcePartValence):
             attribute of the system instance. All oops are given harmonic
             potentials.
         '''
-        #get all dihedrals
-        from molmod.ic import opbend_dist
-        ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
-        opdists = {}
-        for opdist in self.system.iter_oops():
-            opdist, types = term_sort_atypes(ffatypes, opdist, 'opdist')
-            if types in opdists.keys():
-                opdists[types].append(opdist)
-            else:
-                opdists[types] = [opdist]
-        #loop over all distinct opdist types
-        nharm = 0
-        nsq = 0
-        for types, oops in opdists.iteritems():
-            d0s = np.zeros(len(oops), float)
-            for i, oop in enumerate(oops):
-                rs = np.array([#mind the order, is(or was) wrongly documented in molmod
-                    self.system.pos[oop[0]],
-                    self.system.pos[oop[1]],
-                    self.system.pos[oop[2]],
-                    self.system.pos[oop[3]],
-                ])
-                d0s[i] = abs(opbend_dist(rs)[0])
-            if d0s.mean()<thresshold_zero: #TODO: check this thresshold
-                #add regular term harmonic in oopdist
-                for oop in oops:
-                    term = self.add_term(Harmonic, [OopDist(*oop)], types, ['HC_FC_DIAG'], ['kjmol/A**2', 'A'])
-                    self.set_params(term.index, rv0=0.0)
-                    nharm += 1
-            else:
-                #add term harmonic in square of oopdist
-                for oop in oops:
-                    self.add_term(Harmonic, [SqOopDist(*oop)], types, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/A**4', 'A**2'])
-                    nsq += 1
+        with log.section('VAL', 4, 'Initializing'):
+            #get all dihedrals
+            from molmod.ic import opbend_dist, _opdist_low
+            ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
+            opdists = {}
+            for opdist in self.system.iter_oops():
+                opdist, types = term_sort_atypes(ffatypes, opdist, 'opdist')
+                if types in opdists.keys():
+                    opdists[types].append(opdist)
+                else:
+                    opdists[types] = [opdist]
+            #loop over all distinct opdist types
+            nharm = 0
+            nsq = 0
+            for types, oops in opdists.iteritems():
+                d0s = np.zeros(len(oops), float)
+                for i, oop in enumerate(oops):
+                    if self.system.cell.nvec>0:
+                        d01 = self.system.pos[oop[1]]-self.system.pos[oop[0]]
+                        d02 = self.system.pos[oop[2]]-self.system.pos[oop[0]]
+                        d03 = self.system.pos[oop[3]]-self.system.pos[oop[0]]
+                        self.system.cell.mic(d01)
+                        self.system.cell.mic(d02)
+                        self.system.cell.mic(d03)
+                        d0s[i] = abs(_opdist_low(d01, d02, d03, 0)[0])
+                    else:
+                        rs = np.array([#mind the order, is(or was) wrongly documented in molmod
+                            self.system.pos[oop[0]],
+                            self.system.pos[oop[1]],
+                            self.system.pos[oop[2]],
+                            self.system.pos[oop[3]],
+                        ])
+                        d0s[i] = abs(opbend_dist(rs)[0])
+                if d0s.mean()<thresshold_zero: #TODO: check this thresshold
+                    #add regular term harmonic in oopdist
+                    for oop in oops:
+                        term = self.add_term(Harmonic, [OopDist(*oop)], types, ['HC_FC_DIAG'], ['kjmol/A**2', 'A'])
+                        self.set_params(term.index, rv0=0.0)
+                        nharm += 1
+                else:
+                    #add term harmonic in square of oopdist
+                    log.dump('Mean absolute value of OopDist %s is %.3e A, used SQOOPDIST' %('.'.join(types), d0s.mean()/angstrom))
+                    for oop in oops:
+                        self.add_term(Harmonic, [SqOopDist(*oop)], types, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/A**4', 'A**2'])
+                        nsq += 1
         log.dump('Added %i Harmonic and %i SquareHarmonic out-of-plane distance terms' %(nharm, nsq))
 
     def init_cross_terms(self, specs=None):
         '''
             Initialize cross terms between bonds and bends.
         '''
-        ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
-        nbend = 0
-        for angle in self.system.iter_angles():
-            angle, types = term_sort_atypes(ffatypes, angle, 'angle')
-            skip_angle = False
-            for term in self.iter_masters('.'.join(types)):
-                if len(term.ics)>1: continue
-                ickind = term.ics[0].kind
-                potkind = term.kind
-                if ickind==1 or (ickind==2 and potkind!=0):
-                    skip_angle = True
-                    log.dump('Skipped stretch-angle cross term for %s due to incompatible diagonal bend term with potkind=%i and ickind=%i' %('.'.join(types), potkind, ickind))
-                    break
-            bond0, btypes = term_sort_atypes(ffatypes, angle[:2], 'bond')
-            bond1, btypes = term_sort_atypes(ffatypes, angle[1:], 'bond')
-            #add stretch-stretch
-            self.add_term(Cross,
-                [Bond(*bond0), Bond(*bond1)],
-                types, ['HC_FC_CROSS'], ['kjmol/A**2', 'A', 'A']
-            )
-            if not skip_angle:
-                #add stretch0-bend
+        with log.section('VAL', 4, 'Initializing'):
+            ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
+            nbend = 0
+            for angle in self.system.iter_angles():
+                angle, types = term_sort_atypes(ffatypes, angle, 'angle')
+                skip_angle = False
+                for term in self.iter_masters('.'.join(types)):
+                    if len(term.ics)>1: continue
+                    ickind = term.ics[0].kind
+                    potkind = term.kind
+                    if ickind==1 or (ickind==2 and potkind!=0):
+                        skip_angle = True
+                        log.dump('Skipped stretch-angle cross term for %s due to incompatible diagonal bend term with potkind=%i and ickind=%i' %('.'.join(types), potkind, ickind))
+                        break
+                bond0, btypes = term_sort_atypes(ffatypes, angle[:2], 'bond')
+                bond1, btypes = term_sort_atypes(ffatypes, angle[1:], 'bond')
+                #add stretch-stretch
                 self.add_term(Cross,
-                    [Bond(*bond0), BendAngle(*angle)],
-                    types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
+                    [Bond(*bond0), Bond(*bond1)],
+                    types, ['HC_FC_CROSS'], ['kjmol/A**2', 'A', 'A']
                 )
-                #add stretch1-bend
-                self.add_term(Cross,
-                    [Bond(*bond1), BendAngle(*angle)],
-                    types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
-                )
-            nbend += 1
+                if not skip_angle:
+                    #add stretch0-bend
+                    self.add_term(Cross,
+                        [Bond(*bond0), BendAngle(*angle)],
+                        types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
+                    )
+                    #add stretch1-bend
+                    self.add_term(Cross,
+                        [Bond(*bond1), BendAngle(*angle)],
+                        types, ['HC_FC_CROSS'], ['kjmol/(A*rad)', 'A', 'deg']
+                    )
+                nbend += 1
         log.dump('Added %i cross terms for angle patterns' %nbend)
 
     def apply_constraints(self, constraints):
