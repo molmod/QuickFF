@@ -163,7 +163,7 @@ def main():
                 numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn)
                 if system is None:
                     system = System(
-                        numbers, coords, rvecs=None, charges=None, radii=None,
+                        numbers, coords, rvecs=rvecs, charges=None, radii=None,
                         masses=masses
                     )
                 else:
@@ -206,11 +206,10 @@ def main():
             else:
                 raise AssertionError('No atom types defined')
         #construct ab initio reference
-        ai = SecondOrderTaylor('ai', coords=system.pos, energy=energy, grad=grad, hess=hess)
+        ai = SecondOrderTaylor('ai', coords=system.pos.copy(), energy=energy, grad=grad, hess=hess, pbc=pbc)
         #detect a priori defined contributions to the force field
         refs = []
         if options.ei is not None:
-            rcut = 50*angstrom
             if rvecs is None:
                 ff = ForceField.generate(system, options.ei, rcut=50*angstrom)
             else:
