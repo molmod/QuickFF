@@ -159,7 +159,7 @@ def main():
         hess = None
         rvecs = None
         for fn in fns:
-            if fn.endswith('.fchk'):
+            if fn.endswith('.fchk') or fn.endswith('.xml'):
                 numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn)
                 if system is None:
                     system = System(
