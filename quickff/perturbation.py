@@ -266,8 +266,10 @@ class RelaxedStrain(object):
                 if set to True, removes the center of mass translation from the
                 resulting perturbation trajectories [default=True].
         '''
+        index = trajectory.term.index
         with log.section('PTGEN', 4, timer='PT Generate'):
-            index = trajectory.term.index
+            log.dump('  Generating %s(atoms=%s)' %(self.valence.terms[index].basename, trajectory.term.get_atoms()))
+        with log.section('PTGEN', 3, timer='PT Generate'):    
             strain = self.strains[index]
             natom = self.system.natom
             if strain is None:
@@ -278,16 +280,23 @@ class RelaxedStrain(object):
             diag[:strain.ndof] *= 0.1*angstrom
             diag[strain.ndof] *= abs(q0-trajectory.targets[0])
             for iq, target in enumerate(trajectory.targets):
+                with log.section('PTGEN', 4, timer='PT Generate'):
+                    log.dump('    Frame %i (target=%.3f)' %(iq, target))
                 strain.constrain_target = target
                 init = np.zeros([strain.ndof+1], float)
+                init[-1] = np.sign(q0-target)
                 sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
-                if ier==5:
+                if ier!=1:
                     #fsolve did not converge, flag this frame for deletion
-                    log.dump('Trajectory of frame %i (target=%.3f) for %s(atoms=%s) did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
+                    with log.section('PTGEN', 4, timer='PT Generate'):
+                        log.dump('      %s' %mesg.replace('\n', ' '))
+                    log.dump('    Frame %i (target=%.3f) %s(%s) did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
                     trajectory.targets[iq] = np.nan
                     continue
                 x = strain.coords0 + sol[:3*natom].reshape((-1,3))
                 trajectory.values[iq] = strain.constrain_value
+                with log.section('PTGEN', 4, timer='PT Generate'):
+                    log.dump('    Converged (value=%.3f, lagmult=%.3e)' %(strain.constrain_value,sol[3*natom]))
                 if remove_com:
                     com = (x.T*self.system.masses).sum(axis=1)/self.system.masses.sum()
                     for i in xrange(natom):
@@ -332,7 +341,7 @@ class RelaxedStrain(object):
                 If set to True, the current valence force field (stored in
                 self.valence) will be used to compute the valence contribution
         '''
-        with log.section('PTEST', 4, timer='PT Estimate'):
+        with log.section('PTEST', 3, timer='PT Estimate'):
             term = trajectory.term
             index = term.index
             basename = term.basename
@@ -356,8 +365,6 @@ class RelaxedStrain(object):
                     RESs[istep] += self.valence.calc_energy(pos) #- 0.5*fc*(qs[istep]-rv)**2
                 self.valence.set_params(index, fc=fc)
                 self.valence.set_params(index, rv0=rv)
-            #print qs
-            #print (AIs-FFs-RESs)/kjmol
             pars = fitpar(qs, AIs-FFs-RESs-min(AIs-FFs-RESs), rcond=-1)
             if pars[0]!=0.0:
                 trajectory.fc = 2.0*pars[0]
@@ -383,10 +390,6 @@ class Strain(ForceField):
             term_index.
 
             **Arguments**
-
-            term_index
-                Integer defining the index of the term in valence.terms for
-                which the current strain is designed.
 
             system
                 A Yaff System instance containing all system information.
@@ -453,4 +456,6 @@ class Strain(ForceField):
         grad[self.ndof] = self.constrain_value - self.constrain_target
         #cartesian penalty, i.e. extra penalty for deviation w.r.t. cartesian equilibrium coords
         grad[:self.ndof] += X[:self.ndof]/(self.ndof*self.cart_penalty**2)
+        with log.section('PTGEN', 4, timer='PT Generate'):
+            log.dump('      Gradient:  rms = %.3e  max = %.3e  cnstr = %.3e' %(np.sqrt((grad[:self.ndof]**2).mean()), max(grad[:self.ndof]), grad[self.ndof]))
         return grad

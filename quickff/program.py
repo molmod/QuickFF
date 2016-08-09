@@ -120,7 +120,7 @@ class BaseProgram(object):
             was modified.
         '''
         log.dump('Updating terms of trajectories to current valenceFF terms')
-        with log.section('PTUPD', 4):
+        with log.section('PTUPD', 3):
             for traj in self.trajectories:
                 found = False
                 for term in self.valence.iter_terms():
@@ -190,7 +190,7 @@ class BaseProgram(object):
             Plot energy contributions along perturbation trajectories and dump
             perturbation trajectories to XYZ files.
         '''
-        with log.section('PLOT', 4, timer='PT plot energy'):
+        with log.section('PLOT', 3, timer='PT plot energy'):
             if self.kwargs.get('plot_traj', False):
                 ffrefs = self.kwargs.get('ffrefs', [])
                 valence = None
@@ -198,7 +198,7 @@ class BaseProgram(object):
                 for trajectory in self.trajectories:
                     if trajectory is not None:
                         trajectory.plot(self.ai, ffrefs=ffrefs, valence=valence)
-        with log.section('XYZ', 4, timer='PT dump XYZ'):
+        with log.section('XYZ', 3, timer='PT dump XYZ'):
             if self.kwargs.get('xyz_traj', False):
                 for trajectory in self.trajectories:
                     if trajectory is not None:
@@ -421,7 +421,7 @@ class BaseProgram(object):
                 the (half) the width of the interval around 180 deg (90 degrees)
                 to check if a square BA4
         '''
-        with log.section('SQBEND', 4):
+        with log.section('SQBEND', 3):
             for master in self.valence.iter_masters(label='BendAHarm'):
                 rvs = np.zeros([len(master.slaves)+1], float)
                 rvs[0] = self.valence.get_params(master.index, only='rv')
@@ -461,7 +461,7 @@ class BaseProgram(object):
             value, convert master and all slaves to BendCharm with
             cos(phis0)=-1.
         '''
-        with log.section('BNDCHRM', 4):
+        with log.section('BNDCHRM', 3):
             for master in self.valence.iter_masters(label='BendAHarm'):
                 indices = [master.index]
                 for slave in master.slaves: indices.append(slave)
@@ -494,7 +494,7 @@ class BaseProgram(object):
             zero, to a term Oopdist (harmonic in Oopdist instead of square of
             Oopdist) with a rest value of 0.0 A.
         '''
-        with log.section('SQOOP', 4):
+        with log.section('SQOOP', 3):
             for master in self.valence.iter_masters(label='SqOopdist'):
                 indices = [master.index]
                 for slave in master.slaves: indices.append(slave)

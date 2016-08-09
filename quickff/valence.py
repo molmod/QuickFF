@@ -312,7 +312,7 @@ class ValenceFF(ForcePartValence):
             of the system instance. All bond terms are given harmonic
             potentials.
         '''
-        with log.section('VAL', 4, 'Initializing'):
+        with log.section('VAL', 3, 'Initializing'):
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
             #get the bond terms
             nbonds = 0
@@ -329,7 +329,7 @@ class ValenceFF(ForcePartValence):
             of the system instance. All bend terms are given harmonic
             potentials.
         '''
-        with log.section('VAL', 4, 'Initializing'):
+        with log.section('VAL', 3, 'Initializing'):
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
             #get the angle terms
             nbends = 0
@@ -354,7 +354,7 @@ class ValenceFF(ForcePartValence):
 
                     0.5*K*(1-cos(m*psi-m*psi0)) with psi0 = 0 or 360/(2*m)
         '''
-        with log.section('VAL', 4, 'Initializing'):
+        with log.section('VAL', 3, 'Initializing'):
             #get all dihedrals
             from molmod.ic import dihed_angle, _dihed_angle_low
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
@@ -413,7 +413,7 @@ class ValenceFF(ForcePartValence):
             attribute of the system instance. All oops are given harmonic
             potentials.
         '''
-        with log.section('VAL', 4, 'Initializing'):
+        with log.section('VAL', 3, 'Initializing'):
             #get all dihedrals
             from molmod.ic import opbend_dist, _opdist_low
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
@@ -464,7 +464,7 @@ class ValenceFF(ForcePartValence):
         '''
             Initialize cross terms between bonds and bends.
         '''
-        with log.section('VAL', 4, 'Initializing'):
+        with log.section('VAL', 3, 'Initializing'):
             ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
             nbend = 0
             for angle in self.system.iter_angles():
