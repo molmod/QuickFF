@@ -171,6 +171,7 @@ class Trajectory(object):
         if fn is None:
             fn = 'trajectory-%s-%i.png' %(self.term.basename.replace('/', '-'),self.term.index)
         fig.savefig(fn)
+        pp.close()
 
     def to_xyz(self, fn=None):
         '''
