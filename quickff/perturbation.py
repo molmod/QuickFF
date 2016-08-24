@@ -291,9 +291,17 @@ class RelaxedStrain(object):
                     #fsolve did not converge, flag this frame for deletion
                     with log.section('PTGEN', 4, timer='PT Generate'):
                         log.dump('      %s' %mesg.replace('\n', ' '))
-                    log.dump('    Frame %i (target=%.3f) %s(%s) did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
-                    trajectory.targets[iq] = np.nan
-                    continue
+                    log.dump('    Frame %i (target=%.3f) %s(%s) did not converge. Trying again with slightly perturbed initial conditions.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
+                    #try one more time
+                    init = sol.copy()
+                    init[:3*natom] += np.random.normal(0.0, 0.01, [3*natom])*angstrom
+                    sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
+                    if ier!=1:
+                        with log.section('PTGEN', 4, timer='PT Generate'):
+                            log.dump('      %s' %mesg.replace('\n', ' '))
+                        log.dump('    Frame %i (target=%.3f) %s(%s) STILL did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
+                        trajectory.targets[iq] = np.nan
+                        continue
                 x = strain.coords0 + sol[:3*natom].reshape((-1,3))
                 trajectory.values[iq] = strain.constrain_value
                 with log.section('PTGEN', 4, timer='PT Generate'):
