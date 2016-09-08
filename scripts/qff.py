@@ -62,8 +62,13 @@ def parse():
     )
     parser.add_option(
         '-v', '--verbose', default=False, action='store_true',
-        help='Increases verbosity, is overwriten if SILENT is switched on. '
-             '[default=%default]'
+        help='Increases verbosity, is overwriten if SILENT or VERY_VERBOSE is '
+             'switched on. [default=%default]'
+    )
+    parser.add_option(
+        '-V', '--very-verbose', default=False, action='store_true',
+        help='Increases verbosity to highest level, is overwriten if SILENT is '
+             'switched on. [default=%default]'
     )
     parser.add_option(
         '-l', '--logfile', default=None,
@@ -146,8 +151,10 @@ def main():
     if options.silent:
         log.set_level('silent')
     else:
-        if options.verbose:
+        if options.very_verbose:
             log.set_level('highest')
+        elif options.verbose:
+            log.set_level('high')
         if options.logfile is not None and isinstance(options.logfile, str):
             log.write_to_file(options.logfile)
     with log.section('QFF', 1, timer='Initializing'):

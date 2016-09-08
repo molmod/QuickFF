@@ -268,9 +268,8 @@ class RelaxedStrain(object):
                 resulting perturbation trajectories [default=True].
         '''
         index = trajectory.term.index
-        with log.section('PTGEN', 4, timer='PT Generate'):
+        with log.section('PTGEN', 3, timer='PT Generate'):
             log.dump('  Generating %s(atoms=%s)' %(self.valence.terms[index].basename, trajectory.term.get_atoms()))
-        with log.section('PTGEN', 3, timer='PT Generate'):    
             strain = self.strains[index]
             natom = self.system.natom
             if strain is None:
@@ -281,7 +280,7 @@ class RelaxedStrain(object):
             diag[:strain.ndof] *= 0.1*angstrom
             diag[strain.ndof] *= abs(q0-trajectory.targets[0])
             for iq, target in enumerate(trajectory.targets):
-                with log.section('PTGEN', 4, timer='PT Generate'):
+                with log.section('PTGEN', 3, timer='PT Generate'):
                     log.dump('    Frame %i (target=%.3f)' %(iq, target))
                 strain.constrain_target = target
                 init = np.zeros([strain.ndof+1], float)
@@ -289,7 +288,7 @@ class RelaxedStrain(object):
                 sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
                 if ier!=1:
                     #fsolve did not converge, flag this frame for deletion
-                    with log.section('PTGEN', 4, timer='PT Generate'):
+                    with log.section('PTGEN', 3, timer='PT Generate'):
                         log.dump('      %s' %mesg.replace('\n', ' '))
                     log.dump('    Frame %i (target=%.3f) %s(%s) did not converge. Trying again with slightly perturbed initial conditions.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
                     #try one more time
@@ -297,14 +296,14 @@ class RelaxedStrain(object):
                     init[:3*natom] += np.random.normal(0.0, 0.01, [3*natom])*angstrom
                     sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
                     if ier!=1:
-                        with log.section('PTGEN', 4, timer='PT Generate'):
+                        with log.section('PTGEN', 3, timer='PT Generate'):
                             log.dump('      %s' %mesg.replace('\n', ' '))
                         log.dump('    Frame %i (target=%.3f) %s(%s) STILL did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
                         trajectory.targets[iq] = np.nan
                         continue
                 x = strain.coords0 + sol[:3*natom].reshape((-1,3))
                 trajectory.values[iq] = strain.constrain_value
-                with log.section('PTGEN', 4, timer='PT Generate'):
+                with log.section('PTGEN', 3, timer='PT Generate'):
                     log.dump('    Converged (value=%.3f, lagmult=%.3e)' %(strain.constrain_value,sol[3*natom]))
                 if remove_com:
                     com = (x.T*self.system.masses).sum(axis=1)/self.system.masses.sum()
