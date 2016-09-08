@@ -190,21 +190,27 @@ class BaseProgram(object):
             Plot energy contributions along perturbation trajectories and dump
             perturbation trajectories to XYZ files.
         '''
+        only = self.kwargs.get('only_traj', 'PT_ALL')
+        if not isinstance(only, list): only = [only]
         with log.section('PLOT', 3, timer='PT plot energy'):
             if self.kwargs.get('plot_traj', False):
                 ffrefs = self.kwargs.get('ffrefs', [])
                 valence = None
                 if do_valence: valence=self.valence
                 for trajectory in self.trajectories:
-                    if trajectory is not None:
-                        trajectory.plot(self.ai, ffrefs=ffrefs, valence=valence)
+                    if trajectory is None: continue
+                    for pattern in only:
+                        if pattern=='PT_ALL' or pattern in trajectory.term.basename:
+                            trajectory.plot(self.ai, ffrefs=ffrefs, valence=valence)
         with log.section('XYZ', 3, timer='PT dump XYZ'):
             if self.kwargs.get('xyz_traj', False):
                 for trajectory in self.trajectories:
-                    if trajectory is not None:
-                        trajectory.to_xyz()
+                    if trajectory is None: continue
+                    for pattern in only:
+                        if pattern=='PT_ALL' or pattern in trajectory.term.basename:
+                            trajectory.to_xyz()
 
-    def do_pt_generate(self, do='PT_ALL'):
+    def do_pt_generate(self):
         '''
             Generate perturbation trajectories.
 
@@ -226,15 +232,12 @@ class BaseProgram(object):
                 return
             #configure
             self.reset_system()
-            if isinstance(do, str):
-                do_terms = [term for term in self.valence.terms if do in term.tasks]
-            elif isinstance(do, list):
-                do_terms = []
-                for master in do:
-                    for term in self.valence.iter_terms(master):
-                        do_terms.append(term)
-            else:
-                raise IOError("Invalid value for optional argument 'do', recieved %s" %str(do))
+            only = self.kwargs.get('only_traj', 'PT_ALL')
+            if not isinstance(only, list): only = [only]
+            do_terms = []
+            for pattern in only:
+                for term in self.valence.iter_terms(pattern):
+                    do_terms.append(term)
             trajectories = self.perturbation.prepare(do_terms)
             #compute
             log.dump('Constructing trajectories')
@@ -245,7 +248,7 @@ class BaseProgram(object):
                 cPickle.dump(self.trajectories, open(fn_traj, 'w'))
                 log.dump('Trajectories stored to file %s' %fn_traj)
 
-    def do_pt_estimate(self, do_valence=False, plot=False):
+    def do_pt_estimate(self, do_valence=False):
         '''
             Estimate force constants and rest values from the perturbation
             trajectories
@@ -255,10 +258,6 @@ class BaseProgram(object):
             do_valence
                 if set to True, the current valence force field will be used to
                 estimate the contribution of all other valence terms.
-            
-            plot
-                if set to True, plots the energy contributions immediately
-                after estimating them (before averaging).
         '''
         with log.section('PTEST', 2, timer='PT Estimate'):
             self.reset_system()
@@ -270,14 +269,23 @@ class BaseProgram(object):
             for traj in self.trajectories:
                 if traj is None: continue
                 self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs, do_valence=do_valence)
-            #plot trajectories if needed
-            if plot: self.plot_trajectories(do_valence=do_valence)
             #set force field parameters to computed fc and rv
             for traj in self.trajectories:
                 if traj is None: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
             #output
             self.valence.dump_logger(print_level=4)
+
+    def do_pt_postprocess(self):
+        '''
+            Do some first post processing of the ff parameters estimated from
+            the perturbation trajectories including:
+            
+                * detecting bend patterns with rest values of 90 and 180 deg
+                * detecting bend patterns with rest values only close to 180 deg
+                * averaging parameters
+        '''
+        with log.section('PTPOST', 2, timer='PT Post process'):
             self.do_squarebend()
             self.do_bendcharm()
             #self.do_sqoopdist_to_oopdist()
@@ -430,11 +438,11 @@ class BaseProgram(object):
                 n90 = 0
                 n180 = 0
                 nother = 0
-                for rv in rvs:
+                for i, rv in enumerate(rvs):
                     if 90*deg-thresshold<=rv and rv<=90*deg+thresshold: n90 += 1
                     elif 180*deg-thresshold<=rv and rv<=180*deg+thresshold: n180 += 1
                     else: nother += 1
-                if nother==0 and n90>0 and n180>0:
+                if n90>0 and n180>0:
                     log.dump('%s has rest values around 90 deg and 180 deg, converted to BendCos with m=4' %master.basename)
                     #modify master and slaves
                     indices = [master.index]
@@ -488,7 +496,7 @@ class BaseProgram(object):
                                 traj.fc = None
                                 traj.active = False
 
-    def do_sqoopdist_to_oopdist(self,thresshold=1e-4*angstrom):
+    def do_sqoopdist_to_oopdist(self, thresshold=1e-4*angstrom):
         '''
             Transform a SqOopdist term with a rest value that has been set to
             zero, to a term Oopdist (harmonic in Oopdist instead of square of
@@ -535,7 +543,7 @@ class MakeTrajectories(BaseProgram):
             fn_traj = self.kwargs.get('fn_traj', None)
             assert fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
             assert not os.path.isfile(fn_traj), 'Given file %s to store trajectories to already exists!' %fn_traj
-            self.do_pt_generate(do=self.kwargs.get('only_traj', 'PT_ALL'))
+            self.do_pt_generate()
 
 class PlotTrajectories(BaseProgram):
     '''
@@ -547,10 +555,10 @@ class PlotTrajectories(BaseProgram):
             fn_traj = self.kwargs.get('fn_traj', None)
             assert fn_traj is not None, 'The PlotTrajectories program requires a trajectory filename fn_traj!'
             assert os.path.isfile(fn_traj), 'Given file %s to read trajectories does not exists!' %fn_traj
-            self.do_pt_generate()
-            self.do_pt_estimate()
             self.kwargs['xyz_traj'] = True
             self.kwargs['plot_traj'] = True
+            self.do_pt_generate()
+            self.do_pt_estimate()
             self.plot_trajectories()
 
 class DeriveDiagFF(BaseProgram):
@@ -562,6 +570,7 @@ class DeriveDiagFF(BaseProgram):
             self.do_eq_setrv(['EQ_RV'])
             self.do_pt_generate()
             self.do_pt_estimate()
+            self.do_pt_postprocess()
             self.do_hc_estimatefc(['HC_FC_DIAG'])
             self.do_pt_estimate(do_valence=True)
             self.do_hc_estimatefc(['HC_FC_DIAG'], logger_level=1)
@@ -576,6 +585,7 @@ class DeriveNonDiagFF(BaseProgram):
             self.do_eq_setrv(['EQ_RV'])
             self.do_pt_generate()
             self.do_pt_estimate()
+            self.do_pt_postprocess()
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
             self.do_pt_estimate(do_valence=True)
@@ -591,6 +601,7 @@ class DeriveNonDiagFFNoQRef(BaseProgram):
             self.do_eq_setrv(['EQ_RV'])
             self.do_pt_generate()
             self.do_pt_estimate()
+            self.do_pt_postprocess()
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], logger_level=1)
             self.make_output()
