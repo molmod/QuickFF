@@ -25,7 +25,7 @@
 #--
 
 from quickff.program import __all__ as allowed_programs, __dict__ as program_modes
-from quickff.log import log
+from quickff.log import log, version
 from quickff.tools import guess_ffatypes
 from quickff.reference import SecondOrderTaylor, YaffForceField
 from quickff.io import read_abinitio
@@ -74,6 +74,10 @@ def parse():
         '-l', '--logfile', default=None,
         help='Redirect logger output to a file with the given name. '
              '[default=%default]'
+    )
+    parser.add_option(
+        '--version', default=False, action='store_true',
+        help='Print QuickFF version number and exit.'
     )
     #General settings options
     settings = OptionGroup(parser, 'General', 'General specifications of the program')
@@ -142,6 +146,9 @@ def parse():
     )
     parser.add_option_group(system)
     options, args = parser.parse_args()
+    if options.version:
+        print version
+        sys.exit()
     assert len(args)>0, 'No input files found.'
     return options, args
 

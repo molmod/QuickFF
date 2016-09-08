@@ -26,8 +26,9 @@
 import os, sys, datetime, getpass, atexit
 import numpy, scipy, matplotlib
 
-__all__ = ['log']
+__all__ = ['version', 'log']
 
+version = '2.1.1'
 
 header = """
 ________________/\\\\\\_________/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_________________
@@ -40,7 +41,7 @@ __________________\\////\\\\\\//______\\/\\\\\\_____________\\/\\\\\\___________
 ______________________\\///\\\\\\\\\\\\___\\/\\\\\\_____________\\/\\\\\\______________________
 _________________________\\//////____\\///______________\\///______________________
 
-                            Welcom to QuickFF 2.1
+                            Welcom to QuickFF
    a Python package to quickly derive force fields from ab initio input data
 
                                  Written by
@@ -168,6 +169,7 @@ class Logger(object):
         with self.section('USER', 1): self.dump(getpass.getuser(), new_line=False)
         with self.section('MACHINE', 1): self.dump(' '.join(os.uname()), new_line=False)
         with self.section('TIME', 1): self.dump(datetime.datetime.now().isoformat().replace('T', ' '), new_line=False)
+        with self.section('QUICKFF VERSION', 1): self.dump(version.replace('\n', ''), new_line=False)
         with self.section('PYTHON VERSION', 1): self.dump(sys.version.replace('\n', ''), new_line=False)
         with self.section('NUMPY VERSION', 1): self.dump(numpy.__version__, new_line=False)
         with self.section('SCIPY VERSION', 1): self.dump(scipy.__version__, new_line=False)
