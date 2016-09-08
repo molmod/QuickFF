@@ -233,11 +233,13 @@ class BaseProgram(object):
             #configure
             self.reset_system()
             only = self.kwargs.get('only_traj', 'PT_ALL')
-            if not isinstance(only, list): only = [only]
-            do_terms = []
-            for pattern in only:
-                for term in self.valence.iter_terms(pattern):
-                    do_terms.append(term)
+            if isinstance(only, str):
+                do_terms = [term for term in self.valence.terms if only in term.tasks]
+            else:
+                do_terms = []
+                for pattern in only:
+                    for term in self.valence.iter_terms(pattern):
+                        do_terms.append(term)
             trajectories = self.perturbation.prepare(do_terms)
             #compute
             log.dump('Constructing trajectories')
