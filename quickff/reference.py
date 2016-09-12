@@ -218,7 +218,7 @@ def get_ei_ff(name, system, charges, scales, radii=None, average=True, pbc=[0,0,
             If set to True, the charges and radii will first be averaged over
             atom types. This is True by default.
     '''
-    if not np.array(pbc==0).all():
+    if not (np.array(pbc)==0).all():
         raise NotImplementedError('Periodic system not implemented in get_ei_ff')
     if average:
         qs = {}
@@ -234,6 +234,7 @@ def get_ei_ff(name, system, charges, scales, radii=None, average=True, pbc=[0,0,
             charges[i] = np.array(qs[atype]).mean()
             if radii is not None:
                 radii[i] = np.array(rs[atype]).mean()
+    if radii is None: radii = np.zeros(len(system.ffatype_ids), float)
     pair_pot = PairPotEI(charges.astype(np.float), 0.0, 50*angstrom, None, 1.0, radii.astype(np.float))
     nlist = NeighborList(system, 0)
     scalings = Scalings(system, scale1=scales[0], scale2=scales[1], scale3=scales[2], scale4=scales[3])
