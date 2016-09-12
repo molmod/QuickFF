@@ -6,15 +6,16 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>quickff.program &mdash; QuickFF 2.0.1 documentation</title>
+    <title>quickff.program &mdash; QuickFF 2.1.2 documentation</title>
     
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '2.0.1',
+        VERSION:     '2.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +24,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.0.1 documentation" href="../../index.html" />
+    <link rel="top" title="QuickFF 2.1.2 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">QuickFF 2.1.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -80,13 +81,13 @@
 <span class="kn">from</span> <span class="nn">quickff.log</span> <span class="kn">import</span> <span class="n">log</span>
 
 <span class="kn">from</span> <span class="nn">yaff.pes.vlist</span> <span class="kn">import</span> <span class="n">Cosine</span><span class="p">,</span> <span class="n">Harmonic</span>
-<span class="kn">from</span> <span class="nn">yaff.pes.iclist</span> <span class="kn">import</span> <span class="n">BendAngle</span><span class="p">,</span> <span class="n">BendCos</span>
+<span class="kn">from</span> <span class="nn">yaff.pes.iclist</span> <span class="kn">import</span> <span class="n">BendAngle</span><span class="p">,</span> <span class="n">BendCos</span><span class="p">,</span> <span class="n">OopDist</span>
 
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">cPickle</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">datetime</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s">&#39;BaseProgram&#39;</span><span class="p">,</span> <span class="s">&#39;MakeTrajectories&#39;</span><span class="p">,</span> <span class="s">&#39;PlotTrajectories&#39;</span><span class="p">,</span>
-    <span class="s">&#39;DeriveDiagFF&#39;</span><span class="p">,</span> <span class="s">&#39;DeriveNonDiagFF&#39;</span>
+    <span class="s">&#39;DeriveDiagFF&#39;</span><span class="p">,</span> <span class="s">&#39;DeriveNonDiagFF&#39;</span><span class="p">,</span> <span class="s">&#39;DeriveNonDiagFFNoQRef&#39;</span><span class="p">,</span>
 <span class="p">]</span>
 
 <div class="viewcode-block" id="BaseProgram"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram">[docs]</a><span class="k">class</span> <span class="nc">BaseProgram</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -169,17 +170,16 @@
 <span class="sd">            was modified.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;Updating terms of trajectories to current valenceFF terms&#39;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;PTUPD&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
-            <span class="n">new_trajectories</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">terms</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iter_terms</span><span class="p">():</span>
-                <span class="k">if</span> <span class="s">&#39;PT_ALL&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
-                    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;No perturbation trajectory for </span><span class="si">%s</span><span class="s">-</span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
-                    <span class="k">continue</span>
+        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;PTUPD&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectories</span><span class="p">:</span>
                 <span class="n">found</span> <span class="o">=</span> <span class="bp">False</span>
-                <span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectories</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">traj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">traj</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">()</span><span class="o">==</span><span class="n">term</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iter_terms</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">traj</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">()</span><span class="o">==</span><span class="n">term</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">():</span>
                         <span class="k">if</span> <span class="n">found</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Found two trajectories for term </span><span class="si">%i</span><span class="s"> (</span><span class="si">%s</span><span class="s">) with atom indices </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">())))</span>
                         <span class="n">traj</span><span class="o">.</span><span class="n">term</span> <span class="o">=</span> <span class="n">term</span>
+                        <span class="k">if</span> <span class="s">&#39;PT_ALL&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span> 
+                            <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;PT_ALL not in tasks of </span><span class="si">%s</span><span class="s">-</span><span class="si">%i</span><span class="s">, deactivated PT&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+                            <span class="n">traj</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="bp">False</span>
                         <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
                         <span class="k">break</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;WARNING: No trajectory found for term </span><span class="si">%i</span><span class="s"> (</span><span class="si">%s</span><span class="s">) with atom indices </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">())))</span>
@@ -240,21 +240,27 @@
 <span class="sd">            Plot energy contributions along perturbation trajectories and dump</span>
 <span class="sd">            perturbation trajectories to XYZ files.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;PLOT&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s">&#39;PT plot energy&#39;</span><span class="p">):</span>
+        <span class="n">only</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;only_traj&#39;</span><span class="p">,</span> <span class="s">&#39;PT_ALL&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">only</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span> <span class="n">only</span> <span class="o">=</span> <span class="p">[</span><span class="n">only</span><span class="p">]</span>
+        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;PLOT&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s">&#39;PT plot energy&#39;</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;plot_traj&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
                 <span class="n">ffrefs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;ffrefs&#39;</span><span class="p">,</span> <span class="p">[])</span>
                 <span class="n">valence</span> <span class="o">=</span> <span class="bp">None</span>
                 <span class="k">if</span> <span class="n">do_valence</span><span class="p">:</span> <span class="n">valence</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">valence</span>
                 <span class="k">for</span> <span class="n">trajectory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectories</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">trajectory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                        <span class="n">trajectory</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ai</span><span class="p">,</span> <span class="n">ffrefs</span><span class="o">=</span><span class="n">ffrefs</span><span class="p">,</span> <span class="n">valence</span><span class="o">=</span><span class="n">valence</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;XYZ&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s">&#39;PT dump XYZ&#39;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">trajectory</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">continue</span>
+                    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">only</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">pattern</span><span class="o">==</span><span class="s">&#39;PT_ALL&#39;</span> <span class="ow">or</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">:</span>
+                            <span class="n">trajectory</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ai</span><span class="p">,</span> <span class="n">ffrefs</span><span class="o">=</span><span class="n">ffrefs</span><span class="p">,</span> <span class="n">valence</span><span class="o">=</span><span class="n">valence</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;XYZ&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s">&#39;PT dump XYZ&#39;</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;xyz_traj&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">trajectory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectories</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">trajectory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                        <span class="n">trajectory</span><span class="o">.</span><span class="n">to_xyz</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">trajectory</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">continue</span>
+                    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">only</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">pattern</span><span class="o">==</span><span class="s">&#39;PT_ALL&#39;</span> <span class="ow">or</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">:</span>
+                            <span class="n">trajectory</span><span class="o">.</span><span class="n">to_xyz</span><span class="p">()</span>
 </div>
-<div class="viewcode-block" id="BaseProgram.do_pt_generate"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_pt_generate">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do</span><span class="o">=</span><span class="s">&#39;PT_ALL&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_pt_generate"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_pt_generate">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Generate perturbation trajectories.</span>
 
@@ -276,15 +282,14 @@
                 <span class="k">return</span>
             <span class="c">#configure</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">reset_system</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">do</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">do_terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">terms</span> <span class="k">if</span> <span class="n">do</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">tasks</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">do</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">do_terms</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">master</span> <span class="ow">in</span> <span class="n">do</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iter_terms</span><span class="p">(</span><span class="n">master</span><span class="p">):</span>
-                        <span class="n">do_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+            <span class="n">only</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;only_traj&#39;</span><span class="p">,</span> <span class="s">&#39;PT_ALL&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">only</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">do_terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">terms</span> <span class="k">if</span> <span class="n">only</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">tasks</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&quot;Invalid value for optional argument &#39;do&#39;, recieved </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">do</span><span class="p">))</span>
+                <span class="n">do_terms</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">only</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iter_terms</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+                        <span class="n">do_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
             <span class="n">trajectories</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturbation</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">do_terms</span><span class="p">)</span>
             <span class="c">#compute</span>
             <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;Constructing trajectories&#39;</span><span class="p">)</span>
@@ -320,9 +325,22 @@
             <span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectories</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">traj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">continue</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="n">traj</span><span class="o">.</span><span class="n">fc</span><span class="p">,</span> <span class="n">rv0</span><span class="o">=</span><span class="n">traj</span><span class="o">.</span><span class="n">rv</span><span class="p">)</span>
+            <span class="c">#output</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">dump_logger</span><span class="p">(</span><span class="n">print_level</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BaseProgram.do_pt_postprocess"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_pt_postprocess">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_postprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Do some first post processing of the ff parameters estimated from</span>
+<span class="sd">            the perturbation trajectories including:</span>
+<span class="sd">            </span>
+<span class="sd">                * detecting bend patterns with rest values of 90 and 180 deg</span>
+<span class="sd">                * detecting bend patterns with rest values only close to 180 deg</span>
+<span class="sd">                * averaging parameters</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;PTPOST&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s">&#39;PT Post process&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_squarebend</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_bendcharm</span><span class="p">()</span>
+            <span class="c">#self.do_sqoopdist_to_oopdist()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">average_pars</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="BaseProgram.do_eq_setrv"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_eq_setrv">[docs]</a>    <span class="k">def</span> <span class="nf">do_eq_setrv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
@@ -343,7 +361,7 @@
                         <span class="n">ic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iclist</span><span class="o">.</span><span class="n">ictab</span><span class="p">[</span><span class="n">vterm</span><span class="p">[</span><span class="s">&#39;ic0&#39;</span><span class="p">]]</span>
                         <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">get_params</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="s">&#39;m&#39;</span><span class="p">)</span>
                         <span class="n">rv</span> <span class="o">=</span> <span class="n">ic</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span><span class="o">%</span><span class="p">(</span><span class="mf">360.0</span><span class="o">*</span><span class="n">deg</span><span class="o">/</span><span class="n">m</span><span class="p">)</span>
-                        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;EQSET&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s">&#39;Equil Set RV&#39;</span><span class="p">):</span>
+                        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;EQSET&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s">&#39;Equil Set RV&#39;</span><span class="p">):</span>
                             <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;Set rest value of </span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">) (eq=</span><span class="si">%.3f</span><span class="s"> deg) to </span><span class="si">%.3f</span><span class="s"> deg&#39;</span> <span class="o">%</span><span class="p">(</span>
                                 <span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span>
                                 <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">at</span><span class="p">)</span> <span class="k">for</span> <span class="n">at</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">()]),</span>
@@ -420,7 +438,7 @@
 <span class="sd">            corresponding diagonal terms. The force constants are initialized</span>
 <span class="sd">            to zero.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;CRINI&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;VAL&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;Initializing&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">reset_system</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">init_cross_terms</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">vlist</span><span class="o">.</span><span class="n">nv</span><span class="p">):</span>
@@ -463,7 +481,7 @@
 <span class="sd">                the (half) the width of the interval around 180 deg (90 degrees)</span>
 <span class="sd">                to check if a square BA4</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;SQBEND&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;SQBEND&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">master</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iter_masters</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s">&#39;BendAHarm&#39;</span><span class="p">):</span>
                 <span class="n">rvs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">master</span><span class="o">.</span><span class="n">slaves</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
                 <span class="n">rvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">get_params</span><span class="p">(</span><span class="n">master</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="s">&#39;rv&#39;</span><span class="p">)</span>
@@ -472,11 +490,11 @@
                 <span class="n">n90</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="n">n180</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="n">nother</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">rvs</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">rv</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rvs</span><span class="p">):</span>
                     <span class="k">if</span> <span class="mi">90</span><span class="o">*</span><span class="n">deg</span><span class="o">-</span><span class="n">thresshold</span><span class="o">&lt;=</span><span class="n">rv</span> <span class="ow">and</span> <span class="n">rv</span><span class="o">&lt;=</span><span class="mi">90</span><span class="o">*</span><span class="n">deg</span><span class="o">+</span><span class="n">thresshold</span><span class="p">:</span> <span class="n">n90</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="k">elif</span> <span class="mi">180</span><span class="o">*</span><span class="n">deg</span><span class="o">-</span><span class="n">thresshold</span><span class="o">&lt;=</span><span class="n">rv</span> <span class="ow">and</span> <span class="n">rv</span><span class="o">&lt;=</span><span class="mi">180</span><span class="o">*</span><span class="n">deg</span><span class="o">+</span><span class="n">thresshold</span><span class="p">:</span> <span class="n">n180</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="k">else</span><span class="p">:</span> <span class="n">nother</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="k">if</span> <span class="n">nother</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">n90</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">n180</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n90</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">n180</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
                     <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> has rest values around 90 deg and 180 deg, converted to BendCos with m=4&#39;</span> <span class="o">%</span><span class="n">master</span><span class="o">.</span><span class="n">basename</span><span class="p">)</span>
                     <span class="c">#modify master and slaves</span>
                     <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">master</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
@@ -503,7 +521,7 @@
 <span class="sd">            value, convert master and all slaves to BendCharm with</span>
 <span class="sd">            cos(phis0)=-1.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;BNDCHRM&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;BNDCHRM&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">master</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iter_masters</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s">&#39;BendAHarm&#39;</span><span class="p">):</span>
                 <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">master</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
                 <span class="k">for</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">master</span><span class="o">.</span><span class="n">slaves</span><span class="p">:</span> <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">slave</span><span class="p">)</span>
@@ -529,8 +547,35 @@
                                 <span class="n">traj</span><span class="o">.</span><span class="n">rv</span> <span class="o">=</span> <span class="bp">None</span>
                                 <span class="n">traj</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="bp">None</span>
                                 <span class="n">traj</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="bp">False</span>
-                        
-        </div>
+</div>
+<div class="viewcode-block" id="BaseProgram.do_sqoopdist_to_oopdist"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_sqoopdist_to_oopdist">[docs]</a>    <span class="k">def</span> <span class="nf">do_sqoopdist_to_oopdist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="o">*</span><span class="n">angstrom</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Transform a SqOopdist term with a rest value that has been set to</span>
+<span class="sd">            zero, to a term Oopdist (harmonic in Oopdist instead of square of</span>
+<span class="sd">            Oopdist) with a rest value of 0.0 A.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;SQOOP&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">master</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iter_masters</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s">&#39;SqOopdist&#39;</span><span class="p">):</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">master</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">master</span><span class="o">.</span><span class="n">slaves</span><span class="p">:</span> <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">slave</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                    <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">get_params</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="s">&#39;rv&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">rv</span><span class="o">&lt;=</span><span class="n">thresshold</span><span class="p">:</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> has rest value &lt;= </span><span class="si">%.0f</span><span class="s"> A^2, converted to Oopdist with d0=0&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">master</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">/</span><span class="n">angstrom</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                        <span class="n">term</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">terms</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">modify_term</span><span class="p">(</span>
+                            <span class="n">index</span><span class="p">,</span>
+                            <span class="n">Harmonic</span><span class="p">,</span> <span class="p">[</span><span class="n">OopDist</span><span class="p">(</span><span class="o">*</span><span class="n">term</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">())],</span>
+                            <span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;SqOopdist&#39;</span><span class="p">,</span> <span class="s">&#39;Oopdist&#39;</span><span class="p">),</span>
+                            <span class="p">[</span><span class="s">&#39;HC_FC_DIAG&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;kjmol/A**2&#39;</span><span class="p">,</span> <span class="s">&#39;A&#39;</span><span class="p">]</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rv0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+</div>
 <div class="viewcode-block" id="BaseProgram.run"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Sequence of instructions, should be implemented in the inheriting</span>
@@ -550,7 +595,7 @@
             <span class="n">fn_traj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;fn_traj&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
             <span class="k">assert</span> <span class="n">fn_traj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!&#39;</span>
             <span class="k">assert</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn_traj</span><span class="p">),</span> <span class="s">&#39;Given file </span><span class="si">%s</span><span class="s"> to store trajectories to already exists!&#39;</span> <span class="o">%</span><span class="n">fn_traj</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">(</span><span class="n">do</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;only_traj&#39;</span><span class="p">,</span> <span class="s">&#39;PT_ALL&#39;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="PlotTrajectories"><a class="viewcode-back" href="../../rg_module.html#quickff.program.PlotTrajectories">[docs]</a><span class="k">class</span> <span class="nc">PlotTrajectories</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -562,10 +607,10 @@
             <span class="n">fn_traj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;fn_traj&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
             <span class="k">assert</span> <span class="n">fn_traj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;The PlotTrajectories program requires a trajectory filename fn_traj!&#39;</span>
             <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn_traj</span><span class="p">),</span> <span class="s">&#39;Given file </span><span class="si">%s</span><span class="s"> to read trajectories does not exists!&#39;</span> <span class="o">%</span><span class="n">fn_traj</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_estimate</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;xyz_traj&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;plot_traj&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_estimate</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">plot_trajectories</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="DeriveDiagFF"><a class="viewcode-back" href="../../rg_module.html#quickff.program.DeriveDiagFF">[docs]</a><span class="k">class</span> <span class="nc">DeriveDiagFF</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
@@ -577,6 +622,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">do_eq_setrv</span><span class="p">([</span><span class="s">&#39;EQ_RV&#39;</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_estimate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_postprocess</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_hc_estimatefc</span><span class="p">([</span><span class="s">&#39;HC_FC_DIAG&#39;</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_estimate</span><span class="p">(</span><span class="n">do_valence</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_hc_estimatefc</span><span class="p">([</span><span class="s">&#39;HC_FC_DIAG&#39;</span><span class="p">],</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -591,9 +637,24 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">do_eq_setrv</span><span class="p">([</span><span class="s">&#39;EQ_RV&#39;</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_estimate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_postprocess</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_cross_init</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_hc_estimatefc</span><span class="p">([</span><span class="s">&#39;HC_FC_DIAG&#39;</span><span class="p">,</span><span class="s">&#39;HC_FC_CROSS&#39;</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_estimate</span><span class="p">(</span><span class="n">do_valence</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_hc_estimatefc</span><span class="p">([</span><span class="s">&#39;HC_FC_DIAG&#39;</span><span class="p">,</span><span class="s">&#39;HC_FC_CROSS&#39;</span><span class="p">],</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">make_output</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="DeriveNonDiagFFNoQRef"><a class="viewcode-back" href="../../rg_module.html#quickff.program.DeriveNonDiagFFNoQRef">[docs]</a><span class="k">class</span> <span class="nc">DeriveNonDiagFFNoQRef</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Derive a non-diagonal force field, i.e. contains cross terms.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;PROGRAM&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_eq_setrv</span><span class="p">([</span><span class="s">&#39;EQ_RV&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_estimate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_postprocess</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_cross_init</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_hc_estimatefc</span><span class="p">([</span><span class="s">&#39;HC_FC_DIAG&#39;</span><span class="p">,</span><span class="s">&#39;HC_FC_CROSS&#39;</span><span class="p">],</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">make_output</span><span class="p">()</span></div>
 </pre></div>
@@ -629,13 +690,20 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">QuickFF 2.1.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>

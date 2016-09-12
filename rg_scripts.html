@@ -6,15 +6,16 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>1. qff.py – Main script to run QuickFF calculation &mdash; QuickFF 2.0.1 documentation</title>
+    <title>1. qff.py – Main script to run QuickFF calculation &mdash; QuickFF 2.1.2 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.0.1',
+        VERSION:     '2.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.0.1 documentation" href="index.html" />
+    <link rel="top" title="QuickFF 2.1.2 documentation" href="index.html" />
     <link rel="prev" title="1. quickff.cost – Least-Square cost function for hessian matching" href="rg_module.html" /> 
   </head>
   <body>
@@ -39,7 +40,7 @@
         <li class="right" >
           <a href="rg_module.html" title="1. quickff.cost – Least-Square cost function for hessian matching"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -67,11 +68,14 @@ Options:
                         [default=False]
   -s, --silent          Swith of all logging completely, overwrites all other
                         verbosity options. [default=False]
-  -v, --verbose         Increases verbosity, is overwriten if SILENT is
-                        switched on. [default=False]
+  -v, --verbose         Increases verbosity, is overwriten if SILENT or
+                        VERY_VERBOSE is switched on. [default=False]
+  -V, --very-verbose    Increases verbosity to highest level, is overwriten if
+                        SILENT is switched on. [default=False]
   -l LOGFILE, --logfile=LOGFILE
                         Redirect logger output to a file with the given name.
                         [default=none]
+  --version             Print QuickFF version number and exit.
 
   General:
     General specifications of the program
@@ -81,8 +85,9 @@ Options:
                         instructions that will be executed. Allowed strings
                         are the names of the program classes defined in
                         quickff/program.py, which are: MakeTrajectories,
-                        PlotTrajectories, DeriveDiagFF, DeriveNonDiagFF (case
-                        sensitive). [default=DeriveNonDiagFF]
+                        PlotTrajectories, DeriveDiagFF, DeriveNonDiagFF,
+                        DeriveNonDiagFFNoQRef (case sensitive).
+                        [default=DeriveNonDiagFF]
     --fn-traj=FN_TRAJ   Name for the file to read/write the perturbation
                         trajectories from/to. If the given file exists, the
                         trajectories are read from the file. Otherwise, the
@@ -126,13 +131,14 @@ Options:
 </div>
 <div class="section" id="qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">
 <span id="seclab-rg-scripts-inputei"></span><h1>2. <tt class="docutils literal"><span class="pre">qff-input-ei.py</span></tt> &#8211; generate Yaff parameter file for electrostatics<a class="headerlink" href="#qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-text"><div class="highlight"><pre>Usage: qff-input-ei.py [options] fn_sys fn_hdf5 path
+<div class="highlight-text"><div class="highlight"><pre>Usage: qff-input-ei.py [options] fn_sys fn_in path
 
 This script will read the atomic charges from the input arguments and make the
 Yaff parameters file for use with the QuickFF option --ei. fn_sys is any file
 from which the system can be extracted (MolMod CHK, Gaussian FCHK, XYZ, ...).
-Path represents the path to the charges, which are assumed to be stored in the
-file fn_hdf5 in the dataset /path/charges.
+Path represents the path to the charges, which are assumed to be stored in
+either a HDF5 file fn_in in the dataset /path/charges or in a MolMod CHK file
+under the label `path`.
 
 Options:
   -h, --help            show this help message and exit
@@ -143,10 +149,11 @@ Options:
                         None, the atom types are assumed to be defined in the
                         input files. [default=none]
   --gaussian            Use gaussian smeared charges. The radii are taken from
-                        the dataset /path/radii if it exists, otherwise the
-                        radii are estimated according to the procedure of Chen
-                        et al. See ``quickff.tools.get_ei_radii`` for more
-                        info.
+                        the input file fn_in (from dataset /path/radii for
+                        HDF5 file or from label `radii` for CHK file) if the
+                        data is present, otherwise the radii are estimated
+                        according to the procedure of Chen et al. See
+                        ``quickff.tools.get_ei_radii`` for more info.
   --bci                 Convert averaged atomic charges to bond charge
                         increments, i.e. charge transfers along the chemical
                         bonds in the system. In this way, one is certain of
@@ -219,12 +226,19 @@ Options:
         <li class="right" >
           <a href="rg_module.html" title="1. quickff.cost – Least-Square cost function for hessian matching"
              >previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>

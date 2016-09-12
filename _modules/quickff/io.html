@@ -6,15 +6,16 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>quickff.io &mdash; QuickFF 2.0.1 documentation</title>
+    <title>quickff.io &mdash; QuickFF 2.1.2 documentation</title>
     
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '2.0.1',
+        VERSION:     '2.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +24,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.0.1 documentation" href="../../index.html" />
+    <link rel="top" title="QuickFF 2.1.2 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">QuickFF 2.1.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -179,7 +180,7 @@
         <span class="n">numbers</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;numbers&#39;</span><span class="p">]</span>
         <span class="n">coords</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;pos_init&#39;</span><span class="p">]</span>
         <span class="n">energy</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;energies&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">grad</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;gradient&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="o">-</span><span class="n">vasprun</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;gradient&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">hess</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;hessian&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">),</span><span class="mi">3</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">),</span><span class="mi">3</span> <span class="p">))</span>
         <span class="n">masses</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;masses&#39;</span><span class="p">]</span>
         <span class="n">rvecs</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;rvecs_init&#39;</span><span class="p">]</span>
@@ -286,13 +287,20 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">QuickFF 2.1.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>

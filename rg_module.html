@@ -6,15 +6,16 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>1. quickff.cost – Least-Square cost function for hessian matching &mdash; QuickFF 2.0.1 documentation</title>
+    <title>1. quickff.cost – Least-Square cost function for hessian matching &mdash; QuickFF 2.1.2 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.0.1',
+        VERSION:     '2.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.0.1 documentation" href="index.html" />
+    <link rel="top" title="QuickFF 2.1.2 documentation" href="index.html" />
     <link rel="next" title="1. qff.py – Main script to run QuickFF calculation" href="rg_scripts.html" />
     <link rel="prev" title="Tutorial 3 - Biphenyl" href="tu_biphenyl.html" /> 
   </head>
@@ -43,7 +44,7 @@
         <li class="right" >
           <a href="tu_biphenyl.html" title="Tutorial 3 - Biphenyl"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -305,7 +306,7 @@ estimate the contribution of all other valence terms.</dd>
 
 <dl class="method">
 <dt id="quickff.program.BaseProgram.do_pt_generate">
-<tt class="descname">do_pt_generate</tt><big>(</big><em>do='PT_ALL'</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_pt_generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_pt_generate" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">do_pt_generate</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_pt_generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_pt_generate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate perturbation trajectories.</p>
 <p><strong>Optional Arguments</strong></p>
 <dl class="docutils">
@@ -315,6 +316,28 @@ should be constructed. Can also be a string specifying a task,
 a trajectory will then be constructed for each term that has this
 task in its tasks attribute.</dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_pt_postprocess">
+<tt class="descname">do_pt_postprocess</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_pt_postprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_pt_postprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do some first post processing of the ff parameters estimated from
+the perturbation trajectories including:</p>
+<blockquote>
+<div><ul class="simple">
+<li>detecting bend patterns with rest values of 90 and 180 deg</li>
+<li>detecting bend patterns with rest values only close to 180 deg</li>
+<li>averaging parameters</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_sqoopdist_to_oopdist">
+<tt class="descname">do_sqoopdist_to_oopdist</tt><big>(</big><em>thresshold=0.0001889726133921252</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_sqoopdist_to_oopdist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_sqoopdist_to_oopdist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform a SqOopdist term with a rest value that has been set to
+zero, to a term Oopdist (harmonic in Oopdist instead of square of
+Oopdist) with a rest value of 0.0 A.</p>
 </dd></dl>
 
 <dl class="method">
@@ -559,6 +582,50 @@ an XYZ file.</dd>
 </dl>
 </dd></dl>
 
+<dl class="class">
+<dt id="quickff.program.DeriveNonDiagFFNoQRef">
+<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">DeriveNonDiagFFNoQRef</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#DeriveNonDiagFFNoQRef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveNonDiagFFNoQRef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derive a non-diagonal force field, i.e. contains cross terms.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>a Yaff <cite>System</cite> object defining the system</dd>
+<dt>ai</dt>
+<dd>a <cite>Reference</cite> instance corresponding to the ab initio input data</dd>
+</dl>
+<p><strong>Keyword Arguments</strong></p>
+<dl class="docutils">
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> objects corresponding to a priori determined
+contributions to the force field (such as eg. electrostatics
+or van der Waals contributions)</dd>
+<dt>fn_yaff</dt>
+<dd>the name of the file to write the final parameters to in Yaff
+format. The default is <cite>pars.txt</cite>.</dd>
+<dt>fn_sys</dt>
+<dd>the name of the file to write the system to. The default is
+<cite>system.chk</cite>.</dd>
+<dt>fn_traj</dt>
+<dd>a cPickle filename to read/write the perturbation trajectories
+from/to. If the file exists, the trajectories are read from the
+file. If the file does not exist, the trajectories are written
+to the file.</dd>
+<dt>only_traj</dt>
+<dd>specifier to determine for which terms a perturbation trajectory
+needs to be constructed. If ONLY_TRAJ is a single string, it is
+interpreted as a task (only terms that have this task in their
+tasks attribute will get a trajectory). If ONLY_TRAJ is a list
+of strings, each string is interpreted as the basename of the
+term for which a trajectory will be constructed.</dd>
+<dt>plot_traj</dt>
+<dd>if set to True, all energy contributions along each perturbation
+trajectory will be plotted using the final force field.</dd>
+<dt>xyz_traj</dt>
+<dd>if set to True, each perturbation trajectory will be written to
+an XYZ file.</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="module-quickff.reference">
 <span id="quickff-reference-representation-of-the-ab-initio-reference-data"></span><h1>5. <tt class="docutils literal"><span class="pre">quickff.reference</span></tt> &#8211; Representation of the ab initio reference data<a class="headerlink" href="#module-quickff.reference" title="Permalink to this headline">¶</a></h1>
@@ -660,7 +727,7 @@ the identity matrix. VRx is a vector of rotation around x-axis.</p>
 
 <dl class="function">
 <dt id="quickff.tools.fitpar">
-<tt class="descclassname">quickff.tools.</tt><tt class="descname">fitpar</tt><big>(</big><em>xs</em>, <em>ys</em>, <em>rcond=0.001</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#fitpar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.fitpar" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">fitpar</tt><big>(</big><em>xs</em>, <em>ys</em>, <em>rcond=-1</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#fitpar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.fitpar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit a parabola to the samples (xs, ys):</p>
 <blockquote>
 <div>ys[:] = a*xs[:]^2 + b*xs[:] + c</div></blockquote>
@@ -738,9 +805,29 @@ corresponding atom types.</p>
 
 <dl class="function">
 <dt id="quickff.tools.get_restvalue">
-<tt class="descclassname">quickff.tools.</tt><tt class="descname">get_restvalue</tt><big>(</big><em>values</em>, <em>m</em>, <em>thresshold=0.2617993877991494</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#get_restvalue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.get_restvalue" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">get_restvalue</tt><big>(</big><em>values</em>, <em>m</em>, <em>thresshold=0.3490658503988659</em>, <em>mode=1</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#get_restvalue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.get_restvalue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a rest value of 0.0, 360/(2*m) or None depending on the given
-equilbrium values</p>
+equilbrium values.</p>
+<p>For mode=0, the rest value is:</p>
+<blockquote>
+<div><p>0, if all &#8216;values modulo per&#8217; are in the interval
+[0,thresshold] U [per-thresshold,per]</p>
+<p>per/2, if all &#8216;values modulo per&#8217; are in the interval
+[per/2-thresshold,per/2+thresshold]</p>
+<p>None, in all other cases</p>
+</div></blockquote>
+<p>For mode=1, the rest value is determined as follows:</p>
+<blockquote>
+<div>first the values are folded in the interval [0,per/2] by first
+taking the module with per and then mirroring values in [per/2,per]
+on [0,per/2]. Next, the mean and std of the folded values are 
+computed. If the std is larger then the thresshold, the values are
+considered to be too scattered and no rest value can be computed
+(None is returned). If the std is small enough, the rest value will
+be determined based on the mean. If the mean is close enough to 0,
+the rest value will be 0. If the mean is close enough to per/2, the
+rest value will be per/2. In all other cases no rest value will be
+computed and None is returned.</div></blockquote>
 </dd></dl>
 
 <dl class="function">
@@ -895,7 +982,7 @@ potentials.</p>
 
 <dl class="method">
 <dt id="quickff.valence.ValenceFF.init_dihedral_terms">
-<tt class="descname">init_dihedral_terms</tt><big>(</big><em>thresshold=0.2617993877991494</em><big>)</big><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_dihedral_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_dihedral_terms" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">init_dihedral_terms</tt><big>(</big><em>thresshold=0.3490658503988659</em><big>)</big><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_dihedral_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_dihedral_terms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize the dihedral potentials from the local topology. The
 dihedral potential will be one of the two following possibilities:</p>
 <blockquote>
@@ -1001,12 +1088,19 @@ given, only iterate over terms with the label its name.</p>
         <li class="right" >
           <a href="tu_biphenyl.html" title="Tutorial 3 - Biphenyl"
              >previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>

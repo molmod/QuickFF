@@ -6,15 +6,16 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>quickff.tools &mdash; QuickFF 2.0.1 documentation</title>
+    <title>quickff.tools &mdash; QuickFF 2.1.2 documentation</title>
     
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '2.0.1',
+        VERSION:     '2.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +24,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.0.1 documentation" href="../../index.html" />
+    <link rel="top" title="QuickFF 2.1.2 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">QuickFF 2.1.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -144,7 +145,7 @@
     <span class="k">return</span> <span class="n">VRx</span><span class="p">,</span> <span class="n">VRy</span><span class="p">,</span> <span class="n">VRz</span>
 
 </div>
-<div class="viewcode-block" id="fitpar"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.fitpar">[docs]</a><span class="k">def</span> <span class="nf">fitpar</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
+<div class="viewcode-block" id="fitpar"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.fitpar">[docs]</a><span class="k">def</span> <span class="nf">fitpar</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Fit a parabola to the samples (xs, ys):</span>
 
@@ -164,9 +165,10 @@
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span>
     <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="mi">3</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">xs</span><span class="p">):</span>
-        <span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.1</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span>
         <span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
-    <span class="n">sol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="n">rcond</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">sol</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">svals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="n">rcond</span><span class="p">)</span>
+    <span class="n">sol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">0.1</span>
     <span class="k">return</span> <span class="n">sol</span>
 
 </div>
@@ -351,28 +353,68 @@
     <span class="k">else</span><span class="p">:</span>                          <span class="k">return</span> <span class="bp">None</span>
 
 </div>
-<div class="viewcode-block" id="get_restvalue"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.get_restvalue">[docs]</a><span class="k">def</span> <span class="nf">get_restvalue</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">15</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
+<div class="viewcode-block" id="get_restvalue"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.get_restvalue">[docs]</a><span class="k">def</span> <span class="nf">get_restvalue</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">20</span><span class="o">*</span><span class="n">deg</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Get a rest value of 0.0, 360/(2*m) or None depending on the given</span>
-<span class="sd">        equilbrium values</span>
+<span class="sd">        equilbrium values.</span>
+<span class="sd">        </span>
+<span class="sd">        For mode=0, the rest value is:</span>
+<span class="sd">        </span>
+<span class="sd">            0, if all &#39;values modulo per&#39; are in the interval</span>
+<span class="sd">            [0,thresshold] U [per-thresshold,per]</span>
+<span class="sd">            </span>
+<span class="sd">            per/2, if all &#39;values modulo per&#39; are in the interval</span>
+<span class="sd">            [per/2-thresshold,per/2+thresshold]</span>
+<span class="sd">            </span>
+<span class="sd">            None, in all other cases</span>
+<span class="sd">        </span>
+<span class="sd">        For mode=1, the rest value is determined as follows:</span>
+<span class="sd">        </span>
+<span class="sd">            first the values are folded in the interval [0,per/2] by first</span>
+<span class="sd">            taking the module with per and then mirroring values in [per/2,per]</span>
+<span class="sd">            on [0,per/2]. Next, the mean and std of the folded values are </span>
+<span class="sd">            computed. If the std is larger then the thresshold, the values are</span>
+<span class="sd">            considered to be too scattered and no rest value can be computed</span>
+<span class="sd">            (None is returned). If the std is small enough, the rest value will</span>
+<span class="sd">            be determined based on the mean. If the mean is close enough to 0,</span>
+<span class="sd">            the rest value will be 0. If the mean is close enough to per/2, the</span>
+<span class="sd">            rest value will be per/2. In all other cases no rest value will be</span>
+<span class="sd">            computed and None is returned.        </span>
+<span class="sd">            </span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">rv</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="n">per</span> <span class="o">=</span> <span class="mi">360</span><span class="o">*</span><span class="n">deg</span><span class="o">/</span><span class="n">m</span>
-    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">value</span> <span class="o">%</span> <span class="n">per</span>
-        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">thresshold</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">per</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">&lt;</span><span class="n">thresshold</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">rv</span><span class="o">!=</span><span class="mf">0.0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">mode</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">value</span> <span class="o">%</span> <span class="n">per</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">thresshold</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">per</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">&lt;</span><span class="n">thresshold</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">rv</span><span class="o">!=</span><span class="mf">0.0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">None</span>
+                <span class="k">elif</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">rv</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">per</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span><span class="o">&lt;</span><span class="n">thresshold</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">rv</span><span class="o">!=</span><span class="n">per</span><span class="o">/</span><span class="mf">2.0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">None</span>
+                <span class="k">elif</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">rv</span> <span class="o">=</span> <span class="n">per</span><span class="o">/</span><span class="mf">2.0</span>
+            <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">None</span>
-            <span class="k">elif</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">rv</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">per</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span><span class="o">&lt;</span><span class="n">thresshold</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">rv</span><span class="o">!=</span><span class="n">per</span><span class="o">/</span><span class="mf">2.0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">None</span>
-            <span class="k">elif</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">rv</span> <span class="o">=</span> <span class="n">per</span><span class="o">/</span><span class="mf">2.0</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">None</span>
-    <span class="k">return</span> <span class="n">rv</span>
+        <span class="k">return</span> <span class="n">rv</span>
+    <span class="k">elif</span> <span class="n">mode</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">folded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="n">value</span> <span class="o">%</span> <span class="n">per</span>
+            <span class="k">if</span> <span class="n">new</span><span class="o">&gt;</span><span class="mf">0.5</span><span class="o">*</span><span class="n">per</span><span class="p">:</span> <span class="n">folded</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">per</span> <span class="o">-</span> <span class="n">new</span>
+            <span class="k">else</span><span class="p">:</span>           <span class="n">folded</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">new</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">folded</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">folded</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="mf">0.0</span><span class="o">&lt;=</span><span class="n">mean</span> <span class="ow">and</span> <span class="n">mean</span><span class="o">&lt;=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">per</span>
+        <span class="k">if</span> <span class="n">std</span><span class="o">&lt;</span><span class="n">thresshold</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mean</span><span class="o">&lt;=</span><span class="mf">0.25</span><span class="o">*</span><span class="n">per</span><span class="p">:</span> <span class="n">rv</span><span class="o">=</span><span class="mf">0.0</span>
+            <span class="k">elif</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">per</span><span class="o">-</span><span class="n">mean</span><span class="o">&lt;=</span><span class="mf">0.25</span><span class="o">*</span><span class="n">per</span><span class="p">:</span> <span class="n">rv</span><span class="o">=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">per</span>
+        <span class="k">return</span> <span class="n">rv</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Mode </span><span class="si">%i</span><span class="s"> in get_restvalue is not supported&#39;</span> <span class="o">%</span><span class="n">mode</span><span class="p">)</span>
 
 </div>
 <div class="viewcode-block" id="get_ei_radii"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.get_ei_radii">[docs]</a><span class="k">def</span> <span class="nf">get_ei_radii</span><span class="p">(</span><span class="n">numbers</span><span class="p">):</span>
@@ -621,13 +663,20 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">QuickFF 2.1.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>

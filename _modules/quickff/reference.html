@@ -6,15 +6,16 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>quickff.reference &mdash; QuickFF 2.0.1 documentation</title>
+    <title>quickff.reference &mdash; QuickFF 2.1.2 documentation</title>
     
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '2.0.1',
+        VERSION:     '2.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +24,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.0.1 documentation" href="../../index.html" />
+    <link rel="top" title="QuickFF 2.1.2 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">QuickFF 2.1.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -267,7 +268,7 @@
 <span class="sd">            If set to True, the charges and radii will first be averaged over</span>
 <span class="sd">            atom types. This is True by default.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pbc</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pbc</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Periodic system not implemented in get_ei_ff&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">average</span><span class="p">:</span>
         <span class="n">qs</span> <span class="o">=</span> <span class="p">{}</span>
@@ -283,6 +284,7 @@
             <span class="n">charges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">qs</span><span class="p">[</span><span class="n">atype</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">radii</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">radii</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rs</span><span class="p">[</span><span class="n">atype</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">radii</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">radii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">ffatype_ids</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
     <span class="n">pair_pot</span> <span class="o">=</span> <span class="n">PairPotEI</span><span class="p">(</span><span class="n">charges</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">50</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">radii</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">))</span>
     <span class="n">nlist</span> <span class="o">=</span> <span class="n">NeighborList</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">scalings</span> <span class="o">=</span> <span class="n">Scalings</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">scale1</span><span class="o">=</span><span class="n">scales</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">scale2</span><span class="o">=</span><span class="n">scales</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale3</span><span class="o">=</span><span class="n">scales</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">scale4</span><span class="o">=</span><span class="n">scales</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
@@ -322,13 +324,20 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 2.0.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">QuickFF 2.1.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>
