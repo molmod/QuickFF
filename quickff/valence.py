@@ -391,7 +391,7 @@ class ValenceFF(ForcePartValence):
                 if nan or None in ms or ms.std()>1e-3:
                     ms_string = str(ms)
                     if nan: ms_string = 'nan'
-                    log.dump('WARNING missing dihedral for %s (m is %s)' %('.'.join(types), ms_string))
+                    log.warning('missing dihedral for %s (m is %s)' %('.'.join(types), ms_string))
                     continue
                 m = int(np.round(ms.mean()))
                 rv = get_restvalue(psi0s, m, thresshold=thresshold, mode=1)
@@ -403,7 +403,7 @@ class ValenceFF(ForcePartValence):
                         ncos += 1
                 else:
                     #no dihedral potential could be determine, hence it is ignored
-                    log.dump('WARNING: missing dihedral for %s (could not determine rest value from %s)' %('.'.join(types), str(psi0s/deg)))
+                    log.warning('missing dihedral for %s (could not determine rest value from %s)' %('.'.join(types), str(psi0s/deg)))
                     continue
         log.dump('Added %i Cosine dihedral terms' %ncos)
 
@@ -673,7 +673,7 @@ class ValenceFF(ForcePartValence):
             sequence = [
                 'bondharm',
                 'bendaharm', 'bendcharm', 'bendcos',
-                'torsion', 'torsc2harm',
+                'torsion', 'torsc2harm', 'dihedharm',
                 'oopdist', 'cross'
             ]
             log.dump('')
@@ -773,6 +773,21 @@ class ValenceFF(ForcePartValence):
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
+    def _dihedharm_to_yaff(self):
+        'construct a DIHEDHARM section of a yaff parameter file'
+        prefix = 'DIHEDHARM'
+        units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'PHI0 deg'])
+        pars = ParameterDefinition('PARS')
+        for i, master in enumerate(self.iter_masters(label=prefix)):
+            ffatypes = master.basename.split('/')[1].split('.')
+            K, phi0 = self.get_params(master.index)
+            if K<1e-6*kjmol: continue
+            pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3],
+                K/kjmol, phi0/deg
+            ))
+        return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
     def _opdists_to_yaff(self):
         'construct a OOPDIST section of a yaff parameter file'
         prefix = 'OOPDIST'
@@ -852,6 +867,7 @@ class ValenceFF(ForcePartValence):
             self._bendaharm_to_yaff(), self._bendcharm_to_yaff(),
             self._bendcos_to_yaff(),
             self._torsions_to_yaff(), self._torsc2harm_to_yaff(),
+            self._dihedharm_to_yaff(),
             self._opdists_to_yaff(),self._sqopdists_to_yaff(),
             self._cross_to_yaff(),
         ]

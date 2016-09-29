@@ -108,11 +108,17 @@ class VASPRun(object):
         return np.asarray(result)*unit
 
 
-def read_abinitio(fn):
+def read_abinitio(fn, do_hess=True):
     '''
         Wrapper to read all information from an ab initio calculation that
         QuickFF needs. Currently Gaussian .fchk and VASP .xml files are
         supported.
+        
+        **Optional Arguments**
+        
+        do_hess
+            Extract the hessian from the ab initio output. For qff-input-ei.py,
+            it is interesting to be able to switch this off.
     '''
     extension = fn.split('.')[-1]
     if extension=='fchk':
@@ -121,7 +127,10 @@ def read_abinitio(fn):
         energy = fchk.fields.get('Total Energy')
         coords = fchk.fields.get('Current cartesian coordinates').reshape([len(numbers), 3])
         grad = fchk.fields.get('Cartesian Gradient').reshape([len(numbers), 3])
-        hess = fchk.get_hessian().reshape([len(numbers), 3, len(numbers), 3])
+        if do_hess:
+            hess = fchk.get_hessian().reshape([len(numbers), 3, len(numbers), 3])
+        else:
+            hess = None
         masses = None
         rvecs = None
         pbc = [0,0,0]

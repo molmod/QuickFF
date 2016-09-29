@@ -90,7 +90,7 @@ def main():
     options, args = parse()
     fn_sys, fn_in, path = args
     if fn_sys.endswith('.fchk'):
-        numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn_sys)
+        numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn_sys, do_hess=False)
         system = System(numbers, coords, rvecs=None, charges=None, radii=None, masses=masses)
         system.detect_bonds()
     else:
