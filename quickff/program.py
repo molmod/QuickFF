@@ -594,7 +594,7 @@ class DeriveNonDiagFF(BaseProgram):
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
             self.do_pt_estimate(do_valence=True)
-            self.do_pt_postprocess()
+            self.average_pars()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], logger_level=1)
             self.make_output()
 
