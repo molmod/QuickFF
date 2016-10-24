@@ -121,7 +121,7 @@ class BaseProgram(object):
         '''
         log.dump('Updating terms of trajectories to current valenceFF terms')
         with log.section('PTUPD', 3):
-            #update the terms in the trajectories to match the terms in 
+            #update the terms in the trajectories to match the terms in
             #self.valence
             for traj in self.trajectories:
                 found = False
@@ -129,7 +129,7 @@ class BaseProgram(object):
                     if traj.term.get_atoms()==term.get_atoms():
                         if found: raise ValueError('Found two terms for trajectory %s with atom indices %s' %(traj.term.basename, str(traj.term.get_atoms())))
                         traj.term = term
-                        if 'PT_ALL' not in term.tasks: 
+                        if 'PT_ALL' not in term.tasks:
                             log.dump('PT_ALL not in tasks of %s-%i, deactivated PT' %(term.basename, term.index))
                             traj.active = False
                         found = True
@@ -288,7 +288,7 @@ class BaseProgram(object):
         '''
             Do some first post processing of the ff parameters estimated from
             the perturbation trajectories including:
-            
+
                 * detecting bend patterns with rest values of 90 and 180 deg
                 * detecting bend patterns with rest values only close to 180 deg
                 * averaging parameters
@@ -413,7 +413,7 @@ class BaseProgram(object):
                 if rv0 is None or rv1 is None:
                     raise ValueError('No rest values found for %s' %self.valence.terms[index].basename)
                 self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-    
+
     def do_squarebend(self, thresshold=10*deg):
         '''
             Identify bend patterns in which 4 atoms of type A surround a central
@@ -421,18 +421,18 @@ class BaseProgram(object):
             harmonic pattern will not be adequate since a rest value of 90 and
             180 degrees is possible for the same A-B-A term. Therefore, a
             cosine term with multiplicity of 4 is used:
-           
+
                   V = K/2*[1-cos(4*theta)]
-            
-            To identify the patterns, it is assumed that the rest values have 
+
+            To identify the patterns, it is assumed that the rest values have
             already been estimated from the perturbation trajectories. For each
             master and slave of a BENDAHARM term, its rest value is computed and
             checked if it lies either the interval [90-thresshold,90+thresshold]
             or [180-thresshold,180]. If this is the case, the new cosine term
             is used.
-            
+
             **Optional arguments**
-            
+
             thresshold
                 the (half) the width of the interval around 180 deg (90 degrees)
                 to check if a square BA4
@@ -468,11 +468,11 @@ class BaseProgram(object):
                             traj.active = False
                             traj.fc = None
                             traj.rv = None
-    
+
     def do_bendcharm(self, thresshold=2*deg):
         '''
-            No Harmonic bend can have a rest value equal to are large than 
-            180 deg - thresshold. If a master (or its slaves) has such a rest 
+            No Harmonic bend can have a rest value equal to are large than
+            180 deg - thresshold. If a master (or its slaves) has such a rest
             value, convert master and all slaves to BendCharm with
             cos(phis0)=-1.
         '''
@@ -552,7 +552,7 @@ class MakeTrajectories(BaseProgram):
 
 class PlotTrajectories(BaseProgram):
     '''
-        Read the perturbation trajectories, dump to XYZ files and plot the 
+        Read the perturbation trajectories, dump to XYZ files and plot the
         energy contributions.
     '''
     def run(self):

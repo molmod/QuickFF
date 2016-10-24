@@ -183,7 +183,7 @@ class Logger(object):
                 line += '\n'
             line = line.rstrip('\n')
             print >> self._f, line
-    
+
     def print_header(self):
         if self.log_level>0:
             print >> self._f, header

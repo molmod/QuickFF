@@ -251,7 +251,7 @@ class RelaxedStrain(object):
                 raise NotImplementedError
             trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=7)
         return trajectories
-    
+
     def generate(self, trajectory, remove_com=True):
         '''
             Method to calculate the perturbation trajectory, i.e. the trajectory
@@ -413,9 +413,9 @@ class Strain(ForceField):
             cons_ic
                 An instance of Yaff Internal Coordinate representing the
                 constrained term in the strain.
-            
+
             cons_ic_atindexes
-                A list of the atoms involved in the constrained IC. This is 
+                A list of the atoms involved in the constrained IC. This is
                 required for the implementation of the cartesian penalty. In
                 principle this could be extracted from the information stored
                 in cons_ic, but this is the lazy solution.
@@ -423,7 +423,7 @@ class Strain(ForceField):
             ics
                 A list of Yaff Internal Coordinate instances for which the
                 strain needs to be minimized.
-            
+
             cart_penalty
                 Magnitude of an extra term added to the strain that penalises
                 a deviation of the cartesian coordinates of each atom with
@@ -479,7 +479,8 @@ class Strain(ForceField):
         grad[self.ndof] = self.constrain_value - self.constrain_target
         #cartesian penalty, i.e. extra penalty for deviation w.r.t. cartesian equilibrium coords
         indices = np.array([[3*i,3*i+1,3*i+2] for i in xrange(self.ndof/3) if i not in self.cons_ic_atindexes]).ravel()
-        grad[indices] += X[indices]/(self.ndof*self.cart_penalty**2)
+        if len(indices)>0:
+            grad[indices] += X[indices]/(self.ndof*self.cart_penalty**2)
         with log.section('PTGEN', 4, timer='PT Generate'):
             log.dump('      Gradient:  rms = %.3e  max = %.3e  cnstr = %.3e' %(np.sqrt((grad[:self.ndof]**2).mean()), max(grad[:self.ndof]), grad[self.ndof]))
         return grad

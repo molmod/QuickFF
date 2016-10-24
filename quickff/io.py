@@ -113,9 +113,9 @@ def read_abinitio(fn, do_hess=True):
         Wrapper to read all information from an ab initio calculation that
         QuickFF needs. Currently Gaussian .fchk and VASP .xml files are
         supported.
-        
+
         **Optional Arguments**
-        
+
         do_hess
             Extract the hessian from the ab initio output. For qff-input-ei.py,
             it is interesting to be able to switch this off.
@@ -191,10 +191,10 @@ def read_bci_constraints(fn):
     '''
         Read constraints for a charge to bci fit. The constraints should be
         written to a file in the following format:
-        
+
             master0: slave00,slave01,slave02: sign
             master1: slave10,slave11,slave12: sign
-        
+
         There should be a new line for each master and format is insensitive
         towards spaces (: and , serve as seperators). Lines starting with #
         are ignored (i.e. # is the comment identifier). Sign indicates if a

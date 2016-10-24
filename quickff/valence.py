@@ -161,13 +161,13 @@ class ValenceFF(ForcePartValence):
     def __init__(self, system, specs=None):
         '''
             **Arguments**
-            
+
             system
                 an instance of the Yaff System class containing all system
                 properties
-            
+
             **Keyword Arguments**
-            
+
             specs
                 Not yet implemented
         '''
@@ -186,25 +186,25 @@ class ValenceFF(ForcePartValence):
             Adds new term both to the Yaff vlist object and a new QuickFF
             list (self.terms) which holds all information about the term
             for easy access later in QuickFF.
-            
+
             **Arguments**
-            
+
             pot
                 an instance of ValenceTerm from `yaff.pes.vlist.py` representing
                 the potential chosen for the term
-            
+
             ics
                 list of InternalCoordinate instances from `yaff.pes.iclist.py`
-            
+
             atypes
                 ordered string of atom types (required to assign name to the
                 term)
-            
+
             tasks
                 List of strings defining all tasks that have to be performed for
                 this term. Possible tasks are: PT_ALL, HC_FC_DIAG, HC_FC_CROSS,
                 EQ_RV.
-            
+
             units
                 Units for all parameters in this term (ordered in the same
                 way as parameters are stored in `yaff.vlist.vtab`)
@@ -287,23 +287,28 @@ class ValenceFF(ForcePartValence):
             for i in xrange(len(ic_indexes)):
                 vterm['ic%i'%i] = ic_indexes[i]
 
-    def iter_masters(self, label=None):
-        '''
-            Iterate over all master terms in the valence force field. If label
-            is given, only iterate of the terms with the label in its name.
-        '''
-        for term in self.terms:
-            if label is None or label.lower() in term.basename.lower():
-                if term.is_master():
-                    yield term
-
     def iter_terms(self, label=None):
         '''
             Iterate over all terms in the valence force field. If label is
             given, only iterate over terms with the label its name.
         '''
         for term in self.terms:
-            if label is None or label.lower() in term.basename.lower():
+            if label is None:
+                yield term
+            elif label.startswith('/'):
+                trimmed = label[1:]
+                if trimmed.lower() in term.basename.lower()[:len(trimmed)]:
+                    yield term
+            elif label.lower() in term.basename.lower():
+                yield term
+
+    def iter_masters(self, label=None):
+        '''
+            Iterate over all master terms in the valence force field. If label
+            is given, only iterate of the terms with the label in its name.
+        '''
+        for term in self.iter_terms(label=label):
+            if term.is_master():
                 yield term
 
     def init_bond_terms(self):
@@ -339,7 +344,7 @@ class ValenceFF(ForcePartValence):
                 self.add_term(Harmonic, [BendAngle(*angle)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
                 nbends += 1
         log.dump('Added %i Harmonic bend terms' %nbends)
-    
+
     def init_dihedral_terms(self, thresshold=20*deg):
         '''
             Initialize the dihedral potentials from the local topology. The

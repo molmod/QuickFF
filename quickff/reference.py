@@ -105,10 +105,14 @@ class SecondOrderTaylor(Reference):
         VTx, VTy, VTz = global_translation(self.coords0)
         VRx, VRy, VRz = global_rotation(self.coords0)
         if np.all(np.array(self.pbc)==0):
-            U = np.linalg.svd(
+            U, S, Vt = np.linalg.svd(
                 np.array([VTx, VTy, VTz, VRx, VRy, VRz]).transpose()
-            )[0]
-            nproj = 6
+            )
+            nproj = len([s for s in S if s>1e-6])
+            if nproj==5:
+                log.dump('Only 5 out of the 6 trans-rot vectors were linearly independent. If the molecule is not linear, something went wrong!')
+            elif not nproj==6:
+                raise RuntimeError('Only %i of the 6 trans-rot vectors were linearly independent. Something went wrong!')
         elif np.all(np.array(self.pbc)==1):
             U = np.linalg.svd(
                 np.array([VTx, VTy, VTz]).transpose()
