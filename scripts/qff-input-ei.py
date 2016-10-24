@@ -43,6 +43,10 @@ def parse():
     description += '/path/charges or in a MolMod CHK file under the label `path`.'
     parser = OptionParser(usage=usage, description=description)
     parser.add_option(
+        '-v', '--verbose', default=False, action='store_true',
+        help='Increase verbosity of the script [default=%default].'
+    )
+    parser.add_option(
         '--ffatypes', default=None,
         help='Assign atom types in the system. If FFATYPES is a string equal to '
              'either low,medium, high or highest, atom types will be assigned '
@@ -102,7 +106,7 @@ def main():
         h5 = h5py.File(fn_in)
         if not path in h5 or 'charges' not in h5[path]:
             raise IOError('Given HDF5 file %s does not contain dataset %s/charges' %(fn_in, path))
-        charges = average(h5['%s/charges' %path][:], ffatypes, fmt='full')
+        charges = h5['%s/charges' %path][:]
         radii = None
         if options.gaussian:
             if 'radii' in h5[path]:
@@ -122,17 +126,20 @@ def main():
     else:
         raise IOError('Invalid extension, fn_in should be a HDF5 or a CHK file.')
     if options.output is None:
-        fn_out = 'pars_ei_%s.txt' %path.replace('/', '_')
+        if path=='.':
+            fn_out = 'pars_ei.txt'
+        else:
+            fn_out = 'pars_ei_%s.txt' %path.replace('/', '_')
     else:
         fn_out = options.output
     if options.bci:
         constraints = {}
         if options.bci_constraints is not None:
             constraints = read_bci_constraints(options.bci_constraints)
-        bcis = charges_to_bcis(charges, ffatypes, system.bonds, constraints=constraints)
+        bcis = charges_to_bcis(charges, ffatypes, system.bonds, constraints=constraints, verbose=options.verbose)
         make_yaff_ei(fn_out, None, bcis=bcis, radii=radii)
     else:
-        charges = average(charges, ffatypes, fmt='dict')
+        charges = average(charges, ffatypes, fmt='dict', verbose=options.verbose)
         make_yaff_ei(fn_out, charges, radii=radii)
 
 if __name__=='__main__':

@@ -429,7 +429,7 @@ def digits(x,n):
     else:
         return '%i.%s' %(i, str(r)[2:2+ndig])
 
-def average(data, ffatypes, fmt='full'):
+def average(data, ffatypes, fmt='full', verbose=False):
     '''
         Average the atomic parameters stored in data over atoms of the same atom
         type.
@@ -446,12 +446,19 @@ def average(data, ffatypes, fmt='full'):
         **Keywork arguments**
         
         fmt
-            Should be either full or dict. In case of full, the result will be
+            Should be either full, dict or sort. In case of full, the result will be
             returned as an numpy array of equal length as data and ffatypes. In
             case of dict, the result will be returned as a dictionairy of the 
             following format:
             
                 {ffatype0: value0, ffatype1: value1, ...}
+            
+            in which value0, ... is the mean value of the given ffatype. In case
+            of sort, a dictionairy of the following format will be returned:
+            
+                {ffatype0: values0, ffatype1: values1, ...}
+            
+            in which values0, ... is a list of the values for the given ffatype. 
     '''
     data_atypes = {}
     for value, ffatype in zip(data,ffatypes):
@@ -459,22 +466,32 @@ def average(data, ffatypes, fmt='full'):
             data_atypes[ffatype].append(value)
         else:
             data_atypes[ffatype] = [value]
-    if fmt=='full':
-        averaged_data = np.zeros(len(data))
+    if fmt=='sort':
+        output = {}
+        for ffatype, data in data_atypes.iteritems():
+            output[ffatype] = np.array(data)
+    elif fmt=='full':
+        output = np.zeros(len(data))
         printed = []
         for i, ffatype in enumerate(ffatypes):
             std = np.array(data_atypes[ffatype]).std()
             if not std < 1e-2 and ffatype not in printed:
                 print 'WARNING: charge of atom type %s has a large std: %.3e' %(ffatype, std)
                 printed.append(ffatype)
-            averaged_data[i] = np.array(data_atypes[ffatype]).mean()
+            output[i] = np.array(data_atypes[ffatype]).mean()
     elif fmt=='dict':
-        averaged_data = {}
+        output = {}
         for ffatype, values in data_atypes.iteritems():
-            averaged_data[ffatype] = np.array(values).mean()
+            output[ffatype] = np.array(values).mean()
     else:
         raise IOError('Format %s not supported, should be full or dict' %fmt)
-    return averaged_data
+    if verbose: 
+        print 'Averaged Atomic Charges:'
+        print '------------------------'
+        for ffatype, values in data_atypes.iteritems():
+            print '  %4s    % .3f +- % .3f (N=%i)' %(ffatype, np.array(values).mean(), np.array(values).std(), len(values))
+        print ''
+    return output
 
 def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     '''
@@ -513,7 +530,7 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     signs = np.zeros([len(bonds)], float)
     for i, bond in enumerate(bonds):
         ffatype0, ffatype1 = ffatypes[bond[0]], ffatypes[bond[1]]
-        if ffatype0.lower()<ffatype1.lower():
+        if ffatype0<ffatype1:
             btypes[i] = '%s.%s' %(ffatype0,ffatype1)
             signs[i] = 1.0
         else:
@@ -523,10 +540,10 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     masterof = {}
     for m, s in constraints.iteritems():
         types = m.split('.')
-        if types[0].lower()>=types[1].lower(): m = '.'.join(types[::-1])
+        if types[0]>=types[1]: m = '.'.join(types[::-1])
         for slave, sign in s:
             types = slave.split('.')
-            if types[0].lower()>=types[1].lower(): slave = '.'.join(types[::-1])
+            if types[0]>=types[1]: slave = '.'.join(types[::-1])
             assert slave not in masterof.keys(), \
                 'Slave %s has multiple masters in constraints' %slave
             masterof[slave] = (m, sign)
@@ -538,8 +555,15 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     for master in masterlist:
         assert not master in masterof.keys(), 'master %s encountered in slaves' %master
     for slave in masterof.keys():
-        print slave, masterof[slave]
         assert not slave in masterlist, 'slave %s encountered in masters' %slave
+    if verbose:
+        print 'Master-slaves relations:'
+        print '------------------------'
+        for slave in masterof.keys():
+            print slave, masterof[slave]
+        if len(masterof.keys())==0:
+            print '(None)'
+        print ''
     #construct the matrix to convert bci's to charges
     #matrix[i,n] is the contribution to charge i from bci n
     #bci p_AB is a charge transfer from B to A, hence qA+=p_AB and qB-=p_AB
@@ -558,24 +582,44 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     #solve the set of equations q=M.t with q the full array of atomic charges
     #and t the array of bci masters
     bcis, res, rank, svals = np.linalg.lstsq(matrix, charges, rcond=1e-6)
+    #print statistics if required
     if verbose:
         print 'Fitting SQ to charges:'
+        print '----------------------'
         print '    sing vals = ', svals
         if min(svals)>0:
             print '    cond numb = ', max(svals)/min(svals)
         else:
             print '    cond numb = inf'            
-        print 'Averaged Atomic Charges'
-        charge_atypes = average(charges, ffatypes, 'dict')
-        for ffatype, aq in charge_atypes.iteritems():
-            print '  %4s    % .3f' %(ffatype, aq)
-        print 'Fitted Split Charges'
+        print ''
+        print 'Resulting split charges:'
+        print '------------------------'
         for btype, sq in zip(masterlist, bcis):
             print '  %10s    % .3f' %(btype, sq)
-        print 'Atomic Charges from Split Charges'
-        aq2 = np.dot(matrix, bcis)
-        for ffatype, aq in average(aq2, ffatypes, 'dict').iteritems():
-            print '  %4s    % .3f' %(ffatype, aq)
+        print ''
+        print 'Statistics of the BCI charges:'
+        print '------------------------------'
+        apriori_values  = average(charges, ffatypes, 'sort')
+        aposteriori_values = average(np.dot(matrix, bcis), ffatypes, 'sort')
+        print ' %10s |  %6s +- %5s (%2s)  |  %6s +- %5s (%2s)  | %9s ' %('Atype', '<Qin>', 'std', 'N', '<Qbci>', 'std', 'N', 'RMSD')
+        print '    '+'-'*71
+        sums = np.array([0.0, 0.0, 0.0])
+        for atype, qins in apriori_values.iteritems():
+            qouts = aposteriori_values[atype]
+            print ' %10s |  % 6.3f +- %5.3f (%2i)  |  % 6.3f +- %5.3f (%2i)  | % 9.6f ' %(atype,
+                qins.mean(), qins.std(), len(qins),
+                qouts.mean(), qouts.std(), len(qouts),
+                np.sqrt(((qouts-qins)**2).mean())
+            )
+            sums += np.array([qins.sum(), qouts.sum(), ((qouts-qins)**2).sum()])
+        print '    '+'-'*71
+        print ' %10s |  % 9.6f             |  % 9.6f             | % 9.6f ' %('ALL',
+            sums[0],
+            sums[1],
+            np.sqrt(sums[2]/len(ffatypes))
+        )
+        print ''
+    #construct output dictionnary containing also bci's of slaves
     result = dict((btype, bci) for btype, bci in zip(masterlist, bcis))
     for slave, (master, sign) in masterof.iteritems():
         result[slave] = result[master]*sign
