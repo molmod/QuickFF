@@ -526,7 +526,6 @@ class ValenceFF(ForcePartValence):
                     slave.slaves = []
                     master.slaves.append(slave.index)
 
-
     def calc_energy(self, pos):
         old =  self.system.pos.copy()
         self.system.pos = pos.copy()
@@ -549,7 +548,6 @@ class ValenceFF(ForcePartValence):
         val = ForcePartValence(self.system)
         kind = self.vlist.vtab[index]['kind']
         masterslaves = [index]+self.terms[index].slaves
-        kind_to_term = {0: Harmonic, 1: PolyFour, 2: Fues, 3: Cross, 4: Cosine}
         if kind==4:#Cosine
             m, k, rv = self.get_params(index)
             if fc is not None: k = fc
@@ -579,7 +577,7 @@ class ValenceFF(ForcePartValence):
             for jterm in masterslaves:
                 ics = self.terms[jterm].ics
                 args = (k, rv) + tuple(ics)
-                val.add_term(kind_to_term[kind](*args))
+                val.add_term(Harmonic(*args))
         else:
             raise ValueError('Term kind %i not supported' %kind)
         ff = ForceField(self.system, [val])

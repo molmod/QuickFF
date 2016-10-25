@@ -20,7 +20,7 @@ def test_h2():
     freq = (2*np.pi)*4416.65640485*lightspeed/centimeter
     mass = pt['H'].mass/2 #reduced mass for the H2 stretch mode
     #Load system, model and pert. theory and estimate ff
-    with log.section('PROGRAM', 2):
+    with log.section('NOSETST', 2):
         system, ai = read_system('H2/gaussian.fchk')
         guess_ffatypes(system, 'low')
         program = DeriveNonDiagFF(system, ai)
