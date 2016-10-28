@@ -6,16 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial 1 - Benzene &mdash; QuickFF 2.1.2 documentation</title>
+    <title>Tutorial 1 - Benzene &mdash; QuickFF 2.1.3 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.1.2',
+        VERSION:     '2.1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.1.2 documentation" href="index.html" />
+    <link rel="top" title="QuickFF 2.1.3 documentation" href="index.html" />
     <link rel="next" title="Tutorial 2 - Water" href="tu_water.html" />
     <link rel="prev" title="3. Generating Yaff parameter file for the electrostatic contribution" href="ug_inputei.html" /> 
   </head>
@@ -44,7 +43,7 @@
         <li class="right" >
           <a href="ug_inputei.html" title="3. Generating Yaff parameter file for the electrostatic contribution"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -200,7 +199,7 @@ _________________________\//////____\///______________\///______________________
  USER               louis
  MACHINE            Linux molmod91 4.2.0-42-generic #49-Ubuntu SMP Tue Jun 28 
  MACHINE            21:26:26 UTC 2016 x86_64
- TIME               2016-09-12 14:44:06.798023
+ TIME               2016-10-28 13:10:38.927570
  QUICKFF VERSION    2.1.2
  PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
  NUMPY VERSION      1.8.2
@@ -223,6 +222,8 @@ _________________________\//////____\///______________\///______________________
  VAL    Added 18 Harmonic bend terms
  VAL    Added 24 Cosine dihedral terms
  VAL    Added 6 Harmonic and 0 SquareHarmonic out-of-plane distance terms
+
+ PROG   Initializing strain
 
  EQSET  Resetting system coordinates to ab initio ref
  EQSET  Setting rest values to AI equilibrium values for tasks EQ_RV
@@ -247,64 +248,66 @@ _________________________\//////____\///______________\///______________________
  PTEST  Estimating FF parameters from perturbation trajectories with valence 
  PTEST  reference
 
+ PROGRA Averaging force field parameters over master and slaves
+
  HCEST  Resetting system coordinates to ab initio ref
  HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
  HCEST  CROSS
 
 
         BondHarm/C.C (kjmol/A^2  A)                                             
-            fc =  3975 ± .000    rv = 1.394 ± .170
+            fc =  3975 ± .000    rv = 1.394 ± .000
 
         BondHarm/C.H (kjmol/A^2  A)                                             
-            fc =  3385 ± .000    rv = 1.084 ± .368
+            fc =  3385 ± .000    rv = 1.084 ± .000
 
         BendAHarm/C.C.C (kjmol/rad^2  deg)                                      
-            fc = 617.4 ± .000    rv = 120.0 ± .006
+            fc = 617.4 ± .000    rv = 119.9 ± .000
 
         BendAHarm/C.C.H (kjmol/rad^2  deg)                                      
-            fc = 291.1 ± .000    rv = 120.0 ± .005
+            fc = 291.1 ± .000    rv = 120.0 ± .000
 
         Torsion/C.C.C.C (au  kjmol  deg)                                        
-            fc = 32.1 ± .00    rv = .000 ± 0.0    m = 2
+            fc = 32.0 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Torsion/C.C.C.H (au  kjmol  deg)                                        
-            fc = 31.9 ± .00    rv = .000 ± 0.0    m = 2
+            fc = 31.9 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Torsion/H.C.C.H (au  kjmol  deg)                                        
             fc = 12.9 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Oopdist/C.C.H.C (kjmol/A^2  A)                                          
-            fc = 275.1 ± .000    rv = .0000 ± .000
+            fc = 274.7 ± .000    rv = .0000 ± .000
 
         Cross/C.C.C/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.47 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.48 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.C/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.59 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.60 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.C/bb (kjmol/A^2  A  A)                                        
             fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
 
         Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 63.1 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± .00
+            fc = 63.1 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc =  144 ± .0    rv0 = 1.08 ± .00    rv0 =  120 ± .00
+            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
-            fc =  120 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.08 ± .00
+            fc =  120 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.08 ± 0.0
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.100445
- TIMING Equil Set RV                    0:00:00.001968
- TIMING PT Generate                     0:00:16.789932
- TIMING PT Estimate                     0:00:00.071685
- TIMING PT Post process                 0:00:00.001686
- TIMING HC Estimate FC                  0:00:00.279580
- TIMING PT plot energy                  0:00:00.000011
- TIMING PT dump XYZ                     0:00:00.000016
+ TIMING Initializing                    0:00:00.537360
+ TIMING Equil Set RV                    0:00:00.002013
+ TIMING PT Generate                     0:00:18.349055
+ TIMING PT Estimate                     0:00:00.068062
+ TIMING PT Post process                 0:00:00.001763
+ TIMING HC Estimate FC                  0:00:00.277720
+ TIMING PT plot energy                  0:00:00.000010
+ TIMING PT dump XYZ                     0:00:00.000004
 
 __/\\\__________________________________________________________________/\\\____
   \ \\\                                                                 \ \\\
@@ -358,8 +361,8 @@ program is provided.</p>
 BONDHARM:UNIT  K kjmol/A**2
 BONDHARM:UNIT  R0 A
 
-BONDHARM:PARS         C         H  3.3852875622e+03  1.0844072897e+00
-BONDHARM:PARS         C         C  3.9753998135e+03  1.3946806770e+00
+BONDHARM:PARS         C         H  3.3852893947e+03  1.0844123950e+00
+BONDHARM:PARS         C         C  3.9753852432e+03  1.3946491693e+00
 
 
 # BENDAHARM
@@ -367,8 +370,8 @@ BONDHARM:PARS         C         C  3.9753998135e+03  1.3946806770e+00
 BENDAHARM:UNIT  K kjmol/rad**2
 BENDAHARM:UNIT  THETA0 deg
 
-BENDAHARM:PARS         C         C         H  2.9110658059e+02  1.2000023583e+02
-BENDAHARM:PARS         C         C         C  6.1744786167e+02  1.1999199623e+02
+BENDAHARM:PARS         C         C         H  2.9110664537e+02  1.2000492188e+02
+BENDAHARM:PARS         C         C         C  6.1741724407e+02  1.1999871731e+02
 
 
 # TORSION
@@ -376,9 +379,9 @@ BENDAHARM:PARS         C         C         C  6.1744786167e+02  1.1999199623e+02
 TORSION:UNIT  A kjmol
 TORSION:UNIT  PHI0 deg
 
-TORSION:PARS         C         C         C         H  2 3.1975871334e+01  0.0000000000e+00
-TORSION:PARS         H         C         C         H  2 1.2950887546e+01  0.0000000000e+00
-TORSION:PARS         C         C         C         C  2 3.2106004328e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         H  2 3.1976601203e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.2959200863e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.2099295991e+01  0.0000000000e+00
 
 
 # OOPDIST
@@ -386,7 +389,7 @@ TORSION:PARS         C         C         C         C  2 3.2106004328e+01  0.0000
 OOPDIST:UNIT  K kjmol/A**2
 OOPDIST:UNIT  D0 A
 
-OOPDIST:PARS         C         C         H         C  2.7511666289e+02  0.0000000000e+00
+OOPDIST:PARS         C         C         H         C  2.7473873774e+02  0.0000000000e+00
 
 
 # Cross
@@ -398,8 +401,8 @@ Cross:UNIT  R0 angstrom
 Cross:UNIT  R1 angstrom
 Cross:UNIT  THETA0 deg
 
-Cross:PARS         C         C         H   1.2082979586e+02   6.3139636697e+01   1.4429943362e+02  1.3946344878e+00  1.0844149897e+00  1.2000442638e+02
-Cross:PARS         C         C         C   5.9512907661e+02   9.4746194402e+00   9.5916480749e+00  1.3946344878e+00  1.3946344878e+00  1.2000303456e+02
+Cross:PARS         C         C         H   1.2082812869e+02   6.3132531185e+01   1.4430463043e+02  1.3946595447e+00  1.0844161352e+00  1.2000342749e+02
+Cross:PARS         C         C         C   5.9512368110e+02   9.4838480861e+00   9.6008754077e+00  1.3946595447e+00  1.3946595447e+00  1.2000554725e+02
 </pre></div>
 </div>
 </div>
@@ -477,7 +480,7 @@ _________________________\//////____\///______________\///______________________
  USER               louis
  MACHINE            Linux molmod91 4.2.0-42-generic #49-Ubuntu SMP Tue Jun 28 
  MACHINE            21:26:26 UTC 2016 x86_64
- TIME               2016-09-12 14:44:15.835793
+ TIME               2016-10-28 13:10:48.828632
  QUICKFF VERSION    2.1.2
  PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
  NUMPY VERSION      1.8.2
@@ -502,6 +505,8 @@ _________________________\//////____\///______________\///______________________
  VAL    Added 24 Cosine dihedral terms
  VAL    Added 6 Harmonic and 0 SquareHarmonic out-of-plane distance terms
 
+ PROG   Initializing strain
+
  EQSET  Resetting system coordinates to ab initio ref
  EQSET  Setting rest values to AI equilibrium values for tasks EQ_RV
  EQSET  Averaging force field parameters over master and slaves
@@ -525,64 +530,66 @@ _________________________\//////____\///______________\///______________________
  PTEST  Estimating FF parameters from perturbation trajectories with valence 
  PTEST  reference
 
+ PROGRA Averaging force field parameters over master and slaves
+
  HCEST  Resetting system coordinates to ab initio ref
  HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
  HCEST  CROSS
 
 
         BondHarm/C.C (kjmol/A^2  A)                                             
-            fc =  3975 ± .000    rv = 1.394 ± .170
+            fc =  3975 ± .000    rv = 1.394 ± .000
 
         BondHarm/C.H (kjmol/A^2  A)                                             
-            fc =  3385 ± .000    rv = 1.084 ± .384
+            fc =  3385 ± .000    rv = 1.084 ± .000
 
         BendAHarm/C.C.C (kjmol/rad^2  deg)                                      
-            fc = 617.2 ± .000    rv = 120.0 ± .006
+            fc = 617.1 ± .000    rv = 119.9 ± .000
 
         BendAHarm/C.C.H (kjmol/rad^2  deg)                                      
-            fc = 291.3 ± .000    rv = 120.0 ± .005
+            fc = 291.3 ± .000    rv = 120.0 ± .000
 
         Torsion/C.C.C.C (au  kjmol  deg)                                        
             fc = 32.1 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Torsion/C.C.C.H (au  kjmol  deg)                                        
-            fc = 32.0 ± .00    rv = .000 ± 0.0    m = 2
+            fc = 32.0 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Torsion/H.C.C.H (au  kjmol  deg)                                        
             fc = 13.0 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Oopdist/C.C.H.C (kjmol/A^2  A)                                          
-            fc = 274.1 ± .000    rv = .0000 ± .000
+            fc = 273.0 ± .000    rv = .0000 ± .000
 
         Cross/C.C.C/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.41 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.43 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.C/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.53 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.55 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.C/bb (kjmol/A^2  A  A)                                        
             fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
 
         Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 63.1 ± .0    rv0 = 1.39 ± .00    rv0 =  120 ± 0.0
+            fc = 63.1 ± .0    rv0 = 1.39 ± .00    rv0 =  120 ± .00
 
         Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc =  144 ± .0    rv0 = 1.08 ± .00    rv0 =  120 ± 0.0
+            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± .00
 
         Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
-            fc =  121 ± .0    rv0 = 1.39 ± .00    rv0 = 1.08 ± .00
+            fc =  121 ± .0    rv0 = 1.39 ± .00    rv0 = 1.08 ± 0.0
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.098413
- TIMING Equil Set RV                    0:00:00.001953
- TIMING PT Generate                     0:00:17.028964
- TIMING PT Estimate                     0:00:00.160384
- TIMING PT Post process                 0:00:00.001685
- TIMING HC Estimate FC                  0:00:00.314298
- TIMING PT plot energy                  0:00:00.000012
- TIMING PT dump XYZ                     0:00:00.000007
+ TIMING Initializing                    0:00:00.548572
+ TIMING Equil Set RV                    0:00:00.002101
+ TIMING PT Generate                     0:00:20.260152
+ TIMING PT Estimate                     0:00:00.168541
+ TIMING PT Post process                 0:00:00.002220
+ TIMING HC Estimate FC                  0:00:00.318265
+ TIMING PT plot energy                  0:00:00.000009
+ TIMING PT dump XYZ                     0:00:00.000004
 
 __/\\\__________________________________________________________________/\\\____
   \ \\\                                                                 \ \\\
@@ -603,8 +610,8 @@ what we expect due to the charges being so small.</p>
 BONDHARM:UNIT  K kjmol/A**2
 BONDHARM:UNIT  R0 A
 
-BONDHARM:PARS         C         H  3.3854649075e+03  1.0847723611e+00
-BONDHARM:PARS         C         C  3.9756835062e+03  1.3946395838e+00
+BONDHARM:PARS         C         H  3.3854697508e+03  1.0847809292e+00
+BONDHARM:PARS         C         C  3.9756331395e+03  1.3945718546e+00
 
 
 # BENDAHARM
@@ -612,8 +619,8 @@ BONDHARM:PARS         C         C  3.9756835062e+03  1.3946395838e+00
 BENDAHARM:UNIT  K kjmol/rad**2
 BENDAHARM:UNIT  THETA0 deg
 
-BENDAHARM:PARS         C         C         H  2.9135189232e+02  1.1999950892e+02
-BENDAHARM:PARS         C         C         C  6.1725570120e+02  1.1999212556e+02
+BENDAHARM:PARS         C         C         H  2.9134031202e+02  1.2002064559e+02
+BENDAHARM:PARS         C         C         C  6.1714249916e+02  1.1999667296e+02
 
 
 # TORSION
@@ -621,9 +628,9 @@ BENDAHARM:PARS         C         C         C  6.1725570120e+02  1.1999212556e+02
 TORSION:UNIT  A kjmol
 TORSION:UNIT  PHI0 deg
 
-TORSION:PARS         C         C         C         H  2 3.2007687035e+01  0.0000000000e+00
-TORSION:PARS         H         C         C         H  2 1.3038636970e+01  0.0000000000e+00
-TORSION:PARS         C         C         C         C  2 3.2118312551e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         H  2 3.2004758267e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.3054873038e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.2117594950e+01  0.0000000000e+00
 
 
 # OOPDIST
@@ -631,7 +638,7 @@ TORSION:PARS         C         C         C         C  2 3.2118312551e+01  0.0000
 OOPDIST:UNIT  K kjmol/A**2
 OOPDIST:UNIT  D0 A
 
-OOPDIST:PARS         C         C         H         C  2.7410071418e+02  0.0000000000e+00
+OOPDIST:PARS         C         C         H         C  2.7301527890e+02  0.0000000000e+00
 
 
 # Cross
@@ -643,8 +650,8 @@ Cross:UNIT  R0 angstrom
 Cross:UNIT  R1 angstrom
 Cross:UNIT  THETA0 deg
 
-Cross:PARS         C         C         H   1.2111289285e+02   6.3154139372e+01   1.4431356155e+02  1.3945974924e+00  1.0847772510e+00  1.2000364105e+02
-Cross:PARS         C         C         C   5.9504398820e+02   9.4144343829e+00   9.5314629493e+00  1.3945974924e+00  1.3945974924e+00  1.2000316422e+02
+Cross:PARS         C         C         H   1.2110928987e+02   6.3136672055e+01   1.4432714887e+02  1.3945221314e+00  1.0847777454e+00  1.2000548104e+02
+Cross:PARS         C         C         C   5.9502002103e+02   9.4378387841e+00   9.5548638703e+00  1.3945221314e+00  1.3945221314e+00  1.2000973701e+02
 </pre></div>
 </div>
 </dd>
@@ -712,19 +719,12 @@ Cross:PARS         C         C         C   5.9504398820e+02   9.4144343829e+00  
         <li class="right" >
           <a href="ug_inputei.html" title="3. Generating Yaff parameter file for the electrostatic contribution"
              >previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
- <script type="text/javascript">
-    $(document).ready(function() {
-        $(".toggle > *").hide();
-        $(".toggle .header").show();
-        $(".toggle .header").click(function() {
-            $(this).parent().children().not(".header").toggle(400);
-            $(this).parent().children(".header").toggleClass("open");
-        })
-    });
-</script>
-
+    <div class="footer">
+        &copy; Copyright 2016, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
   </body>
 </html>

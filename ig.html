@@ -6,16 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>1. Dependencies &mdash; QuickFF 2.1.2 documentation</title>
+    <title>1. Dependencies &mdash; QuickFF 2.1.3 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.1.2',
+        VERSION:     '2.1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.1.2 documentation" href="index.html" />
+    <link rel="top" title="QuickFF 2.1.3 documentation" href="index.html" />
     <link rel="next" title="1. Running QuickFF using qff.py" href="ug_script.html" />
     <link rel="prev" title="QuickFF Documentation" href="index.html" /> 
   </head>
@@ -44,7 +43,7 @@
         <li class="right" >
           <a href="index.html" title="QuickFF Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -69,16 +68,16 @@ The instructions below only work if the MolMod package is installed.</p>
 code used at the Center for Molecular Modeling (CMM) to test-drive new FF models.
 Yaff is required to run QuickFF, the implementation of each force field term is
 based on the implementation in Yaff. For this version of QuickFF, it is required
-to install the
-<a class="reference external" href="https://github.com/molmod/yaff/tree/1.0.develop.2.13">1.0.develop.2.13</a>
+to install the development version in the
+<a class="reference external" href="https://github.com/molmod/yaff/tree/master">master</a>
 branch of Yaff available at github. It can be installed by cloning the git
 repository using the git command:</p>
 <div class="highlight-python"><div class="highlight"><pre>git clone https://github.com/molmod/yaff.git
 </pre></div>
 </div>
-<p>and switch to the branch <em>1.0.develop.2.13</em>. Alternatively, a zip file can be
+<p>Alternatively, a zip file can be
 downloaded from the online repository for the branch
-<a class="reference external" href="https://github.com/molmod/yaff/tree/1.0.develop.2.13">1.0.develop.2.13</a>.
+<a class="reference external" href="https://github.com/molmod/yaff/tree/master">master</a>.
 After extracting the zip file, Yaff can be installed by following the
 instructions given in the
 <a class="reference external" href="http://molmod.github.io/yaff/ug_install.html">yaff documentation</a>. The
@@ -133,18 +132,19 @@ python setup.py install
 <p>A stable release of the second generation of QuickFF, which includes all
 features described on this website, can be downloaded from:</p>
 <blockquote>
-<div><a class="reference external" href="http://users.ugent.be/~lvduyfhu/QuickFF-2.1.2.tar.gz">http://users.ugent.be/~lvduyfhu/QuickFF-2.1.2.tar.gz</a></div></blockquote>
+<div><a class="reference external" href="http://users.ugent.be/~lvduyfhu/QuickFF-2.1.3.tar.gz">http://users.ugent.be/~lvduyfhu/QuickFF-2.1.3.tar.gz</a></div></blockquote>
 <p>Previous versions available for download can be found below:</p>
 <blockquote>
-<div><p><a class="reference external" href="http://users.ugent.be/~lvduyfhu/QuickFF-2.0.1.tar.gz">http://users.ugent.be/~lvduyfhu/QuickFF-2.0.1.tar.gz</a></p>
+<div><p><a class="reference external" href="http://users.ugent.be/~lvduyfhu/QuickFF-2.1.2.tar.gz">http://users.ugent.be/~lvduyfhu/QuickFF-2.1.2.tar.gz</a></p>
+<p><a class="reference external" href="http://users.ugent.be/~lvduyfhu/QuickFF-2.0.1.tar.gz">http://users.ugent.be/~lvduyfhu/QuickFF-2.0.1.tar.gz</a></p>
 <p><a class="reference external" href="http://users.ugent.be/~lvduyfhu/quickff-1.0.1.tar.gz">http://users.ugent.be/~lvduyfhu/quickff-1.0.1.tar.gz</a></p>
 </div></blockquote>
 <p>Choose a suitable directory, e.g. <tt class="docutils literal"><span class="pre">~/build</span></tt>, download and unpack the archive:</p>
 <div class="highlight-python"><div class="highlight"><pre>mkdir -p ~/build
 cd ~/build
-wget http://users.ugent.be/~lvduyfhu/QuickFF-2.1.2.tar.gz
-tar -xvzf QuickFF-2.1.2.tar.gz
-cd QuickFF-2.1.2
+wget http://users.ugent.be/~lvduyfhu/QuickFF-2.1.3.tar.gz
+tar -xvzf QuickFF-2.1.3.tar.gz
+cd QuickFF-2.1.3
 </pre></div>
 </div>
 </div>
@@ -158,7 +158,7 @@ downloads and tutorials) can be found <a class="reference external" href="http:/
 official git URL for QuickFF is <a class="reference external" href="http://github.com/molmod/QuickFF">http://github.com/molmod/QuickFF</a> . To <cite>clone</cite>
 the QuickFF repository, go to your favorite directory for source code, e.g.
 <tt class="docutils literal"><span class="pre">~/build</span></tt>, and execute the following commands:</p>
-<div class="highlight-python"><div class="highlight"><pre>git clone git://github.com/molmod/QuickFF.git
+<div class="highlight-python"><div class="highlight"><pre>git clone git://github.com/molmod/QuickFF.git quickff
 cd quickff
 </pre></div>
 </div>
@@ -262,19 +262,12 @@ nosetests
         <li class="right" >
           <a href="index.html" title="QuickFF Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
- <script type="text/javascript">
-    $(document).ready(function() {
-        $(".toggle > *").hide();
-        $(".toggle .header").show();
-        $(".toggle .header").click(function() {
-            $(this).parent().children().not(".header").toggle(400);
-            $(this).parent().children(".header").toggleClass("open");
-        })
-    });
-</script>
-
+    <div class="footer">
+        &copy; Copyright 2016, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
   </body>
 </html>

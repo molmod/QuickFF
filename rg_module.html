@@ -6,16 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>1. quickff.cost – Least-Square cost function for hessian matching &mdash; QuickFF 2.1.2 documentation</title>
+    <title>1. quickff.cost – Least-Square cost function for hessian matching &mdash; QuickFF 2.1.3 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.1.2',
+        VERSION:     '2.1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.1.2 documentation" href="index.html" />
+    <link rel="top" title="QuickFF 2.1.3 documentation" href="index.html" />
     <link rel="next" title="1. qff.py – Main script to run QuickFF calculation" href="rg_scripts.html" />
     <link rel="prev" title="Tutorial 3 - Biphenyl" href="tu_biphenyl.html" /> 
   </head>
@@ -44,7 +43,7 @@
         <li class="right" >
           <a href="tu_biphenyl.html" title="Tutorial 3 - Biphenyl"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -111,10 +110,16 @@ vectors are read.</dd>
 
 <dl class="function">
 <dt id="quickff.io.read_abinitio">
-<tt class="descclassname">quickff.io.</tt><tt class="descname">read_abinitio</tt><big>(</big><em>fn</em><big>)</big><a class="reference internal" href="_modules/quickff/io.html#read_abinitio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.io.read_abinitio" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quickff.io.</tt><tt class="descname">read_abinitio</tt><big>(</big><em>fn</em>, <em>do_hess=True</em><big>)</big><a class="reference internal" href="_modules/quickff/io.html#read_abinitio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.io.read_abinitio" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper to read all information from an ab initio calculation that
 QuickFF needs. Currently Gaussian .fchk and VASP .xml files are
 supported.</p>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>do_hess</dt>
+<dd>Extract the hessian from the ab initio output. For qff-input-ei.py,
+it is interesting to be able to switch this off.</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -247,8 +252,8 @@ an XYZ file.</dd>
 <dl class="method">
 <dt id="quickff.program.BaseProgram.do_bendcharm">
 <tt class="descname">do_bendcharm</tt><big>(</big><em>thresshold=0.03490658503988659</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_bendcharm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_bendcharm" title="Permalink to this definition">¶</a></dt>
-<dd><p>No Harmonic bend can have a rest value equal to are large than 
-180 deg - thresshold. If a master (or its slaves) has such a rest 
+<dd><p>No Harmonic bend can have a rest value equal to are large than
+180 deg - thresshold. If a master (or its slaves) has such a rest
 value, convert master and all slaves to BendCharm with
 cos(phis0)=-1.</p>
 </dd></dl>
@@ -308,14 +313,6 @@ estimate the contribution of all other valence terms.</dd>
 <dt id="quickff.program.BaseProgram.do_pt_generate">
 <tt class="descname">do_pt_generate</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_pt_generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_pt_generate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate perturbation trajectories.</p>
-<p><strong>Optional Arguments</strong></p>
-<dl class="docutils">
-<dt>do</dt>
-<dd>List of term basenames for which the perturbation trajectories
-should be constructed. Can also be a string specifying a task,
-a trajectory will then be constructed for each term that has this
-task in its tasks attribute.</dd>
-</dl>
 </dd></dl>
 
 <dl class="method">
@@ -350,7 +347,7 @@ harmonic pattern will not be adequate since a rest value of 90 and
 cosine term with multiplicity of 4 is used:</p>
 <blockquote>
 <div>V = K/2*[1-cos(4*theta)]</div></blockquote>
-<p>To identify the patterns, it is assumed that the rest values have 
+<p>To identify the patterns, it is assumed that the rest values have
 already been estimated from the perturbation trajectories. For each
 master and slave of a BENDAHARM term, its rest value is computed and
 checked if it lies either the interval [90-thresshold,90+thresshold]
@@ -452,7 +449,7 @@ an XYZ file.</dd>
 <dl class="class">
 <dt id="quickff.program.PlotTrajectories">
 <em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">PlotTrajectories</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#PlotTrajectories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.PlotTrajectories" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the perturbation trajectories, dump to XYZ files and plot the 
+<dd><p>Read the perturbation trajectories, dump to XYZ files and plot the
 energy contributions.</p>
 <p><strong>Arguments</strong></p>
 <dl class="docutils">
@@ -820,7 +817,7 @@ equilbrium values.</p>
 <blockquote>
 <div>first the values are folded in the interval [0,per/2] by first
 taking the module with per and then mirroring values in [per/2,per]
-on [0,per/2]. Next, the mean and std of the folded values are 
+on [0,per/2]. Next, the mean and std of the folded values are
 computed. If the std is larger then the thresshold, the values are
 considered to be too scattered and no rest value can be computed
 (None is returned). If the std is small enough, the rest value will
@@ -851,7 +848,7 @@ Slater orbitals and over Gaussian orbitals.</p>
 
 <dl class="function">
 <dt id="quickff.tools.average">
-<tt class="descclassname">quickff.tools.</tt><tt class="descname">average</tt><big>(</big><em>data</em>, <em>ffatypes</em>, <em>fmt='full'</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.average" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">average</tt><big>(</big><em>data</em>, <em>ffatypes</em>, <em>fmt='full'</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.average" title="Permalink to this definition">¶</a></dt>
 <dd><p>Average the atomic parameters stored in data over atoms of the same atom
 type.</p>
 <p><strong>Arguments</strong></p>
@@ -865,12 +862,17 @@ length as data</dd>
 <p><strong>Keywork arguments</strong></p>
 <dl class="docutils">
 <dt>fmt</dt>
-<dd><p class="first">Should be either full or dict. In case of full, the result will be
+<dd><p class="first">Should be either full, dict or sort. In case of full, the result will be
 returned as an numpy array of equal length as data and ffatypes. In
-case of dict, the result will be returned as a dictionairy of the 
+case of dict, the result will be returned as a dictionairy of the
 following format:</p>
-<blockquote class="last">
+<blockquote>
 <div>{ffatype0: value0, ffatype1: value1, ...}</div></blockquote>
+<p>in which value0, ... is the mean value of the given ffatype. In case
+of sort, a dictionairy of the following format will be returned:</p>
+<blockquote>
+<div>{ffatype0: values0, ffatype1: values1, ...}</div></blockquote>
+<p class="last">in which values0, ... is a list of the values for the given ffatype.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1088,19 +1090,12 @@ given, only iterate over terms with the label its name.</p>
         <li class="right" >
           <a href="tu_biphenyl.html" title="Tutorial 3 - Biphenyl"
              >previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
- <script type="text/javascript">
-    $(document).ready(function() {
-        $(".toggle > *").hide();
-        $(".toggle .header").show();
-        $(".toggle .header").click(function() {
-            $(this).parent().children().not(".header").toggle(400);
-            $(this).parent().children(".header").toggleClass("open");
-        })
-    });
-</script>
-
+    <div class="footer">
+        &copy; Copyright 2016, Louis Vanduyfhuys.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
   </body>
 </html>
