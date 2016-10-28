@@ -121,18 +121,33 @@ class BaseProgram(object):
         '''
         log.dump('Updating terms of trajectories to current valenceFF terms')
         with log.section('PTUPD', 3):
+            #update the terms in the trajectories to match the terms in
+            #self.valence
             for traj in self.trajectories:
                 found = False
                 for term in self.valence.iter_terms():
                     if traj.term.get_atoms()==term.get_atoms():
-                        if found: raise ValueError('Found two trajectories for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
+                        if found: raise ValueError('Found two terms for trajectory %s with atom indices %s' %(traj.term.basename, str(traj.term.get_atoms())))
                         traj.term = term
-                        if 'PT_ALL' not in term.tasks: 
+                        if 'PT_ALL' not in term.tasks:
                             log.dump('PT_ALL not in tasks of %s-%i, deactivated PT' %(term.basename, term.index))
                             traj.active = False
                         found = True
-                        break
-                if not found: log.dump('WARNING: No trajectory found for term %i (%s) with atom indices %s' %(term.index, term.basename, str(term.get_atoms())))
+                if not found: log.warning('No term found for trajectory %s with atom indices %s' %(traj.term.basename, str(traj.term.get_atoms())))
+            #check if every term with task PT_ALL has a trajectory associated
+            #with it. It a trajectory is missing, generate it.
+            for term in self.valence.iter_terms():
+                if 'PT_ALL' not in term.tasks: continue
+                found = False
+                for traj in self.trajectories:
+                    if term.get_atoms()==traj.term.get_atoms():
+                        if found: raise ValueError('Found two trajectories for term %s with atom indices %s' %(term.basename, str(term.get_atoms())))
+                        found =True
+                if not found:
+                    log.warning('No trajectory found for term %s with atom indices %s. Generating it now.' %(term.basename, str(term.get_atoms())))
+                    trajectory = self.perturbation.prepare([term])[term.index]
+                    self.perturbation.generate(trajectory)
+                    self.trajectories.append(trajectory)
 
     def average_pars(self):
         '''
@@ -211,17 +226,7 @@ class BaseProgram(object):
                             trajectory.to_xyz()
 
     def do_pt_generate(self):
-        '''
-            Generate perturbation trajectories.
-
-            **Optional Arguments**
-
-            do
-              List of term basenames for which the perturbation trajectories
-              should be constructed. Can also be a string specifying a task,
-              a trajectory will then be constructed for each term that has this
-              task in its tasks attribute.
-        '''
+        'Generate perturbation trajectories.'
         with log.section('PTGEN', 2, timer='PT Generate'):
             #read if an existing file was specified through fn_traj
             fn_traj = self.kwargs.get('fn_traj', None)
@@ -229,6 +234,7 @@ class BaseProgram(object):
                 self.trajectories = cPickle.load(open(fn_traj, 'r'))
                 log.dump('Trajectories read from file %s' %fn_traj)
                 self.update_trajectory_terms()
+                cPickle.dump(self.trajectories, open('new_'+fn_traj, 'w'))
                 return
             #configure
             self.reset_system()
@@ -282,7 +288,7 @@ class BaseProgram(object):
         '''
             Do some first post processing of the ff parameters estimated from
             the perturbation trajectories including:
-            
+
                 * detecting bend patterns with rest values of 90 and 180 deg
                 * detecting bend patterns with rest values only close to 180 deg
                 * averaging parameters
@@ -407,7 +413,7 @@ class BaseProgram(object):
                 if rv0 is None or rv1 is None:
                     raise ValueError('No rest values found for %s' %self.valence.terms[index].basename)
                 self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-    
+
     def do_squarebend(self, thresshold=10*deg):
         '''
             Identify bend patterns in which 4 atoms of type A surround a central
@@ -415,88 +421,86 @@ class BaseProgram(object):
             harmonic pattern will not be adequate since a rest value of 90 and
             180 degrees is possible for the same A-B-A term. Therefore, a
             cosine term with multiplicity of 4 is used:
-           
+
                   V = K/2*[1-cos(4*theta)]
-            
-            To identify the patterns, it is assumed that the rest values have 
+
+            To identify the patterns, it is assumed that the rest values have
             already been estimated from the perturbation trajectories. For each
             master and slave of a BENDAHARM term, its rest value is computed and
             checked if it lies either the interval [90-thresshold,90+thresshold]
             or [180-thresshold,180]. If this is the case, the new cosine term
             is used.
-            
+
             **Optional arguments**
-            
+
             thresshold
                 the (half) the width of the interval around 180 deg (90 degrees)
                 to check if a square BA4
         '''
-        with log.section('SQBEND', 3):
-            for master in self.valence.iter_masters(label='BendAHarm'):
-                rvs = np.zeros([len(master.slaves)+1], float)
-                rvs[0] = self.valence.get_params(master.index, only='rv')
-                for i, islave in enumerate(master.slaves):
-                    rvs[1+i] = self.valence.get_params(islave, only='rv')
-                n90 = 0
-                n180 = 0
-                nother = 0
-                for i, rv in enumerate(rvs):
-                    if 90*deg-thresshold<=rv and rv<=90*deg+thresshold: n90 += 1
-                    elif 180*deg-thresshold<=rv and rv<=180*deg+thresshold: n180 += 1
-                    else: nother += 1
-                if n90>0 and n180>0:
-                    log.dump('%s has rest values around 90 deg and 180 deg, converted to BendCos with m=4' %master.basename)
-                    #modify master and slaves
-                    indices = [master.index]
-                    for slave in master.slaves: indices.append(slave)
-                    for index in indices:
-                        term = self.valence.terms[index]
-                        self.valence.modify_term(
-                            index,
-                            Cosine, [BendAngle(*term.get_atoms())],
-                            term.basename.replace('BendAHarm', 'BendCos'),
-                            ['HC_FC_DIAG'], ['au', 'kjmol', 'deg']
-                        )
-                        self.valence.set_params(index, rv0=0.0, m=4)
-                        for traj in self.trajectories:
-                            if traj.term.index==index:
-                                traj.active = False
-                                traj.fc = None
-                                traj.rv = None
-    
+        for master in self.valence.iter_masters(label='BendAHarm'):
+            rvs = np.zeros([len(master.slaves)+1], float)
+            rvs[0] = self.valence.get_params(master.index, only='rv')
+            for i, islave in enumerate(master.slaves):
+                rvs[1+i] = self.valence.get_params(islave, only='rv')
+            n90 = 0
+            n180 = 0
+            nother = 0
+            for i, rv in enumerate(rvs):
+                if 90*deg-thresshold<=rv and rv<=90*deg+thresshold: n90 += 1
+                elif 180*deg-thresshold<=rv and rv<=180*deg+thresshold: n180 += 1
+                else: nother += 1
+            if n90>0 and n180>0:
+                log.dump('%s has rest values around 90 deg and 180 deg, converted to BendCos with m=4' %master.basename)
+                #modify master and slaves
+                indices = [master.index]
+                for slave in master.slaves: indices.append(slave)
+                for index in indices:
+                    term = self.valence.terms[index]
+                    self.valence.modify_term(
+                        index,
+                        Cosine, [BendAngle(*term.get_atoms())],
+                        term.basename.replace('BendAHarm', 'BendCos'),
+                        ['HC_FC_DIAG'], ['au', 'kjmol', 'deg']
+                    )
+                    self.valence.set_params(index, rv0=0.0, m=4)
+                    for traj in self.trajectories:
+                        if traj.term.index==index:
+                            traj.active = False
+                            traj.fc = None
+                            traj.rv = None
+
     def do_bendcharm(self, thresshold=2*deg):
         '''
-            No Harmonic bend can have a rest value equal to are large than 
-            180 deg - thresshold. If a master (or its slaves) has such a rest 
+            No Harmonic bend can have a rest value equal to are large than
+            180 deg - thresshold. If a master (or its slaves) has such a rest
             value, convert master and all slaves to BendCharm with
             cos(phis0)=-1.
         '''
-        with log.section('BNDCHRM', 3):
-            for master in self.valence.iter_masters(label='BendAHarm'):
-                indices = [master.index]
-                for slave in master.slaves: indices.append(slave)
-                found = False
+        for master in self.valence.iter_masters(label='BendAHarm'):
+            indices = [master.index]
+            for slave in master.slaves: indices.append(slave)
+            found = False
+            for index in indices:
+                rv = self.valence.get_params(index, only='rv')
+                if rv>=180.0*deg-thresshold:
+                    found = True
+                    break
+            if found:
+                log.dump('%s has rest value > 180-%.0f deg, converted to BendCHarm with cos(phi0)=-1' %(master.basename, thresshold/deg))
                 for index in indices:
-                    rv = self.valence.get_params(index, only='rv')
-                    if rv>=180.0*deg-thresshold:
-                        found = True
-                        break
-                if found:
-                    log.dump('%s has rest value > 180-%.0f deg, converted to BendCHarm with cos(phi0)=-1' %(master.basename, thresshold/deg))
-                    for index in indices:
-                        term = self.valence.terms[index]
-                        self.valence.modify_term(
-                            index,
-                            Harmonic, [BendCos(*term.get_atoms())],
-                            term.basename.replace('BendAHarm', 'BendCHarm'),
-                            ['HC_FC_DIAG'], ['kjmol', 'au']
-                        )
-                        self.valence.set_params(index, fc=0.0, rv0=-1.0)
-                        for traj in self.trajectories:
-                            if traj.term.index==index:
-                                traj.rv = None
-                                traj.fc = None
-                                traj.active = False
+                    term = self.valence.terms[index]
+                    self.valence.modify_term(
+                        index,
+                        Harmonic, [BendCos(*term.get_atoms())],
+                        term.basename.replace('BendAHarm', 'BendCHarm'),
+                        ['HC_FC_DIAG'], ['kjmol', 'au']
+                    )
+                    self.valence.set_params(index, fc=0.0, rv0=-1.0)
+                    for traj in self.trajectories:
+                        if traj.term.index==index:
+                            traj.rv = None
+                            traj.fc = None
+                            traj.active = False
 
     def do_sqoopdist_to_oopdist(self, thresshold=1e-4*angstrom):
         '''
@@ -504,27 +508,26 @@ class BaseProgram(object):
             zero, to a term Oopdist (harmonic in Oopdist instead of square of
             Oopdist) with a rest value of 0.0 A.
         '''
-        with log.section('SQOOP', 3):
-            for master in self.valence.iter_masters(label='SqOopdist'):
-                indices = [master.index]
-                for slave in master.slaves: indices.append(slave)
-                found = False
+        for master in self.valence.iter_masters(label='SqOopdist'):
+            indices = [master.index]
+            for slave in master.slaves: indices.append(slave)
+            found = False
+            for index in indices:
+                rv = self.valence.get_params(index, only='rv')
+                if rv<=thresshold:
+                    found = True
+                    break
+            if found:
+                log.dump('%s has rest value <= %.0f A^2, converted to Oopdist with d0=0' %(master.basename, thresshold/angstrom))
                 for index in indices:
-                    rv = self.valence.get_params(index, only='rv')
-                    if rv<=thresshold:
-                        found = True
-                        break
-                if found:
-                    log.dump('%s has rest value <= %.0f A^2, converted to Oopdist with d0=0' %(master.basename, thresshold/angstrom))
-                    for index in indices:
-                        term = self.valence.terms[index]
-                        self.valence.modify_term(
-                            index,
-                            Harmonic, [OopDist(*term.get_atoms())],
-                            term.basename.replace('SqOopdist', 'Oopdist'),
-                            ['HC_FC_DIAG'], ['kjmol/A**2', 'A']
-                        )
-                        self.valence.set_params(index, fc=0.0, rv0=0.0)
+                    term = self.valence.terms[index]
+                    self.valence.modify_term(
+                        index,
+                        Harmonic, [OopDist(*term.get_atoms())],
+                        term.basename.replace('SqOopdist', 'Oopdist'),
+                        ['HC_FC_DIAG'], ['kjmol/A**2', 'A']
+                    )
+                    self.valence.set_params(index, fc=0.0, rv0=0.0)
 
     def run(self):
         '''
@@ -549,7 +552,7 @@ class MakeTrajectories(BaseProgram):
 
 class PlotTrajectories(BaseProgram):
     '''
-        Read the perturbation trajectories, dump to XYZ files and plot the 
+        Read the perturbation trajectories, dump to XYZ files and plot the
         energy contributions.
     '''
     def run(self):
@@ -591,6 +594,7 @@ class DeriveNonDiagFF(BaseProgram):
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
             self.do_pt_estimate(do_valence=True)
+            self.average_pars()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], logger_level=1)
             self.make_output()
 

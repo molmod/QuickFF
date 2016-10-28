@@ -28,7 +28,7 @@ import numpy, scipy, matplotlib
 
 __all__ = ['version', 'log']
 
-version = '2.1.1'
+version = '2.1.2'
 
 header = """
 ________________/\\\\\\_________/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_________________
@@ -91,6 +91,8 @@ class Section(object):
             self.end = None
 
     def __exit__(self, type, value, traceback):
+        if self.new_label!=self.old_label and self.logger.log_level>0:
+            self.logger.add_blank_line = True
         self.logger.label = self.old_label
         self.logger.section_level = self.old_level
         if self.timer_description is not None:
@@ -153,6 +155,28 @@ class Logger(object):
                 self.add_blank_line = False
             line = ''
             for piece in splitstring(message, self.ll-self.mll):
+                line += ' ' + self.label[:self.mll-2] + ' '
+                line += ' '*(self.mll-2 - len(self.label[:self.mll-2]))
+                line += piece.encode('utf-8')
+                line += '\n'
+            line = line.rstrip('\n')
+            print >> self._f, line
+
+    def warning(self, message, new_line=True):
+        '''
+            Warnings are printed whenever log_level is higher than 0, i.e. not
+            in silent mode.
+        '''
+        if self.log_level>0:
+            if not self._active:
+                self._active = True
+                self.print_header()
+            assert self.label is not None
+            if new_line and self.add_blank_line:
+                print >> self._f , ''
+                self.add_blank_line = False
+            line = ''
+            for piece in splitstring('WARNING: '+message, self.ll-self.mll):
                 line += ' ' + self.label[:self.mll-2] + ' '
                 line += ' '*(self.mll-2 - len(self.label[:self.mll-2]))
                 line += piece.encode('utf-8')

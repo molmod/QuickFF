@@ -207,14 +207,25 @@ class RelaxedStrain(object):
         '''
         self.system = system
         self.valence = valence
-        self.strains = None
+        log.dump('Initializing strain')
+        with log.section('STRAIN', 3, timer='Initializing'):
+            self.strains = [None,]*len(valence.terms)
+            for term in valence.terms:
+                cons_ic = term.ics[0]
+                cons_ic_atindexes = term.get_atoms()
+                #collect all other ics
+                ics = []
+                for term2 in valence.terms:
+                    #if term2.index == term.index: continue #not the current term ic
+                    if term2.kind == 3: continue #not a cross term ic
+                    ics.append(term2.ics[0])
+                self.strains[term.index] = Strain(system, cons_ic, cons_ic_atindexes, ics)
 
     def prepare(self, do_terms):
         '''
             Method to initialize trajectories and configure everything required
             for the generate method.
         '''
-        self.strains = [None,]*len(self.valence.terms)
         trajectories = [None,]*len(self.valence.terms)
         for term in do_terms:
             assert term.kind==0, 'Only harmonic terms supported for pert traj'
@@ -224,7 +235,7 @@ class RelaxedStrain(object):
                 start=ic['value']-0.02*angstrom
                 end=ic['value']+0.02*angstrom
                 if start<0.0: start = 0.0
-            elif ic['kind'] in [2]:
+            elif ic['kind'] in [2,4]:
                 start=ic['value']-2*deg
                 end=ic['value']+2*deg
                 if start<0*deg: start = 0.0
@@ -238,13 +249,6 @@ class RelaxedStrain(object):
                 if start<0.0: start=0.0
             else:
                 raise NotImplementedError
-            #collect all other ics
-            ics = []
-            for term2 in self.valence.terms:
-                #if term2.index == term.index: continue #not the current term ic
-                if term2.kind == 3: continue #not a cross term ic
-                ics.append(term2.ics[0])
-            self.strains[term.index] = Strain(self.system, term.ics[0], ics)
             trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=7)
         return trajectories
 
@@ -273,38 +277,42 @@ class RelaxedStrain(object):
             strain = self.strains[index]
             natom = self.system.natom
             if strain is None:
-                log.dump('Strain for term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
+                log.warning('Strain for term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
                 return
             q0 = self.valence.iclist.ictab[self.valence.vlist.vtab[index]['ic0']]['value']
             diag = np.ones([strain.ndof+1], float)
             diag[:strain.ndof] *= 0.1*angstrom
             diag[strain.ndof] *= abs(q0-trajectory.targets[0])
+            sol = None
             for iq, target in enumerate(trajectory.targets):
-                with log.section('PTGEN', 3, timer='PT Generate'):
-                    log.dump('    Frame %i (target=%.3f)' %(iq, target))
+                log.dump('    Frame %i (target=%.3f)' %(iq, target))
                 strain.constrain_target = target
-                init = np.zeros([strain.ndof+1], float)
-                init[-1] = np.sign(q0-target)
-                sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
-                if ier!=1:
-                    #fsolve did not converge, flag this frame for deletion
-                    with log.section('PTGEN', 3, timer='PT Generate'):
-                        log.dump('      %s' %mesg.replace('\n', ' '))
-                    log.dump('    Frame %i (target=%.3f) %s(%s) did not converge. Trying again with slightly perturbed initial conditions.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
-                    #try one more time
-                    init = sol.copy()
-                    init[:3*natom] += np.random.normal(0.0, 0.01, [3*natom])*angstrom
+                if abs(target-q0)<1e-6:
+                    sol = np.zeros([strain.ndof+1],float)
+                    strain.gradient(sol)
+                else:
+                    if sol is not None:
+                        init = sol.copy()
+                    else:
+                        init = np.zeros([strain.ndof+1], float)
+                    init[-1] = np.sign(q0-target)
                     sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
                     if ier!=1:
-                        with log.section('PTGEN', 3, timer='PT Generate'):
+                        #fsolve did not converge, flag this frame for deletion
+                        log.dump('      %s' %mesg.replace('\n', ' '))
+                        log.dump('    Frame %i (target=%.3f) %s(%s) did not converge. Trying again with slightly perturbed initial conditions.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
+                        #try one more time
+                        init = sol.copy()
+                        init[:3*natom] += np.random.normal(0.0, 0.01, [3*natom])*angstrom
+                        sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
+                        if ier!=1:
                             log.dump('      %s' %mesg.replace('\n', ' '))
-                        log.dump('    Frame %i (target=%.3f) %s(%s) STILL did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
-                        trajectory.targets[iq] = np.nan
-                        continue
+                            log.dump('    Frame %i (target=%.3f) %s(%s) STILL did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
+                            trajectory.targets[iq] = np.nan
+                            continue
                 x = strain.coords0 + sol[:3*natom].reshape((-1,3))
                 trajectory.values[iq] = strain.constrain_value
-                with log.section('PTGEN', 3, timer='PT Generate'):
-                    log.dump('    Converged (value=%.3f, lagmult=%.3e)' %(strain.constrain_value,sol[3*natom]))
+                log.dump('    Converged (value=%.3f, lagmult=%.3e)' %(strain.constrain_value,sol[3*natom]))
                 if remove_com:
                     com = (x.T*self.system.masses).sum(axis=1)/self.system.masses.sum()
                     for i in xrange(natom):
@@ -391,7 +399,7 @@ class RelaxedStrain(object):
 
 
 class Strain(ForceField):
-    def __init__(self, system, cons_ic, ics, cart_penalty=1.0*angstrom):
+    def __init__(self, system, cons_ic, cons_ic_atindexes, ics, cart_penalty=1e-3*angstrom):
         '''
             A class deriving from the Yaff ForceField class to implement the
             strain of a molecular geometry associated with the term defined by
@@ -406,10 +414,16 @@ class Strain(ForceField):
                 An instance of Yaff Internal Coordinate representing the
                 constrained term in the strain.
 
+            cons_ic_atindexes
+                A list of the atoms involved in the constrained IC. This is
+                required for the implementation of the cartesian penalty. In
+                principle this could be extracted from the information stored
+                in cons_ic, but this is the lazy solution.
+
             ics
                 A list of Yaff Internal Coordinate instances for which the
                 strain needs to be minimized.
-            
+
             cart_penalty
                 Magnitude of an extra term added to the strain that penalises
                 a deviation of the cartesian coordinates of each atom with
@@ -421,6 +435,7 @@ class Strain(ForceField):
         self.coords0 = system.pos.copy()
         self.ndof = np.prod(self.coords0.shape)
         self.cart_penalty = cart_penalty
+        self.cons_ic_atindexes = cons_ic_atindexes
         part = ForcePartValence(system)
         for ic in ics:
             part.add_term(Harmonic(1.0, None, ic))
@@ -448,7 +463,7 @@ class Strain(ForceField):
             is included.
         '''
         #small check
-        assert X.shape[0] ==  self.ndof + 1
+        #assert X.shape[0] ==  self.ndof + 1
         #initialize return value
         grad = np.zeros((len(X),))
         #compute strain gradient
@@ -463,7 +478,9 @@ class Strain(ForceField):
         grad[:self.ndof] = gstrain.reshape((-1,)) + X[self.ndof]*gconstraint.reshape((-1,))
         grad[self.ndof] = self.constrain_value - self.constrain_target
         #cartesian penalty, i.e. extra penalty for deviation w.r.t. cartesian equilibrium coords
-        grad[:self.ndof] += X[:self.ndof]/(self.ndof*self.cart_penalty**2)
+        indices = np.array([[3*i,3*i+1,3*i+2] for i in xrange(self.ndof/3) if i not in self.cons_ic_atindexes]).ravel()
+        if len(indices)>0:
+            grad[indices] += X[indices]/(self.ndof*self.cart_penalty**2)
         with log.section('PTGEN', 4, timer='PT Generate'):
             log.dump('      Gradient:  rms = %.3e  max = %.3e  cnstr = %.3e' %(np.sqrt((grad[:self.ndof]**2).mean()), max(grad[:self.ndof]), grad[self.ndof]))
         return grad

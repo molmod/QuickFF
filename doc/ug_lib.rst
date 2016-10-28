@@ -95,8 +95,8 @@ script as follows::
     log.set_level(level)
 
 In the second line of code, `level` should be either the string `silent`, `low`,
-`medium`, `high` or `highest`, or an integer withing the range 0-5 (0 
-corresponds to `silent`, 5 corresponds to `highest`). One can introduce custom
+`medium`, `high` or `highest`, or an integer withing the range 0-4 (0 
+corresponds to `silent`, 4 corresponds to `highest`). One can introduce custom
 logging sections in the script as follows::
 
     with log.section(key, print_level, timer=timer_description):

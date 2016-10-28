@@ -161,13 +161,13 @@ class ValenceFF(ForcePartValence):
     def __init__(self, system, specs=None):
         '''
             **Arguments**
-            
+
             system
                 an instance of the Yaff System class containing all system
                 properties
-            
+
             **Keyword Arguments**
-            
+
             specs
                 Not yet implemented
         '''
@@ -186,25 +186,25 @@ class ValenceFF(ForcePartValence):
             Adds new term both to the Yaff vlist object and a new QuickFF
             list (self.terms) which holds all information about the term
             for easy access later in QuickFF.
-            
+
             **Arguments**
-            
+
             pot
                 an instance of ValenceTerm from `yaff.pes.vlist.py` representing
                 the potential chosen for the term
-            
+
             ics
                 list of InternalCoordinate instances from `yaff.pes.iclist.py`
-            
+
             atypes
                 ordered string of atom types (required to assign name to the
                 term)
-            
+
             tasks
                 List of strings defining all tasks that have to be performed for
                 this term. Possible tasks are: PT_ALL, HC_FC_DIAG, HC_FC_CROSS,
                 EQ_RV.
-            
+
             units
                 Units for all parameters in this term (ordered in the same
                 way as parameters are stored in `yaff.vlist.vtab`)
@@ -287,23 +287,28 @@ class ValenceFF(ForcePartValence):
             for i in xrange(len(ic_indexes)):
                 vterm['ic%i'%i] = ic_indexes[i]
 
-    def iter_masters(self, label=None):
-        '''
-            Iterate over all master terms in the valence force field. If label
-            is given, only iterate of the terms with the label in its name.
-        '''
-        for term in self.terms:
-            if label is None or label.lower() in term.basename.lower():
-                if term.is_master():
-                    yield term
-
     def iter_terms(self, label=None):
         '''
             Iterate over all terms in the valence force field. If label is
             given, only iterate over terms with the label its name.
         '''
         for term in self.terms:
-            if label is None or label.lower() in term.basename.lower():
+            if label is None:
+                yield term
+            elif label.startswith('/'):
+                trimmed = label[1:]
+                if trimmed.lower() in term.basename.lower()[:len(trimmed)]:
+                    yield term
+            elif label.lower() in term.basename.lower():
+                yield term
+
+    def iter_masters(self, label=None):
+        '''
+            Iterate over all master terms in the valence force field. If label
+            is given, only iterate of the terms with the label in its name.
+        '''
+        for term in self.iter_terms(label=label):
+            if term.is_master():
                 yield term
 
     def init_bond_terms(self):
@@ -339,7 +344,7 @@ class ValenceFF(ForcePartValence):
                 self.add_term(Harmonic, [BendAngle(*angle)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
                 nbends += 1
         log.dump('Added %i Harmonic bend terms' %nbends)
-    
+
     def init_dihedral_terms(self, thresshold=20*deg):
         '''
             Initialize the dihedral potentials from the local topology. The
@@ -391,7 +396,7 @@ class ValenceFF(ForcePartValence):
                 if nan or None in ms or ms.std()>1e-3:
                     ms_string = str(ms)
                     if nan: ms_string = 'nan'
-                    log.dump('WARNING missing dihedral for %s (m is %s)' %('.'.join(types), ms_string))
+                    log.warning('missing dihedral for %s (m is %s)' %('.'.join(types), ms_string))
                     continue
                 m = int(np.round(ms.mean()))
                 rv = get_restvalue(psi0s, m, thresshold=thresshold, mode=1)
@@ -403,7 +408,7 @@ class ValenceFF(ForcePartValence):
                         ncos += 1
                 else:
                     #no dihedral potential could be determine, hence it is ignored
-                    log.dump('WARNING: missing dihedral for %s (could not determine rest value from %s)' %('.'.join(types), str(psi0s/deg)))
+                    log.warning('missing dihedral for %s (could not determine rest value from %s)' %('.'.join(types), str(psi0s/deg)))
                     continue
         log.dump('Added %i Cosine dihedral terms' %ncos)
 
@@ -521,7 +526,6 @@ class ValenceFF(ForcePartValence):
                     slave.slaves = []
                     master.slaves.append(slave.index)
 
-
     def calc_energy(self, pos):
         old =  self.system.pos.copy()
         self.system.pos = pos.copy()
@@ -544,7 +548,6 @@ class ValenceFF(ForcePartValence):
         val = ForcePartValence(self.system)
         kind = self.vlist.vtab[index]['kind']
         masterslaves = [index]+self.terms[index].slaves
-        kind_to_term = {0: Harmonic, 1: PolyFour, 2: Fues, 3: Cross, 4: Cosine}
         if kind==4:#Cosine
             m, k, rv = self.get_params(index)
             if fc is not None: k = fc
@@ -574,7 +577,7 @@ class ValenceFF(ForcePartValence):
             for jterm in masterslaves:
                 ics = self.terms[jterm].ics
                 args = (k, rv) + tuple(ics)
-                val.add_term(kind_to_term[kind](*args))
+                val.add_term(Harmonic(*args))
         else:
             raise ValueError('Term kind %i not supported' %kind)
         ff = ForceField(self.system, [val])
@@ -673,7 +676,7 @@ class ValenceFF(ForcePartValence):
             sequence = [
                 'bondharm',
                 'bendaharm', 'bendcharm', 'bendcos',
-                'torsion', 'torsc2harm',
+                'torsion', 'torsc2harm', 'dihedharm',
                 'oopdist', 'cross'
             ]
             log.dump('')
@@ -773,6 +776,21 @@ class ValenceFF(ForcePartValence):
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
+    def _dihedharm_to_yaff(self):
+        'construct a DIHEDHARM section of a yaff parameter file'
+        prefix = 'DIHEDHARM'
+        units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'PHI0 deg'])
+        pars = ParameterDefinition('PARS')
+        for i, master in enumerate(self.iter_masters(label=prefix)):
+            ffatypes = master.basename.split('/')[1].split('.')
+            K, phi0 = self.get_params(master.index)
+            if K<1e-6*kjmol: continue
+            pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3],
+                K/kjmol, phi0/deg
+            ))
+        return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
     def _opdists_to_yaff(self):
         'construct a OOPDIST section of a yaff parameter file'
         prefix = 'OOPDIST'
@@ -852,6 +870,7 @@ class ValenceFF(ForcePartValence):
             self._bendaharm_to_yaff(), self._bendcharm_to_yaff(),
             self._bendcos_to_yaff(),
             self._torsions_to_yaff(), self._torsc2harm_to_yaff(),
+            self._dihedharm_to_yaff(),
             self._opdists_to_yaff(),self._sqopdists_to_yaff(),
             self._cross_to_yaff(),
         ]

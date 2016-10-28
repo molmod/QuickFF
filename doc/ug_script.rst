@@ -194,8 +194,14 @@ These options control the logging of all the operations in QuickFF.
     default, the silent mode is not activated.
 
 * Verbose mode (:option:`-v` or :option:`--verbose`):
-    Increases verbosity, is overwriten if :option:`--silent` is switched on. By
-    default, the verbosity mode is not activated.
+    Increases verbosity, is overwriten if :option:`--silent` or 
+    :option:`--very-verbose` is switched on. By default, the verbose mode is
+    not activated.
+
+* Very verbose mode (:option:`-V` or :option:`--very-verbose`):
+    Increases verbosity to highest level, is overwriten if :option:`--silent`
+    is switched on. This is mostly usefull for debugging purposes. By default,
+    the very verbose mode is not activated.
 
 * Pipe logging (:option:`-l LOGFILE` or :option:`--logfile=LOGFILE`):
     Redirect logger output to a file with the name `LOGFILE`. By default, all
