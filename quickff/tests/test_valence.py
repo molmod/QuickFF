@@ -99,7 +99,7 @@ def get_indices_zero_nonzero(term, natoms):
     for i in xrange(natoms):
         iindices = [3*i,3*i,3*i, 3*i+1,3*i+1,3*i+1, 3*i+2,3*i+2,3*i+2]
         for j in xrange(natoms):
-            jindices = [3*j,3*j+1,3*j+2, 3*j,3*j+1,3*j+2, 3*j,3*j+1,3*j+2] 
+            jindices = [3*j,3*j+1,3*j+2, 3*j,3*j+1,3*j+2, 3*j,3*j+1,3*j+2]
             if i in term.get_atoms() and j in term.get_atoms():
                 inonzero[0] += iindices
                 inonzero[1] += jindices
@@ -214,7 +214,7 @@ def check_hessian_oops(name, tol=1e-3*kjmol/angstrom**2):
         fc = np.random.uniform(low=500, high=5000)*kjmol/angstrom**4
         ref, num = get_analytic_numeric_hessian(valence, term, fc=fc, rv0=rv)
         #assert that hessian elements of atoms not part of the current oop
-        #are zero   
+        #are zero
         if len(izero[0])>0:
             assert (abs(ref[izero])).max()<1e-12*kjmol/angstrom**2
             assert (abs(num[izero])).max()<1e-12*kjmol/angstrom**2
@@ -315,4 +315,3 @@ def test_hessian_dihedrals_benzene():
 
 def test_hessian_oops_benzene():
     check_hessian_oops('benzene/gaussian.fchk')
-

@@ -80,9 +80,11 @@ Stable release
 A stable release of the second generation of QuickFF, which includes all 
 features described on this website, can be downloaded from:
 
-    http://users.ugent.be/~lvduyfhu/QuickFF-2.1.2.tar.gz
+    http://users.ugent.be/~lvduyfhu/QuickFF-2.1.3.tar.gz
 
 Previous versions available for download can be found below:
+
+    http://users.ugent.be/~lvduyfhu/QuickFF-2.1.2.tar.gz
 
     http://users.ugent.be/~lvduyfhu/QuickFF-2.0.1.tar.gz
     
@@ -92,9 +94,9 @@ Choose a suitable directory, e.g. ``~/build``, download and unpack the archive::
 
     mkdir -p ~/build
     cd ~/build
-    wget http://users.ugent.be/~lvduyfhu/QuickFF-2.1.2.tar.gz
-    tar -xvzf QuickFF-2.1.2.tar.gz
-    cd QuickFF-2.1.2
+    wget http://users.ugent.be/~lvduyfhu/QuickFF-2.1.3.tar.gz
+    tar -xvzf QuickFF-2.1.3.tar.gz
+    cd QuickFF-2.1.3
 
 
 Latest development version (experts only)
