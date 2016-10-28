@@ -17,16 +17,16 @@ Yaff dependency
 code used at the Center for Molecular Modeling (CMM) to test-drive new FF models.
 Yaff is required to run QuickFF, the implementation of each force field term is
 based on the implementation in Yaff. For this version of QuickFF, it is required
-to install the 
-`1.0.develop.2.13 <https://github.com/molmod/yaff/tree/1.0.develop.2.13>`_ 
+to install the development version in the
+`master <https://github.com/molmod/yaff/tree/master>`_
 branch of Yaff available at github. It can be installed by cloning the git 
 repository using the git command::
 
     git clone https://github.com/molmod/yaff.git
 
-and switch to the branch *1.0.develop.2.13*. Alternatively, a zip file can be
+Alternatively, a zip file can be
 downloaded from the online repository for the branch
-`1.0.develop.2.13 <https://github.com/molmod/yaff/tree/1.0.develop.2.13>`_.
+`master <https://github.com/molmod/yaff/tree/master>`_.
 After extracting the zip file, Yaff can be installed by following the 
 instructions given in the 
 `yaff documentation <http://molmod.github.io/yaff/ug_install.html>`_. The 
@@ -107,7 +107,7 @@ official git URL for QuickFF is http://github.com/molmod/QuickFF . To `clone`
 the QuickFF repository, go to your favorite directory for source code, e.g. 
 ``~/build``, and execute the following commands::
 
-    git clone git://github.com/molmod/QuickFF.git
+    git clone git://github.com/molmod/QuickFF.git quickff
     cd quickff
 
 The source code can be updated with the latest patches with the following
