@@ -30,7 +30,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 
 from molmod.periodic import periodic
-from molmod.units import angstrom, electronvolt, amu, kcalmol, deg
+from molmod.units import angstrom, electronvolt, amu, kcalmol, kjmol, deg
 from molmod.io.fchk import FCHKFile
 
 from yaff.pes.ext import PairPotEI
@@ -305,8 +305,7 @@ def _bonds_to_charmm22_prm(valence):
     for master in valence.iter_masters(label='BONDHARM'):
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
-        if K < 1e-6*kcalmol/angstrom**2:
-            continue
+        if K < 1e-6*kjmol/angstrom**2: continue
         result.append('{:15s}  {:15s}  {:9.3f}  {:10.4f}'.format(
             ffatypes[0], ffatypes[1], 0.5*K/(kcalmol/angstrom**2), q0/angstrom
         ))
@@ -325,8 +324,7 @@ def _angles_to_charmm22_prm(valence):
     for master in valence.iter_masters(label='BENDAHARM'):
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
-        if K < 1e-6*kcalmol:
-            continue
+        if K < 1e-6*kjmol: continue
         result.append('{:15s}  {:15s}  {:15s}  {:9.3f}  {:10.4f}'.format(
             ffatypes[0], ffatypes[1], ffatypes[2], 0.5*K/kcalmol, q0/deg
         ))
@@ -345,7 +343,7 @@ def _dihedrals_to_charmm22_prm(valence):
     for master in valence.iter_masters(label='TORSION'):
         ffatypes = master.basename.split('/')[1].split('.')
         m, K, q0 = valence.get_params(master.index)
-        if K < 1e-6*kcalmol: continue
+        if K < 1e-6*kjmol: continue
         result.append('{:15s}  {:15s}  {:15s}  {:15s}  {:10.4f}  {:2.0f}  {:8.2f}'.format(
             ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3], 0.5*K/kcalmol, m, q0/deg+180
         ))
@@ -413,11 +411,13 @@ def _atoms_to_charmm22_psf(system):
     return '\n'.join(result)
 
 
-def _ics_to_charmm22_psf(valence, label, maxwidth, header):
+def _ics_to_charmm22_psf(valence, label, maxwidth, header, K_index, K_threshold):
     result = []
     width = maxwidth
     nic = 0
     for term in valence.iter_terms(label=label):
+        K = valence.get_params(term.master)[K_index]
+        if K < K_threshold: continue
         # Extract iatom0, iatom1
         iatoms = term.get_atoms()
         # Predict what the width will be and fix if needed
@@ -436,15 +436,15 @@ def _ics_to_charmm22_psf(valence, label, maxwidth, header):
 
 
 def _bonds_to_charmm22_psf(valence):
-    return _ics_to_charmm22_psf(valence, 'BONDHARM', 8, '{:8d} !NBOND: bonds')
+    return _ics_to_charmm22_psf(valence, 'BONDHARM', 8, '{:8d} !NBOND: bonds', 0, 1e-6*kjmol/angstrom**2)
 
 
 def _angles_to_charmm22_psf(valence):
-    return _ics_to_charmm22_psf(valence, 'BENDAHARM', 9, '{:8d} !NTHETA: angles')
+    return _ics_to_charmm22_psf(valence, 'BENDAHARM', 9, '{:8d} !NTHETA: angles', 0, 1e-6*kjmol)
 
 
 def _dihedrals_to_charmm22_psf(valence):
-    return _ics_to_charmm22_psf(valence, 'TORSION', 8, '{:8d} !NPHI: dihedrals')
+    return _ics_to_charmm22_psf(valence, 'TORSION', 8, '{:8d} !NPHI: dihedrals', 1, 1e-6*kjmol)
 
 
 def dump_charmm22_psf(system, valence, fn):
