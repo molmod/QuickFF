@@ -34,7 +34,6 @@ from quickff.reference import *
 from quickff.valence import *
 from quickff.perturbation import *
 from quickff.program import *
-from quickff.ffio import *
 from quickff.cost import *
 from quickff.io import *
 from quickff.tools import *

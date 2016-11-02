@@ -28,7 +28,7 @@ from quickff.valence import ValenceFF
 from quickff.perturbation import RelaxedStrain
 from quickff.cost import HessianFCCost
 from quickff.paracontext import paracontext
-from quickff.ffio import dump_charmm22_prm, dump_charmm22_psf
+from quickff.io import dump_charmm22_prm, dump_charmm22_psf
 from quickff.log import log
 
 from yaff.pes.vlist import Cosine, Harmonic
