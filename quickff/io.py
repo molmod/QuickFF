@@ -246,7 +246,7 @@ BONDS
 !Kb: kcal/mole/A**2
 !b0: A
 !
-!atom type Kb          b0
+!at1  at2        Kb         b0
 !
 {}
 
@@ -262,7 +262,7 @@ ANGLES
 !Kub: kcal/mole/A**2 (Urey-Bradley)
 !S0: A
 !
-!atom types     Ktheta    Theta0   Kub     S0
+!at1  at2  at3    Ktheta     Theta0     Kub     S0
 !
 {}
 
@@ -275,7 +275,8 @@ DIHEDRALS
 !n: multiplicity
 !delta: degrees
 !
-!atom types             Kchi    n   delta
+!at1  at2  at3  at4       Kchi  n    delta
+!
 {}
 
 
@@ -287,7 +288,7 @@ IMPROPER
 !psi0: degrees
 !note that the second column of numbers (0) is ignored
 !
-!atom types           Kpsi                   psi0
+!at1  at2  at3  at4   Kpsi        psi0
 !
 
 '''
@@ -306,7 +307,7 @@ def _bonds_to_charmm22_prm(valence):
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
         if K < 1e-6*kjmol/angstrom**2: continue
-        result.append('{:15s}  {:15s}  {:9.3f}  {:10.4f}'.format(
+        result.append('{:4s} {:4s} {:9.3f} {:10.4f}'.format(
             ffatypes[0], ffatypes[1], 0.5*K/(kcalmol/angstrom**2), q0/angstrom
         ))
     return '\n'.join(result)
@@ -325,7 +326,7 @@ def _angles_to_charmm22_prm(valence):
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
         if K < 1e-6*kjmol: continue
-        result.append('{:15s}  {:15s}  {:15s}  {:9.3f}  {:10.4f}'.format(
+        result.append('{:4s} {:4s} {:4s} {:9.3f} {:10.4f}'.format(
             ffatypes[0], ffatypes[1], ffatypes[2], 0.5*K/kcalmol, q0/deg
         ))
     return '\n'.join(result)
@@ -344,7 +345,7 @@ def _dihedrals_to_charmm22_prm(valence):
         ffatypes = master.basename.split('/')[1].split('.')
         m, K, q0 = valence.get_params(master.index)
         if K < 1e-6*kjmol: continue
-        result.append('{:15s}  {:15s}  {:15s}  {:15s}  {:10.4f}  {:2.0f}  {:8.2f}'.format(
+        result.append('{:4s} {:4s} {:4s} {:4s} {:10.4f} {:2.0f} {:8.2f}'.format(
             ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3], 0.5*K/kcalmol, m, q0/deg+180
         ))
     return '\n'.join(result)
