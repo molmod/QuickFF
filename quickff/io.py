@@ -217,7 +217,7 @@ def read_bci_constraints(fn):
     return constraints
 
 
-def _check_charm22(valence):
+def _check_charmm22(valence):
     """Print warnings for all kinds of energy terms not supported by CHARMM22.
 
        **Arguments**
@@ -237,7 +237,7 @@ def _check_charm22(valence):
 
 # Template based on the PROTEINS-ZINC-NUCLEID-ACIDS force field file by MacKerell.
 # (par_all27_prot_na.prm)
-charmm22_template = '''\
+charmm22_prm_template = '''\
 
 BONDS
 !
@@ -293,7 +293,7 @@ IMPROPER
 '''
 
 
-def _bonds_to_charmm22(valence):
+def _bonds_to_charmm22_prm(valence):
     """Construct a BONDS section of a CHARMM22 parameter file.
 
        **Arguments**
@@ -313,7 +313,7 @@ def _bonds_to_charmm22(valence):
     return '\n'.join(result)
 
 
-def _angles_to_charmm22(valence):
+def _angles_to_charmm22_prm(valence):
     """Construct a ANGLES section of a CHARMM22 parameter file.
 
        **Arguments**
@@ -333,7 +333,7 @@ def _angles_to_charmm22(valence):
     return '\n'.join(result)
 
 
-def _dihedrals_to_charmm22(valence):
+def _dihedrals_to_charmm22_prm(valence):
     """Construct a DIHEDRALS section of a CHARMM22 parameter file.
 
        **Arguments**
@@ -364,17 +364,17 @@ def dump_charmm22_prm(valence, fn):
             The filename to write to.
     """
     # First report all types of terms not supported by CHARMM22.
-    _check_charm22(valence)
+    _check_charmm22(valence)
 
     # Dump supported parameters in prm file.
     with open(fn, 'w') as f:
-        f.write(charmm22_template.format(
-            _bonds_to_charmm22(valence),
-            _angles_to_charmm22(valence),
-            _dihedrals_to_charmm22(valence)))
+        f.write(charmm22_prm_template.format(
+            _bonds_to_charmm22_prm(valence),
+            _angles_to_charmm22_prm(valence),
+            _dihedrals_to_charmm22_prm(valence)))
 
 
-psf_template = '''\
+charmm22_psf_template = '''\
 PSF
 
        1 !NTITLE
@@ -402,7 +402,7 @@ PSF
 
 '''
 
-def _atoms_to_psf(system):
+def _atoms_to_charmm22_psf(system):
     result = ['{:8d} !NATOM'.format(system.natom)]
     for iatom in xrange(system.natom):
         ffatype = system.get_ffatype(iatom)
@@ -413,7 +413,7 @@ def _atoms_to_psf(system):
     return '\n'.join(result)
 
 
-def _ics_to_charmm22(valence, label, maxwidth, header):
+def _ics_to_charmm22_psf(valence, label, maxwidth, header):
     result = []
     width = maxwidth
     nic = 0
@@ -426,7 +426,7 @@ def _ics_to_charmm22(valence, label, maxwidth, header):
             width = 0
         nic += 1
         # Convert to string and add to result
-        s = ''.join(['{:8d}'.format(iatom) for iatom in iatoms])
+        s = ''.join(['{:8d}'.format(iatom+1) for iatom in iatoms])
         if width == 0:
             result.append(s)
         else:
@@ -435,16 +435,16 @@ def _ics_to_charmm22(valence, label, maxwidth, header):
     return '\n'.join(result)
 
 
-def _bonds_to_charmm22(valence):
-    return _ics_to_charmm22(valence, 'BONDHARM', 8, '{:8d} !NBOND: bonds')
+def _bonds_to_charmm22_psf(valence):
+    return _ics_to_charmm22_psf(valence, 'BONDHARM', 8, '{:8d} !NBOND: bonds')
 
 
-def _angles_to_charmm22(valence):
-    return _ics_to_charmm22(valence, 'BENDAHARM', 9, '{:8d} !NTHETA: angles')
+def _angles_to_charmm22_psf(valence):
+    return _ics_to_charmm22_psf(valence, 'BENDAHARM', 9, '{:8d} !NTHETA: angles')
 
 
-def _dihedrals_to_charmm22(valence):
-    return _ics_to_charmm22(valence, 'TORSION', 8, '{:8d} !NPHI: dihedrals')
+def _dihedrals_to_charmm22_psf(valence):
+    return _ics_to_charmm22_psf(valence, 'TORSION', 8, '{:8d} !NPHI: dihedrals')
 
 
 def dump_charmm22_psf(system, valence, fn):
@@ -462,12 +462,12 @@ def dump_charmm22_psf(system, valence, fn):
             The filename to write to.
     """
     # First report all types of terms not supported by CHARMM22.
-    _check_charm22(valence)
+    _check_charmm22(valence)
 
     # Dump supported internal coordinates into PSF file.
     with open(fn, 'w') as f:
-        f.write(psf_template.format(
-            _atoms_to_psf(system),
-            _bonds_to_charmm22(valence),
-            _angles_to_charmm22(valence),
-            _dihedrals_to_charmm22(valence)))
+        f.write(charmm22_psf_template.format(
+            _atoms_to_charmm22_psf(system),
+            _bonds_to_charmm22_psf(valence),
+            _angles_to_charmm22_psf(valence),
+            _dihedrals_to_charmm22_psf(valence)))
