@@ -26,10 +26,29 @@
 
 from quickff.log import log
 
-from molmod.units import kcalmol, angstrom, deg
+from molmod.units import kcalmol, angstrom, deg, amu
 
 
-__all__ = ['dump_charmm22_par']
+__all__ = ['dump_charmm22_prm', 'dump_charmm22_psf']
+
+
+
+def _check_charm22(valence):
+    """Print warnings for all kinds of energy terms not supported by CHARMM22.
+
+       **Arguments**
+
+       valence
+            Instance of ValenceFF, which defines the force field.
+    """
+    # First report all types of terms not supported by CHARMM22.
+    skipped = set([])
+    supported_kinds = set(['BONDHARM', 'BENDAHARM', 'TORSION'])
+    for term in valence.iter_terms():
+        kind = term.basename[:term.basename.find('/')].upper()
+        if kind not in supported_kinds and kind not in skipped:
+            log.warning('Not writing {} term to CHARMM22 parameter file.'.format(kind))
+            skipped.add(kind)
 
 
 
@@ -150,7 +169,7 @@ def _dihedrals_to_charmm22(valence):
     return '\n'.join(result)
 
 
-def dump_charmm22_par(valence, fn):
+def dump_charmm22_prm(valence, fn):
     """Dump supported parameters in a CHARMM22 parameter file.
 
        **Arguments**
@@ -162,17 +181,110 @@ def dump_charmm22_par(valence, fn):
             The filename to write to.
     """
     # First report all types of terms not supported by CHARMM22.
-    skipped = set([])
-    supported_kinds = set(['BONDHARM', 'BENDAHARM', 'TORSION'])
-    for term in valence.iter_terms():
-        kind = term.basename[:term.basename.find('/')].upper()
-        if kind not in supported_kinds and kind not in skipped:
-            log.warning('Not writing {} term to CHARMM22 parameter file.'.format(kind))
-            skipped.add(kind)
+    _check_charm22(valence)
 
     # Dump supported parameters in prm file.
     with open(fn, 'w') as f:
         f.write(charmm22_template.format(
+            _bonds_to_charmm22(valence),
+            _angles_to_charmm22(valence),
+            _dihedrals_to_charmm22(valence)))
+
+
+psf_template = '''\
+PSF
+
+       1 !NTITLE
+ REMARKS Generated with QuickFF
+
+{}
+
+{}
+
+{}
+
+{}
+
+       0 !NIMPHI: impropers
+
+
+       0 !NDON: donors
+
+
+       0 !NACC: acceptors
+
+
+       0 !NNB
+
+
+'''
+
+def _atoms_to_psf(system):
+    result = ['{:8d} !NATOM'.format(system.natom)]
+    for iatom in xrange(system.natom):
+        ffatype = system.get_ffatype(iatom)
+        if len(ffatype) > 4:
+            log.warning('Atom type too long for CHARMM PSF file: {}'.format(ffatype))
+        result.append('{:8d} A    1    MOL  {:4} {:4} {:10.6f} {:13.4f}           0'.format(
+            iatom+1, ffatype, ffatype, system.charges[iatom], system.masses[iatom]/amu))
+    return '\n'.join(result)
+
+
+def _ics_to_charmm22(valence, label, maxwidth, header):
+    result = []
+    width = maxwidth
+    nic = 0
+    for term in valence.iter_terms(label=label):
+        # Extract iatom0, iatom1
+        iatoms = term.get_atoms()
+        # Predict what the width will be and fix if needed
+        width += len(iatoms)
+        if width >= maxwidth:
+            width = 0
+        nic += 1
+        # Convert to string and add to result
+        s = ''.join(['{:8d}'.format(iatom) for iatom in iatoms])
+        if width == 0:
+            result.append(s)
+        else:
+            result[-1] += s
+    result.insert(0, header.format(nic))
+    return '\n'.join(result)
+
+
+def _bonds_to_charmm22(valence):
+    return _ics_to_charmm22(valence, 'BONDHARM', 8, '{:8d} !NBOND: bonds')
+
+
+def _angles_to_charmm22(valence):
+    return _ics_to_charmm22(valence, 'BENDAHARM', 9, '{:8d} !NTHETA: angles')
+
+
+def _dihedrals_to_charmm22(valence):
+    return _ics_to_charmm22(valence, 'TORSION', 8, '{:8d} !NPHI: dihedrals')
+
+
+def dump_charmm22_psf(system, valence, fn):
+    """Dump supported internal coordinates in a CHARMM psf file.
+
+       **Arguments**
+
+       system
+            Instance of yaff.System class
+
+       valence
+            Instance of ValenceFF, which defines the force field.
+
+       fn
+            The filename to write to.
+    """
+    # First report all types of terms not supported by CHARMM22.
+    _check_charm22(valence)
+
+    # Dump supported internal coordinates into PSF file.
+    with open(fn, 'w') as f:
+        f.write(psf_template.format(
+            _atoms_to_psf(system),
             _bonds_to_charmm22(valence),
             _angles_to_charmm22(valence),
             _dihedrals_to_charmm22(valence)))
