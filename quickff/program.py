@@ -68,7 +68,7 @@ class BaseProgram(object):
                 the name of the file to write the final parameters to in Yaff
                 format. The default is `pars.txt`.
 
-            fn_charmm22_par
+            fn_charmm22_prm
                 the name of a CHARMM parameter file. If not given, the file is not written
 
             fn_charmm22_psf
