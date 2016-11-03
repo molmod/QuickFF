@@ -28,6 +28,7 @@ from quickff.valence import ValenceFF
 from quickff.perturbation import RelaxedStrain
 from quickff.cost import HessianFCCost
 from quickff.paracontext import paracontext
+from quickff.io import dump_charmm22_prm, dump_charmm22_psf
 from quickff.log import log
 
 from yaff.pes.vlist import Cosine, Harmonic
@@ -66,6 +67,12 @@ class BaseProgram(object):
             fn_yaff
                 the name of the file to write the final parameters to in Yaff
                 format. The default is `pars.txt`.
+
+            fn_charmm22_prm
+                the name of a CHARMM parameter file. If not given, the file is not written
+
+            fn_charmm22_psf
+                the name of a CHARMM topology file. If not given, the file is not written
 
             fn_sys
                 the name of the file to write the system to. The default is
@@ -194,6 +201,12 @@ class BaseProgram(object):
         if fn_yaff is None:
             fn_yaff = 'pars_cov%s.txt' %(self.kwargs.get('suffix', ''))
         self.valence.dump_yaff(fn_yaff)
+        fn_charmm22_prm = self.kwargs.get('fn_charmm22_prm')
+        if fn_charmm22_prm is not None:
+            dump_charmm22_prm(self.valence, fn_charmm22_prm)
+        fn_charmm22_psf = self.kwargs.get('fn_charmm22_psf')
+        if fn_charmm22_psf is not None:
+            dump_charmm22_psf(self.system, self.valence, fn_charmm22_psf)
         fn_sys = self.kwargs.get('fn_sys', None)
         if fn_sys is None:
             fn_sys = 'system%s.chk' %(self.kwargs.get('suffix', ''))
