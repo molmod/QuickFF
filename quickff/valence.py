@@ -643,8 +643,29 @@ class ValenceFF(ForcePartValence):
             elif only.lower()=='rv1': return term['par2']
             else: raise ValueError('Invalid par kind definition %s' %only)
         else:
-            raise NotImplementedError, \
-                'set_params not implemented for Yaff %s term' %term['kind']
+            raise NotImplementedError(
+                'get_params not implemented for Yaff %s term' % term['kind'])
+
+    def is_negligible(self, term_index):
+        """Return True if the given term can be neglected (e.g. in parameter files)."""
+        # Note that the units may not be strictly correct: below per angstrom, radian
+        # squared, etc should be used. Because that would not affect the order of
+        # magnitude of the threshold, it is not worth adding such complications to the
+        # code.
+        term = self.vlist.vtab[term_index]
+        if term['kind'] in [0, 2]:  # ['Harmonic', 'Fues']
+            return abs(term['par0']) < 1e-6*kjmol
+        elif term['kind'] in [1]:   # ['PolyFour']
+            # Not sure how to handle this one...
+            # For now, never neglect.
+            return False
+        elif term['kind'] in [4]:   # ['Cosine']
+            return abs(term['par1']) < 1e-6*kjmol
+        elif term['kind'] in [3]:   # ['Cross']
+            return abs(term['par0']) < 1e-6*kjmol
+        else:
+            raise NotImplementedError(
+                'is_negligible not implemented for Yaff %s term' % term['kind'])
 
     def check_params(self, term, labels):
         '''
@@ -694,9 +715,9 @@ class ValenceFF(ForcePartValence):
         units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'R0 A'])
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
             ffatypes = master.basename.split('/')[1].split('.')
             K, q0 = self.get_params(master.index)
-            if K<1e-6*kjmol/angstrom**2: continue
             pars.lines.append('%8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1], K/(kjmol/angstrom**2), q0/angstrom
             ))
@@ -708,9 +729,9 @@ class ValenceFF(ForcePartValence):
         units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'THETA0 deg'])
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
             ffatypes = master.basename.split('/')[1].split('.')
             K, q0 = self.get_params(master.index)
-            if K<1e-6*kjmol: continue
             pars.lines.append('%8s  %8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol, q0/deg
             ))
@@ -722,9 +743,9 @@ class ValenceFF(ForcePartValence):
         units = ParameterDefinition('UNIT', lines=['K kjmol', 'COS0 au'])
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
             ffatypes = master.basename.split('/')[1].split('.')
             K, q0 = self.get_params(master.index)
-            if K<1e-6*kjmol: continue
             pars.lines.append('%8s  %8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol, q0
             ))
@@ -736,9 +757,9 @@ class ValenceFF(ForcePartValence):
         units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
             ffatypes = master.basename.split('/')[1].split('.')
             m, K, q0 = self.get_params(master.index)
-            if K<1e-6*kjmol: continue
             pars.lines.append('%8s  %8s  %8s  %1i %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1], ffatypes[2], m, K/kjmol, q0/deg
             ))
@@ -750,9 +771,9 @@ class ValenceFF(ForcePartValence):
         units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
             ffatypes = master.basename.split('/')[1].split('.')
             m, K, q0 = self.get_params(master.index)
-            if K<1e-6*kjmol: continue
             pars.lines.append('%8s  %8s  %8s  %8s  %1i %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3], m,
                 K/kjmol, q0/deg
@@ -765,10 +786,10 @@ class ValenceFF(ForcePartValence):
         units = ParameterDefinition('UNIT', lines=['A kjmol', 'COS0 au'])
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
             ffatypes = master.basename.split('/')[1].split('.')
             a = self.get_params(master.index)
             K = 0.5*a[3]
-            if K<1e-6*kjmol: continue
             cos0 = np.arccos(np.sqrt(-0.5*a[1]/a[3]))
             pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3],
@@ -782,9 +803,9 @@ class ValenceFF(ForcePartValence):
         units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'PHI0 deg'])
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
             ffatypes = master.basename.split('/')[1].split('.')
             K, phi0 = self.get_params(master.index)
-            if K<1e-6*kjmol: continue
             pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3],
                 K/kjmol, phi0/deg
@@ -797,10 +818,10 @@ class ValenceFF(ForcePartValence):
         units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'D0 A'])
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
             if 'sqoopdist' in master.basename.lower(): continue
             ffatypes = master.basename.split('/')[1].split('.')
             K, q0 = self.get_params(master.index)
-            if K<1e-6: continue
             pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
                 K/(kjmol/angstrom**2), q0/angstrom
@@ -813,9 +834,9 @@ class ValenceFF(ForcePartValence):
         units = ParameterDefinition('UNIT', lines=['K kjmol/A**4', 'D0 A**2'])
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
             ffatypes = master.basename.split('/')[1].split('.')
             K, q0 = self.get_params(master.index)
-            if K<1e-6: continue
             pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
                 K/(kjmol/angstrom**4), q0/angstrom**2
@@ -836,6 +857,7 @@ class ValenceFF(ForcePartValence):
         done = []
         pars = ParameterDefinition('PARS')
         for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
             prefix, ffatypes, suffix = master.basename.split('/')
             label = prefix+'/'+ffatypes+'/'
             if label in done: continue
