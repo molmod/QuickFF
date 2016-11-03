@@ -390,12 +390,10 @@ class ValenceFF(ForcePartValence):
                     n1 = len(self.system.neighs1[dihed[1]])
                     n2 = len(self.system.neighs1[dihed[2]])
                     ms[i] = get_multiplicity(n1, n2)
-                nan = False
-                for m in ms:
-                    if np.isnan(m): nan = True
-                if nan or None in ms or ms.std()>1e-3:
+                if np.isnan(ms).any() or ms.std()>1e-3:
                     ms_string = str(ms)
-                    if nan: ms_string = 'nan'
+                    if np.isnan(ms).any():
+                        ms_string = 'nan'
                     log.warning('missing dihedral for %s (m is %s)' %('.'.join(types), ms_string))
                     continue
                 m = int(np.round(ms.mean()))

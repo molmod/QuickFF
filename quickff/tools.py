@@ -300,7 +300,7 @@ def get_multiplicity(n1, n2):
     elif set([n1,n2])==set([3,3]): return 2
     elif set([n1,n2])==set([2,3]): return 2
     elif set([n1,n2])==set([2,2]): return 1
-    else:                          return None
+    else:                          return np.nan
 
 
 def get_restvalue(values, m, thresshold=20*deg, mode=1):
