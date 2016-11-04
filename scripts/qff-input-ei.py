@@ -24,13 +24,16 @@
 #
 #--
 
-from quickff.tools import guess_ffatypes, get_ei_radii, average, charges_to_bcis
-from quickff.io import read_abinitio, make_yaff_ei, read_bci_constraints
-from molmod.io.chk import load_chk
-from yaff import System
 from argparse import ArgumentParser
+import os
 
 import h5py as h5
+
+from molmod.io.chk import load_chk
+from yaff import System
+
+from quickff.tools import guess_ffatypes, get_ei_radii, average, charges_to_bcis
+from quickff.io import read_abinitio, make_yaff_ei, read_bci_constraints
 
 
 description  = '''\
@@ -42,7 +45,7 @@ def parse_args():
     parser = ArgumentParser(description=description)
     parser.add_argument(
         '-v', '--verbose', default=False, action='store_true',
-        help='Increase verbosity of the script [default=%default].'
+        help='Increase verbosity of the script [default=%(default)s].'
     )
     parser.add_argument(
         '--ffatypes', default=None,
@@ -50,7 +53,7 @@ def parse_args():
              'either low,medium, high or highest, atom types will be assigned '
              'through the automatic built-in detection (see documentation). If '
              'FFATYPES is None, the atom types are assumed to be defined in the '
-             'input files. [default=%default]'
+             'input files. [default=%(default)s]'
     )
     parser.add_argument(
         '--gaussian', default=False, action='store_true',
@@ -69,7 +72,7 @@ def parse_args():
              'requires the definition of bonds, if the bonds cannot be read '
              'from the system file, they will be estimated from the interatomic '
              'distances using the detect_bonds routine in the Yaff System '
-             'class. [default=%default]'
+             'class. [default=%(default)s]'
     )
     parser.add_argument(
         '--bci-constraints', default=None,
@@ -94,8 +97,8 @@ def parse_args():
              'is the label of the dataset that contains the atomic charges.'
     )
     parser.add_argument(
-        'fn_out', default='pars_ei.txt',
-        help='Name of the Yaff file to write the parameters to. [default=%default]'
+        'fn_out', default='pars_ei.txt', nargs='?',
+        help='Name of the Yaff file to write the parameters to. [default=%(default)s]'
     )
     args = parser.parse_args()
     if args.charges.count(':') != 1:
@@ -108,7 +111,7 @@ def main():
 
     # Load system file
     if args.fn_sys.endswith('.fchk'):
-        numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fargs.n_sys, do_hess=False)
+        numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(args.fn_sys, do_hess=False)
         system = System(numbers, coords, rvecs=None, charges=None, radii=None, masses=masses)
         system.detect_bonds()
     else:
@@ -122,9 +125,9 @@ def main():
     # Load atomic charges
     fn_charges, _, path = args.charges.partition(':')
     if fn_charges.endswith('.h5'):
-        with h5.File(fn_in, 'r') as f:
+        with h5.File(fn_charges, 'r') as f:
             if not path in f:
-                raise IOError('Given HDF5 file %s does not contain a dataset %s' %(fn_in, path))
+                raise IOError('Given HDF5 file %s does not contain a dataset %s' % (fn_charges, path))
             charges = f[path][:]
             radii = None
             if args.gaussian:
@@ -138,13 +141,13 @@ def main():
         if path in sample.keys():
             charges = sample[path]
         else:
-            raise IOError('Given CHK file %s does not contain a dataset with label %s' %(fn_in, path))
+            raise IOError('Given CHK file %s does not contain a dataset with label %s' % (fn_charges, path))
         radii = None
         if args.gaussian:
             if 'radii' in sample.keys():
                 radii = average(sample['radii'], ffatypes, fmt='dict')
     else:
-        raise IOError('Invalid extension, fn_in should be a HDF5 or a CHK file.')
+        raise IOError('Invalid extension, fn_charges should be a HDF5 or a CHK file.')
 
     # Derive charge parameters
     if args.bci:

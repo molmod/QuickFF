@@ -37,7 +37,7 @@ the source code in the directory `share/systems/benzene`):
     The output of this command for the gaussian_mbis.h5 file provided in the
     directory ``share/systems/benzene`` is:
 
-    .. program-output:: h5dump -n /home/louis/build/quickff/share/systems/benzene/gaussian_mbis.h5
+    .. program-output:: h5dump -n ../share/systems/benzene/gaussian_mbis.h5
 
     From this output, we can conclude that, for this example, MBIS charges can
     be found in the path ``/charges``.
@@ -60,7 +60,7 @@ accessed by `qff.py` :option:`--help`)::
 The script will dump all relevant information to the screen, for this tutorial,
 the output is as follows:
 
-.. program-output:: qff.py --ffatypes=low --suffix=_noei /home/louis/build/quickff/share/systems/benzene/gaussian.fchk
+.. program-output:: qff.py --ffatypes=low --suffix=_noei ../share/systems/benzene/gaussian.fchk
 
 The logger will dump to following information to the screen (or a file if the
 :option:`--logfile` option was used):
@@ -111,7 +111,7 @@ Force field with electrostatics
     not the atom types are well chosen from the point of view of electrostatics
     (see second remark in :ref:`qff-input-ei.py <seclab_ug_tools_inputei>`):
 
-    .. program-output:: qff-input-ei.py --ffatypes=low --gaussian /home/louis/build/quickff/share/systems/benzene/gaussian.fchk /home/louis/build/quickff/share/systems/benzene/gaussian_mbis.h5:charges
+    .. program-output:: qff-input-ei.py --ffatypes=low --gaussian ../share/systems/benzene/gaussian.fchk ../share/systems/benzene/gaussian_mbis.h5:charges
 
     Furthermore, the following Yaff parameter (`pars_ei.txt`) file was written:
 
@@ -125,7 +125,7 @@ Force field with electrostatics
 
     The logging output for this job is:
 
-    .. program-output:: qff.py --ffatypes=low --suffix=_ei --ei=pars_ei.txt /home/louis/build/quickff/share/systems/benzene/gaussian.fchk
+    .. program-output:: qff.py --ffatypes=low --suffix=_ei --ei=pars_ei.txt ../share/systems/benzene/gaussian.fchk
 
     An extra line appeared in the beginning of the log output, i.e.
     ``QFF    Initializing Yaff force field reference for EI``. This indicates

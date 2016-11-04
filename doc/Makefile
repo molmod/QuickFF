@@ -40,6 +40,7 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
+	rm pars_cov_ei.txt pars_cov_noei.txt pars_ei.txt system_ei.chk system_noei.chk
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

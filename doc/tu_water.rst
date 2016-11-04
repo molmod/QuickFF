@@ -86,4 +86,5 @@ To summarize, the entire script as well as the logger output is given below.
 
       **Click to show/hide the logger output**
 
-   .. program-output:: python /home/louis/build/quickff/share/tutorials/water/qff-derive.py
+   .. program-output:: ./qff-derive.py
+      :cwd: ../share/tutorials/water/
