@@ -1,11 +1,11 @@
-from yaff import System 
+from yaff import System
 from molmod.io.fchk import FCHKFile
 
 from quickff.reference import SecondOrderTaylor, get_ei_ff
 from quickff.program import BaseProgram
 from quickff.log import log
 
-import h5py
+import h5py as h5
 
 #define class for deriving the force field
 class Program(BaseProgram):
@@ -46,8 +46,8 @@ rules = [
 system.detect_ffatypes(rules)
 
 #construct electrostatic force field from HE charges in gaussian_wpart.h5
-f = h5py.File('/home/louis/build/quickff/share/systems/water/gaussian_wpart.h5')
-charges = f['wpart/he/charges'][:]
+with hf.File('/home/louis/build/quickff/share/systems/water/gaussian_mbis.h5') as f:
+    charges = f['charges'][:]
 scales = [1.0, 1.0, 1.0, 1.0]
 ff_ei = get_ei_ff('EI', system, charges, scales, radii=None, average=True, pbc=[0,0,0])
 

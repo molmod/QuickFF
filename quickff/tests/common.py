@@ -26,12 +26,10 @@ def read_system(name):
     numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn)
     # Try to load charges.
     charges = None
-    fns_wpart = glob(os.path.join(os.path.dirname(fn), '*wpart.h5'))
-    print os.path.join(os.path.dirname(name), '*wpart.h5')
+    fns_wpart = glob(os.path.join(os.path.dirname(fn), 'gaussian_mbis.h5'))
     if len(fns_wpart) > 0:
         with h5.File(fns_wpart[0], 'r') as f:
-            if 'wpart/hi/charges' in f:
-                charges = f['wpart/hi/charges'][:]
+            charges = f['charges'][:]
     # Create system object.
     system = System(numbers, coords, charges=charges)
     system.detect_bonds()

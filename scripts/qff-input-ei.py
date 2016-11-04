@@ -28,25 +28,23 @@ from quickff.tools import guess_ffatypes, get_ei_radii, average, charges_to_bcis
 from quickff.io import read_abinitio, make_yaff_ei, read_bci_constraints
 from molmod.io.chk import load_chk
 from yaff import System
-from optparse import OptionParser
+from argparse import ArgumentParser
 
-import h5py
+import h5py as h5
 
-def parse():
-    usage = '%prog [options] fn_sys fn_in path'
-    description  = 'This script will read the atomic charges from the input '
-    description += 'arguments and make the Yaff parameters file for use with '
-    description += 'the QuickFF option --ei. fn_sys is any file from which the '
-    description += 'system can be extracted (MolMod CHK, Gaussian FCHK, XYZ, '
-    description += '...). Path represents the path to the charges, which are '
-    description += 'assumed to be stored in either a HDF5 file fn_in in the dataset '
-    description += '/path/charges or in a MolMod CHK file under the label `path`.'
-    parser = OptionParser(usage=usage, description=description)
-    parser.add_option(
+
+description  = '''\
+This script reads atomic charges from an input file and makes a Yaff parameters file
+suitable for the QuickFF option --ei.'''
+
+
+def parse_args():
+    parser = ArgumentParser(description=description)
+    parser.add_argument(
         '-v', '--verbose', default=False, action='store_true',
         help='Increase verbosity of the script [default=%default].'
     )
-    parser.add_option(
+    parser.add_argument(
         '--ffatypes', default=None,
         help='Assign atom types in the system. If FFATYPES is a string equal to '
              'either low,medium, high or highest, atom types will be assigned '
@@ -54,7 +52,7 @@ def parse():
              'FFATYPES is None, the atom types are assumed to be defined in the '
              'input files. [default=%default]'
     )
-    parser.add_option(
+    parser.add_argument(
         '--gaussian', default=False, action='store_true',
         help='Use gaussian smeared charges. The radii are taken from the input '
              'file fn_in (from dataset /path/radii for HDF5 file or from label '
@@ -62,7 +60,7 @@ def parse():
              'are estimated according to the procedure of Chen et al. See '
              '``quickff.tools.get_ei_radii`` for more info.'
     )
-    parser.add_option(
+    parser.add_argument(
         '--bci', default=False, action='store_true',
         help='Convert averaged atomic charges to bond charge increments, i.e. '
              'charge transfers along the chemical bonds in the system. In this '
@@ -73,7 +71,7 @@ def parse():
              'distances using the detect_bonds routine in the Yaff System '
              'class. [default=%default]'
     )
-    parser.add_option(
+    parser.add_argument(
         '--bci-constraints', default=None,
         help='A file containing constraints for the charge to bci fit in a '
              'master: slave0,slave1,...: sign format. A new line should be used '
@@ -81,66 +79,84 @@ def parse():
              'Sign should be 1.0 or -1.0 indicating wheter or not a sign switch '
              'should be introduced when mapping the slaves to the master.'
     )
-    parser.add_option(
-        '-o', '--output', default=None,
-        help='Name of the Yaff file to write the parameters to.'
-             ' [default=pars_ei_${PATH}.txt]'
+    parser.add_argument(
+        'fn_sys',
+        help='Any file from which the system can be extracted (MolMod CHK, Gaussian '
+             'FCHK, XYZ, ...).'
     )
-    options, args = parser.parse_args()
-    assert len(args)==3, 'Exactly three arguments are required: a system file, a HDF5 file and the path to the charges.'
-    return options, args
+    parser.add_argument(
+        'charges',
+        help='The atomic charges to be used. This argument has the form fn_charges:path, '
+             'where fn_charges is a filename that contains the charges and path refers '
+             'to a location within that file where the charges can be found. If '
+             'fn_charges is an HDF5 file, path is the location of a dataset containing '
+             'the charges, e.g. \'/charges\'. If fn_charges is a MolMod CHK file, path '
+             'is the label of the dataset that contains the atomic charges.'
+    )
+    parser.add_argument(
+        'fn_out', default='pars_ei.txt',
+        help='Name of the Yaff file to write the parameters to. [default=%default]'
+    )
+    args = parser.parse_args()
+    if args.charges.count(':') != 1:
+        parser.error('The argument charges must contain exactly one colon.')
+    return args
+
 
 def main():
-    options, args = parse()
-    fn_sys, fn_in, path = args
-    if fn_sys.endswith('.fchk'):
-        numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn_sys, do_hess=False)
+    args = parse_args()
+
+    # Load system file
+    if args.fn_sys.endswith('.fchk'):
+        numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fargs.n_sys, do_hess=False)
         system = System(numbers, coords, rvecs=None, charges=None, radii=None, masses=masses)
         system.detect_bonds()
     else:
-        system = System.from_file(fn_sys)
-    if options.ffatypes is not None:
-        guess_ffatypes(system, options.ffatypes)
+        system = System.from_file(args.fn_sys)
+
+    # Guess atom types if needed
+    if args.ffatypes is not None:
+        guess_ffatypes(system, args.ffatypes)
     ffatypes = [system.ffatypes[i] for i in system.ffatype_ids]
-    if fn_in.endswith('.h5'):
-        h5 = h5py.File(fn_in)
-        if not path in h5 or 'charges' not in h5[path]:
-            raise IOError('Given HDF5 file %s does not contain dataset %s/charges' %(fn_in, path))
-        charges = h5['%s/charges' %path][:]
-        radii = None
-        if options.gaussian:
-            if 'radii' in h5[path]:
-                radii = average(h5['%s/radii' %path][:], ffatypes, fmt='dict')
-            else:
-                radii = average(get_ei_radii(system.numbers), ffatypes, fmt='dict')
-    elif fn_in.endswith('.chk'):
-        sample = load_chk(fn_in)
+
+    # Load atomic charges
+    fn_charges, _, path = args.charges.partition(':')
+    if fn_charges.endswith('.h5'):
+        with h5.File(fn_in, 'r') as f:
+            if not path in f:
+                raise IOError('Given HDF5 file %s does not contain a dataset %s' %(fn_in, path))
+            charges = f[path][:]
+            radii = None
+            if args.gaussian:
+                path_radii = os.path.join(os.path.dirname(path), 'radii')
+                if 'radii' in f[path]:
+                    radii = average(f['%s/radii' %path][:], ffatypes, fmt='dict')
+                else:
+                    radii = average(get_ei_radii(system.numbers), ffatypes, fmt='dict')
+    elif fn_charges.endswith('.chk'):
+        sample = load_chk(fn_charges)
         if path in sample.keys():
             charges = sample[path]
         else:
-            raise IOError('Given CHK file %s does not contain dataset with label %s' %(fn_in, path))
+            raise IOError('Given CHK file %s does not contain a dataset with label %s' %(fn_in, path))
         radii = None
-        if options.gaussian:
+        if args.gaussian:
             if 'radii' in sample.keys():
                 radii = average(sample['radii'], ffatypes, fmt='dict')
     else:
         raise IOError('Invalid extension, fn_in should be a HDF5 or a CHK file.')
-    if options.output is None:
-        if path=='.':
-            fn_out = 'pars_ei.txt'
-        else:
-            fn_out = 'pars_ei_%s.txt' %path.replace('/', '_')
-    else:
-        fn_out = options.output
-    if options.bci:
+
+    # Derive charge parameters
+    if args.bci:
         constraints = {}
-        if options.bci_constraints is not None:
-            constraints = read_bci_constraints(options.bci_constraints)
-        bcis = charges_to_bcis(charges, ffatypes, system.bonds, constraints=constraints, verbose=options.verbose)
-        make_yaff_ei(fn_out, None, bcis=bcis, radii=radii)
+        if args.bci_constraints is not None:
+            constraints = read_bci_constraints(args.bci_constraints)
+        bcis = charges_to_bcis(charges, ffatypes, system.bonds, constraints=constraints, verbose=args.verbose)
+        make_yaff_ei(args.fn_out, None, bcis=bcis, radii=radii)
     else:
-        charges = average(charges, ffatypes, fmt='dict', verbose=options.verbose)
-        make_yaff_ei(fn_out, charges, radii=radii)
+        charges = average(charges, ffatypes, fmt='dict', verbose=args.verbose)
+        make_yaff_ei(args.fn_out, charges, radii=radii)
+
 
 if __name__=='__main__':
     main()
