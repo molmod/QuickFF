@@ -60,7 +60,7 @@ the following input files are available (examples of such file are provided with
 the source code in the directory <cite>share/systems/benzene</cite>):</p>
 <ul>
 <li><dl class="first docutils">
-<dt>gaussian.fchk</dt>
+<dt><tt class="docutils literal"><span class="pre">gaussian.fchk</span></tt></dt>
 <dd><p class="first">A Gaussian Formatted Checkpoint file containing the ab initio equilibrium
 geometry and ab initio Hessian in equilibrium. This file can be generated
 by performing a freq job in Gaussian using your level of theory and basis
@@ -78,87 +78,45 @@ following command:</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>gaussian_wpart.h5</dt>
+<dt><tt class="docutils literal"><span class="pre">gaussian_mbis.h5</span></tt></dt>
 <dd><p class="first">A HDF5 file containing the atomic charges. Such a file can, for example, be
-generated using <a class="reference external" href="http://molmod.github.com/horton/">Horton</a>. To determine
-the path in the HDF5 file to these charges, one can use the <cite>h5dump</cite>
-command (part of the Linux package <cite>hdf5-tools</cite>):</p>
-<div class="highlight-python"><div class="highlight"><pre>h5dump -n gaussian_wpart.h5
+generated using <a class="reference external" href="http://molmod.github.com/horton/">HORTON</a>. If you have HORTON 2.x
+installed, the following command will derive the atomic charges in this example from
+the wavefunction in the <tt class="docutils literal"><span class="pre">gaussian.fchk</span></tt> file:</p>
+<div class="highlight-python"><div class="highlight"><pre>horton-wpart.py gaussian.fchk gaussian_mbis.h5 mbis --grid=ultrafine
 </pre></div>
 </div>
-<p>The output of this command for the gaussian_wpart.h5 file provided in the
-directory <cite>share/systems/benzene</cite> is:</p>
-<div class="highlight-text"><div class="highlight"><pre>HDF5 &quot;/home/louis/build/quickff/share/systems/benzene/gaussian_wpart.h5&quot; {
+<p>To determine
+the path in the HDF5 file to these charges, one can use the <cite>h5dump</cite>
+command (part of the Linux package <cite>hdf5-tools</cite>):</p>
+<div class="highlight-python"><div class="highlight"><pre>h5dump -n gaussian_mbis.h5
+</pre></div>
+</div>
+<p>The output of this command for the gaussian_mbis.h5 file provided in the
+directory <tt class="docutils literal"><span class="pre">share/systems/benzene</span></tt> is:</p>
+<div class="highlight-text"><div class="highlight"><pre>HDF5 &quot;../share/systems/benzene/gaussian_mbis.h5&quot; {
 FILE_CONTENTS {
  group      /
- group      /system
- dataset    /system/coordinates
- group      /system/extra
- dataset    /system/extra/energy
- dataset    /system/extra/mulliken_charges
- dataset    /system/numbers
- group      /system/obasis
- dataset    /system/obasis/alphas
- dataset    /system/obasis/centers
- dataset    /system/obasis/con_coeffs
- dataset    /system/obasis/nprims
- dataset    /system/obasis/shell_map
- dataset    /system/obasis/shell_types
- dataset    /system/pseudo_numbers
- group      /system/wfn
- group      /system/wfn/dm_alpha
- dataset    /system/wfn/dm_alpha/array
- group      /system/wfn/exp_alpha
- dataset    /system/wfn/exp_alpha/coeffs
- dataset    /system/wfn/exp_alpha/energies
- dataset    /system/wfn/exp_alpha/occupations
- dataset    /system/wfn/nbasis
- dataset    /system/wfn/norb
- group      /system/wfn/occ_model
- dataset    /system/wfn/occ_model/nalpha
- dataset    /system/wfn/occ_model/nbeta
- group      /wpart
- group      /wpart/h
- dataset    /wpart/h/c6s
- dataset    /wpart/h/cartesian_multipoles
- dataset    /wpart/h/charges
- dataset    /wpart/h/populations
- dataset    /wpart/h/pseudo_populations
- dataset    /wpart/h/radial_moments
- dataset    /wpart/h/volume_ratios
- dataset    /wpart/h/volumes
- group      /wpart/he
- dataset    /wpart/he/c6s
- dataset    /wpart/he/cartesian_multipoles
- dataset    /wpart/he/change
- dataset    /wpart/he/charges
- dataset    /wpart/he/history_charges
- dataset    /wpart/he/history_propars
- dataset    /wpart/he/niter
- dataset    /wpart/he/populations
- dataset    /wpart/he/pseudo_populations
- dataset    /wpart/he/radial_moments
- dataset    /wpart/he/volume_ratios
- dataset    /wpart/he/volumes
- group      /wpart/hi
- dataset    /wpart/hi/c6s
- dataset    /wpart/hi/cartesian_multipoles
- dataset    /wpart/hi/change
- dataset    /wpart/hi/charges
- dataset    /wpart/hi/history_charges
- dataset    /wpart/hi/history_propars
- dataset    /wpart/hi/niter
- dataset    /wpart/hi/populations
- dataset    /wpart/hi/pseudo_populations
- dataset    /wpart/hi/radial_moments
- dataset    /wpart/hi/volume_ratios
- dataset    /wpart/hi/volumes
+ dataset    /cartesian_multipoles
+ dataset    /change
+ dataset    /charges
+ dataset    /core_charges
+ dataset    /history_charges
+ dataset    /history_propars
+ dataset    /niter
+ dataset    /populations
+ dataset    /propars
+ dataset    /pseudo_populations
+ dataset    /pure_multipoles
+ dataset    /radial_moments
+ dataset    /valence_charges
+ dataset    /valence_widths
  }
 }
 </pre></div>
 </div>
-<p class="last">From this output, we can conclude that, for example, Hirshfeld-I charges can
-be found in the path <cite>/wpart/hi/charges</cite>.</p>
+<p class="last">From this output, we can conclude that, for this example, MBIS charges can
+be found in the path <tt class="docutils literal"><span class="pre">/charges</span></tt>.</p>
 </dd>
 </dl>
 </li>
@@ -199,7 +157,7 @@ _________________________\//////____\///______________\///______________________
  USER               louis
  MACHINE            Linux molmod91 4.2.0-42-generic #49-Ubuntu SMP Tue Jun 28 
  MACHINE            21:26:26 UTC 2016 x86_64
- TIME               2016-11-05 14:25:49.776175
+ TIME               2016-11-05 14:39:10.820052
  QUICKFF VERSION    2.1.3
  PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
  NUMPY VERSION      1.8.2
@@ -207,8 +165,7 @@ _________________________\//////____\///______________\///______________________
  MATPLOTLIB VERSION 1.4.2
  CURRENT DIR        /home/louis/build/quickff/doc
  COMMAND LINE       /home/louis/.local/bin/qff.py --ffatypes=low --suffix=_noei 
- COMMAND LINE       /home/louis/build/quickff/share/systems/benzene/
- COMMAND LINE       gaussian.fchk
+ COMMAND LINE       ../share/systems/benzene/gaussian.fchk
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -271,13 +228,13 @@ _________________________\//////____\///______________\///______________________
             fc = 32.0 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Torsion/C.C.C.H (au  kjmol  deg)                                        
-            fc = 31.9 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 31.9 ± .00    rv = .000 ± 0.0    m = 2
 
         Torsion/H.C.C.H (au  kjmol  deg)                                        
-            fc = 12.9 ± .00    rv = .000 ± 0.0    m = 2
+            fc = 12.9 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Oopdist/C.C.H.C (kjmol/A^2  A)                                          
-            fc = 274.7 ± .000    rv = .0000 ± .000
+            fc = 274.8 ± .000    rv = .0000 ± .000
 
         Cross/C.C.C/b0a (kjmol/(A*rad)  A  deg)                                 
             fc = 9.48 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
@@ -289,24 +246,24 @@ _________________________\//////____\///______________\///______________________
             fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
 
         Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 63.1 ± .0    rv0 = 1.39 ± .00    rv0 =  120 ± 0.0
+            fc = 63.1 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± .00
 
         Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± 0.0
+            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± .00
 
         Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
-            fc =  120 ± .0    rv0 = 1.39 ± .00    rv0 = 1.08 ± 0.0
+            fc =  120 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.08 ± 0.0
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.668345
- TIMING Equil Set RV                    0:00:00.001981
- TIMING PT Generate                     0:00:20.202887
- TIMING PT Estimate                     0:00:00.069787
- TIMING PT Post process                 0:00:00.001707
- TIMING HC Estimate FC                  0:00:00.271728
- TIMING PT plot energy                  0:00:00.000009
+ TIMING Initializing                    0:00:00.535294
+ TIMING Equil Set RV                    0:00:00.002071
+ TIMING PT Generate                     0:00:18.757393
+ TIMING PT Estimate                     0:00:00.068639
+ TIMING PT Post process                 0:00:00.001782
+ TIMING HC Estimate FC                  0:00:00.298075
+ TIMING PT plot energy                  0:00:00.000008
  TIMING PT dump XYZ                     0:00:00.000004
 
 __/\\\__________________________________________________________________/\\\____
@@ -361,8 +318,8 @@ program is provided.</p>
 BONDHARM:UNIT  K kjmol/A**2
 BONDHARM:UNIT  R0 A
 
-BONDHARM:PARS         C         H  3.3852898499e+03  1.0844155604e+00
-BONDHARM:PARS         C         C  3.9753820365e+03  1.3946476093e+00
+BONDHARM:PARS         C         H  3.3852897446e+03  1.0844156458e+00
+BONDHARM:PARS         C         C  3.9753841443e+03  1.3946505540e+00
 
 
 # BENDAHARM
@@ -370,8 +327,8 @@ BONDHARM:PARS         C         C  3.9753820365e+03  1.3946476093e+00
 BENDAHARM:UNIT  K kjmol/rad**2
 BENDAHARM:UNIT  THETA0 deg
 
-BENDAHARM:PARS         C         C         H  2.9110592132e+02  1.2000377162e+02
-BENDAHARM:PARS         C         C         C  6.1741357078e+02  1.1999857531e+02
+BENDAHARM:PARS         C         C         H  2.9110601502e+02  1.2000169701e+02
+BENDAHARM:PARS         C         C         C  6.1741882060e+02  1.1999893622e+02
 
 
 # TORSION
@@ -379,9 +336,9 @@ BENDAHARM:PARS         C         C         C  6.1741357078e+02  1.1999857531e+02
 TORSION:UNIT  A kjmol
 TORSION:UNIT  PHI0 deg
 
-TORSION:PARS         C         C         C         H  2 3.1976687413e+01  0.0000000000e+00
-TORSION:PARS         H         C         C         H  2 1.2960361175e+01  0.0000000000e+00
-TORSION:PARS         C         C         C         C  2 3.2098913066e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         H  2 3.1976971865e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.2960437115e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.2097921005e+01  0.0000000000e+00
 
 
 # OOPDIST
@@ -389,7 +346,7 @@ TORSION:PARS         C         C         C         C  2 3.2098913066e+01  0.0000
 OOPDIST:UNIT  K kjmol/A**2
 OOPDIST:UNIT  D0 A
 
-OOPDIST:PARS         C         C         H         C  2.7474404785e+02  0.0000000000e+00
+OOPDIST:PARS         C         C         H         C  2.7480471292e+02  0.0000000000e+00
 
 
 # Cross
@@ -401,8 +358,8 @@ Cross:UNIT  R0 angstrom
 Cross:UNIT  R1 angstrom
 Cross:UNIT  THETA0 deg
 
-Cross:PARS         C         C         H   1.2082785725e+02   6.3131174424e+01   1.4430549597e+02  1.3946580957e+00  1.0844162677e+00  1.2000142701e+02
-Cross:PARS         C         C         C   5.9512298651e+02   9.4842791158e+00   9.6013063801e+00  1.3946580957e+00  1.3946580957e+00  1.2000562176e+02
+Cross:PARS         C         C         H   1.2082790946e+02   6.3131757677e+01   1.4430524343e+02  1.3946618526e+00  1.0844154825e+00  1.2000081727e+02
+Cross:PARS         C         C         C   5.9512422215e+02   9.4833301461e+00   9.6003574433e+00  1.3946618526e+00  1.3946618526e+00  1.2000556709e+02
 </pre></div>
 </div>
 </div>
@@ -414,22 +371,19 @@ Cross:PARS         C         C         C   5.9512298651e+02   9.4842791158e+00  
 <dd><p class="first">First we need to generate the Yaff input file for the electrostatic
 contribution to the force field. This is done using the script
 <a class="reference internal" href="rg_scripts.html#seclab-rg-scripts-inputei"><em>qff_input-ei.py</em></a>. For this tutorial,
-we will convert the charges given in the dataset <cite>/wpart/he/charges</cite> of the
-file <cite>gaussian_wpart.h5</cite> for the atoms in gaussian.fchk with atom types
+we will convert the charges given in the dataset <tt class="docutils literal"><span class="pre">/charges</span></tt> of the
+file <tt class="docutils literal"><span class="pre">gaussian_mbis.h5</span></tt> for the atoms in gaussian.fchk with atom types
 according to the level <cite>medium</cite> and use Gaussian charge distributions:</p>
-<div class="highlight-python"><div class="highlight"><pre>qff-input-ei.py --ffatypes=low --gaussian gaussian.fchk gaussian_wpart.h5 wpart/he
+<div class="highlight-python"><div class="highlight"><pre>qff-input-ei.py --ffatypes=low --gaussian gaussian.fchk gaussian_mbis.h5:charges
 </pre></div>
 </div>
 <p>This command dumped the following output to the screen, indicating wheter or
 not the atom types are well chosen from the point of view of electrostatics
 (see second remark in <a class="reference internal" href="ug_inputei.html#seclab-ug-tools-inputei"><em>qff-input-ei.py</em></a>):</p>
-<div class="highlight-text"><div class="highlight"><pre>usage: qff-input-ei.py [-h] [-v] [--ffatypes FFATYPES] [--gaussian] [--bci]
-                       [--bci-constraints BCI_CONSTRAINTS]
-                       fn_sys charges [fn_out]
-qff-input-ei.py: error: The argument charges must contain exactly one colon.
+<div class="highlight-text"><div class="highlight"><pre>
 </pre></div>
 </div>
-<p>Furthermore, the following Yaff parameter (<cite>pars_ei_wpart_he.txt</cite>) file was written:</p>
+<p>Furthermore, the following Yaff parameter (<cite>pars_ei.txt</cite>) file was written:</p>
 <div class="last highlight-text"><div class="highlight"><pre>#Fixed charges
 #---------------
 
@@ -445,8 +399,8 @@ FIXQ:DIELECTRIC 1.0
 # ----------------------------------------------------
 # KEY        label  Q_0A              R_A
 # ----------------------------------------------------
-FIXQ:ATOM        H  0.0442214368  0.7309000000
-FIXQ:ATOM        C -0.0441535372  1.1646000000
+FIXQ:ATOM        H  0.1314377213  0.7309000000
+FIXQ:ATOM        C -0.1315514661  1.1646000000
 </pre></div>
 </div>
 </dd>
@@ -456,7 +410,7 @@ FIXQ:ATOM        C -0.0441535372  1.1646000000
 <dt>Constructing the covalent contribution</dt>
 <dd><p class="first">Now, we generate a covalent force field on top of the previously derived
 electrostatic contribution using the qff.py script:</p>
-<div class="highlight-python"><div class="highlight"><pre>qff.py --ffatype=low --ei=pars_ei_wpart_he.txt gaussian.fchk
+<div class="highlight-python"><div class="highlight"><pre>qff.py --ffatype=low --ei=pars_ei.txt gaussian.fchk
 </pre></div>
 </div>
 <p>The logging output for this job is:</p>
@@ -483,7 +437,7 @@ _________________________\//////____\///______________\///______________________
  USER               louis
  MACHINE            Linux molmod91 4.2.0-42-generic #49-Ubuntu SMP Tue Jun 28 
  MACHINE            21:26:26 UTC 2016 x86_64
- TIME               2016-11-05 14:26:00.542494
+ TIME               2016-11-05 14:39:20.925471
  QUICKFF VERSION    2.1.3
  PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
  NUMPY VERSION      1.8.2
@@ -491,8 +445,7 @@ _________________________\//////____\///______________\///______________________
  MATPLOTLIB VERSION 1.4.2
  CURRENT DIR        /home/louis/build/quickff/doc
  COMMAND LINE       /home/louis/.local/bin/qff.py --ffatypes=low --suffix=_ei 
- COMMAND LINE       --ei=pars_ei_wpart_he.txt /home/louis/build/quickff/share/
- COMMAND LINE       systems/benzene/gaussian.fchk
+ COMMAND LINE       --ei=pars_ei.txt ../share/systems/benzene/gaussian.fchk
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -541,57 +494,57 @@ _________________________\//////____\///______________\///______________________
 
 
         BondHarm/C.C (kjmol/A^2  A)                                             
-            fc =  3975 ± .000    rv = 1.394 ± .000
+            fc =  3977 ± .000    rv = 1.393 ± .000
 
         BondHarm/C.H (kjmol/A^2  A)                                             
-            fc =  3385 ± .000    rv = 1.084 ± .000
+            fc =  3386 ± .000    rv = 1.087 ± .000
 
         BendAHarm/C.C.C (kjmol/rad^2  deg)                                      
-            fc = 617.1 ± .000    rv = 119.9 ± .000
+            fc = 614.9 ± .000    rv = 119.9 ± .000
 
         BendAHarm/C.C.H (kjmol/rad^2  deg)                                      
-            fc = 291.3 ± .000    rv = 120.0 ± .000
+            fc = 293.1 ± .000    rv = 120.1 ± .000
 
         Torsion/C.C.C.C (au  kjmol  deg)                                        
-            fc = 32.1 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 32.2 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Torsion/C.C.C.H (au  kjmol  deg)                                        
-            fc = 32.0 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 32.2 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Torsion/H.C.C.H (au  kjmol  deg)                                        
-            fc = 13.0 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 13.7 ± 0.0    rv = .000 ± 0.0    m = 2
 
         Oopdist/C.C.H.C (kjmol/A^2  A)                                          
-            fc = 272.9 ± .000    rv = .0000 ± .000
+            fc = 259.7 ± .000    rv = .0000 ± .000
 
         Cross/C.C.C/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.44 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.07 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.C/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.55 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 9.18 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
 
         Cross/C.C.C/bb (kjmol/A^2  A  A)                                        
-            fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
+            fc =  594 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
 
         Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 63.1 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 63.1 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± .00
 
         Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± 0.0
+            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± .00
 
         Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
-            fc =  121 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.08 ± 0.0
+            fc =  123 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.08 ± 0.0
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.522613
- TIMING Equil Set RV                    0:00:00.001995
- TIMING PT Generate                     0:00:19.197973
- TIMING PT Estimate                     0:00:00.140824
- TIMING PT Post process                 0:00:00.001722
- TIMING HC Estimate FC                  0:00:00.314861
- TIMING PT plot energy                  0:00:00.000012
+ TIMING Initializing                    0:00:00.529719
+ TIMING Equil Set RV                    0:00:00.001988
+ TIMING PT Generate                     0:00:18.729635
+ TIMING PT Estimate                     0:00:00.145253
+ TIMING PT Post process                 0:00:00.001729
+ TIMING HC Estimate FC                  0:00:00.315333
+ TIMING PT plot energy                  0:00:00.000008
  TIMING PT dump XYZ                     0:00:00.000004
 
 __/\\\__________________________________________________________________/\\\____
@@ -613,8 +566,8 @@ what we expect due to the charges being so small.</p>
 BONDHARM:UNIT  K kjmol/A**2
 BONDHARM:UNIT  R0 A
 
-BONDHARM:PARS         C         H  3.3854708109e+03  1.0847811911e+00
-BONDHARM:PARS         C         C  3.9756190052e+03  1.3945543524e+00
+BONDHARM:PARS         C         H  3.3868938036e+03  1.0876777797e+00
+BONDHARM:PARS         C         C  3.9775768555e+03  1.3939572603e+00
 
 
 # BENDAHARM
@@ -622,8 +575,8 @@ BONDHARM:PARS         C         C  3.9756190052e+03  1.3945543524e+00
 BENDAHARM:UNIT  K kjmol/rad**2
 BENDAHARM:UNIT  THETA0 deg
 
-BENDAHARM:PARS         C         C         H  2.9133597543e+02  1.2002127496e+02
-BENDAHARM:PARS         C         C         C  6.1711682991e+02  1.1999773888e+02
+BENDAHARM:PARS         C         C         H  2.9317619340e+02  1.2014174923e+02
+BENDAHARM:PARS         C         C         C  6.1498802409e+02  1.1997589602e+02
 
 
 # TORSION
@@ -631,9 +584,9 @@ BENDAHARM:PARS         C         C         C  6.1711682991e+02  1.1999773888e+02
 TORSION:UNIT  A kjmol
 TORSION:UNIT  PHI0 deg
 
-TORSION:PARS         C         C         C         H  2 3.2003916969e+01  0.0000000000e+00
-TORSION:PARS         H         C         C         H  2 1.3059494740e+01  0.0000000000e+00
-TORSION:PARS         C         C         C         C  2 3.2114410520e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         H  2 3.2223054672e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.3797891262e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.2261125478e+01  0.0000000000e+00
 
 
 # OOPDIST
@@ -641,7 +594,7 @@ TORSION:PARS         C         C         C         C  2 3.2114410520e+01  0.0000
 OOPDIST:UNIT  K kjmol/A**2
 OOPDIST:UNIT  D0 A
 
-OOPDIST:PARS         C         C         H         C  2.7290383451e+02  0.0000000000e+00
+OOPDIST:PARS         C         C         H         C  2.5974458012e+02  0.0000000000e+00
 
 
 # Cross
@@ -653,8 +606,8 @@ Cross:UNIT  R0 angstrom
 Cross:UNIT  R1 angstrom
 Cross:UNIT  THETA0 deg
 
-Cross:PARS         C         C         H   1.2110764793e+02   6.3132282945e+01   1.4433100892e+02  1.3945206014e+00  1.0847323770e+00  1.2000536152e+02
-Cross:PARS         C         C         C   5.9501432097e+02   9.4417616938e+00   9.5587873384e+00  1.3945206014e+00  1.3945206014e+00  1.2000868250e+02
+Cross:PARS         C         C         H   1.2331874822e+02   6.3169602172e+01   1.4450915115e+02  1.3934599929e+00  1.0876207075e+00  1.2001906223e+02
+Cross:PARS         C         C         C   5.9420291891e+02   9.0718167184e+00   9.1888276662e+00  1.3934599929e+00  1.3934599929e+00  1.2003642907e+02
 </pre></div>
 </div>
 </dd>

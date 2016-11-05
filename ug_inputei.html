@@ -55,9 +55,9 @@
   <div class="section" id="generating-yaff-parameter-file-for-the-electrostatic-contribution">
 <span id="seclab-ug-tools-inputei"></span><span id="seclab-ug-tools"></span><h1>3. Generating Yaff parameter file for the electrostatic contribution<a class="headerlink" href="#generating-yaff-parameter-file-for-the-electrostatic-contribution" title="Permalink to this headline">¶</a></h1>
 <p>A Yaff force field file for the electrostatic contribution can be constructed
-from the output of <a class="reference external" href="https://theochem.github.io/horton/">Horton</a> using the
+from the output of <a class="reference external" href="https://theochem.github.io/horton/">HORTON</a> using the
 <a class="reference internal" href="rg_scripts.html#seclab-rg-scripts-inputei"><em>qff-input-ei.py</em></a> script:</p>
-<div class="highlight-python"><div class="highlight"><pre>qff-input-ei.py [options] fn_sys fn_wpart path
+<div class="highlight-python"><div class="highlight"><pre>qff-input-ei.py [options] fn_sys fn_wpart:path
 </pre></div>
 </div>
 <p><strong>Arguments</strong></p>
@@ -72,17 +72,18 @@ main script <a class="reference internal" href="rg_scripts.html#seclab-rg-script
 </li>
 <li><dl class="first docutils">
 <dt><tt class="docutils literal"><span class="pre">fn_wpart</span></tt></dt>
-<dd><p class="first last">is a <a class="reference external" href="https://theochem.github.io/horton/">Horton</a>: HDF5 file containing
-the charges of each atom. The charges in this file should have the same
-ordering as the atoms in the system file <cite>fn_sys</cite>.</p>
+<dd><p class="first last">is a <a class="reference external" href="https://theochem.github.io/horton/">HORTON</a>: HDF5 file containing
+the charges of each atom. The script <tt class="docutils literal"><span class="pre">horton-wpart.py</span></tt> derives atomic charges from
+wavefunction files and writes the results in this type of HDF5 file. The charges in
+this file should have the same ordering as the atoms in the system file <tt class="docutils literal"><span class="pre">fn_sys</span></tt>.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><tt class="docutils literal"><span class="pre">path</span></tt></dt>
-<dd><p class="first last">is the path in the HDF5 file which contains a dataset <cite>charges</cite>. In other
-words, the file <cite>fn_wpart</cite> should contain a dataset <cite>/path/charges</cite>
-containing the charges for each atom in the system.</p>
+<dd><p class="first last">is the path in the HDF5 to the dataset <tt class="docutils literal"><span class="pre">charges</span></tt>. The default path in HORTON 2.x
+is <tt class="docutils literal"><span class="pre">/charges</span></tt>. In HORTON 1.x, the path depends on the method used to compute the
+charges, e.g. <tt class="docutils literal"><span class="pre">/wpart/hi/charges</span></tt> would be the path to the Hirshfeld-I charges.</p>
 </dd>
 </dl>
 </li>
@@ -93,7 +94,7 @@ containing the charges for each atom in the system.</p>
 <dt>Force field atom types (<em class="xref std std-option">--ffatypes=LEVEL</em>):</dt>
 <dd><p class="first last">Determine the force field atom types according to the given level (see
 <a class="reference internal" href="ug_script.html#seclab-ug-atype-estimator"><em>automatic estimation of atom types</em></a>). By
-default, the atom types are assumed to be defined in <cite>fn_sys</cite>.</p>
+default, the atom types are assumed to be defined in <tt class="docutils literal"><span class="pre">fn_sys</span></tt>.</p>
 </dd>
 </dl>
 </li>
@@ -102,7 +103,7 @@ default, the atom types are assumed to be defined in <cite>fn_sys</cite>.</p>
 <dd><p class="first last">Treat the atomic charges as Gaussian charge distributions with atomic radii
 determined according to the precedure of
 <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0009261407002618">Chen et al.</a>,
-implemented in the routine <cite>get_ei_radii</cite> from the
+implemented in the routine <tt class="docutils literal"><span class="pre">get_ei_radii</span></tt> from the
 <a class="reference internal" href="rg_module.html#seclab-rg-modules-tools"><em>tools</em></a> module.</p>
 </dd>
 </dl>
