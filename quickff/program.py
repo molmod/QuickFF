@@ -269,7 +269,7 @@ class BaseProgram(object):
                 cPickle.dump(self.trajectories, open(fn_traj, 'w'))
                 log.dump('Trajectories stored to file %s' %fn_traj)
 
-    def do_pt_estimate(self, do_valence=False):
+    def do_pt_estimate(self, do_valence=False, logger_level=3):
         '''
             Estimate force constants and rest values from the perturbation
             trajectories
@@ -295,7 +295,10 @@ class BaseProgram(object):
                 if traj is None: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
             #output
-            self.valence.dump_logger(print_level=4)
+            self.valence.dump_logger(print_level=logger_level)
+            #do not add average here since the fluctuation on the parameters is
+            #required for do_pt_postprocess. Average will be done at the end of
+            #do_pt_postprocess
 
     def do_pt_postprocess(self):
         '''
@@ -312,7 +315,7 @@ class BaseProgram(object):
             #self.do_sqoopdist_to_oopdist()
             self.average_pars()
 
-    def do_eq_setrv(self, tasks):
+    def do_eq_setrv(self, tasks, logger_level=3):
         '''
             Set the rest values to their respective AI equilibrium values.
         '''
@@ -340,10 +343,10 @@ class BaseProgram(object):
                     else:
                         rv = self.valence.iclist.ictab[vterm['ic0']]['value']
                         self.valence.set_params(term.index, rv0=rv)
-            self.valence.dump_logger(print_level=4)
+            self.valence.dump_logger(print_level=logger_level)
             self.average_pars()
 
-    def do_hc_estimatefc(self, tasks, logger_level=4):
+    def do_hc_estimatefc(self, tasks, logger_level=3):
         '''
             Refine force constants using Hessian Cost function.
 
@@ -566,7 +569,7 @@ class MakeTrajectories(BaseProgram):
 class PlotTrajectories(BaseProgram):
     '''
         Read the perturbation trajectories, dump to XYZ files and plot the
-        energy contributions.
+        energy contributions. This program does not derive the force field.
     '''
     def run(self):
         with log.section('PROGRAM', 2):
@@ -581,7 +584,11 @@ class PlotTrajectories(BaseProgram):
 
 class DeriveDiagFF(BaseProgram):
     '''
-        Derive a diagonal force field, i.e. does not contain cross terms.
+        Derive a diagonal force field, i.e. without cross terms. After the
+        hessian fit of the force constants, the rest values are refined by
+        revisiting the perturbation trajectories with an extra a priori term
+        representing the present valence contribution. Finally, the force 
+        constants are refined by means of a final hessian fit.
     '''
     def run(self):
         with log.section('PROGRAM', 2):
@@ -596,7 +603,11 @@ class DeriveDiagFF(BaseProgram):
 
 class DeriveNonDiagFF(BaseProgram):
     '''
-        Derive a non-diagonal force field, i.e. contains cross terms.
+        Derive a non-diagonal force field, i.e. with cross terms. After the
+        hessian fit of the force constants, the rest values are refined by
+        revisiting the perturbation trajectories with an extra a priori term
+        representing the present valence contribution. Finally, the force 
+        constants are refined by means of a final hessian fit.
     '''
     def run(self):
         with log.section('PROGRAM', 2):
@@ -613,7 +624,9 @@ class DeriveNonDiagFF(BaseProgram):
 
 class DeriveNonDiagFFNoQRef(BaseProgram):
     '''
-        Derive a non-diagonal force field, i.e. contains cross terms.
+        Derive a non-diagonal force field, i.e. with cross terms, whitout
+        the refinement of the rest value by revisiting the perturbation
+        trajectories.
     '''
     def run(self):
         with log.section('PROGRAM', 2):

@@ -36,134 +36,136 @@ from yaff import System, ForceField, Cell
 from molmod.units import angstrom
 from molmod.io.chk import load_chk
 
-from optparse import OptionParser, OptionGroup
+from argparse import ArgumentParser
 import sys, os
 
+description  = '''\
+This script will apply QuickFF to derive a covalent force field for the given
+system from the ab initio input given in the input files.'''
+#The arguments fn1, fn2, ... represent all input files that specify the system and the ab initio reference data. 
+
 def parse():
-    usage = '%prog [options] fn1 [fn2 [...]]'
-    description  = 'This script will apply QuickFF to derive a covalent force '
-    description += 'field for the given system. The arguments fn1, fn2, ... '
-    description += 'represent all input files that specify the system and the '
-    description += 'ab initio reference data. Files later in the list '
-    description += 'overwrite earlier files'
-    parser = OptionParser(usage=usage, description=description)
-    parser.add_option(
-        '--scoop', default=False, action='store_true',
-        help='Flag to enable parallelisation using SCOOP. With SCOOP, the '
-             'command to run QuickFF is slightly different, the absolute path '
-             'to quickff.py should be used. For example, to run on 4 cores:\n'
-             'python -m scoop -n4 /path/to/%prog --scoop [options] fns\n'
-             '[default=%default]'
-    )
-    parser.add_option(
-        '-s', '--silent', default=False, action='store_true',
-        help='Swith of all logging completely, overwrites all other verbosity '
-             'options. [default=%default]'
-    )
-    parser.add_option(
-        '-v', '--verbose', default=False, action='store_true',
-        help='Increases verbosity, is overwriten if SILENT or VERY_VERBOSE is '
-             'switched on. [default=%default]'
-    )
-    parser.add_option(
-        '-V', '--very-verbose', default=False, action='store_true',
-        help='Increases verbosity to highest level, is overwriten if SILENT is '
-             'switched on. [default=%default]'
-    )
-    parser.add_option(
-        '-l', '--logfile', default=None,
-        help='Redirect logger output to a file with the given name. '
-             '[default=%default]'
-    )
-    parser.add_option(
+    parser = ArgumentParser(description=description)
+    parser.add_argument(
         '--version', default=False, action='store_true',
         help='Print QuickFF version number and exit.'
     )
+    parser.add_argument(
+        '-s', '--silent', default=False, action='store_true',
+        help='Swith of all logging completely, overwrites all other verbosity '
+             'options.'
+    )
+    parser.add_argument(
+        '-v', '--verbose', default=False, action='store_true',
+        help='Increases verbosity, is overwriten if SILENT or VERY_VERBOSE is '
+             'switched on.'
+    )
+    parser.add_argument(
+        '-V', '--very-verbose', default=False, action='store_true',
+        help='Increases verbosity to highest level, is overwriten if SILENT is '
+             'switched on.'
+    )
+    parser.add_argument(
+        '-l', '--logfile', default=None,
+        help='Redirect logger output to a file with name LOGFILE.'
+    )
+    parser.add_argument(
+        '--scoop', default=False, action='store_true',
+        help='Flag to enable parallelisation using SCOOP. With SCOOP, the '
+             'command to run QuickFF is slightly different, the absolute path '
+             'to quickff.py should be used. For example, to run on 4 cores: '
+             'python -m scoop -n4 /path/to/%(prog)s --scoop [options] fns'
+    )
     #General settings options
-    settings = OptionGroup(parser, 'General', 'General specifications of the program')
-    settings.add_option(
+    settings = parser.add_argument_group(title='General QuickFF specifications')
+    settings.add_argument(
         '-m', '--program-mode', default='DeriveNonDiagFF',
+        choices=[prog for prog in allowed_programs if not prog=='BaseProgram'],
         help='Specify the program mode which defines the set of instructions '
-             'that will be executed. Allowed strings are the names of the '
-             'program classes defined in quickff/program.py, which are: '
-             ''+', '.join([prog for prog in allowed_programs if not prog=='BaseProgram'])+' (case sensitive). [default=%default]'
+             'that will be executed.'
     )
-    settings.add_option(
+    settings.add_argument(
         '--fn-traj', default=None,
-        help='Name for the file to read/write the perturbation trajectories '
-             'from/to. If the given file exists, the trajectories are read '
-             'from the file. Otherwise, the trajectories are written to the '
-             'given file. [default=%default]'
+        help='Read/write the perturbation trajectories from/to FN_TRAJ. If the '
+             'given file exists, the trajectories are read from the file. '
+             'Otherwise, the trajectories are written to the given file.'
     )
-    settings.add_option(
+    settings.add_argument(
         '--only-traj', default=None,
         help='Construct the perturbation trajectory only for the terms with '+\
              'the given basenames. This options is only applied in the ' +\
              'MakeTrajectories program.'
     )
-    settings.add_option(
+    settings.add_argument(
         '-e', '--ener-traj', default=False, action='store_true',
         help='Plot the various energy contributions along the perturbation '
-             'trajectories to. [default=%default]'
+             'trajectories to.'
     )
-    settings.add_option(
+    settings.add_argument(
         '-x', '--xyz-traj', default=False, action='store_true',
         help='Write the perturbation trajectories in XYZ format. '
-             '[default=%default]'
     )
-    settings.add_option(
+    settings.add_argument(
         '--suffix', default='',
-        help = "Suffix that will be added to all output files. [default='']"
+        help = 'Suffix that will be added to all output files.'
     )
-    parser.add_option_group(settings)
     #Force field options
-    ff = OptionGroup(parser, 'Force Field', 'All options related to the definition and derivation of the force field.')
-    ff.add_option(
+    ff = parser.add_argument_group(title='Options related to the definition and derivation of the force field')
+    ff.add_argument(
         '--ei', default=None,
         help='A Yaff parameters file defining the electrostatic contribution '
-             'of the force field. [default=%default]'
+             'of the force field.'
     )
-    ff.add_option(
+    ff.add_argument(
         '--vdw', default=None,
         help='A Yaff parameters file defining the van der Waals contribution '
-             'of the force field. [default=%default]'
+             'of the force field.'
     )
-    ff.add_option(
+    ff.add_argument(
         '--covres', default=None,
         help='A Yaff parameters file defining a residual contribution to the '
-             'covalent part of the force field. [default=%default]'
+             'covalent part of the force field.'
     )
-    parser.add_option_group(ff)
     #System options
-    system = OptionGroup(parser, 'System', 'All options related to the definition of the system.')
-    system.add_option(
+    system = parser.add_argument_group(title='Options related to the definition of the system')
+    system.add_argument(
         '--ffatypes', default=None,
-        help='Assign atom types in the system. If FFATYPES is a string equal to '
-             'either low,medium, high or highest, atom types will be assigned '
-             'through the automatic built-in detection (see documentation). If '
-             'FFATYPES is None, the atom types are assumed to be defined in the '
-             'input files. [default=%default]'
+        choices=['None','low','medium','high','highest'],
+        help='Assign atom types in the system through the automatic built-in '
+             'detection (see documentation). By default (or if None is given), '
+             'the atom types are assumed to be defined in the input files. '
+             '[default=%(default)s]'
     )
-    parser.add_option_group(system)
-    options, args = parser.parse_args()
-    if options.version:
+    #Input files
+    parser.add_argument(
+        'fn', nargs='+',
+        help='Input file name that specify the system and ab initio reference '
+             'data. Multiple file names are allowed, but at least one should '
+             'be given. Files later in the list overwrite information from '
+             'earlier files. Allowed file formats are MolMod checkpoint files '
+             '(file.chk), Gaussian formatted checkpoint files (file.fchk) '
+             'and VASP xml files (file.xml).  '
+    )
+    args = parser.parse_args()
+    if args.version:
         print version
         sys.exit()
-    assert len(args)>0, 'No input files found.'
-    return options, args
+    if args.ffatypes.lower()=='none':
+        args.ffatypes = None
+    return args
 
 def main():
-    options, fns = parse()
+    args = parse()
     #define logger
-    if options.silent:
+    if args.silent:
         log.set_level('silent')
     else:
-        if options.very_verbose:
+        if args.very_verbose:
             log.set_level('highest')
-        elif options.verbose:
+        elif args.verbose:
             log.set_level('high')
-        if options.logfile is not None and isinstance(options.logfile, str):
-            log.write_to_file(options.logfile)
+        if args.logfile is not None and isinstance(args.logfile, str):
+            log.write_to_file(args.logfile)
     with log.section('QFF', 1, timer='Initializing'):
         log.dump('Initializing system')
         #read system and ab initio reference
@@ -172,7 +174,7 @@ def main():
         grad = None
         hess = None
         rvecs = None
-        for fn in fns:
+        for fn in args.fn:
             if fn.endswith('.fchk') or fn.endswith('.xml'):
                 numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn)
                 if system is None:
@@ -213,42 +215,42 @@ def main():
         if system.bonds is None: system.detect_bonds()
         if system.masses is None: system.set_standard_masses()
         if system.ffatypes is None:
-            if options.ffatypes in ['low', 'medium', 'high', 'highest']:
-                guess_ffatypes(system, options.ffatypes)
-            elif options.ffatypes is not None:
-                raise NotImplementedError('Guessing atom types from %s not implemented' %options.ffatypes)
+            if args.ffatypes in ['low', 'medium', 'high', 'highest']:
+                guess_ffatypes(system, args.ffatypes)
+            elif args.ffatypes is not None:
+                raise NotImplementedError('Guessing atom types from %s not implemented' %args.ffatypes)
             else:
                 raise AssertionError('No atom types defined')
         #construct ab initio reference
         ai = SecondOrderTaylor('ai', coords=system.pos.copy(), energy=energy, grad=grad, hess=hess, pbc=pbc)
         #detect a priori defined contributions to the force field
         refs = []
-        if options.ei is not None:
+        if args.ei is not None:
             if rvecs is None:
-                ff = ForceField.generate(system, options.ei, rcut=50*angstrom)
+                ff = ForceField.generate(system, args.ei, rcut=50*angstrom)
             else:
-                ff = ForceField.generate(system, options.ei, rcut=20*angstrom, alpha_scale=3.2, gcut_scale=1.5, smooth_ei=True)
+                ff = ForceField.generate(system, args.ei, rcut=20*angstrom, alpha_scale=3.2, gcut_scale=1.5, smooth_ei=True)
             refs.append(YaffForceField('EI', ff))
-        if options.vdw is not None:
-            ff = ForceField.generate(system, options.vdw, rcut=20*angstrom)
+        if args.vdw is not None:
+            ff = ForceField.generate(system, args.vdw, rcut=20*angstrom)
             refs.append(YaffForceField('vdW', ff))
-        if options.covres is not None:
-            ff = ForceField.generate(system, options.covres)
+        if args.covres is not None:
+            ff = ForceField.generate(system, args.covres)
             refs.append(YaffForceField('Cov res', ff))
     #define quickff program
-    assert options.program_mode in allowed_programs, \
+    assert args.program_mode in allowed_programs, \
         'Given program mode %s not allowed. Choose one of %s' %(
-            options.program_mode,
+            args.program_mode,
             ', '.join([prog for prog in allowed_programs if not prog=='BaseProgram'])
         )
-    mode = program_modes[options.program_mode]
+    mode = program_modes[args.program_mode]
     only_traj = 'PT_ALL'
-    if options.only_traj is not None: only_traj = options.only_traj.split(',')
+    if args.only_traj is not None: only_traj = args.only_traj.split(',')
     program = mode(
         system, ai, ffrefs=refs,
-        fn_traj=options.fn_traj, only_traj=only_traj,
-        plot_traj=options.ener_traj, xyz_traj=options.xyz_traj,
-        suffix=options.suffix
+        fn_traj=args.fn_traj, only_traj=only_traj,
+        plot_traj=args.ener_traj, xyz_traj=args.xyz_traj,
+        suffix=args.suffix
     )
     #run program
     program.run()
