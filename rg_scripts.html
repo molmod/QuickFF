@@ -122,7 +122,8 @@ Options related to the definition of the system:
 </div>
 <div class="section" id="qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">
 <span id="seclab-rg-scripts-inputei"></span><h1>2. <tt class="docutils literal"><span class="pre">qff-input-ei.py</span></tt> &#8211; generate Yaff parameter file for electrostatics<a class="headerlink" href="#qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-text"><div class="highlight"><pre>usage: qff-input-ei.py [-h] [-v] [--ffatypes FFATYPES] [--gaussian] [--bci]
+<div class="highlight-text"><div class="highlight"><pre>usage: qff-input-ei.py [-h] [-v] [--ffatypes {None,low,medium,high,highest}]
+                       [--gaussian] [--bci]
                        [--bci-constraints BCI_CONSTRAINTS]
                        fn_sys charges [fn_out]
 
@@ -147,12 +148,11 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -v, --verbose         Increase verbosity of the script [default=False].
-  --ffatypes FFATYPES   Assign atom types in the system. If FFATYPES is a
-                        string equal to either low,medium, high or highest,
-                        atom types will be assigned through the automatic
-                        built-in detection (see documentation). If FFATYPES is
-                        None, the atom types are assumed to be defined in the
-                        input files. [default=None]
+  --ffatypes {None,low,medium,high,highest}
+                        Assign atom types in the system through the automatic
+                        built-in detection (see documentation). By default (or
+                        if None is given), the atom types are assumed to be
+                        defined in the input files. [default=None]
   --gaussian            Use gaussian smeared charges. The radii are taken from
                         the input file fn_in (from dataset /path/radii for
                         HDF5 file or from label `radii` for CHK file) if the
