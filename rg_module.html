@@ -122,6 +122,34 @@ it is interesting to be able to switch this off.</dd>
 </dl>
 </dd></dl>
 
+<dl class="function">
+<dt id="quickff.io.dump_charmm22_prm">
+<tt class="descclassname">quickff.io.</tt><tt class="descname">dump_charmm22_prm</tt><big>(</big><em>valence</em>, <em>fn</em><big>)</big><a class="reference internal" href="_modules/quickff/io.html#dump_charmm22_prm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.io.dump_charmm22_prm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump supported parameters in a CHARMM22 parameter file.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>valence</dt>
+<dd>Instance of ValenceFF, which defines the force field.</dd>
+<dt>fn</dt>
+<dd>The filename to write to.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.io.dump_charmm22_psf">
+<tt class="descclassname">quickff.io.</tt><tt class="descname">dump_charmm22_psf</tt><big>(</big><em>system</em>, <em>valence</em>, <em>fn</em><big>)</big><a class="reference internal" href="_modules/quickff/io.html#dump_charmm22_psf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.io.dump_charmm22_psf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump supported internal coordinates in a CHARMM psf file.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>Instance of yaff.System class</dd>
+<dt>valence</dt>
+<dd>Instance of ValenceFF, which defines the force field.</dd>
+<dt>fn</dt>
+<dd>The filename to write to.</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="module-quickff.perturbation">
 <span id="quickff-perturbation-perturbation-trajectories-for-internal-coordinates"></span><h1>3. <tt class="docutils literal"><span class="pre">quickff.perturbation</span></tt> &#8211; Perturbation trajectories for internal coordinates<a class="headerlink" href="#module-quickff.perturbation" title="Permalink to this headline">¶</a></h1>
@@ -201,7 +229,7 @@ assumes that the coords attribute has been assigned.</p>
 <span id="quickff-program-program-classes-implementing-a-sequence-of-fitting-steps"></span><span id="seclab-rg-modules-program"></span><h1>4. <tt class="docutils literal"><span class="pre">quickff.program</span></tt> &#8211; Program classes implementing a sequence of fitting steps<a class="headerlink" href="#module-quickff.program" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="quickff.program.BaseProgram">
-<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">BaseProgram</tt><big>(</big><em>system</em>, <em>ai</em>, <em>settings=None</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">BaseProgram</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base program which implements all possible steps of a force field
 fitting program. The actual sequence of the steps are defined in the
 deriving classes.</p>
@@ -214,9 +242,38 @@ deriving classes.</p>
 </dl>
 <p><strong>Keyword Arguments</strong></p>
 <dl class="docutils">
-<dt>settings</dt>
-<dd>a <cite>Settings</cite> instance defining the settings for the current run.
-If this is not given, the default settings will be used.</dd>
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> objects corresponding to a priori determined
+contributions to the force field (such as eg. electrostatics
+or van der Waals contributions)</dd>
+<dt>fn_yaff</dt>
+<dd>the name of the file to write the final parameters to in Yaff
+format. The default is <cite>pars.txt</cite>.</dd>
+<dt>fn_charmm22_prm</dt>
+<dd>the name of a CHARMM parameter file. If not given, the file is not written</dd>
+<dt>fn_charmm22_psf</dt>
+<dd>the name of a CHARMM topology file. If not given, the file is not written</dd>
+<dt>fn_sys</dt>
+<dd>the name of the file to write the system to. The default is
+<cite>system.chk</cite>.</dd>
+<dt>fn_traj</dt>
+<dd>a cPickle filename to read/write the perturbation trajectories
+from/to. If the file exists, the trajectories are read from the
+file. If the file does not exist, the trajectories are written
+to the file.</dd>
+<dt>only_traj</dt>
+<dd>specifier to determine for which terms a perturbation trajectory
+needs to be constructed. If ONLY_TRAJ is a single string, it is
+interpreted as a task (only terms that have this task in their
+tasks attribute will get a trajectory). If ONLY_TRAJ is a list
+of strings, each string is interpreted as the basename of the
+term for which a trajectory will be constructed.</dd>
+<dt>plot_traj</dt>
+<dd>if set to True, all energy contributions along each perturbation
+trajectory will be plotted using the final force field.</dd>
+<dt>xyz_traj</dt>
+<dd>if set to True, each perturbation trajectory will be written to
+an XYZ file.</dd>
 </dl>
 <dl class="method">
 <dt id="quickff.program.BaseProgram.average_pars">
@@ -249,7 +306,7 @@ to zero.</p>
 
 <dl class="method">
 <dt id="quickff.program.BaseProgram.do_hc_estimatefc">
-<tt class="descname">do_hc_estimatefc</tt><big>(</big><em>tasks</em>, <em>logger_level=3</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_hc_estimatefc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_hc_estimatefc" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">do_hc_estimatefc</tt><big>(</big><em>tasks</em>, <em>logger_level=4</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_hc_estimatefc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_hc_estimatefc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Refine force constants using Hessian Cost function.</p>
 <p><strong>Arguments</strong></p>
 <dl class="docutils">
@@ -378,7 +435,7 @@ was modified.</p>
 
 <dl class="class">
 <dt id="quickff.program.MakeTrajectories">
-<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">MakeTrajectories</tt><big>(</big><em>system</em>, <em>ai</em>, <em>settings=None</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#MakeTrajectories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.MakeTrajectories" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">MakeTrajectories</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#MakeTrajectories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.MakeTrajectories" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct the perturbation trajectories and store them. This program
 does not derive the force field.</p>
 <p><strong>Arguments</strong></p>
@@ -390,15 +447,44 @@ does not derive the force field.</p>
 </dl>
 <p><strong>Keyword Arguments</strong></p>
 <dl class="docutils">
-<dt>settings</dt>
-<dd>a <cite>Settings</cite> instance defining the settings for the current run.
-If this is not given, the default settings will be used.</dd>
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> objects corresponding to a priori determined
+contributions to the force field (such as eg. electrostatics
+or van der Waals contributions)</dd>
+<dt>fn_yaff</dt>
+<dd>the name of the file to write the final parameters to in Yaff
+format. The default is <cite>pars.txt</cite>.</dd>
+<dt>fn_charmm22_prm</dt>
+<dd>the name of a CHARMM parameter file. If not given, the file is not written</dd>
+<dt>fn_charmm22_psf</dt>
+<dd>the name of a CHARMM topology file. If not given, the file is not written</dd>
+<dt>fn_sys</dt>
+<dd>the name of the file to write the system to. The default is
+<cite>system.chk</cite>.</dd>
+<dt>fn_traj</dt>
+<dd>a cPickle filename to read/write the perturbation trajectories
+from/to. If the file exists, the trajectories are read from the
+file. If the file does not exist, the trajectories are written
+to the file.</dd>
+<dt>only_traj</dt>
+<dd>specifier to determine for which terms a perturbation trajectory
+needs to be constructed. If ONLY_TRAJ is a single string, it is
+interpreted as a task (only terms that have this task in their
+tasks attribute will get a trajectory). If ONLY_TRAJ is a list
+of strings, each string is interpreted as the basename of the
+term for which a trajectory will be constructed.</dd>
+<dt>plot_traj</dt>
+<dd>if set to True, all energy contributions along each perturbation
+trajectory will be plotted using the final force field.</dd>
+<dt>xyz_traj</dt>
+<dd>if set to True, each perturbation trajectory will be written to
+an XYZ file.</dd>
 </dl>
 </dd></dl>
 
 <dl class="class">
 <dt id="quickff.program.PlotTrajectories">
-<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">PlotTrajectories</tt><big>(</big><em>system</em>, <em>ai</em>, <em>settings=None</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#PlotTrajectories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.PlotTrajectories" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">PlotTrajectories</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#PlotTrajectories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.PlotTrajectories" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the perturbation trajectories, dump to XYZ files and plot the
 energy contributions.</p>
 <p><strong>Arguments</strong></p>
@@ -410,15 +496,44 @@ energy contributions.</p>
 </dl>
 <p><strong>Keyword Arguments</strong></p>
 <dl class="docutils">
-<dt>settings</dt>
-<dd>a <cite>Settings</cite> instance defining the settings for the current run.
-If this is not given, the default settings will be used.</dd>
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> objects corresponding to a priori determined
+contributions to the force field (such as eg. electrostatics
+or van der Waals contributions)</dd>
+<dt>fn_yaff</dt>
+<dd>the name of the file to write the final parameters to in Yaff
+format. The default is <cite>pars.txt</cite>.</dd>
+<dt>fn_charmm22_prm</dt>
+<dd>the name of a CHARMM parameter file. If not given, the file is not written</dd>
+<dt>fn_charmm22_psf</dt>
+<dd>the name of a CHARMM topology file. If not given, the file is not written</dd>
+<dt>fn_sys</dt>
+<dd>the name of the file to write the system to. The default is
+<cite>system.chk</cite>.</dd>
+<dt>fn_traj</dt>
+<dd>a cPickle filename to read/write the perturbation trajectories
+from/to. If the file exists, the trajectories are read from the
+file. If the file does not exist, the trajectories are written
+to the file.</dd>
+<dt>only_traj</dt>
+<dd>specifier to determine for which terms a perturbation trajectory
+needs to be constructed. If ONLY_TRAJ is a single string, it is
+interpreted as a task (only terms that have this task in their
+tasks attribute will get a trajectory). If ONLY_TRAJ is a list
+of strings, each string is interpreted as the basename of the
+term for which a trajectory will be constructed.</dd>
+<dt>plot_traj</dt>
+<dd>if set to True, all energy contributions along each perturbation
+trajectory will be plotted using the final force field.</dd>
+<dt>xyz_traj</dt>
+<dd>if set to True, each perturbation trajectory will be written to
+an XYZ file.</dd>
 </dl>
 </dd></dl>
 
 <dl class="class">
 <dt id="quickff.program.DeriveDiagFF">
-<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">DeriveDiagFF</tt><big>(</big><em>system</em>, <em>ai</em>, <em>settings=None</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#DeriveDiagFF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveDiagFF" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">DeriveDiagFF</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#DeriveDiagFF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveDiagFF" title="Permalink to this definition">¶</a></dt>
 <dd><p>Derive a diagonal force field, i.e. does not contain cross terms.</p>
 <p><strong>Arguments</strong></p>
 <dl class="docutils">
@@ -429,15 +544,44 @@ If this is not given, the default settings will be used.</dd>
 </dl>
 <p><strong>Keyword Arguments</strong></p>
 <dl class="docutils">
-<dt>settings</dt>
-<dd>a <cite>Settings</cite> instance defining the settings for the current run.
-If this is not given, the default settings will be used.</dd>
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> objects corresponding to a priori determined
+contributions to the force field (such as eg. electrostatics
+or van der Waals contributions)</dd>
+<dt>fn_yaff</dt>
+<dd>the name of the file to write the final parameters to in Yaff
+format. The default is <cite>pars.txt</cite>.</dd>
+<dt>fn_charmm22_prm</dt>
+<dd>the name of a CHARMM parameter file. If not given, the file is not written</dd>
+<dt>fn_charmm22_psf</dt>
+<dd>the name of a CHARMM topology file. If not given, the file is not written</dd>
+<dt>fn_sys</dt>
+<dd>the name of the file to write the system to. The default is
+<cite>system.chk</cite>.</dd>
+<dt>fn_traj</dt>
+<dd>a cPickle filename to read/write the perturbation trajectories
+from/to. If the file exists, the trajectories are read from the
+file. If the file does not exist, the trajectories are written
+to the file.</dd>
+<dt>only_traj</dt>
+<dd>specifier to determine for which terms a perturbation trajectory
+needs to be constructed. If ONLY_TRAJ is a single string, it is
+interpreted as a task (only terms that have this task in their
+tasks attribute will get a trajectory). If ONLY_TRAJ is a list
+of strings, each string is interpreted as the basename of the
+term for which a trajectory will be constructed.</dd>
+<dt>plot_traj</dt>
+<dd>if set to True, all energy contributions along each perturbation
+trajectory will be plotted using the final force field.</dd>
+<dt>xyz_traj</dt>
+<dd>if set to True, each perturbation trajectory will be written to
+an XYZ file.</dd>
 </dl>
 </dd></dl>
 
 <dl class="class">
 <dt id="quickff.program.DeriveNonDiagFF">
-<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">DeriveNonDiagFF</tt><big>(</big><em>system</em>, <em>ai</em>, <em>settings=None</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#DeriveNonDiagFF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveNonDiagFF" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">DeriveNonDiagFF</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#DeriveNonDiagFF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveNonDiagFF" title="Permalink to this definition">¶</a></dt>
 <dd><p>Derive a non-diagonal force field, i.e. contains cross terms.</p>
 <p><strong>Arguments</strong></p>
 <dl class="docutils">
@@ -448,15 +592,44 @@ If this is not given, the default settings will be used.</dd>
 </dl>
 <p><strong>Keyword Arguments</strong></p>
 <dl class="docutils">
-<dt>settings</dt>
-<dd>a <cite>Settings</cite> instance defining the settings for the current run.
-If this is not given, the default settings will be used.</dd>
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> objects corresponding to a priori determined
+contributions to the force field (such as eg. electrostatics
+or van der Waals contributions)</dd>
+<dt>fn_yaff</dt>
+<dd>the name of the file to write the final parameters to in Yaff
+format. The default is <cite>pars.txt</cite>.</dd>
+<dt>fn_charmm22_prm</dt>
+<dd>the name of a CHARMM parameter file. If not given, the file is not written</dd>
+<dt>fn_charmm22_psf</dt>
+<dd>the name of a CHARMM topology file. If not given, the file is not written</dd>
+<dt>fn_sys</dt>
+<dd>the name of the file to write the system to. The default is
+<cite>system.chk</cite>.</dd>
+<dt>fn_traj</dt>
+<dd>a cPickle filename to read/write the perturbation trajectories
+from/to. If the file exists, the trajectories are read from the
+file. If the file does not exist, the trajectories are written
+to the file.</dd>
+<dt>only_traj</dt>
+<dd>specifier to determine for which terms a perturbation trajectory
+needs to be constructed. If ONLY_TRAJ is a single string, it is
+interpreted as a task (only terms that have this task in their
+tasks attribute will get a trajectory). If ONLY_TRAJ is a list
+of strings, each string is interpreted as the basename of the
+term for which a trajectory will be constructed.</dd>
+<dt>plot_traj</dt>
+<dd>if set to True, all energy contributions along each perturbation
+trajectory will be plotted using the final force field.</dd>
+<dt>xyz_traj</dt>
+<dd>if set to True, each perturbation trajectory will be written to
+an XYZ file.</dd>
 </dl>
 </dd></dl>
 
 <dl class="class">
 <dt id="quickff.program.DeriveNonDiagFFNoQRef">
-<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">DeriveNonDiagFFNoQRef</tt><big>(</big><em>system</em>, <em>ai</em>, <em>settings=None</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#DeriveNonDiagFFNoQRef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveNonDiagFFNoQRef" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">DeriveNonDiagFFNoQRef</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#DeriveNonDiagFFNoQRef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveNonDiagFFNoQRef" title="Permalink to this definition">¶</a></dt>
 <dd><p>Derive a non-diagonal force field, i.e. contains cross terms.</p>
 <p><strong>Arguments</strong></p>
 <dl class="docutils">
@@ -467,9 +640,38 @@ If this is not given, the default settings will be used.</dd>
 </dl>
 <p><strong>Keyword Arguments</strong></p>
 <dl class="docutils">
-<dt>settings</dt>
-<dd>a <cite>Settings</cite> instance defining the settings for the current run.
-If this is not given, the default settings will be used.</dd>
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> objects corresponding to a priori determined
+contributions to the force field (such as eg. electrostatics
+or van der Waals contributions)</dd>
+<dt>fn_yaff</dt>
+<dd>the name of the file to write the final parameters to in Yaff
+format. The default is <cite>pars.txt</cite>.</dd>
+<dt>fn_charmm22_prm</dt>
+<dd>the name of a CHARMM parameter file. If not given, the file is not written</dd>
+<dt>fn_charmm22_psf</dt>
+<dd>the name of a CHARMM topology file. If not given, the file is not written</dd>
+<dt>fn_sys</dt>
+<dd>the name of the file to write the system to. The default is
+<cite>system.chk</cite>.</dd>
+<dt>fn_traj</dt>
+<dd>a cPickle filename to read/write the perturbation trajectories
+from/to. If the file exists, the trajectories are read from the
+file. If the file does not exist, the trajectories are written
+to the file.</dd>
+<dt>only_traj</dt>
+<dd>specifier to determine for which terms a perturbation trajectory
+needs to be constructed. If ONLY_TRAJ is a single string, it is
+interpreted as a task (only terms that have this task in their
+tasks attribute will get a trajectory). If ONLY_TRAJ is a list
+of strings, each string is interpreted as the basename of the
+term for which a trajectory will be constructed.</dd>
+<dt>plot_traj</dt>
+<dd>if set to True, all energy contributions along each perturbation
+trajectory will be plotted using the final force field.</dd>
+<dt>xyz_traj</dt>
+<dd>if set to True, each perturbation trajectory will be written to
+an XYZ file.</dd>
 </dl>
 </dd></dl>
 
@@ -615,16 +817,15 @@ status      Return also the number of iterations performed</dd>
 
 <dl class="function">
 <dt id="quickff.tools.guess_ffatypes">
-<tt class="descclassname">quickff.tools.</tt><tt class="descname">guess_ffatypes</tt><big>(</big><em>system</em>, <em>settings</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#guess_ffatypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.guess_ffatypes" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quickff.tools.</tt><tt class="descname">guess_ffatypes</tt><big>(</big><em>system</em>, <em>level</em><big>)</big><a class="reference internal" href="_modules/quickff/tools.html#guess_ffatypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.guess_ffatypes" title="Permalink to this definition">¶</a></dt>
 <dd><p>A method to guess atom types. This will overwrite ffatypes
 that are already defined in the system.</p>
 <p><strong>Arguments:</strong></p>
 <dl class="docutils">
 <dt>system</dt>
 <dd>A yaff system instance</dd>
-<dt>settings</dt>
-<dd><p class="first">A <cite>Settings</cite> instanc that contains the attribute ffatypes, which is
-a string used for guessing atom types:</p>
+<dt>level</dt>
+<dd><p class="first">A string used for guessing atom types:</p>
 <blockquote class="last">
 <div><ul class="simple">
 <li>low:     based on atomic number</li>
@@ -733,7 +934,7 @@ of sort, a dictionairy of the following format will be returned:</p>
 <span id="quickff-valence-valenceff-class-storing-all-valence-ff-terms"></span><h1>7. <tt class="docutils literal"><span class="pre">quickff.valence</span></tt> &#8211; ValenceFF class storing all valence ff terms<a class="headerlink" href="#module-quickff.valence" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="quickff.valence.ValenceFF">
-<em class="property">class </em><tt class="descclassname">quickff.valence.</tt><tt class="descname">ValenceFF</tt><big>(</big><em>system</em>, <em>settings=None</em><big>)</big><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">quickff.valence.</tt><tt class="descname">ValenceFF</tt><big>(</big><em>system</em>, <em>specs=None</em><big>)</big><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to collect all valence terms in the force field for which
 parameters need to be estimated.</p>
 <p><strong>Arguments</strong></p>
@@ -744,9 +945,8 @@ properties</dd>
 </dl>
 <p><strong>Keyword Arguments</strong></p>
 <dl class="docutils">
-<dt>settings</dt>
-<dd>a <cite>Settings</cite> instance defining the settings for the current run.
-If this is not given, the default settings will be used.</dd>
+<dt>specs</dt>
+<dd>Not yet implemented</dd>
 </dl>
 <dl class="method">
 <dt id="quickff.valence.ValenceFF.add_term">
@@ -830,7 +1030,7 @@ potentials.</p>
 
 <dl class="method">
 <dt id="quickff.valence.ValenceFF.init_cross_terms">
-<tt class="descname">init_cross_terms</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_cross_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_cross_terms" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">init_cross_terms</tt><big>(</big><em>specs=None</em><big>)</big><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_cross_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_cross_terms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize cross terms between bonds and bends.</p>
 </dd></dl>
 
@@ -856,6 +1056,12 @@ the following potential will be chosen:</p>
 <dd><p>Initialize all out-of-plane terms in the system based on the oops
 attribute of the system instance. All oops are given harmonic
 potentials.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.is_negligible">
+<tt class="descname">is_negligible</tt><big>(</big><em>term_index</em><big>)</big><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.is_negligible"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.is_negligible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the given term can be neglected (e.g. in parameter files).</p>
 </dd></dl>
 
 <dl class="method">

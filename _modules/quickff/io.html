@@ -79,7 +79,7 @@
 <span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span> <span class="kn">as</span> <span class="nn">ET</span>
 
 <span class="kn">from</span> <span class="nn">molmod.periodic</span> <span class="kn">import</span> <span class="n">periodic</span>
-<span class="kn">from</span> <span class="nn">molmod.units</span> <span class="kn">import</span> <span class="n">angstrom</span><span class="p">,</span> <span class="n">electronvolt</span><span class="p">,</span> <span class="n">amu</span>
+<span class="kn">from</span> <span class="nn">molmod.units</span> <span class="kn">import</span> <span class="n">angstrom</span><span class="p">,</span> <span class="n">electronvolt</span><span class="p">,</span> <span class="n">amu</span><span class="p">,</span> <span class="n">kcalmol</span><span class="p">,</span> <span class="n">kjmol</span><span class="p">,</span> <span class="n">deg</span>
 <span class="kn">from</span> <span class="nn">molmod.io.fchk</span> <span class="kn">import</span> <span class="n">FCHKFile</span>
 
 <span class="kn">from</span> <span class="nn">yaff.pes.ext</span> <span class="kn">import</span> <span class="n">PairPotEI</span>
@@ -87,7 +87,9 @@
 
 <span class="kn">from</span> <span class="nn">quickff.log</span> <span class="kn">import</span> <span class="n">log</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;VASPRun&#39;</span><span class="p">,</span> <span class="s">&#39;read_abinitio&#39;</span><span class="p">,</span> <span class="s">&#39;make_yaff_ei&#39;</span><span class="p">]</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;VASPRun&#39;</span><span class="p">,</span> <span class="s">&#39;read_abinitio&#39;</span><span class="p">,</span> <span class="s">&#39;make_yaff_ei&#39;</span><span class="p">,</span> <span class="s">&#39;dump_charmm22_prm&#39;</span><span class="p">,</span>
+           <span class="s">&#39;dump_charmm22_psf&#39;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="VASPRun"><a class="viewcode-back" href="../../rg_module.html#quickff.io.VASPRun">[docs]</a><span class="k">class</span> <span class="nc">VASPRun</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -262,6 +264,262 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">constraints</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">slaves</span>
     <span class="k">return</span> <span class="n">constraints</span>
+
+
+<span class="k">def</span> <span class="nf">_check_charmm22</span><span class="p">(</span><span class="n">valence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Print warnings for all kinds of energy terms not supported by CHARMM22.</span>
+
+<span class="sd">       **Arguments**</span>
+
+<span class="sd">       valence</span>
+<span class="sd">            Instance of ValenceFF, which defines the force field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># First report all types of terms not supported by CHARMM22.</span>
+    <span class="n">skipped</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+    <span class="n">supported_kinds</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;BONDHARM&#39;</span><span class="p">,</span> <span class="s">&#39;BENDAHARM&#39;</span><span class="p">,</span> <span class="s">&#39;TORSION&#39;</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">valence</span><span class="o">.</span><span class="n">iter_terms</span><span class="p">():</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">[:</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_kinds</span> <span class="ow">and</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skipped</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;Not writing {} term to CHARMM22 parameter file.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kind</span><span class="p">))</span>
+            <span class="n">skipped</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span>
+
+
+<span class="c"># Template based on the PROTEINS-ZINC-NUCLEID-ACIDS force field file by MacKerell.</span>
+<span class="c"># (par_all27_prot_na.prm)</span>
+<span class="n">charmm22_prm_template</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+
+<span class="s">BONDS</span>
+<span class="s">!</span>
+<span class="s">!V(bond) = Kb(b - b0)**2</span>
+<span class="s">!</span>
+<span class="s">!Kb: kcal/mole/A**2</span>
+<span class="s">!b0: A</span>
+<span class="s">!</span>
+<span class="s">!at1  at2        Kb         b0</span>
+<span class="s">!</span>
+<span class="s">{}</span>
+
+
+<span class="s">ANGLES</span>
+<span class="s">!</span>
+<span class="s">!V(angle) = Ktheta(Theta - Theta0)**2</span>
+<span class="s">!</span>
+<span class="s">!V(Urey-Bradley) = Kub(S - S0)**2</span>
+<span class="s">!</span>
+<span class="s">!Ktheta: kcal/mole/rad**2</span>
+<span class="s">!Theta0: degrees</span>
+<span class="s">!Kub: kcal/mole/A**2 (Urey-Bradley)</span>
+<span class="s">!S0: A</span>
+<span class="s">!</span>
+<span class="s">!at1  at2  at3    Ktheta     Theta0     Kub     S0</span>
+<span class="s">!</span>
+<span class="s">{}</span>
+
+
+<span class="s">DIHEDRALS</span>
+<span class="s">!</span>
+<span class="s">!V(dihedral) = Kchi(1 + cos(n(chi) - delta))</span>
+<span class="s">!</span>
+<span class="s">!Kchi: kcal/mole</span>
+<span class="s">!n: multiplicity</span>
+<span class="s">!delta: degrees</span>
+<span class="s">!</span>
+<span class="s">!at1  at2  at3  at4       Kchi  n    delta</span>
+<span class="s">!</span>
+<span class="s">{}</span>
+
+
+<span class="s">IMPROPER</span>
+<span class="s">!</span>
+<span class="s">!V(improper) = Kpsi(psi - psi0)**2</span>
+<span class="s">!</span>
+<span class="s">!Kpsi: kcal/mole/rad**2</span>
+<span class="s">!psi0: degrees</span>
+<span class="s">!note that the second column of numbers (0) is ignored</span>
+<span class="s">!</span>
+<span class="s">!at1  at2  at3  at4   Kpsi        psi0</span>
+<span class="s">!</span>
+
+<span class="s">&#39;&#39;&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">_bonds_to_charmm22_prm</span><span class="p">(</span><span class="n">valence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Construct a BONDS section of a CHARMM22 parameter file.</span>
+
+<span class="sd">       **Arguments**</span>
+
+<span class="sd">       valence</span>
+<span class="sd">            Instance of ValenceFF, which defines the force field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">master</span> <span class="ow">in</span> <span class="n">valence</span><span class="o">.</span><span class="n">iter_masters</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s">&#39;BONDHARM&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">valence</span><span class="o">.</span><span class="n">is_negligible</span><span class="p">(</span><span class="n">master</span><span class="o">.</span><span class="n">index</span><span class="p">):</span> <span class="k">continue</span>
+        <span class="n">ffatypes</span> <span class="o">=</span> <span class="n">master</span><span class="o">.</span><span class="n">basename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+        <span class="n">K</span><span class="p">,</span> <span class="n">q0</span> <span class="o">=</span> <span class="n">valence</span><span class="o">.</span><span class="n">get_params</span><span class="p">(</span><span class="n">master</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;{:4s} {:4s} {:9.3f} {:10.4f}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">ffatypes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ffatypes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">K</span><span class="o">/</span><span class="p">(</span><span class="n">kcalmol</span><span class="o">/</span><span class="n">angstrom</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">q0</span><span class="o">/</span><span class="n">angstrom</span>
+        <span class="p">))</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_angles_to_charmm22_prm</span><span class="p">(</span><span class="n">valence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Construct a ANGLES section of a CHARMM22 parameter file.</span>
+
+<span class="sd">       **Arguments**</span>
+
+<span class="sd">       valence</span>
+<span class="sd">            Instance of ValenceFF, which defines the force field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">master</span> <span class="ow">in</span> <span class="n">valence</span><span class="o">.</span><span class="n">iter_masters</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s">&#39;BENDAHARM&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">valence</span><span class="o">.</span><span class="n">is_negligible</span><span class="p">(</span><span class="n">master</span><span class="o">.</span><span class="n">index</span><span class="p">):</span> <span class="k">continue</span>
+        <span class="n">ffatypes</span> <span class="o">=</span> <span class="n">master</span><span class="o">.</span><span class="n">basename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+        <span class="n">K</span><span class="p">,</span> <span class="n">q0</span> <span class="o">=</span> <span class="n">valence</span><span class="o">.</span><span class="n">get_params</span><span class="p">(</span><span class="n">master</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;{:4s} {:4s} {:4s} {:9.3f} {:10.4f}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">ffatypes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ffatypes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ffatypes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">K</span><span class="o">/</span><span class="n">kcalmol</span><span class="p">,</span> <span class="n">q0</span><span class="o">/</span><span class="n">deg</span>
+        <span class="p">))</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_dihedrals_to_charmm22_prm</span><span class="p">(</span><span class="n">valence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Construct a DIHEDRALS section of a CHARMM22 parameter file.</span>
+
+<span class="sd">       **Arguments**</span>
+
+<span class="sd">       valence</span>
+<span class="sd">            Instance of ValenceFF, which defines the force field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">master</span> <span class="ow">in</span> <span class="n">valence</span><span class="o">.</span><span class="n">iter_masters</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s">&#39;TORSION&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">valence</span><span class="o">.</span><span class="n">is_negligible</span><span class="p">(</span><span class="n">master</span><span class="o">.</span><span class="n">index</span><span class="p">):</span> <span class="k">continue</span>
+        <span class="n">ffatypes</span> <span class="o">=</span> <span class="n">master</span><span class="o">.</span><span class="n">basename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+        <span class="n">m</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">q0</span> <span class="o">=</span> <span class="n">valence</span><span class="o">.</span><span class="n">get_params</span><span class="p">(</span><span class="n">master</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;{:4s} {:4s} {:4s} {:4s} {:10.4f} {:2.0f} {:8.2f}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">ffatypes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ffatypes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ffatypes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ffatypes</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">K</span><span class="o">/</span><span class="n">kcalmol</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">q0</span><span class="o">/</span><span class="n">deg</span><span class="o">+</span><span class="mi">180</span>
+        <span class="p">))</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dump_charmm22_prm"><a class="viewcode-back" href="../../rg_module.html#quickff.io.dump_charmm22_prm">[docs]</a><span class="k">def</span> <span class="nf">dump_charmm22_prm</span><span class="p">(</span><span class="n">valence</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dump supported parameters in a CHARMM22 parameter file.</span>
+
+<span class="sd">       **Arguments**</span>
+
+<span class="sd">       valence</span>
+<span class="sd">            Instance of ValenceFF, which defines the force field.</span>
+
+<span class="sd">       fn</span>
+<span class="sd">            The filename to write to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># First report all types of terms not supported by CHARMM22.</span>
+    <span class="n">_check_charmm22</span><span class="p">(</span><span class="n">valence</span><span class="p">)</span>
+
+    <span class="c"># Dump supported parameters in prm file.</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">charmm22_prm_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">_bonds_to_charmm22_prm</span><span class="p">(</span><span class="n">valence</span><span class="p">),</span>
+            <span class="n">_angles_to_charmm22_prm</span><span class="p">(</span><span class="n">valence</span><span class="p">),</span>
+            <span class="n">_dihedrals_to_charmm22_prm</span><span class="p">(</span><span class="n">valence</span><span class="p">)))</span>
+
+</div>
+<span class="n">charmm22_psf_template</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">PSF</span>
+
+<span class="s">       1 !NTITLE</span>
+<span class="s"> REMARKS Generated with QuickFF</span>
+
+<span class="s">{}</span>
+
+<span class="s">{}</span>
+
+<span class="s">{}</span>
+
+<span class="s">{}</span>
+
+<span class="s">       0 !NIMPHI: impropers</span>
+
+
+<span class="s">       0 !NDON: donors</span>
+
+
+<span class="s">       0 !NACC: acceptors</span>
+
+
+<span class="s">       0 !NNB</span>
+
+
+<span class="s">&#39;&#39;&#39;</span>
+
+<span class="k">def</span> <span class="nf">_atoms_to_charmm22_psf</span><span class="p">(</span><span class="n">system</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;{:8d} !NATOM&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">natom</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">iatom</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">natom</span><span class="p">):</span>
+        <span class="n">ffatype</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">get_ffatype</span><span class="p">(</span><span class="n">iatom</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ffatype</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;Atom type too long for CHARMM PSF file: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ffatype</span><span class="p">))</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;{:8d} A    1    MOL  {:4} {:4} {:10.6f} {:13.4f}           0&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">iatom</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">system</span><span class="o">.</span><span class="n">charges</span><span class="p">[</span><span class="n">iatom</span><span class="p">],</span> <span class="n">system</span><span class="o">.</span><span class="n">masses</span><span class="p">[</span><span class="n">iatom</span><span class="p">]</span><span class="o">/</span><span class="n">amu</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_ics_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">maxwidth</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="n">maxwidth</span>
+    <span class="n">nic</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">valence</span><span class="o">.</span><span class="n">iter_terms</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">valence</span><span class="o">.</span><span class="n">is_negligible</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">master</span><span class="p">):</span> <span class="k">continue</span>
+        <span class="c"># Extract iatom0, iatom1</span>
+        <span class="n">iatoms</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">()</span>
+        <span class="c"># Predict what the width will be and fix if needed</span>
+        <span class="n">width</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iatoms</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">width</span> <span class="o">&gt;=</span> <span class="n">maxwidth</span><span class="p">:</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">nic</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c"># Convert to string and add to result</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;{:8d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">iatom</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">iatom</span> <span class="ow">in</span> <span class="n">iatoms</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">width</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">s</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">header</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nic</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_bonds_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_ics_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">,</span> <span class="s">&#39;BONDHARM&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="s">&#39;{:8d} !NBOND: bonds&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_angles_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_ics_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">,</span> <span class="s">&#39;BENDAHARM&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="s">&#39;{:8d} !NTHETA: angles&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_dihedrals_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_ics_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">,</span> <span class="s">&#39;TORSION&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="s">&#39;{:8d} !NPHI: dihedrals&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dump_charmm22_psf"><a class="viewcode-back" href="../../rg_module.html#quickff.io.dump_charmm22_psf">[docs]</a><span class="k">def</span> <span class="nf">dump_charmm22_psf</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">valence</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dump supported internal coordinates in a CHARMM psf file.</span>
+
+<span class="sd">       **Arguments**</span>
+
+<span class="sd">       system</span>
+<span class="sd">            Instance of yaff.System class</span>
+
+<span class="sd">       valence</span>
+<span class="sd">            Instance of ValenceFF, which defines the force field.</span>
+
+<span class="sd">       fn</span>
+<span class="sd">            The filename to write to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># First report all types of terms not supported by CHARMM22.</span>
+    <span class="n">_check_charmm22</span><span class="p">(</span><span class="n">valence</span><span class="p">)</span>
+
+    <span class="c"># Dump supported internal coordinates into PSF file.</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">charmm22_psf_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">_atoms_to_charmm22_psf</span><span class="p">(</span><span class="n">system</span><span class="p">),</span>
+            <span class="n">_bonds_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">),</span>
+            <span class="n">_angles_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">),</span>
+            <span class="n">_dihedrals_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">)))</span></div>
 </pre></div>
 
           </div>

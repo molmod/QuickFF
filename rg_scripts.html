@@ -64,7 +64,7 @@ Options:
                         different, the absolute path to quickff.py should be
                         used. For example, to run on 4 cores: python -m scoop
                         -n4 /path/to/%prog --scoop [options] fns
-                        [default=default]
+                        [default=False]
   -s, --silent          Swith of all logging completely, overwrites all other
                         verbosity options. [default=False]
   -v, --verbose         Increases verbosity, is overwriten if SILENT or
@@ -73,12 +73,7 @@ Options:
                         SILENT is switched on. [default=False]
   -l LOGFILE, --logfile=LOGFILE
                         Redirect logger output to a file with the given name.
-                        [default=default]
-  -c CONFIG, --config=CONFIG
-                        File name of a config file containing all settings.
-                        Settings defined through optional arguments of this
-                        script overwrite settings in the config file.
-                        [default=None]
+                        [default=none]
   --version             Print QuickFF version number and exit.
 
   General:
@@ -91,20 +86,20 @@ Options:
                         quickff/program.py, which are: MakeTrajectories,
                         PlotTrajectories, DeriveDiagFF, DeriveNonDiagFF,
                         DeriveNonDiagFFNoQRef (case sensitive).
-                        [default=default]
+                        [default=DeriveNonDiagFF]
     --fn-traj=FN_TRAJ   Name for the file to read/write the perturbation
                         trajectories from/to. If the given file exists, the
                         trajectories are read from the file. Otherwise, the
                         trajectories are written to the given file.
-                        [default=default]
+                        [default=none]
     --only-traj=ONLY_TRAJ
                         Construct the perturbation trajectory only for the
                         terms with the given basenames. This options is only
                         applied in the MakeTrajectories program.
-    -p, --plot-traj     Plot the various energy contributions along the
-                        perturbation trajectories to. [default=default]
+    -e, --ener-traj     Plot the various energy contributions along the
+                        perturbation trajectories to. [default=False]
     -x, --xyz-traj      Write the perturbation trajectories in XYZ format.
-                        [default=default]
+                        [default=False]
     --suffix=SUFFIX     Suffix that will be added to all output files.
                         [default=&#39;&#39;]
 
@@ -113,12 +108,12 @@ Options:
     field.
 
     --ei=EI             A Yaff parameters file defining the electrostatic
-                        contribution of the force field. [default=default]
+                        contribution of the force field. [default=none]
     --vdw=VDW           A Yaff parameters file defining the van der Waals
-                        contribution of the force field. [default=default]
+                        contribution of the force field. [default=none]
     --covres=COVRES     A Yaff parameters file defining a residual
                         contribution to the covalent part of the force field.
-                        [default=default]
+                        [default=none]
 
   System:
     All options related to the definition of the system.
@@ -129,30 +124,43 @@ Options:
                         atom types will be assigned through the automatic
                         built-in detection (see documentation). If FFATYPES is
                         None, the atom types are assumed to be defined in the
-                        input files. [default=default]
+                        input files. [default=none]
 </pre></div>
 </div>
 </div>
 <div class="section" id="qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">
 <span id="seclab-rg-scripts-inputei"></span><h1>2. <tt class="docutils literal"><span class="pre">qff-input-ei.py</span></tt> &#8211; generate Yaff parameter file for electrostatics<a class="headerlink" href="#qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-text"><div class="highlight"><pre>Usage: qff-input-ei.py [options] fn_sys fn_in path
+<div class="highlight-text"><div class="highlight"><pre>usage: qff-input-ei.py [-h] [-v] [--ffatypes FFATYPES] [--gaussian] [--bci]
+                       [--bci-constraints BCI_CONSTRAINTS]
+                       fn_sys charges [fn_out]
 
-This script will read the atomic charges from the input arguments and make the
-Yaff parameters file for use with the QuickFF option --ei. fn_sys is any file
-from which the system can be extracted (MolMod CHK, Gaussian FCHK, XYZ, ...).
-Path represents the path to the charges, which are assumed to be stored in
-either a HDF5 file fn_in in the dataset /path/charges or in a MolMod CHK file
-under the label `path`.
+This script reads atomic charges from an input file and makes a Yaff
+parameters file suitable for the QuickFF option --ei.
 
-Options:
+positional arguments:
+  fn_sys                Any file from which the system can be extracted
+                        (MolMod CHK, Gaussian FCHK, XYZ, ...).
+  charges               The atomic charges to be used. This argument has the
+                        form fn_charges:path, where fn_charges is a filename
+                        that contains the charges and path refers to a
+                        location within that file where the charges can be
+                        found. If fn_charges is an HDF5 file, path is the
+                        location of a dataset containing the charges, e.g.
+                        &#39;/charges&#39;. If fn_charges is a MolMod CHK file, path
+                        is the label of the dataset that contains the atomic
+                        charges.
+  fn_out                Name of the Yaff file to write the parameters to.
+                        [default=pars_ei.txt]
+
+optional arguments:
   -h, --help            show this help message and exit
   -v, --verbose         Increase verbosity of the script [default=False].
-  --ffatypes=FFATYPES   Assign atom types in the system. If FFATYPES is a
+  --ffatypes FFATYPES   Assign atom types in the system. If FFATYPES is a
                         string equal to either low,medium, high or highest,
                         atom types will be assigned through the automatic
                         built-in detection (see documentation). If FFATYPES is
                         None, the atom types are assumed to be defined in the
-                        input files. [default=none]
+                        input files. [default=None]
   --gaussian            Use gaussian smeared charges. The radii are taken from
                         the input file fn_in (from dataset /path/radii for
                         HDF5 file or from label `radii` for CHK file) if the
@@ -168,16 +176,13 @@ Options:
                         be read from the system file, they will be estimated
                         from the interatomic distances using the detect_bonds
                         routine in the Yaff System class. [default=False]
-  --bci-constraints=BCI_CONSTRAINTS
+  --bci-constraints BCI_CONSTRAINTS
                         A file containing constraints for the charge to bci
                         fit in a master: slave0,slave1,...: sign format. A new
                         line should be used for each master and the format is
                         insensitive towards spaces.Sign should be 1.0 or -1.0
                         indicating wheter or not a sign switch should be
                         introduced when mapping the slaves to the master.
-  -o OUTPUT, --output=OUTPUT
-                        Name of the Yaff file to write the parameters to.
-                        [default=pars_ei_${PATH}.txt]
 </pre></div>
 </div>
 </div>
