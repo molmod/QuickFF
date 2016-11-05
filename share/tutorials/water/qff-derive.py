@@ -1,11 +1,13 @@
-from yaff import System 
+#!/usr/bin/env python
+
+from yaff import System
 from molmod.io.fchk import FCHKFile
 
 from quickff.reference import SecondOrderTaylor, get_ei_ff
 from quickff.program import BaseProgram
 from quickff.log import log
 
-import h5py
+import h5py as h5
 
 #define class for deriving the force field
 class Program(BaseProgram):
@@ -23,7 +25,7 @@ class Program(BaseProgram):
             self.make_output()
 
 #load Gaussian Formatted Checkpoint file
-fchk = FCHKFile('/home/louis/build/quickff/share/systems/water/gaussian.fchk')
+fchk = FCHKFile('gaussian.fchk')
 numbers = fchk.fields.get('Atomic numbers')
 energy = fchk.fields.get('Total Energy')
 coords = fchk.fields.get('Current cartesian coordinates').reshape([len(numbers), 3])
@@ -46,8 +48,8 @@ rules = [
 system.detect_ffatypes(rules)
 
 #construct electrostatic force field from HE charges in gaussian_wpart.h5
-f = h5py.File('/home/louis/build/quickff/share/systems/water/gaussian_wpart.h5')
-charges = f['wpart/he/charges'][:]
+with h5.File('gaussian_mbis.h5') as f:
+    charges = f['charges'][:]
 scales = [1.0, 1.0, 1.0, 1.0]
 ff_ei = get_ei_ff('EI', system, charges, scales, radii=None, average=True, pbc=[0,0,0])
 
