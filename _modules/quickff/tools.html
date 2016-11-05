@@ -240,7 +240,7 @@
     <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">x1</span>
 
 </div>
-<div class="viewcode-block" id="guess_ffatypes"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.guess_ffatypes">[docs]</a><span class="k">def</span> <span class="nf">guess_ffatypes</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+<div class="viewcode-block" id="guess_ffatypes"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.guess_ffatypes">[docs]</a><span class="k">def</span> <span class="nf">guess_ffatypes</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">       A method to guess atom types. This will overwrite ffatypes</span>
 <span class="sd">       that are already defined in the system.</span>
@@ -250,8 +250,9 @@
 <span class="sd">       system</span>
 <span class="sd">            A yaff system instance</span>
 
-<span class="sd">       level</span>
-<span class="sd">            A string used for guessing atom types:</span>
+<span class="sd">       settings</span>
+<span class="sd">            A `Settings` instanc that contains the attribute ffatypes, which is</span>
+<span class="sd">            a string used for guessing atom types:</span>
 
 <span class="sd">                * low:     based on atomic number</span>
 <span class="sd">                * medium:  based on atomic number and number of neighbors</span>
@@ -261,16 +262,16 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">if</span> <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Atom types are already defined in the system.&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;low&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">ffatypes</span> <span class="o">==</span> <span class="s">&#39;low&#39;</span><span class="p">:</span>
         <span class="n">atypes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pt</span><span class="p">[</span><span class="n">number</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">])</span>
-    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;medium&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">settings</span><span class="o">.</span><span class="n">ffatypes</span> <span class="o">==</span> <span class="s">&#39;medium&#39;</span><span class="p">:</span>
         <span class="n">atypes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">):</span>
             <span class="n">nind</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">neighs1</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
             <span class="n">sym</span> <span class="o">=</span> <span class="n">pt</span><span class="p">[</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
             <span class="n">atype</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">nind</span><span class="p">))</span>
             <span class="n">atypes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atype</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;high&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">settings</span><span class="o">.</span><span class="n">ffatypes</span> <span class="o">==</span> <span class="s">&#39;high&#39;</span><span class="p">:</span>
         <span class="n">atypes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">):</span>
             <span class="n">nsyms</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span>
@@ -293,12 +294,12 @@
                 <span class="k">for</span> <span class="n">nsym</span><span class="p">,</span> <span class="n">nnum</span> <span class="ow">in</span> <span class="n">neighs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
                     <span class="n">atype</span> <span class="o">+=</span> <span class="s">&#39;_</span><span class="si">%s%i</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">nsym</span><span class="p">,</span> <span class="n">nnum</span><span class="p">)</span>
             <span class="n">atypes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atype</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;highest&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">settings</span><span class="o">.</span><span class="n">ffatypes</span> <span class="o">==</span> <span class="s">&#39;highest&#39;</span><span class="p">:</span>
         <span class="n">atypes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
             <span class="s">&#39;</span><span class="si">%s%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pt</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">)</span>
         <span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid level, recieved </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">level</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid level, recieved </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">settings</span><span class="o">.</span><span class="n">ffatypes</span><span class="p">)</span>
     <span class="n">system</span><span class="o">.</span><span class="n">ffatype_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">),</span> <span class="nb">int</span><span class="p">)</span>
     <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">atype</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">atypes</span><span class="p">):</span>

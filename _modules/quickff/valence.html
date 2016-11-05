@@ -85,6 +85,7 @@
 <span class="kn">from</span> <span class="nn">quickff.tools</span> <span class="kn">import</span> <span class="n">term_sort_atypes</span><span class="p">,</span> <span class="n">get_multiplicity</span><span class="p">,</span> <span class="n">get_restvalue</span><span class="p">,</span> \
     <span class="n">digits</span>
 <span class="kn">from</span> <span class="nn">quickff.log</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">quickff.settings</span> <span class="kn">import</span> <span class="n">Settings</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
@@ -207,7 +208,7 @@
 <span class="sd">        Class to collect all valence terms in the force field for which</span>
 <span class="sd">        parameters need to be estimated.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">specs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            **Arguments**</span>
 
@@ -217,18 +218,28 @@
 
 <span class="sd">            **Keyword Arguments**</span>
 
-<span class="sd">            specs</span>
-<span class="sd">                Not yet implemented</span>
+<span class="sd">            settings</span>
+<span class="sd">                a `Settings` instance defining the settings for the current run.</span>
+<span class="sd">                If this is not given, the default settings will be used.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;VAL&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s">&#39;Initializing&#39;</span><span class="p">):</span>
             <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;Initializing valence force field&#39;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">system</span>
+            <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">Settings</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&#39;program_mode&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">terms</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">ForcePartValence</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">init_bond_terms</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">init_bend_terms</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">init_dihedral_terms</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">init_oop_terms</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">do_bonds</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">init_bond_terms</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">do_bends</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">init_bend_terms</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">do_diheds</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">init_dihedral_terms</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">do_oops</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">init_oop_terms</span><span class="p">()</span>
 
 <div class="viewcode-block" id="ValenceFF.add_term"><a class="viewcode-back" href="../../rg_module.html#quickff.valence.ValenceFF.add_term">[docs]</a>    <span class="k">def</span> <span class="nf">add_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pot</span><span class="p">,</span> <span class="n">ics</span><span class="p">,</span> <span class="n">atypes</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -514,7 +525,7 @@
                         <span class="n">nsq</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;Added </span><span class="si">%i</span><span class="s"> Harmonic and </span><span class="si">%i</span><span class="s"> SquareHarmonic out-of-plane distance terms&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">nharm</span><span class="p">,</span> <span class="n">nsq</span><span class="p">))</span>
 </div>
-<div class="viewcode-block" id="ValenceFF.init_cross_terms"><a class="viewcode-back" href="../../rg_module.html#quickff.valence.ValenceFF.init_cross_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_cross_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.init_cross_terms"><a class="viewcode-back" href="../../rg_module.html#quickff.valence.ValenceFF.init_cross_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_cross_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Initialize cross terms between bonds and bends.</span>
 <span class="sd">        &#39;&#39;&#39;</span>

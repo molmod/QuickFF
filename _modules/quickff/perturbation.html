@@ -82,6 +82,7 @@
 
 <span class="kn">from</span> <span class="nn">quickff.tools</span> <span class="kn">import</span> <span class="n">fitpar</span>
 <span class="kn">from</span> <span class="nn">quickff.log</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">quickff.settings</span> <span class="kn">import</span> <span class="n">Settings</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">scipy.optimize</span><span class="o">,</span> <span class="nn">warnings</span>
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s">&#39;ignore&#39;</span><span class="p">,</span> <span class="s">&#39;The iteration is not making good progress&#39;</span><span class="p">)</span>
@@ -244,7 +245,7 @@
 
 </div></div>
 <span class="k">class</span> <span class="nc">RelaxedStrain</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">valence</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">valence</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            **Arguments**</span>
 
@@ -253,9 +254,20 @@
 
 <span class="sd">            valence</span>
 <span class="sd">                an instance of ValenceFF defining the valence force field</span>
+
+<span class="sd">            **Keyword Arguments**</span>
+
+<span class="sd">            settings</span>
+<span class="sd">                a `Settings` instance defining the settings for the current run.</span>
+<span class="sd">                If this is not given, the default settings will be used.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">system</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">valence</span> <span class="o">=</span> <span class="n">valence</span>
+        <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">Settings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&#39;program_mode&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;Initializing strain&#39;</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;STRAIN&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s">&#39;Initializing&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">strains</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">valence</span><span class="o">.</span><span class="n">terms</span><span class="p">)</span>

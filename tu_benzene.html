@@ -199,8 +199,8 @@ _________________________\//////____\///______________\///______________________
  USER               louis
  MACHINE            Linux molmod91 4.2.0-42-generic #49-Ubuntu SMP Tue Jun 28 
  MACHINE            21:26:26 UTC 2016 x86_64
- TIME               2016-10-28 13:10:38.927570
- QUICKFF VERSION    2.1.2
+ TIME               2016-11-05 14:18:00.154809
+ QUICKFF VERSION    2.1.3
  PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
  NUMPY VERSION      1.8.2
  SCIPY VERSION      0.14.1
@@ -212,10 +212,32 @@ _________________________\//////____\///______________\///______________________
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- QFF    Initializing system
- QFF    Initializing Second order taylor reference for ai
+ SETT   log_level                       medium
+ SETT   log_file                        None
+ SETT   fn_yaff                         pars_yaff_noei.txt
+ SETT   fn_sys                          system_noei.chk
+ SETT   plot_traj                       False
+ SETT   xyz_traj                        False
+ SETT   fn_traj                         None
+ SETT   program_mode                    DeriveNonDiagFF
+ SETT   scoop                           False
+ SETT   only_traj                       PT_ALL
+ SETT   ffatypes                        low
+ SETT   ei                              None
+ SETT   vdw                             None
+ SETT   covres                          None
+ SETT   do_bonds                        True
+ SETT   do_bends                        True
+ SETT   do_diheds                       True
+ SETT   do_oops                         True
+ SETT   do_cross                        True
+ SETT   do_squarebend                   True
+ SETT   do_bendcharm                    True
+ SETT   do_sqoopdist_to_oopdist         True
 
- PROG   Initializing program
+ QFF    Reading input
+ QFF    Initializing Second order taylor reference for ai
+ QFF    Initializing program
 
  VAL    Initializing valence force field
  VAL    Added 12 Harmonic bond terms
@@ -223,7 +245,7 @@ _________________________\//////____\///______________\///______________________
  VAL    Added 24 Cosine dihedral terms
  VAL    Added 6 Harmonic and 0 SquareHarmonic out-of-plane distance terms
 
- PROG   Initializing strain
+ QFF    Initializing strain
 
  EQSET  Resetting system coordinates to ab initio ref
  EQSET  Setting rest values to AI equilibrium values for tasks EQ_RV
@@ -268,7 +290,7 @@ _________________________\//////____\///______________\///______________________
             fc = 291.1 ± .000    rv = 120.0 ± .000
 
         Torsion/C.C.C.C (au  kjmol  deg)                                        
-            fc = 32.0 ± 0.0    rv = .000 ± 0.0    m = 2
+            fc = 32.0 ± .00    rv = .000 ± 0.0    m = 2
 
         Torsion/C.C.C.H (au  kjmol  deg)                                        
             fc = 31.9 ± 0.0    rv = .000 ± 0.0    m = 2
@@ -289,24 +311,24 @@ _________________________\//////____\///______________\///______________________
             fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
 
         Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 63.1 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
+            fc = 63.1 ± .0    rv0 = 1.39 ± .00    rv0 =  120 ± .00
 
         Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± 0.0
+            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± .00
 
         Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
-            fc =  120 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.08 ± 0.0
+            fc =  120 ± .0    rv0 = 1.39 ± .00    rv0 = 1.08 ± 0.0
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.537360
- TIMING Equil Set RV                    0:00:00.002013
- TIMING PT Generate                     0:00:18.349055
- TIMING PT Estimate                     0:00:00.068062
- TIMING PT Post process                 0:00:00.001763
- TIMING HC Estimate FC                  0:00:00.277720
- TIMING PT plot energy                  0:00:00.000010
+ TIMING Initializing                    0:00:00.545500
+ TIMING Equil Set RV                    0:00:00.002024
+ TIMING PT Generate                     0:00:19.002353
+ TIMING PT Estimate                     0:00:00.069211
+ TIMING PT Post process                 0:00:00.001777
+ TIMING HC Estimate FC                  0:00:00.284861
+ TIMING PT plot energy                  0:00:00.000008
  TIMING PT dump XYZ                     0:00:00.000004
 
 __/\\\__________________________________________________________________/\\\____
@@ -423,7 +445,14 @@ according to the level <cite>medium</cite> and use Gaussian charge distributions
 <p>This command dumped the following output to the screen, indicating wheter or
 not the atom types are well chosen from the point of view of electrostatics
 (see second remark in <a class="reference internal" href="ug_inputei.html#seclab-ug-tools-inputei"><em>qff-input-ei.py</em></a>):</p>
-<div class="highlight-text"><div class="highlight"><pre>
+<div class="highlight-text"><div class="highlight"><pre>Traceback (most recent call last):
+  File &quot;/home/louis/.local/bin/qff-input-ei.py&quot;, line 146, in &lt;module&gt;
+    main()
+  File &quot;/home/louis/.local/bin/qff-input-ei.py&quot;, line 103, in main
+    guess_ffatypes(system, options.ffatypes)
+  File &quot;/home/louis/.local/lib/python2.7/site-packages/quickff/tools.py&quot;, line 216, in guess_ffatypes
+    if settings.ffatypes == &#39;low&#39;:
+AttributeError: &#39;str&#39; object has no attribute &#39;ffatypes&#39;
 </pre></div>
 </div>
 <p>Furthermore, the following Yaff parameter (<cite>pars_ei_wpart_he.txt</cite>) file was written:</p>
@@ -480,8 +509,8 @@ _________________________\//////____\///______________\///______________________
  USER               louis
  MACHINE            Linux molmod91 4.2.0-42-generic #49-Ubuntu SMP Tue Jun 28 
  MACHINE            21:26:26 UTC 2016 x86_64
- TIME               2016-10-28 13:10:48.828632
- QUICKFF VERSION    2.1.2
+ TIME               2016-11-05 14:18:10.385429
+ QUICKFF VERSION    2.1.3
  PYTHON VERSION     2.7.10 (default, Oct 14 2015, 16:09:02) [GCC 5.2.1 20151010]
  NUMPY VERSION      1.8.2
  SCIPY VERSION      0.14.1
@@ -493,103 +522,44 @@ _________________________\//////____\///______________\///______________________
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- QFF    Initializing system
+ SETT   log_level                       medium
+ SETT   log_file                        None
+ SETT   fn_yaff                         pars_yaff_ei.txt
+ SETT   fn_sys                          system_ei.chk
+ SETT   plot_traj                       False
+ SETT   xyz_traj                        False
+ SETT   fn_traj                         None
+ SETT   program_mode                    DeriveNonDiagFF
+ SETT   scoop                           False
+ SETT   only_traj                       PT_ALL
+ SETT   ffatypes                        low
+ SETT   ei                              pars_ei_wpart_he.txt
+ SETT   vdw                             None
+ SETT   covres                          None
+ SETT   do_bonds                        True
+ SETT   do_bends                        True
+ SETT   do_diheds                       True
+ SETT   do_oops                         True
+ SETT   do_cross                        True
+ SETT   do_squarebend                   True
+ SETT   do_bendcharm                    True
+ SETT   do_sqoopdist_to_oopdist         True
+
+ QFF    Reading input
  QFF    Initializing Second order taylor reference for ai
- QFF    Initializing Yaff force field reference for EI
-
- PROG   Initializing program
-
- VAL    Initializing valence force field
- VAL    Added 12 Harmonic bond terms
- VAL    Added 18 Harmonic bend terms
- VAL    Added 24 Cosine dihedral terms
- VAL    Added 6 Harmonic and 0 SquareHarmonic out-of-plane distance terms
-
- PROG   Initializing strain
-
- EQSET  Resetting system coordinates to ab initio ref
- EQSET  Setting rest values to AI equilibrium values for tasks EQ_RV
- EQSET  Averaging force field parameters over master and slaves
-
- PTGEN  Resetting system coordinates to ab initio ref
- PTGEN  Constructing trajectories
-
- PTEST  Resetting system coordinates to ab initio ref
- PTEST  Estimating FF parameters from perturbation trajectories
-
- PTPOST Averaging force field parameters over master and slaves
-
- VAL    Resetting system coordinates to ab initio ref
- VAL    Added 18 cross terms for angle patterns
-
- HCEST  Resetting system coordinates to ab initio ref
- HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
- HCEST  CROSS
-
- PTEST  Resetting system coordinates to ab initio ref
- PTEST  Estimating FF parameters from perturbation trajectories with valence 
- PTEST  reference
-
- PROGRA Averaging force field parameters over master and slaves
-
- HCEST  Resetting system coordinates to ab initio ref
- HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
- HCEST  CROSS
-
-
-        BondHarm/C.C (kjmol/A^2  A)                                             
-            fc =  3975 ± .000    rv = 1.394 ± .000
-
-        BondHarm/C.H (kjmol/A^2  A)                                             
-            fc =  3385 ± .000    rv = 1.084 ± .000
-
-        BendAHarm/C.C.C (kjmol/rad^2  deg)                                      
-            fc = 617.1 ± .000    rv = 119.9 ± .000
-
-        BendAHarm/C.C.H (kjmol/rad^2  deg)                                      
-            fc = 291.3 ± .000    rv = 120.0 ± .000
-
-        Torsion/C.C.C.C (au  kjmol  deg)                                        
-            fc = 32.1 ± 0.0    rv = .000 ± 0.0    m = 2
-
-        Torsion/C.C.C.H (au  kjmol  deg)                                        
-            fc = 32.0 ± 0.0    rv = .000 ± 0.0    m = 2
-
-        Torsion/H.C.C.H (au  kjmol  deg)                                        
-            fc = 13.0 ± 0.0    rv = .000 ± 0.0    m = 2
-
-        Oopdist/C.C.H.C (kjmol/A^2  A)                                          
-            fc = 273.0 ± .000    rv = .0000 ± .000
-
-        Cross/C.C.C/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.43 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
-
-        Cross/C.C.C/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc = 9.55 ± .0    rv0 = 1.39 ± 0.0    rv0 =  120 ± 0.0
-
-        Cross/C.C.C/bb (kjmol/A^2  A  A)                                        
-            fc =  595 ± .0    rv0 = 1.39 ± 0.0    rv0 = 1.39 ± 0.0
-
-        Cross/C.C.H/b0a (kjmol/(A*rad)  A  deg)                                 
-            fc = 63.1 ± .0    rv0 = 1.39 ± .00    rv0 =  120 ± .00
-
-        Cross/C.C.H/b1a (kjmol/(A*rad)  A  deg)                                 
-            fc =  144 ± .0    rv0 = 1.08 ± 0.0    rv0 =  120 ± .00
-
-        Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
-            fc =  121 ± .0    rv0 = 1.39 ± .00    rv0 = 1.08 ± 0.0
-
+ QFF    Initializing program
+Traceback (most recent call last):
+  File &quot;/home/louis/.local/bin/qff.py&quot;, line 255, in &lt;module&gt;
+    main()
+  File &quot;/home/louis/.local/bin/qff.py&quot;, line 245, in main
+    program = mode(system, ai, settings)
+  File &quot;/home/louis/.local/lib/python2.7/site-packages/quickff/program.py&quot;, line 88, in __init__
+    if system.cell.nvecs&gt;0:
+AttributeError: &#39;yaff.pes.ext.Cell&#39; object has no attribute &#39;nvecs&#39;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.548572
- TIMING Equil Set RV                    0:00:00.002101
- TIMING PT Generate                     0:00:20.260152
- TIMING PT Estimate                     0:00:00.168541
- TIMING PT Post process                 0:00:00.002220
- TIMING HC Estimate FC                  0:00:00.318265
- TIMING PT plot energy                  0:00:00.000009
- TIMING PT dump XYZ                     0:00:00.000004
+ TIMING Initializing                    0:00:00.042264
 
 __/\\\__________________________________________________________________/\\\____
   \ \\\                                                                 \ \\\

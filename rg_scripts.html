@@ -64,7 +64,7 @@ Options:
                         different, the absolute path to quickff.py should be
                         used. For example, to run on 4 cores: python -m scoop
                         -n4 /path/to/%prog --scoop [options] fns
-                        [default=False]
+                        [default=default]
   -s, --silent          Swith of all logging completely, overwrites all other
                         verbosity options. [default=False]
   -v, --verbose         Increases verbosity, is overwriten if SILENT or
@@ -73,7 +73,12 @@ Options:
                         SILENT is switched on. [default=False]
   -l LOGFILE, --logfile=LOGFILE
                         Redirect logger output to a file with the given name.
-                        [default=none]
+                        [default=default]
+  -c CONFIG, --config=CONFIG
+                        File name of a config file containing all settings.
+                        Settings defined through optional arguments of this
+                        script overwrite settings in the config file.
+                        [default=None]
   --version             Print QuickFF version number and exit.
 
   General:
@@ -86,20 +91,20 @@ Options:
                         quickff/program.py, which are: MakeTrajectories,
                         PlotTrajectories, DeriveDiagFF, DeriveNonDiagFF,
                         DeriveNonDiagFFNoQRef (case sensitive).
-                        [default=DeriveNonDiagFF]
+                        [default=default]
     --fn-traj=FN_TRAJ   Name for the file to read/write the perturbation
                         trajectories from/to. If the given file exists, the
                         trajectories are read from the file. Otherwise, the
                         trajectories are written to the given file.
-                        [default=none]
+                        [default=default]
     --only-traj=ONLY_TRAJ
                         Construct the perturbation trajectory only for the
                         terms with the given basenames. This options is only
                         applied in the MakeTrajectories program.
-    -e, --ener-traj     Plot the various energy contributions along the
-                        perturbation trajectories to. [default=False]
+    -p, --plot-traj     Plot the various energy contributions along the
+                        perturbation trajectories to. [default=default]
     -x, --xyz-traj      Write the perturbation trajectories in XYZ format.
-                        [default=False]
+                        [default=default]
     --suffix=SUFFIX     Suffix that will be added to all output files.
                         [default=&#39;&#39;]
 
@@ -108,12 +113,12 @@ Options:
     field.
 
     --ei=EI             A Yaff parameters file defining the electrostatic
-                        contribution of the force field. [default=none]
+                        contribution of the force field. [default=default]
     --vdw=VDW           A Yaff parameters file defining the van der Waals
-                        contribution of the force field. [default=none]
+                        contribution of the force field. [default=default]
     --covres=COVRES     A Yaff parameters file defining a residual
                         contribution to the covalent part of the force field.
-                        [default=none]
+                        [default=default]
 
   System:
     All options related to the definition of the system.
@@ -124,7 +129,7 @@ Options:
                         atom types will be assigned through the automatic
                         built-in detection (see documentation). If FFATYPES is
                         None, the atom types are assumed to be defined in the
-                        input files. [default=none]
+                        input files. [default=default]
 </pre></div>
 </div>
 </div>
