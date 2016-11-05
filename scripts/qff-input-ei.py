@@ -49,11 +49,11 @@ def parse_args():
     )
     parser.add_argument(
         '--ffatypes', default=None,
-        help='Assign atom types in the system. If FFATYPES is a string equal to '
-             'either low,medium, high or highest, atom types will be assigned '
-             'through the automatic built-in detection (see documentation). If '
-             'FFATYPES is None, the atom types are assumed to be defined in the '
-             'input files. [default=%(default)s]'
+        choices=['None','low','medium','high','highest'],
+        help='Assign atom types in the system through the automatic built-in '
+             'detection (see documentation). By default (or if None is given), '
+             'the atom types are assumed to be defined in the input files. '
+             '[default=%(default)s]'
     )
     parser.add_argument(
         '--gaussian', default=False, action='store_true',
