@@ -300,13 +300,13 @@ to zero.</p>
 
 <dl class="method">
 <dt id="quickff.program.BaseProgram.do_eq_setrv">
-<tt class="descname">do_eq_setrv</tt><big>(</big><em>tasks</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_eq_setrv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_eq_setrv" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">do_eq_setrv</tt><big>(</big><em>tasks</em>, <em>logger_level=3</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_eq_setrv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_eq_setrv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the rest values to their respective AI equilibrium values.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="quickff.program.BaseProgram.do_hc_estimatefc">
-<tt class="descname">do_hc_estimatefc</tt><big>(</big><em>tasks</em>, <em>logger_level=4</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_hc_estimatefc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_hc_estimatefc" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">do_hc_estimatefc</tt><big>(</big><em>tasks</em>, <em>logger_level=3</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_hc_estimatefc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_hc_estimatefc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Refine force constants using Hessian Cost function.</p>
 <p><strong>Arguments</strong></p>
 <dl class="docutils">
@@ -330,7 +330,7 @@ the highest log level.</dd>
 
 <dl class="method">
 <dt id="quickff.program.BaseProgram.do_pt_estimate">
-<tt class="descname">do_pt_estimate</tt><big>(</big><em>do_valence=False</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_pt_estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_pt_estimate" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">do_pt_estimate</tt><big>(</big><em>do_valence=False</em>, <em>logger_level=3</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_pt_estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_pt_estimate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate force constants and rest values from the perturbation
 trajectories</p>
 <p><strong>Optional Arguments</strong></p>
@@ -486,7 +486,7 @@ an XYZ file.</dd>
 <dt id="quickff.program.PlotTrajectories">
 <em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">PlotTrajectories</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#PlotTrajectories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.PlotTrajectories" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the perturbation trajectories, dump to XYZ files and plot the
-energy contributions.</p>
+energy contributions. This program does not derive the force field.</p>
 <p><strong>Arguments</strong></p>
 <dl class="docutils">
 <dt>system</dt>
@@ -534,7 +534,11 @@ an XYZ file.</dd>
 <dl class="class">
 <dt id="quickff.program.DeriveDiagFF">
 <em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">DeriveDiagFF</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#DeriveDiagFF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveDiagFF" title="Permalink to this definition">¶</a></dt>
-<dd><p>Derive a diagonal force field, i.e. does not contain cross terms.</p>
+<dd><p>Derive a diagonal force field, i.e. without cross terms. After the
+hessian fit of the force constants, the rest values are refined by
+revisiting the perturbation trajectories with an extra a priori term
+representing the present valence contribution. Finally, the force 
+constants are refined by means of a final hessian fit.</p>
 <p><strong>Arguments</strong></p>
 <dl class="docutils">
 <dt>system</dt>
@@ -582,7 +586,11 @@ an XYZ file.</dd>
 <dl class="class">
 <dt id="quickff.program.DeriveNonDiagFF">
 <em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">DeriveNonDiagFF</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#DeriveNonDiagFF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveNonDiagFF" title="Permalink to this definition">¶</a></dt>
-<dd><p>Derive a non-diagonal force field, i.e. contains cross terms.</p>
+<dd><p>Derive a non-diagonal force field, i.e. with cross terms. After the
+hessian fit of the force constants, the rest values are refined by
+revisiting the perturbation trajectories with an extra a priori term
+representing the present valence contribution. Finally, the force 
+constants are refined by means of a final hessian fit.</p>
 <p><strong>Arguments</strong></p>
 <dl class="docutils">
 <dt>system</dt>
@@ -630,7 +638,9 @@ an XYZ file.</dd>
 <dl class="class">
 <dt id="quickff.program.DeriveNonDiagFFNoQRef">
 <em class="property">class </em><tt class="descclassname">quickff.program.</tt><tt class="descname">DeriveNonDiagFFNoQRef</tt><big>(</big><em>system</em>, <em>ai</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quickff/program.html#DeriveNonDiagFFNoQRef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveNonDiagFFNoQRef" title="Permalink to this definition">¶</a></dt>
-<dd><p>Derive a non-diagonal force field, i.e. contains cross terms.</p>
+<dd><p>Derive a non-diagonal force field, i.e. with cross terms, whitout
+the refinement of the rest value by revisiting the perturbation
+trajectories.</p>
 <p><strong>Arguments</strong></p>
 <dl class="docutils">
 <dt>system</dt>

@@ -50,81 +50,73 @@
             
   <div class="section" id="qff-py-main-script-to-run-quickff-calculation">
 <span id="seclab-rg-scripts-qff"></span><span id="seclab-rg-scripts"></span><h1>1. <tt class="docutils literal"><span class="pre">qff.py</span></tt> &#8211; Main script to run QuickFF calculation<a class="headerlink" href="#qff-py-main-script-to-run-quickff-calculation" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-text"><div class="highlight"><pre>Usage: qff.py [options] fn1 [fn2 [...]]
+<div class="highlight-text"><div class="highlight"><pre>usage: qff.py [-h] [--version] [-s] [-v] [-V] [-l LOGFILE] [--scoop]
+              [-m {MakeTrajectories,PlotTrajectories,DeriveDiagFF,DeriveNonDiagFF,DeriveNonDiagFFNoQRef}]
+              [--fn-traj FN_TRAJ] [--only-traj ONLY_TRAJ] [-e] [-x]
+              [--suffix SUFFIX] [--ei EI] [--vdw VDW] [--covres COVRES]
+              [--ffatypes {None,low,medium,high,highest}]
+              fn [fn ...]
 
 This script will apply QuickFF to derive a covalent force field for the given
-system. The arguments fn1, fn2, ... represent all input files that specify the
-system and the ab initio reference data. Files later in the list overwrite
-earlier files
+system from the ab initio input given in the input files.
 
-Options:
+positional arguments:
+  fn                    Input file name that specify the system and ab initio
+                        reference data. Multiple file names are allowed, but
+                        at least one should be given. Files later in the list
+                        overwrite information from earlier files. Allowed file
+                        formats are MolMod checkpoint files (file.chk),
+                        Gaussian formatted checkpoint files (file.fchk) and
+                        VASP xml files (file.xml).
+
+optional arguments:
   -h, --help            show this help message and exit
+  --version             Print QuickFF version number and exit.
+  -s, --silent          Swith of all logging completely, overwrites all other
+                        verbosity options.
+  -v, --verbose         Increases verbosity, is overwriten if SILENT or
+                        VERY_VERBOSE is switched on.
+  -V, --very-verbose    Increases verbosity to highest level, is overwriten if
+                        SILENT is switched on.
+  -l LOGFILE, --logfile LOGFILE
+                        Redirect logger output to a file with name LOGFILE.
   --scoop               Flag to enable parallelisation using SCOOP. With
                         SCOOP, the command to run QuickFF is slightly
                         different, the absolute path to quickff.py should be
                         used. For example, to run on 4 cores: python -m scoop
-                        -n4 /path/to/%prog --scoop [options] fns
-                        [default=False]
-  -s, --silent          Swith of all logging completely, overwrites all other
-                        verbosity options. [default=False]
-  -v, --verbose         Increases verbosity, is overwriten if SILENT or
-                        VERY_VERBOSE is switched on. [default=False]
-  -V, --very-verbose    Increases verbosity to highest level, is overwriten if
-                        SILENT is switched on. [default=False]
-  -l LOGFILE, --logfile=LOGFILE
-                        Redirect logger output to a file with the given name.
-                        [default=none]
-  --version             Print QuickFF version number and exit.
+                        -n4 /path/to/qff.py --scoop [options] fns
 
-  General:
-    General specifications of the program
-
-    -m PROGRAM_MODE, --program-mode=PROGRAM_MODE
+General QuickFF specifications:
+  -m {MakeTrajectories,PlotTrajectories,DeriveDiagFF,DeriveNonDiagFF,DeriveNonDiagFFNoQRef}, --program-mode {MakeTrajectories,PlotTrajectories,DeriveDiagFF,DeriveNonDiagFF,DeriveNonDiagFFNoQRef}
                         Specify the program mode which defines the set of
-                        instructions that will be executed. Allowed strings
-                        are the names of the program classes defined in
-                        quickff/program.py, which are: MakeTrajectories,
-                        PlotTrajectories, DeriveDiagFF, DeriveNonDiagFF,
-                        DeriveNonDiagFFNoQRef (case sensitive).
-                        [default=DeriveNonDiagFF]
-    --fn-traj=FN_TRAJ   Name for the file to read/write the perturbation
-                        trajectories from/to. If the given file exists, the
-                        trajectories are read from the file. Otherwise, the
-                        trajectories are written to the given file.
-                        [default=none]
-    --only-traj=ONLY_TRAJ
+                        instructions that will be executed.
+  --fn-traj FN_TRAJ     Read/write the perturbation trajectories from/to
+                        FN_TRAJ. If the given file exists, the trajectories
+                        are read from the file. Otherwise, the trajectories
+                        are written to the given file.
+  --only-traj ONLY_TRAJ
                         Construct the perturbation trajectory only for the
                         terms with the given basenames. This options is only
                         applied in the MakeTrajectories program.
-    -e, --ener-traj     Plot the various energy contributions along the
-                        perturbation trajectories to. [default=False]
-    -x, --xyz-traj      Write the perturbation trajectories in XYZ format.
-                        [default=False]
-    --suffix=SUFFIX     Suffix that will be added to all output files.
-                        [default=&#39;&#39;]
+  -e, --ener-traj       Plot the various energy contributions along the
+                        perturbation trajectories to.
+  -x, --xyz-traj        Write the perturbation trajectories in XYZ format.
+  --suffix SUFFIX       Suffix that will be added to all output files.
 
-  Force Field:
-    All options related to the definition and derivation of the force
-    field.
-
-    --ei=EI             A Yaff parameters file defining the electrostatic
-                        contribution of the force field. [default=none]
-    --vdw=VDW           A Yaff parameters file defining the van der Waals
-                        contribution of the force field. [default=none]
-    --covres=COVRES     A Yaff parameters file defining a residual
+Options related to the definition and derivation of the force field:
+  --ei EI               A Yaff parameters file defining the electrostatic
+                        contribution of the force field.
+  --vdw VDW             A Yaff parameters file defining the van der Waals
+                        contribution of the force field.
+  --covres COVRES       A Yaff parameters file defining a residual
                         contribution to the covalent part of the force field.
-                        [default=none]
 
-  System:
-    All options related to the definition of the system.
-
-    --ffatypes=FFATYPES
-                        Assign atom types in the system. If FFATYPES is a
-                        string equal to either low,medium, high or highest,
-                        atom types will be assigned through the automatic
-                        built-in detection (see documentation). If FFATYPES is
-                        None, the atom types are assumed to be defined in the
-                        input files. [default=none]
+Options related to the definition of the system:
+  --ffatypes {None,low,medium,high,highest}
+                        Assign atom types in the system through the automatic
+                        built-in detection (see documentation). By default (or
+                        if None is given), the atom types are assumed to be
+                        defined in the input files. [default=None]
 </pre></div>
 </div>
 </div>

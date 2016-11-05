@@ -318,7 +318,7 @@
                 <span class="n">cPickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn_traj</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">))</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;Trajectories stored to file </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">fn_traj</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="BaseProgram.do_pt_estimate"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_pt_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_valence</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_pt_estimate"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_pt_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_valence</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Estimate force constants and rest values from the perturbation</span>
 <span class="sd">            trajectories</span>
@@ -344,7 +344,10 @@
                 <span class="k">if</span> <span class="n">traj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">continue</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="n">traj</span><span class="o">.</span><span class="n">fc</span><span class="p">,</span> <span class="n">rv0</span><span class="o">=</span><span class="n">traj</span><span class="o">.</span><span class="n">rv</span><span class="p">)</span>
             <span class="c">#output</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">dump_logger</span><span class="p">(</span><span class="n">print_level</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">dump_logger</span><span class="p">(</span><span class="n">print_level</span><span class="o">=</span><span class="n">logger_level</span><span class="p">)</span>
+            <span class="c">#do not add average here since the fluctuation on the parameters is</span>
+            <span class="c">#required for do_pt_postprocess. Average will be done at the end of</span>
+            <span class="c">#do_pt_postprocess</span>
 </div>
 <div class="viewcode-block" id="BaseProgram.do_pt_postprocess"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_pt_postprocess">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_postprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -361,7 +364,7 @@
             <span class="c">#self.do_sqoopdist_to_oopdist()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">average_pars</span><span class="p">()</span>
 </div>
-<div class="viewcode-block" id="BaseProgram.do_eq_setrv"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_eq_setrv">[docs]</a>    <span class="k">def</span> <span class="nf">do_eq_setrv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_eq_setrv"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_eq_setrv">[docs]</a>    <span class="k">def</span> <span class="nf">do_eq_setrv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Set the rest values to their respective AI equilibrium values.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -389,10 +392,10 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iclist</span><span class="o">.</span><span class="n">ictab</span><span class="p">[</span><span class="n">vterm</span><span class="p">[</span><span class="s">&#39;ic0&#39;</span><span class="p">]][</span><span class="s">&#39;value&#39;</span><span class="p">]</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">rv0</span><span class="o">=</span><span class="n">rv</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">dump_logger</span><span class="p">(</span><span class="n">print_level</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">dump_logger</span><span class="p">(</span><span class="n">print_level</span><span class="o">=</span><span class="n">logger_level</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">average_pars</span><span class="p">()</span>
 </div>
-<div class="viewcode-block" id="BaseProgram.do_hc_estimatefc"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_hc_estimatefc">[docs]</a>    <span class="k">def</span> <span class="nf">do_hc_estimatefc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_hc_estimatefc"><a class="viewcode-back" href="../../rg_module.html#quickff.program.BaseProgram.do_hc_estimatefc">[docs]</a>    <span class="k">def</span> <span class="nf">do_hc_estimatefc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Refine force constants using Hessian Cost function.</span>
 
@@ -615,7 +618,7 @@
 <div class="viewcode-block" id="PlotTrajectories"><a class="viewcode-back" href="../../rg_module.html#quickff.program.PlotTrajectories">[docs]</a><span class="k">class</span> <span class="nc">PlotTrajectories</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Read the perturbation trajectories, dump to XYZ files and plot the</span>
-<span class="sd">        energy contributions.</span>
+<span class="sd">        energy contributions. This program does not derive the force field.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;PROGRAM&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
@@ -630,7 +633,11 @@
 </div>
 <div class="viewcode-block" id="DeriveDiagFF"><a class="viewcode-back" href="../../rg_module.html#quickff.program.DeriveDiagFF">[docs]</a><span class="k">class</span> <span class="nc">DeriveDiagFF</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Derive a diagonal force field, i.e. does not contain cross terms.</span>
+<span class="sd">        Derive a diagonal force field, i.e. without cross terms. After the</span>
+<span class="sd">        hessian fit of the force constants, the rest values are refined by</span>
+<span class="sd">        revisiting the perturbation trajectories with an extra a priori term</span>
+<span class="sd">        representing the present valence contribution. Finally, the force </span>
+<span class="sd">        constants are refined by means of a final hessian fit.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;PROGRAM&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
@@ -645,7 +652,11 @@
 </div>
 <div class="viewcode-block" id="DeriveNonDiagFF"><a class="viewcode-back" href="../../rg_module.html#quickff.program.DeriveNonDiagFF">[docs]</a><span class="k">class</span> <span class="nc">DeriveNonDiagFF</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Derive a non-diagonal force field, i.e. contains cross terms.</span>
+<span class="sd">        Derive a non-diagonal force field, i.e. with cross terms. After the</span>
+<span class="sd">        hessian fit of the force constants, the rest values are refined by</span>
+<span class="sd">        revisiting the perturbation trajectories with an extra a priori term</span>
+<span class="sd">        representing the present valence contribution. Finally, the force </span>
+<span class="sd">        constants are refined by means of a final hessian fit.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;PROGRAM&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
@@ -662,7 +673,9 @@
 </div>
 <div class="viewcode-block" id="DeriveNonDiagFFNoQRef"><a class="viewcode-back" href="../../rg_module.html#quickff.program.DeriveNonDiagFFNoQRef">[docs]</a><span class="k">class</span> <span class="nc">DeriveNonDiagFFNoQRef</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Derive a non-diagonal force field, i.e. contains cross terms.</span>
+<span class="sd">        Derive a non-diagonal force field, i.e. with cross terms, whitout</span>
+<span class="sd">        the refinement of the rest value by revisiting the perturbation</span>
+<span class="sd">        trajectories.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;PROGRAM&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
