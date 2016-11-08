@@ -247,7 +247,8 @@ class BaseProgram(object):
                 self.trajectories = cPickle.load(open(fn_traj, 'r'))
                 log.dump('Trajectories read from file %s' %fn_traj)
                 self.update_trajectory_terms()
-                cPickle.dump(self.trajectories, open('new_'+fn_traj, 'w'))
+                newname = 'updated_'+fn_traj.split('/')[-1]
+                cPickle.dump(self.trajectories, open(newname, 'w'))
                 return
             #configure
             self.reset_system()
