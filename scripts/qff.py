@@ -150,7 +150,7 @@ def parse():
     if args.version:
         print version
         sys.exit()
-    if args.ffatypes.lower()=='none':
+    if not args.ffatypes is None and args.ffatypes.lower()=='none':
         args.ffatypes = None
     return args
 
