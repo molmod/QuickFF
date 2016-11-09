@@ -298,13 +298,14 @@ class RelaxedStrain(object):
                     init[-1] = np.sign(q0-target)
                     sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
                     if ier!=1:
-                        #fsolve did not converge, flag this frame for deletion
+                        #fsolve did not converge, try again after adding small random noise
                         log.dump('      %s' %mesg.replace('\n', ' '))
                         log.dump('    Frame %i (target=%.3f) %s(%s) did not converge. Trying again with slightly perturbed initial conditions.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
                         #try one more time
                         init = sol.copy()
                         init[:3*natom] += np.random.normal(0.0, 0.01, [3*natom])*angstrom
                         sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
+                        #fsolve did STILL not converge, flag this frame for deletion
                         if ier!=1:
                             log.dump('      %s' %mesg.replace('\n', ' '))
                             log.dump('    Frame %i (target=%.3f) %s(%s) STILL did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
@@ -449,9 +450,9 @@ class Strain(ForceField):
         ForceField.__init__(self, system, [part])
         #Abuse the Chebychev1 polynomial to simply get the value of q-1 and
         #implement the contraint
-        part = ForcePartValence(system)
-        part.add_term(Chebychev1(-2.0,cons_ic))
-        self.constraint = ForceField(system, [part])
+        strainpart = ForcePartValence(system)
+        strainpart.add_term(Chebychev1(-2.0,cons_ic))
+        self.constraint = ForceField(system, [strainpart])
         self.constrain_target = None
         self.constrain_value = None
         self.value = None
@@ -462,8 +463,6 @@ class Strain(ForceField):
             system. For every ic that needs to be constrained, a Lagrange multiplier
             is included.
         '''
-        #small check
-        #assert X.shape[0] ==  self.ndof + 1
         #initialize return value
         grad = np.zeros((len(X),))
         #compute strain gradient

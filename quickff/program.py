@@ -263,7 +263,7 @@ class BaseProgram(object):
             trajectories = self.perturbation.prepare(do_terms)
             #compute
             log.dump('Constructing trajectories')
-            self.trajectories = paracontext.map(self.perturbation.generate, [traj for traj in trajectories if traj is not None])
+            self.trajectories = paracontext.map(self.perturbation.generate, [traj for traj in trajectories if (traj is not None and traj.active)])
             #write the trajectories to the non-existing file fn_traj
             if fn_traj is not None:
                 assert not os.path.isfile(fn_traj)
