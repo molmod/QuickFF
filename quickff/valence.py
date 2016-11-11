@@ -296,8 +296,7 @@ class ValenceFF(ForcePartValence):
             if label is None:
                 yield term
             elif label.startswith('/'):
-                trimmed = label[1:]
-                if trimmed.lower() in term.basename.lower()[:len(trimmed)]:
+                if term.basename.lower().startswith(label.lower()[1:]):
                     yield term
             elif label.lower() in term.basename.lower():
                 yield term

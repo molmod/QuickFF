@@ -27,6 +27,7 @@ from molmod.io.xyz import XYZWriter
 from molmod.units import *
 from molmod.periodic import periodic as pt
 
+from yaff.system import System
 from yaff.pes.ff import ForceField, ForcePartValence
 from yaff.pes.vlist import Chebychev1, Harmonic
 from yaff.pes.iclist import Bond, BendAngle, BendCos, DihedAngle, OopDist
@@ -43,7 +44,7 @@ class Trajectory(object):
     '''
         A class to store a perturbation trajectory
     '''
-    def __init__(self, term, start, end, numbers, steps=11):
+    def __init__(self, term, start, end, numbers, nsteps=11):
         '''
             **Arguments**
 
@@ -66,7 +67,7 @@ class Trajectory(object):
 
             **Optional Arguments**
 
-            steps
+            nsteps
                 an integer defining the number of steps in the perturbation
                 trajectory. The default value is 11 steps.
         '''
@@ -76,10 +77,10 @@ class Trajectory(object):
         self.numbers = numbers
         self.qunit = term.units[1]
         self.kunit = term.units[0]
-        self.step = (end-start)/(steps-1)
-        self.targets = start + (end-start)/(steps-1)*np.array(range(steps), float)
-        self.values = np.zeros(steps, float)
-        self.coords = np.zeros([steps, len(numbers), 3], float)
+        self.step = (end-start)/(nsteps-1)
+        self.targets = start + (end-start)/(nsteps-1)*np.array(range(nsteps), float)
+        self.values = np.zeros(nsteps, float)
+        self.coords = np.zeros([nsteps, len(numbers), 3], float)
         self.active = True
         self.fc = None
         self.rv = None
@@ -193,40 +194,44 @@ class Trajectory(object):
         f.close()
 
 
-
 class RelaxedStrain(object):
     def __init__(self, system, valence):
         '''
             **Arguments**
 
             system
-                an instance of the Yaff System class defining the system
+                a Yaff `System` object defining the system
 
             valence
                 an instance of ValenceFF defining the valence force field
         '''
-        self.system = system
+        self.system0 = system
+        self.system_rvecs = system.cell.rvecs.copy()
         self.valence = valence
-        log.dump('Initializing strain')
-        with log.section('STRAIN', 3, timer='Initializing'):
-            self.strains = [None,]*len(valence.terms)
-            for term in valence.terms:
-                cons_ic = term.ics[0]
-                cons_ic_atindexes = term.get_atoms()
-                #collect all other ics
-                ics = []
-                for term2 in valence.terms:
-                    #if term2.index == term.index: continue #not the current term ic
-                    if term2.kind == 3: continue #not a cross term ic
-                    ics.append(term2.ics[0])
-                self.strains[term.index] = Strain(system, cons_ic, cons_ic_atindexes, ics)
+
+    def _get_system_copy(self):
+        'Routine to get a copy of the equilibrium system'
+        numbers = self.system0.numbers.copy()
+        coords = self.system0.pos.copy()
+        rvecs = self.system_rvecs.copy()
+        masses = self.system0.masses.copy()
+        bonds = self.system0.bonds.copy()
+        ffatypes = self.system0.ffatypes.copy()
+        ffatype_ids = self.system0.ffatype_ids.copy()
+        return System(
+            numbers, coords, rvecs=rvecs,
+            ffatypes=ffatypes, ffatype_ids=ffatype_ids,
+            masses=masses, bonds=bonds
+        )
+
+    system = property(_get_system_copy)
 
     def prepare(self, do_terms):
         '''
             Method to initialize trajectories and configure everything required
             for the generate method.
         '''
-        trajectories = [None,]*len(self.valence.terms)
+        trajectories = []
         for term in do_terms:
             assert term.kind==0, 'Only harmonic terms supported for pert traj'
             ic = self.valence.iclist.ictab[self.valence.vlist.vtab[term.index]['ic0']]
@@ -249,7 +254,7 @@ class RelaxedStrain(object):
                 if start<0.0: start=0.0
             else:
                 raise NotImplementedError
-            trajectories[term.index] = Trajectory(term, start, end, self.system.numbers, steps=7)
+            trajectories.append(Trajectory(term, start, end, self.system0.numbers.copy(), nsteps=7))
         return trajectories
 
     def generate(self, trajectory, remove_com=True):
@@ -271,36 +276,36 @@ class RelaxedStrain(object):
                 if set to True, removes the center of mass translation from the
                 resulting perturbation trajectories [default=True].
         '''
-        index = trajectory.term.index
+        #TODO: find out why system.cell is not parsed correctly when using scoop
+        #force correct rvecs
+        self.system0.cell.update_rvecs(self.system_rvecs)
         with log.section('PTGEN', 3, timer='PT Generate'):
-            log.dump('  Generating %s(atoms=%s)' %(self.valence.terms[index].basename, trajectory.term.get_atoms()))
-            strain = self.strains[index]
-            natom = self.system.natom
-            if strain is None:
-                log.warning('Strain for term %i (%s) is not initialized, skipping.' %(index, self.valence.terms[index].basename))
-                return
-            q0 = self.valence.iclist.ictab[self.valence.vlist.vtab[index]['ic0']]['value']
-            diag = np.ones([strain.ndof+1], float)
-            diag[:strain.ndof] *= 0.1*angstrom
-            diag[strain.ndof] *= abs(q0-trajectory.targets[0])
+            log.dump('  Generating %s(atoms=%s)' %(trajectory.term.basename, trajectory.term.get_atoms()))
+            strain = Strain(self.system, trajectory.term, self.valence.terms)
+            natom = self.system0.natom
+            q0 = self.valence.iclist.ictab[self.valence.vlist.vtab[trajectory.term.index]['ic0']]['value']
+            diag = np.array([0.1*angstrom,]*3*natom+[abs(q0-trajectory.targets[0])])
             sol = None
             for iq, target in enumerate(trajectory.targets):
                 log.dump('    Frame %i (target=%.3f)' %(iq, target))
                 strain.constrain_target = target
                 if abs(target-q0)<1e-6:
                     sol = np.zeros([strain.ndof+1],float)
+                    #call strain.gradient once to compute/store/log relevant information
                     strain.gradient(sol)
                 else:
                     if sol is not None:
                         init = sol.copy()
                     else:
-                        init = np.zeros([strain.ndof+1], float)
+                        init = np.zeros([3*natom+1], float)
                     init[-1] = np.sign(q0-target)
                     sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
                     if ier!=1:
                         #fsolve did not converge, try again after adding small random noise
                         log.dump('      %s' %mesg.replace('\n', ' '))
-                        log.dump('    Frame %i (target=%.3f) %s(%s) did not converge. Trying again with slightly perturbed initial conditions.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
+                        log.dump('    Frame %i (target=%.3f) %s(%s) did not converge. Trying again with slightly perturbed initial conditions.' %(
+                            iq, target, trajectory.term.basename, trajectory.term.get_atoms()
+                        ))
                         #try one more time
                         init = sol.copy()
                         init[:3*natom] += np.random.normal(0.0, 0.01, [3*natom])*angstrom
@@ -308,14 +313,16 @@ class RelaxedStrain(object):
                         #fsolve did STILL not converge, flag this frame for deletion
                         if ier!=1:
                             log.dump('      %s' %mesg.replace('\n', ' '))
-                            log.dump('    Frame %i (target=%.3f) %s(%s) STILL did not converge.' %(iq, target, self.valence.terms[index].basename, trajectory.term.get_atoms()))
+                            log.dump('    Frame %i (target=%.3f) %s(%s) STILL did not converge.' %(
+                                iq, target, trajectory.term.basename, trajectory.term.get_atoms()
+                            ))
                             trajectory.targets[iq] = np.nan
                             continue
-                x = strain.coords0 + sol[:3*natom].reshape((-1,3))
+                x = self.system0.pos.copy() + sol[:3*natom].reshape((-1,3))
                 trajectory.values[iq] = strain.constrain_value
                 log.dump('    Converged (value=%.3f, lagmult=%.3e)' %(strain.constrain_value,sol[3*natom]))
                 if remove_com:
-                    com = (x.T*self.system.masses).sum(axis=1)/self.system.masses.sum()
+                    com = (x.T*self.system0.masses.copy()).sum(axis=1)/self.system0.masses.sum()
                     for i in xrange(natom):
                         x[i,:] -= com
                 trajectory.coords[iq,:,:] = x
@@ -331,7 +338,7 @@ class RelaxedStrain(object):
             trajectory.targets = np.array(targets)
             trajectory.values = np.array(values)
             trajectory.coords = np.array(coords)
-            return trajectory
+        return trajectory
 
     def estimate(self, trajectory, ai, ffrefs=[], do_valence=False):
         '''
@@ -400,7 +407,7 @@ class RelaxedStrain(object):
 
 
 class Strain(ForceField):
-    def __init__(self, system, cons_ic, cons_ic_atindexes, ics, cart_penalty=1e-3*angstrom):
+    def __init__(self, system, term, other_terms, cart_penalty=1e-3*angstrom):
         '''
             A class deriving from the Yaff ForceField class to implement the
             strain of a molecular geometry associated with the term defined by
@@ -411,19 +418,15 @@ class Strain(ForceField):
             system
                 A Yaff System instance containing all system information.
 
-            cons_ic
-                An instance of Yaff Internal Coordinate representing the
-                constrained term in the strain.
-
-            cons_ic_atindexes
-                A list of the atoms involved in the constrained IC. This is
-                required for the implementation of the cartesian penalty. In
-                principle this could be extracted from the information stored
-                in cons_ic, but this is the lazy solution.
-
-            ics
-                A list of Yaff Internal Coordinate instances for which the
-                strain needs to be minimized.
+            term
+                a Term instance representing the term of the perturbation
+                trajectory of the current strain
+            
+            other_terms
+                a list of Term instances representing all other terms for ICs
+                for which a strain contribution should be added
+            
+            **Keyword Arguments**
 
             cart_penalty
                 Magnitude of an extra term added to the strain that penalises
@@ -436,32 +439,34 @@ class Strain(ForceField):
         self.coords0 = system.pos.copy()
         self.ndof = np.prod(self.coords0.shape)
         self.cart_penalty = cart_penalty
-        self.cons_ic_atindexes = cons_ic_atindexes
-        part = ForcePartValence(system)
-        for ic in ics:
-            part.add_term(Harmonic(1.0, None, ic))
+        self.cons_ic_atindexes = term.get_atoms()
+        #construct main strain
+        strain = ForcePartValence(system)
+        for other in other_terms:
+            if other.kind == 3: continue #no cross terms
+            strain.add_term(Harmonic(1.0, None, other.ics[0]))
         #set the rest values to the equilibrium values
-        part.dlist.forward()
-        part.iclist.forward()
-        for iterm in xrange(part.vlist.nv):
-            term = part.vlist.vtab[iterm]
-            ic = part.iclist.ictab[term['ic0']]
-            term['par1'] = ic['value']
-        ForceField.__init__(self, system, [part])
+        strain.dlist.forward()
+        strain.iclist.forward()
+        for iterm in xrange(strain.vlist.nv):
+            vterm = strain.vlist.vtab[iterm]
+            ic = strain.iclist.ictab[vterm['ic0']]
+            vterm['par1'] = ic['value']
+        ForceField.__init__(self, system, [strain])
         #Abuse the Chebychev1 polynomial to simply get the value of q-1 and
         #implement the contraint
-        strainpart = ForcePartValence(system)
-        strainpart.add_term(Chebychev1(-2.0,cons_ic))
-        self.constraint = ForceField(system, [strainpart])
+        constraint = ForcePartValence(system)
+        constraint.add_term(Chebychev1(-2.0,term.ics[0]))
+        self.constraint = ForceField(system, [constraint])
         self.constrain_target = None
         self.constrain_value = None
         self.value = None
 
     def gradient(self, X):
         '''
-            Compute the gradient of the strain wrt Cartesian coordinates of the
-            system. For every ic that needs to be constrained, a Lagrange multiplier
-            is included.
+            Compute the gradient of the strain w.r.t. Cartesian coordinates of
+            the system. For the ic that needs to be constrained, a Lagrange
+            multiplier is included.
         '''
         #initialize return value
         grad = np.zeros((len(X),))
