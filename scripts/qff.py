@@ -173,6 +173,7 @@ def main():
         energy = 0.0
         grad = None
         hess = None
+        pbc = None
         rvecs = None
         for fn in args.fn:
             if fn.endswith('.fchk') or fn.endswith('.xml'):
@@ -195,6 +196,8 @@ def main():
                 elif 'gradient' in sample.keys():   grad = sample['gradient']
                 if 'hess' in sample.keys():         hess = sample['hess']
                 elif 'hessian' in sample.keys():    hess = sample['hessian']
+                if 'rvecs' in sample.keys():        pbc = [1,1,1]
+                else:                               pbc = [0,0,0]
                 if system is None:
                     system = System.from_file(fn)
                 else:
