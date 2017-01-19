@@ -23,13 +23,14 @@
 #
 #--
 from molmod.units import *
+from molmod.ic import bend_angle, _bend_angle_low, dihed_angle, _dihed_angle_low
 
 from yaff.pes.ff import ForceField, ForcePartValence
 from yaff.pes.parameters import *
 from yaff.pes.vlist import ValenceList
-from yaff.pes.vlist import Harmonic, PolyFour, Fues, Cosine, Cross
+from yaff.pes.vlist import Harmonic, PolyFour, Fues, Cosine, Cross, Chebychev1
 from yaff.pes.iclist import InternalCoordinateList
-from yaff.pes.iclist import Bond, BendAngle, DihedCos, DihedAngle, OopDist, SqOopDist
+from yaff.pes.iclist import Bond, BendAngle, BendCos, DihedCos, DihedAngle, OopDist, SqOopDist
 from yaff.pes.dlist import DeltaList
 from yaff.sampling.harmonic import estimate_cart_hessian
 
@@ -140,6 +141,15 @@ class Term(object):
             ]
             units = [self.units[1], self.units[2], 'au']
             ndigits = [(4,3), (4,3), (1,0)]
+        elif self.kind==5:#chebychev
+            fcs = pars[:,0]
+            means = [fcs.mean()]
+            stds = [fcs.std()]
+            formats = [
+                'fc = %%4s %s %%3s' %(u"\u00B1"),
+            ]
+            units = [self.units[0]]
+            ndigits = [(4,3)]
         #convert term pars to string
         line = '%s (%s)' %(
             self.basename[:max_line],
@@ -213,9 +223,10 @@ class ValenceFF(ForcePartValence):
         #define the name
         if len(ics)==1:
             tmp = {
-                (0,0) : 'BondHarm/', (2,0) : 'BendAHarm/' ,
-                (4,4) : 'Torsion/' , (3,1) : 'TorsC2Harm/',
-                (10,0): 'Oopdist/' , (11,0): 'SqOopdist/' ,
+                (0,0) : 'BondHarm/' ,
+                (1,5) : 'BendCLin/', (2,0) : 'BendAHarm/' ,
+                (4,4) : 'Torsion/'  , (3,1) : 'TorsC2Harm/',
+                (10,0): 'Oopdist/'  , (11,0): 'SqOopdist/' ,
             }
             prefix = tmp[(ics[0].kind, pot.kind)]
             suffix = ''
@@ -257,7 +268,11 @@ class ValenceFF(ForcePartValence):
             args = [(None,)*len(units)] + ics
         else:
             args = [None,]*len(units) + ics
-        ForcePartValence.add_term(self, pot(*args))
+        if pot.kind==5:
+            #in case of chebychev, set sign to +1
+            ForcePartValence.add_term(self, pot(*args,sign=1.0))
+        else:
+            ForcePartValence.add_term(self, pot(*args))
         return term
 
     def modify_term(self, term_index, pot, ics, basename, tasks, units):
@@ -331,18 +346,46 @@ class ValenceFF(ForcePartValence):
         '''
             Initialize all bend terms in the system based on the bends attribute
             of the system instance. All bend terms are given harmonic
-            potentials.
+            potentials either in the angle or the cosine of the angle.
         '''
         with log.section('VAL', 3, 'Initializing'):
-            ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
             #get the angle terms
-            nbends = 0
+            ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
+            angles = {}
             for angle in self.system.iter_angles():
-                angle, types = term_sort_atypes(ffatypes, angle, 'angle')
-                units = ['kjmol/rad**2', 'deg']
-                self.add_term(Harmonic, [BendAngle(*angle)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
-                nbends += 1
-        log.dump('Added %i Harmonic bend terms' %nbends)
+                angle, types = term_sort_atypes(ffatypes, angle, 'dihedral')
+                if types in angles.keys():
+                    angles[types].append(angle)
+                else:
+                    angles[types] = [angle]
+            #loop over all distinct angle types
+            nabends = 0
+            ncbends = 0
+            for types, bends in angles.iteritems():
+                do_cos = False
+                for i, bend in enumerate(bends):
+                    if self.system.cell.nvec>0:
+                        d10 = self.system.pos[bend[0]] - self.system.pos[bend[1]]
+                        d12 = self.system.pos[bend[2]] - self.system.pos[bend[1]]
+                        self.system.cell.mic(d10)
+                        self.system.cell.mic(d12)
+                        if _bend_angle_low(d10, d12, 0)[0] > 175*deg:
+                            do_cos = True
+                            break
+                    else:
+                        rs = np.array([self.system.pos[j] for j in bend])
+                        if bend_angle(rs)[0]>175*deg:
+                            do_cos = True
+                            break
+                #add term harmonic in angle or cos(angle)
+                for bend in bends:
+                    if do_cos:
+                        term = self.add_term(Chebychev1, [BendCos(*bend)], types, ['HC_FC_DIAG'], ['kjmol'])
+                        ncbends += 1
+                    else:
+                        self.add_term(Harmonic, [BendAngle(*bend)], types, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/rad**2', 'deg'])
+                        nabends += 1
+        log.dump('Added %i bend terms harmonic in the angle and %i bend terms linear in cos(angle)' %(nabends, ncbends))
 
     def init_dihedral_terms(self, thresshold=20*deg):
         '''
@@ -360,7 +403,6 @@ class ValenceFF(ForcePartValence):
         '''
         with log.section('VAL', 3, 'Initializing'):
             #get all dihedrals
-            from molmod.ic import dihed_angle, _dihed_angle_low
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
             dihedrals = {}
             for dihedral in self.system.iter_dihedrals():
@@ -374,6 +416,7 @@ class ValenceFF(ForcePartValence):
             for types, diheds in dihedrals.iteritems():
                 psi0s = np.zeros(len(diheds), float)
                 ms = np.zeros(len(diheds), float)
+                bendskip = False
                 for i, dihed in enumerate(diheds):
                     if self.system.cell.nvec>0:
                         d10 = self.system.pos[dihed[0]] - self.system.pos[dihed[1]]
@@ -382,13 +425,27 @@ class ValenceFF(ForcePartValence):
                         self.system.cell.mic(d10)
                         self.system.cell.mic(d12)
                         self.system.cell.mic(d23)
+                        #check if bending angle is not 180 deg
+                        bend012 = _bend_angle_low(d10, d12, 0)[0]
+                        bend123 = _bend_angle_low(d12, d23, 0)[0]
+                        if bend012>175*deg or bend123>175*deg:
+                            bendskip = True
+                            continue
                         psi0s[i] = _dihed_angle_low(d10, d12, d23, 0)[0]
                     else:
                         rs = np.array([self.system.pos[j] for j in dihed])
+                        bend012 = bend_angle(rs[:3])[0]
+                        bend123 = bend_angle(rs[1:4])[0]
+                        if bend012>175*deg or bend123>175*deg:
+                            bendskip = True
+                            continue
                         psi0s[i] = dihed_angle(rs)[0]
                     n1 = len(self.system.neighs1[dihed[1]])
                     n2 = len(self.system.neighs1[dihed[2]])
                     ms[i] = get_multiplicity(n1, n2)
+                if bendskip:
+                    log.warning('Dihedral for %s contains bend angle close to 180 deg, skipping' %('.'.join(types)))
+                    continue
                 if np.isnan(ms).any() or ms.std()>1e-3:
                     ms_string = str(ms)
                     if np.isnan(ms).any():
@@ -545,7 +602,14 @@ class ValenceFF(ForcePartValence):
         val = ForcePartValence(self.system)
         kind = self.vlist.vtab[index]['kind']
         masterslaves = [index]+self.terms[index].slaves
-        if kind==4:#Cosine
+        if kind==5:#Chebychev
+            k = self.get_params(index, only='fc')
+            if fc is not None: k = fc
+            for jterm in masterslaves:
+                ics = self.terms[jterm].ics
+                args = (k,) + tuple(ics)
+                val.add_term(Chebychev1(*args,sign=1.0))
+        elif kind==4:#Cosine
             m, k, rv = self.get_params(index)
             if fc is not None: k = fc
             for jterm in masterslaves:
@@ -603,6 +667,8 @@ class ValenceFF(ForcePartValence):
             if m is not None:   term['par0'] = m
             if fc is not None:  term['par1'] = fc
             if rv0 is not None: term['par2'] = rv0
+        elif term['kind'] in [5]:#['Chebychev1']
+            if fc is not None: term['par0'] = fc
         elif term['kind'] in [3]:#['Cross']
             if fc is not None:  term['par0'] = fc
             if rv0 is not None: term['par1'] = rv0
@@ -633,6 +699,10 @@ class ValenceFF(ForcePartValence):
             elif only.lower()=='fc': return term['par1']
             elif only.lower()=='rv': return term['par2']
             else: raise ValueError('Invalid par kind definition %s' %only)
+        elif term['kind'] in [5]:#['Chebychev']
+            if only.lower()=='all': return term['par0'],
+            elif only.lower()=='fc': return term['par0']
+            else: raise ValueError('Invalid par kind definition %s' %only)
         elif term['kind'] in [3]:#['Cross']
             if only.lower()=='all': return term['par0'], term['par1'], term['par2']
             elif only.lower()=='fc': return term['par0']
@@ -659,6 +729,8 @@ class ValenceFF(ForcePartValence):
         elif term['kind'] in [4]:   # ['Cosine']
             return abs(term['par1']) < 1e-6*kjmol
         elif term['kind'] in [3]:   # ['Cross']
+            return abs(term['par0']) < 1e-6*kjmol
+        elif term['kind']==5 and self.terms[term_index].ics[0].kind==1: #linear in cos(angle):
             return abs(term['par0']) < 1e-6*kjmol
         else:
             raise NotImplementedError(
@@ -693,7 +765,7 @@ class ValenceFF(ForcePartValence):
         with log.section('', print_level):
             sequence = [
                 'bondharm',
-                'bendaharm', 'bendcharm', 'bendcos',
+                'bendaharm', 'bendclin', 'bendcharm', 'bendcos',
                 'torsion', 'torsc2harm', 'dihedharm',
                 'oopdist', 'cross'
             ]
@@ -731,6 +803,20 @@ class ValenceFF(ForcePartValence):
             K, q0 = self.get_params(master.index)
             pars.lines.append('%8s  %8s  %8s  %.10e  %.10e' %(
                 ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol, q0/deg
+            ))
+        return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+    def _bendclin_to_yaff(self):
+        'construct a BENDCLIN section of a yaff parameter file'
+        prefix = 'BENDCLIN'
+        units = ParameterDefinition('UNIT', lines=['A kjmol'])
+        pars = ParameterDefinition('PARS')
+        for i, master in enumerate(self.iter_masters(label=prefix)):
+            if self.is_negligible(i): continue
+            ffatypes = master.basename.split('/')[1].split('.')
+            K, = self.get_params(master.index)
+            pars.lines.append('%8s  %8s  %8s  %.10e' %(
+                ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
@@ -887,7 +973,7 @@ class ValenceFF(ForcePartValence):
         sections = [
             self._bonds_to_yaff(),
             self._bendaharm_to_yaff(), self._bendcharm_to_yaff(),
-            self._bendcos_to_yaff(),
+            self._bendcos_to_yaff(), self._bendclin_to_yaff(),
             self._torsions_to_yaff(), self._torsc2harm_to_yaff(),
             self._dihedharm_to_yaff(),
             self._opdists_to_yaff(),self._sqopdists_to_yaff(),
