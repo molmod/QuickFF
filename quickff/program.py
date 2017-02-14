@@ -189,8 +189,8 @@ class BaseProgram(object):
                 self.valence.set_params(master.index, fc=fc, rv0=rv, m=m)
                 for islave in master.slaves:
                     self.valence.set_params(islave, fc=fc, rv0=rv, m=m)
-            elif master.kind==5:#chebychev
-                assert pars.shape[1]==1
+            elif master.kind in [5, 6, 7, 8, 9]:#chebychev
+                assert pars.shape[1]==2
                 fc = pars[:,0].mean()
                 self.valence.set_params(master.index, fc=fc)
                 for islave in master.slaves:

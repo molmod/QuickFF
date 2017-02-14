@@ -28,7 +28,8 @@ from molmod.ic import bend_angle, _bend_angle_low, dihed_angle, _dihed_angle_low
 from yaff.pes.ff import ForceField, ForcePartValence
 from yaff.pes.parameters import *
 from yaff.pes.vlist import ValenceList
-from yaff.pes.vlist import Harmonic, PolyFour, Fues, Cosine, Cross, Chebychev1
+from yaff.pes.vlist import Harmonic, PolyFour, Fues, Cosine, Cross, \
+    Chebychev1, Chebychev2, Chebychev3, Chebychev4, Chebychev6
 from yaff.pes.iclist import InternalCoordinateList
 from yaff.pes.iclist import Bond, BendAngle, BendCos, DihedCos, DihedAngle, OopDist, SqOopDist
 from yaff.pes.dlist import DeltaList
@@ -141,15 +142,22 @@ class Term(object):
             ]
             units = [self.units[1], self.units[2], 'au']
             ndigits = [(4,3), (4,3), (1,0)]
-        elif self.kind==5:#chebychev
+        elif self.kind in [5, 6, 7, 8, 9]:#chebychev
+            mdic = {5: 1, 6: 2, 7: 3, 8: 4, 9: 6}
+            m = mdic[self.kind]
+            sign = pars[:,1].mean()
+            if sign>0: rv = 0.0
+            else:      rv = np.pi/m
             fcs = pars[:,0]
-            means = [fcs.mean()]
-            stds = [fcs.std()]
+            means = [fcs.mean(), rv, m]
+            stds = [fcs.std(), 0, 0]
             formats = [
                 'fc = %%4s %s %%3s' %(u"\u00B1"),
+                'rv = %%4s %s %%4s' %(u"\u00B1"),
+                'm  = %%1s %s %%1s' %(u"\u00B1"),
             ]
             units = [self.units[0]]
-            ndigits = [(4,3)]
+            ndigits = [(4,3), (4,4), (1,1)]
         #convert term pars to string
         line = '%s (%s)' %(
             self.basename[:max_line],
@@ -223,10 +231,12 @@ class ValenceFF(ForcePartValence):
         #define the name
         if len(ics)==1:
             tmp = {
-                (0,0) : 'BondHarm/' ,
+                (0,0) : 'BondHarm/',
                 (1,5) : 'BendCLin/', (2,0) : 'BendAHarm/' ,
-                (4,4) : 'Torsion/'  , (3,1) : 'TorsC2Harm/',
-                (10,0): 'Oopdist/'  , (11,0): 'SqOopdist/' ,
+                (3,5) : 'Cheby1/'  , (3,6) : 'Cheby2/'    , (3,7) : 'Cheby3/',
+                (3,8) : 'Cheby4/'  , (3,9) : 'Cheby6/'    , 
+                (4,4) : 'Torsion/' , (3,1) : 'TorsC2Harm/',
+                (10,0): 'Oopdist/' , (11,0): 'SqOopdist/' ,
             }
             prefix = tmp[(ics[0].kind, pot.kind)]
             suffix = ''
@@ -266,13 +276,11 @@ class ValenceFF(ForcePartValence):
         self.terms.append(term)
         if pot.kind==1:#all 4 parameters of PolyFour are given as 1 tuple
             args = [(None,)*len(units)] + ics
+        elif pot.kind in [5,6,7,8,9]: #Chebychev
+            args = [None] + ics #sign will first be defaulted as -1, but is set to the correct value in init_dihedral_terms
         else:
             args = [None,]*len(units) + ics
-        if pot.kind==5:
-            #in case of chebychev, set sign to +1
-            ForcePartValence.add_term(self, pot(*args,sign=1.0))
-        else:
-            ForcePartValence.add_term(self, pot(*args))
+        ForcePartValence.add_term(self, pot(*args))
         return term
 
     def modify_term(self, term_index, pot, ics, basename, tasks, units):
@@ -602,13 +610,15 @@ class ValenceFF(ForcePartValence):
         val = ForcePartValence(self.system)
         kind = self.vlist.vtab[index]['kind']
         masterslaves = [index]+self.terms[index].slaves
-        if kind==5:#Chebychev
-            k = self.get_params(index, only='fc')
+        if kind in [5,6,7,8,9]:#Chebychev
+            potentials={5: Chebychev1, 6: Chebychev2, 7: Chebychev3, 8: Chebychev4, 9: Chebychev6}
+            k, sign = self.get_params(index, only='all')
             if fc is not None: k = fc
             for jterm in masterslaves:
                 ics = self.terms[jterm].ics
+                pot = potentials[kind]
                 args = (k,) + tuple(ics)
-                val.add_term(Chebychev1(*args,sign=1.0))
+                val.add_term(pot(*args,sign=sign))
         elif kind==4:#Cosine
             m, k, rv = self.get_params(index)
             if fc is not None: k = fc
@@ -646,7 +656,7 @@ class ValenceFF(ForcePartValence):
         return hcov
 
     def set_params(self, term_index, fc=None, rv0=None, rv1=None, m=None,
-            a0=None, a1=None, a2=None, a3=None):
+            a0=None, a1=None, a2=None, a3=None, sign=None):
         term = self.vlist.vtab[term_index]
         if term['kind'] in [0,2]:#['Harmonic', 'Fues']
             if fc is not None:  term['par0'] = fc
@@ -667,8 +677,9 @@ class ValenceFF(ForcePartValence):
             if m is not None:   term['par0'] = m
             if fc is not None:  term['par1'] = fc
             if rv0 is not None: term['par2'] = rv0
-        elif term['kind'] in [5]:#['Chebychev1']
+        elif term['kind'] in [5,6,7,8,9]: #Chebychevs
             if fc is not None: term['par0'] = fc
+            if sign is not None: term['par1'] = sign
         elif term['kind'] in [3]:#['Cross']
             if fc is not None:  term['par0'] = fc
             if rv0 is not None: term['par1'] = rv0
@@ -699,9 +710,10 @@ class ValenceFF(ForcePartValence):
             elif only.lower()=='fc': return term['par1']
             elif only.lower()=='rv': return term['par2']
             else: raise ValueError('Invalid par kind definition %s' %only)
-        elif term['kind'] in [5]:#['Chebychev']
-            if only.lower()=='all': return term['par0'],
+        elif term['kind'] in [5,6,7,8,9]: #Chebychevs
+            if only.lower()=='all': return term['par0'], term['par1'],
             elif only.lower()=='fc': return term['par0']
+            elif only.lower()=='sign': return term['par1']
             else: raise ValueError('Invalid par kind definition %s' %only)
         elif term['kind'] in [3]:#['Cross']
             if only.lower()=='all': return term['par0'], term['par1'], term['par2']
