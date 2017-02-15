@@ -738,9 +738,7 @@ class ValenceFF(ForcePartValence):
             return abs(term['par1']) < 1e-6*kjmol
         elif term['kind'] in [3]:   # ['Cross']
             return abs(term['par0']) < 1e-6*kjmol
-        elif term['kind']==5 and self.terms[term_index].ics[0].kind==1: #linear in cos(angle):
-            return abs(term['par0']) < 1e-6*kjmol
-        elif term['kind'] in [5,6,7,8,9] and self.terms[term_index].ics[0].kind==3: #chebychev torsion
+        elif term['kind'] in [5,6,7,8,9]: #chebychev
             return abs(term['par0']) < 1e-6*kjmol
         else:
             raise NotImplementedError(
@@ -873,6 +871,23 @@ class ValenceFF(ForcePartValence):
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
+    def _torscheby_to_yaff(self, m):
+        'construct a TORSION section of a yaff parameter file for chebychev dihedrals'
+        prefix = 'TORSION'
+        units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
+        pars = ParameterDefinition('PARS')
+        for i, master in enumerate(self.iter_masters(label='TorsCheby%i' %m)):
+            if self.is_negligible(i): continue
+            ffatypes = master.basename.split('/')[1].split('.')
+            K, sign = self.get_params(master.index)
+            if sign<0: q0 = 0.0
+            else: q0 = np.pi/m
+            pars.lines.append('%8s  %8s  %8s  %8s  %1i %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3], m,
+                K/kjmol, q0/deg
+            ))
+        return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
     def _torsc2harm_to_yaff(self):
         'construct a TORSC2HARM section of a yaff parameter file'
         prefix = 'TORSC2HARM'
@@ -935,21 +950,6 @@ class ValenceFF(ForcePartValence):
                 K/(kjmol/angstrom**4), q0/angstrom**2
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
-
-    def _chebychev_to_yaff(self, m):
-        'construct a CHEBYCHEV section of a yaff parameter file'
-        prefix = 'CHEBYCHEV%i' %m
-        units = ParameterDefinition('UNIT', lines=['SIGN au', 'K kjmol'])
-        pars = ParameterDefinition('PARS')
-        for i, master in enumerate(self.iter_masters(label='TorsCheby%i' %m)):
-            if self.is_negligible(i): continue
-            ffatypes = master.basename.split('/')[1].split('.')
-            K, sign = self.get_params(master.index)
-            pars.lines.append('%8s  %8s  %8s  %8s  % .0f  %.10e' %(
-                ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
-                sign, K/kjmol,
-            ))
-        return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
     
     def _cross_to_yaff(self):
         'construct a CROSS section of a yaff parameter file'
@@ -1000,9 +1000,9 @@ class ValenceFF(ForcePartValence):
             self._bendaharm_to_yaff(), self._bendcharm_to_yaff(),
             self._bendcos_to_yaff(), self._bendclin_to_yaff(),
             self._torsions_to_yaff(), self._torsc2harm_to_yaff(),
-            self._chebychev_to_yaff(1), self._chebychev_to_yaff(2),
-            self._chebychev_to_yaff(3), self._chebychev_to_yaff(4),
-            self._chebychev_to_yaff(6), self._dihedharm_to_yaff(),
+            self._torscheby_to_yaff(1), self._torscheby_to_yaff(2),
+            self._torscheby_to_yaff(3), self._torscheby_to_yaff(4),
+            self._torscheby_to_yaff(6), self._dihedharm_to_yaff(),
             self._opdists_to_yaff(), self._sqopdists_to_yaff(),
             self._cross_to_yaff(),
         ]
