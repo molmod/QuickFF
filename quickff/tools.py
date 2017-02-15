@@ -405,11 +405,11 @@ def digits(x,n):
     """
         returns a string representation of x with exactly n digits if possible.
     """
-    if len(str(x))==n: return str(x)
     if np.isnan(x): return ''
+    if len(str(x))==n: return str(x)
     sign = np.sign(x)
     x = float(abs(x))
-    if x < 1e-6:
+    if x < 0.5*10**(-(n-1)):
         return "." + "0"*(n-1)
     if sign<0: n -= 1
     i = int(x)
@@ -418,7 +418,8 @@ def digits(x,n):
         if sign<0:
             return '-'+str(r)[1:1+n]
         else:
-            return str(r)[1:1+n]
+            s = '%f' %r
+            return s[1:1+n]
     if r==0:
         return str(int(i*sign))[:n]
     if len(str(i))>=(n-1):

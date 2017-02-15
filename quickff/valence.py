@@ -143,21 +143,16 @@ class Term(object):
             units = [self.units[1], self.units[2], 'au']
             ndigits = [(4,3), (4,3), (1,0)]
         elif self.kind in [5, 6, 7, 8, 9]:#chebychev
-            mdic = {5: 1, 6: 2, 7: 3, 8: 4, 9: 6}
-            m = mdic[self.kind]
             sign = pars[:,1].mean()
-            if sign>0: rv = 0.0
-            else:      rv = np.pi/m
             fcs = pars[:,0]
-            means = [fcs.mean(), rv, m]
-            stds = [fcs.std(), 0, 0]
+            means = fcs.mean(), sign
+            stds = fcs.std(), np.nan
             formats = [
-                'fc = %%4s %s %%3s' %(u"\u00B1"),
-                'rv = %%4s %s %%4s' %(u"\u00B1"),
-                'm  = %%1s %s %%1s' %(u"\u00B1"),
+                'fc  = %%4s %s %%3s' %(u"\u00B1"),
+                'sgn = %3s%0s',
             ]
-            units = [self.units[0]]
-            ndigits = [(4,3), (4,4), (1,1)]
+            units = [self.units[0], 'au']
+            ndigits = [(4,3), (3,0)]
         #convert term pars to string
         line = '%s (%s)' %(
             self.basename[:max_line],
@@ -231,12 +226,13 @@ class ValenceFF(ForcePartValence):
         #define the name
         if len(ics)==1:
             tmp = {
-                (0,0) : 'BondHarm/',
-                (1,5) : 'BendCLin/', (2,0) : 'BendAHarm/' ,
-                (3,5) : 'Cheby1/'  , (3,6) : 'Cheby2/'    , (3,7) : 'Cheby3/',
-                (3,8) : 'Cheby4/'  , (3,9) : 'Cheby6/'    , 
-                (4,4) : 'Torsion/' , (3,1) : 'TorsC2Harm/',
-                (10,0): 'Oopdist/' , (11,0): 'SqOopdist/' ,
+                (0,0) : 'BondHarm/'  ,
+                (1,5) : 'BendCLin/'  , (2,0) : 'BendAHarm/' ,
+                (3,5) : 'TorsCheby1/', (3,6) : 'TorsCheby2/',
+                (3,7) : 'TorsCheby3/', (3,8) : 'TorsCheby4/',
+                (3,9) : 'TorsCheby6/', 
+                (4,4) : 'Torsion/'   , (3,1) : 'TorsC2Harm/',
+                (10,0): 'Oopdist/'   , (11,0): 'SqOopdist/' ,
             }
             prefix = tmp[(ics[0].kind, pot.kind)]
             suffix = ''
@@ -744,6 +740,8 @@ class ValenceFF(ForcePartValence):
             return abs(term['par0']) < 1e-6*kjmol
         elif term['kind']==5 and self.terms[term_index].ics[0].kind==1: #linear in cos(angle):
             return abs(term['par0']) < 1e-6*kjmol
+        elif term['kind'] in [5,6,7,8,9] and self.terms[term_index].ics[0].kind==3: #chebychev torsion
+            return abs(term['par0']) < 1e-6*kjmol
         else:
             raise NotImplementedError(
                 'is_negligible not implemented for Yaff %s term' % term['kind'])
@@ -778,7 +776,7 @@ class ValenceFF(ForcePartValence):
             sequence = [
                 'bondharm',
                 'bendaharm', 'bendclin', 'bendcharm', 'bendcos',
-                'torsion', 'torsc2harm', 'dihedharm',
+                'torscheby', 'torsion', 'torsc2harm', 'dihedharm',
                 'oopdist', 'cross'
             ]
             log.dump('')
@@ -938,6 +936,21 @@ class ValenceFF(ForcePartValence):
             ))
         return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
+    def _chebychev_to_yaff(self, m):
+        'construct a CHEBYCHEV section of a yaff parameter file'
+        prefix = 'CHEBYCHEV%i' %m
+        units = ParameterDefinition('UNIT', lines=['SIGN au', 'K kjmol'])
+        pars = ParameterDefinition('PARS')
+        for i, master in enumerate(self.iter_masters(label='TorsCheby%i' %m)):
+            if self.is_negligible(i): continue
+            ffatypes = master.basename.split('/')[1].split('.')
+            K, sign = self.get_params(master.index)
+            pars.lines.append('%8s  %8s  %8s  %8s  % .0f  %.10e' %(
+                ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                sign, K/kjmol,
+            ))
+        return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+    
     def _cross_to_yaff(self):
         'construct a CROSS section of a yaff parameter file'
         prefix = 'CROSS'
@@ -987,8 +1000,10 @@ class ValenceFF(ForcePartValence):
             self._bendaharm_to_yaff(), self._bendcharm_to_yaff(),
             self._bendcos_to_yaff(), self._bendclin_to_yaff(),
             self._torsions_to_yaff(), self._torsc2harm_to_yaff(),
-            self._dihedharm_to_yaff(),
-            self._opdists_to_yaff(),self._sqopdists_to_yaff(),
+            self._chebychev_to_yaff(1), self._chebychev_to_yaff(2),
+            self._chebychev_to_yaff(3), self._chebychev_to_yaff(4),
+            self._chebychev_to_yaff(6), self._dihedharm_to_yaff(),
+            self._opdists_to_yaff(), self._sqopdists_to_yaff(),
             self._cross_to_yaff(),
         ]
         f = open(fn, 'w')
