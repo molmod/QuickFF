@@ -385,6 +385,7 @@ class ValenceFF(ForcePartValence):
                 for bend in bends:
                     if do_cos:
                         term = self.add_term(Chebychev1, [BendCos(*bend)], types, ['HC_FC_DIAG'], ['kjmol'])
+                        self.set_params(term.index, sign=1)
                         ncbends += 1
                     else:
                         self.add_term(Harmonic, [BendAngle(*bend)], types, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/rad**2', 'deg'])
@@ -416,6 +417,7 @@ class ValenceFF(ForcePartValence):
                 else:
                     dihedrals[types] = [dihedral]
             #loop over all distinct dihedral types
+            ncheb = 0
             ncos = 0
             for types, diheds in dihedrals.iteritems():
                 psi0s = np.zeros(len(diheds), float)
@@ -459,16 +461,50 @@ class ValenceFF(ForcePartValence):
                 m = int(np.round(ms.mean()))
                 rv = get_restvalue(psi0s, m, thresshold=thresshold, mode=1)
                 if rv is not None:
-                    #a regular Cosine term is used for the dihedral potential
+                    do_chebychev = True
+                    chebypot = None
+                    if m==1:
+                        chebypot = Chebychev1
+                        if   abs(rv)          <1e-6: sign = -1
+                        elif abs(rv-180.0*deg)<1e-6: sign = 1
+                        else: do_chebychev = False
+                    elif m==2:
+                        chebypot = Chebychev2
+                        if   abs(rv)         <1e-6: sign = -1
+                        elif abs(rv-90.0*deg)<1e-6: sign = 1
+                        else: do_chebychev = False
+                    elif m==3:
+                        chebypot = Chebychev3
+                        if   abs(rv)         <1e-6: sign = -1
+                        elif abs(rv-60.0*deg)<1e-6: sign = 1
+                        else: do_chebychev = False
+                    elif m==4:
+                        chebypot = Chebychev4
+                        if   abs(rv)         <1e-6: sign = -1
+                        elif abs(rv-45.0*deg)<1e-6: sign = 1
+                        else: do_chebychev = False
+                    elif m==6:
+                        chebypot = Chebychev6
+                        if   abs(rv)         <1e-6: sign = -1
+                        elif abs(rv-30.0*deg)<1e-6: sign = 1
+                        else: do_chebychev = False
+                    else:
+                        do_chebychev = False
                     for dihed in diheds:
-                        term = self.add_term(Cosine, [DihedAngle(*dihed)], types, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
-                        self.set_params(term.index, rv0=rv, m=m)
-                        ncos += 1
+                        if do_chebychev:
+                            assert chebypot is not None
+                            term = self.add_term(chebypot, [DihedCos(*dihed)], types, ['HC_FC_DIAG'], ['kjmol', 'au'])
+                            self.set_params(term.index, sign=sign)
+                            ncheb += 1
+                        else:
+                            term = self.add_term(Cosine, [DihedAngle(*dihed)], types, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
+                            self.set_params(term.index, rv0=rv, m=m)
+                            ncos += 1
                 else:
                     #no dihedral potential could be determine, hence it is ignored
                     log.warning('missing dihedral for %s (could not determine rest value from %s)' %('.'.join(types), str(psi0s/deg)))
                     continue
-        log.dump('Added %i Cosine dihedral terms' %ncos)
+            log.dump('Added %i Cosine dihedral terms (of which %i are described using Chebychev terms)' %(ncos+ncheb, ncheb))
 
     def init_oop_terms(self, thresshold_zero=5e-2*angstrom):
         '''
@@ -822,7 +858,7 @@ class ValenceFF(ForcePartValence):
         for i, master in enumerate(self.iter_masters(label=prefix)):
             if self.is_negligible(i): continue
             ffatypes = master.basename.split('/')[1].split('.')
-            K, = self.get_params(master.index)
+            K = self.get_params(master.index, only='fc')
             pars.lines.append('%8s  %8s  %8s  %.10e' %(
                 ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol
             ))
