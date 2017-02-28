@@ -227,7 +227,7 @@ def _check_charmm22(valence):
     """
     # First report all types of terms not supported by CHARMM22.
     skipped = set([])
-    supported_kinds = set(['BONDHARM', 'BENDAHARM', 'TORSION'])
+    supported_kinds = set(['BONDHARM', 'BENDAHARM', 'TORSION', 'TORSCHEBY1', 'TORSCHEBY2', 'TORSCHEBY3', 'TORSCHEBY4', 'TORSCHEBY6'])
     for term in valence.iter_terms():
         kind = term.basename[:term.basename.find('/')].upper()
         if kind not in supported_kinds and kind not in skipped:
@@ -341,10 +341,19 @@ def _dihedrals_to_charmm22_prm(valence):
             Instance of ValenceFF, which defines the force field.
     """
     result = []
-    for master in valence.iter_masters(label='TORSION'):
+    for master in valence.iter_masters(label='TORS'):
         if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
-        m, K, q0 = valence.get_params(master.index)
+        kind = master.basename.split('/')[0].lower()
+        if kind=='torsion':
+            m, K, q0 = valence.get_params(master.index)
+        elif kind.startswith('torscheby'):
+            m = int(kind[-1])
+            K = valence.get_params(master.index, only='fc')
+            if valence.get_params(master.index, only='sign')<0:
+                q0 = 0.0
+            else:
+                q0 = 180*deg/m
         result.append('{:4s} {:4s} {:4s} {:4s} {:10.4f} {:2.0f} {:8.2f}'.format(
             ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3], 0.5*K/kcalmol, m, q0/deg+180
         ))
@@ -444,7 +453,7 @@ def _angles_to_charmm22_psf(valence):
 
 
 def _dihedrals_to_charmm22_psf(valence):
-    return _ics_to_charmm22_psf(valence, 'TORSION', 8, '{:8d} !NPHI: dihedrals')
+    return _ics_to_charmm22_psf(valence, 'TORS', 8, '{:8d} !NPHI: dihedrals')
 
 
 def dump_charmm22_psf(system, valence, fn):

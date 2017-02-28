@@ -40,13 +40,13 @@ def check_terms(name):
     #check if every dihedral is present
     for dihed in system.iter_dihedrals():
         found = False
-        for term in valence.iter_terms('TORSION'):
+        for term in valence.iter_terms('Tors'):
             at0, at1, at2, at3 = term.get_atoms()
             if dihed[0]==at0 and dihed[1]==at1 and dihed[2]==at2 and dihed[3]==at3\
             or dihed[0]==at3 and dihed[1]==at2 and dihed[2]==at1 and dihed[3]==at0:
                 assert not found, 'Torsion term %s was already found!' %str(dihed)
                 found = True
-        assert found, 'No Torsion term found for bond %s' %str(dihedral)
+        assert found, 'No Torsion term found for bond %s' %str(dihed)
     #check if every oop distance is present and Harm for rv of 0 and SQHARM else
     for oop in system.iter_oops():
         found = False
@@ -87,13 +87,20 @@ def get_analytic_numeric_hessian(valence, term, **ffpars):
             Dj = Dj.reshape([natoms, 3])
             tmp  = valence.calc_energy(valence.system.pos + Di + Dj)
             tmp -= valence.calc_energy(valence.system.pos + Di - Dj)
-            tmp -= valence.calc_energy(valence.system.pos -     Di + Dj)
+            tmp -= valence.calc_energy(valence.system.pos - Di + Dj)
             tmp += valence.calc_energy(valence.system.pos - Di - Dj)
             num[i,j] = tmp/(2.0*eps)**2
     num = 0.5*(num+num.T)
     return ref, num
 
 def get_indices_zero_nonzero(term, natoms):
+    '''
+        Return list of index tuples inonzero and izero:
+        inonzero: index tuples for which term contributes to the corresponding
+                  Hessian element
+        izero   : index tuples for which term does not contribute to the
+                  corresponding Hessian element
+    '''
     inonzero = [[],[]]
     izero = [[],[]]
     for i in xrange(natoms):
@@ -169,7 +176,8 @@ def check_hessian_dihedrals(name, tol=1e-3*kjmol/angstrom**2):
         system, ref = read_system(name)
         guess_ffatypes(system, 'highest')
         valence = ValenceFF(system)
-    for term in valence.iter_terms('TORSION'):
+    ref, num = None, None
+    for term in valence.iter_terms('TORS'):
         psi0 = get_dihedral_angle(term, system)
         inonzero, izero = get_indices_zero_nonzero(term, len(system.numbers))
         rv = np.random.uniform(low=0, high=180)*deg #q0
@@ -182,11 +190,10 @@ def check_hessian_dihedrals(name, tol=1e-3*kjmol/angstrom**2):
             assert (abs(num[izero])).max()<1e-12*kjmol/angstrom**2
         M = (abs(ref-num)).max()
         iM, jM = np.where(abs(ref-num)==M)[0][0], np.where(abs(ref-num)==M)[1][0]
-        print '%25s (eq=%.1f deg    random FC=%8.3f kjmol        RV=%7.3f deg):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(term.basename, psi0/deg, fc/kjmol, rv/deg, iM, jM, M/(kjmol/angstrom**2))
-        if abs(abs(psi0)-180*deg)<1*deg or abs(psi0)<1*deg:
-            print ' ==> SKIPPED due to instable numerical implementation of derivatives in Yaff for values dihedrals to 0 or 180 deg'
-        else:
-            assert M<tol
+        print '%25s (eq=%.1f deg    random FC=%8.3f kjmol        RV=%7.3f deg):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(
+            term.basename, psi0/deg, fc/kjmol, rv/deg, iM, jM, M/(kjmol/angstrom**2)
+        )
+        assert M<tol
     del system, valence, ref, num
 
 def check_hessian_oops(name, tol=1e-3*kjmol/angstrom**2):
@@ -206,7 +213,9 @@ def check_hessian_oops(name, tol=1e-3*kjmol/angstrom**2):
             assert (abs(num[izero])).max()<1e-12*kjmol/angstrom**2
         M = (abs(ref-num)).max()
         iM, jM = np.where(abs(ref-num)==M)[0][0], np.where(abs(ref-num)==M)[1][0]
-        print '%25s (random FC=%8.3f kjmol/A^2    RV=%7.3f A  ):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(term.basename, fc/(kjmol/angstrom**2), rv/angstrom, iM, jM, M/(kjmol/angstrom**2))
+        print '%25s (random FC=%8.3f kjmol/A^2    RV=%7.3f A  ):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(
+            term.basename, fc/(kjmol/angstrom**2), rv/angstrom, iM, jM, M/(kjmol/angstrom**2)
+        )
         assert M<tol
     for term in valence.iter_terms('SQOOPDIST'):
         inonzero, izero = get_indices_zero_nonzero(term, len(system.numbers))
