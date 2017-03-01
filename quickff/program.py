@@ -28,7 +28,7 @@ from quickff.valence import ValenceFF
 from quickff.perturbation import RelaxedStrain
 from quickff.cost import HessianFCCost
 from quickff.paracontext import paracontext
-from quickff.io import dump_charmm22_prm, dump_charmm22_psf
+from quickff.io import dump_charmm22_prm, dump_charmm22_psf, dump_yaff
 from quickff.log import log
 
 from yaff.system import System
@@ -207,7 +207,7 @@ class BaseProgram(object):
         fn_yaff = self.kwargs.get('fn_yaff', None)
         if fn_yaff is None:
             fn_yaff = 'pars_cov%s.txt' %(self.kwargs.get('suffix', ''))
-        self.valence.dump_yaff(fn_yaff)
+        dump_yaff(self.valence, fn_yaff)
         fn_charmm22_prm = self.kwargs.get('fn_charmm22_prm')
         if fn_charmm22_prm is not None:
             dump_charmm22_prm(self.valence, fn_charmm22_prm)
@@ -319,7 +319,7 @@ class BaseProgram(object):
         '''
         with log.section('PTPOST', 2, timer='PT Post process'):
             self.do_squarebend()
-            self.do_bendcharm()
+            self.do_bendclin()
             #self.do_sqoopdist_to_oopdist()
             self.average_pars()
 
@@ -430,10 +430,32 @@ class BaseProgram(object):
                     if term2['kind']==3: continue
                     if term['ic0']==term2['ic0']:
                         assert rv0 is None
-                        rv0 = self.valence.get_params(index2, only='rv')
+                        #for harmonic potential
+                        if term2['kind']==0:
+                            rv0 = self.valence.get_params(index2, only='rv')
+                        #for linear potential in cosine of angle (chebychev1)
+                        #then take rv0, which is cos(angle0), equal to sign.
+                        #Indeed a chebychev1 term of 1+cos(theta) should
+                        #correspond to rv0=-1 while 1-cos(theta)=-[cos(theta)-1]
+                        #corresponds to rv0=1
+                        elif term2['kind']==5:
+                            rv0 = -self.valence.get_params(index2, only='sign')
+                        else:
+                            raise ValueError('Could not find rest value of ic0 in %s' %self.valence.terms[index].basename)
                     if term['ic1']==term2['ic0']:
                         assert rv1 is None
-                        rv1 = self.valence.get_params(index2, only='rv')
+                        #for harmonic potential
+                        if term2['kind']==0:
+                            rv1 = self.valence.get_params(index2, only='rv')
+                        #for linear potential in cosine of angle (chebychev1)
+                        #then take rv0, which is cos(angle0), equal to sign.
+                        #Indeed a chebychev1 term of 1+cos(theta) should
+                        #correspond to rv0=1 while 1-cos(theta)=-[cos(theta)-1]
+                        #corresponds to rv0=-1
+                        elif term2['kind']==5:
+                            rv1 = -self.valence.get_params(index2, only='sign')
+                        else:
+                            raise ValueError('Could not find rest value of ic1 in %s' %self.valence.terms[index].basename)
                 if rv0 is None or rv1 is None:
                     raise ValueError('No rest values found for %s' %self.valence.terms[index].basename)
                 self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
@@ -493,12 +515,11 @@ class BaseProgram(object):
                             traj.fc = None
                             traj.rv = None
 
-    def do_bendcharm(self, thresshold=2*deg):
+    def do_bendclin(self, thresshold=2*deg):
         '''
             No Harmonic bend can have a rest value equal to are large than
             180 deg - thresshold. If a master (or its slaves) has such a rest
-            value, convert master and all slaves to BendCharm with
-            cos(phis0)=-1.
+            value, convert master and all slaves to BendCLin: 0.5*K*[1-cos(theta)]
         '''
         for master in self.valence.iter_masters(label='BendAHarm'):
             indices = [master.index]
@@ -515,11 +536,11 @@ class BaseProgram(object):
                     term = self.valence.terms[index]
                     self.valence.modify_term(
                         index,
-                        Harmonic, [BendCos(*term.get_atoms())],
-                        term.basename.replace('BendAHarm', 'BendCHarm'),
+                        Chebychev1, [BendCos(*term.get_atoms())],
+                        term.basename.replace('BendAHarm', 'BendCLin'),
                         ['HC_FC_DIAG'], ['kjmol', 'au']
                     )
-                    self.valence.set_params(index, fc=0.0, rv0=-1.0)
+                    self.valence.set_params(index, fc=0.0, sign=1.0)
                     for traj in self.trajectories:
                         if traj.term.index==index:
                             traj.rv = None
@@ -626,7 +647,7 @@ class DeriveNonDiagFF(BaseProgram):
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
             self.do_pt_estimate(do_valence=True)
-            self.average_pars()
+            self.do_pt_postprocess()
             self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], logger_level=1)
             self.make_output()
 

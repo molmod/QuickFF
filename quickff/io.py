@@ -35,12 +35,13 @@ from molmod.io.fchk import FCHKFile
 
 from yaff.pes.ext import PairPotEI
 from yaff.pes.ff import ForcePartPair
+from yaff.pes.parameters import *
 
 from quickff.log import log
 
 
 __all__ = ['VASPRun', 'read_abinitio', 'make_yaff_ei', 'dump_charmm22_prm',
-           'dump_charmm22_psf']
+           'dump_charmm22_psf', 'dump_yaff']
 
 
 class VASPRun(object):
@@ -480,3 +481,281 @@ def dump_charmm22_psf(system, valence, fn):
             _bonds_to_charmm22_psf(valence),
             _angles_to_charmm22_psf(valence),
             _dihedrals_to_charmm22_psf(valence)))
+
+
+def _bonds_to_yaff(valence):
+    'construct a BONDHARM section of a yaff parameter file'
+    prefix = 'BONDHARM'
+    units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'R0 A'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K, q0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1], K/(kjmol/angstrom**2), q0/angstrom
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _bendaharm_to_yaff(valence):
+    'construct a BENDAHARM section of a yaff parameter file'
+    prefix = 'BENDAHARM'
+    units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'THETA0 deg'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K, q0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %8s  %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol, q0/deg
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _bendclin_to_yaff(valence):
+    'construct a BENDCLIN section of a yaff parameter file'
+    prefix = 'BENDCLIN'
+    units = ParameterDefinition('UNIT', lines=['A kjmol'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K = valence.get_params(master.index, only='fc')
+        pars.lines.append('%8s  %8s  %8s  %.10e' %(
+            ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _bendcharm_to_yaff(valence):
+    'construct a BENDCHARM section of a yaff parameter file'
+    prefix = 'BENDCHARM'
+    units = ParameterDefinition('UNIT', lines=['K kjmol', 'COS0 au'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K, q0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %8s  %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol, q0
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _bendcos_to_yaff(valence):
+    'construct a BENDCOS section of a yaff parameter file'
+    prefix = 'BENDCOS'
+    units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        m, K, q0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %8s  %1i %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1], ffatypes[2], m, K/kjmol, q0/deg
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _torsions_to_yaff(valence):
+    'construct a TORSION section of a yaff parameter file'
+    prefix = 'TORSION'
+    units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        m, K, q0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %8s  %8s  %1i %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3], m,
+            K/kjmol, q0/deg
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _torscheby_to_yaff(valence, m):
+    'construct a TORSION section of a yaff parameter file for chebychev dihedrals'
+    prefix = 'TORSION'
+    units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label='TorsCheby%i' %m)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K, sign = valence.get_params(master.index)
+        if sign<0: q0 = 0.0
+        else: q0 = np.pi/m
+        pars.lines.append('%8s  %8s  %8s  %8s  %1i %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3], m,
+            K/kjmol, q0/deg
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _torsc2harm_to_yaff(valence):
+    'construct a TORSC2HARM section of a yaff parameter file'
+    prefix = 'TORSC2HARM'
+    units = ParameterDefinition('UNIT', lines=['A kjmol', 'COS0 au'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        a = valence.get_params(master.index)
+        K = 0.5*a[3]
+        cos0 = np.arccos(np.sqrt(-0.5*a[1]/a[3]))
+        pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3],
+            K/kjmol, cos0
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _dihedharm_to_yaff(valence):
+    'construct a DIHEDHARM section of a yaff parameter file'
+    prefix = 'DIHEDHARM'
+    units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'PHI0 deg'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K, phi0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1],  ffatypes[2], ffatypes[3],
+            K/kjmol, phi0/deg
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _opdists_to_yaff(valence):
+    'construct a OOPDIST section of a yaff parameter file'
+    prefix = 'OOPDIST'
+    units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'D0 A'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        if 'sqoopdist' in master.basename.lower(): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K, q0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+            K/(kjmol/angstrom**2), q0/angstrom
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _sqopdists_to_yaff(valence):
+    'construct a SQOOPDIST section of a yaff parameter file'
+    prefix = 'SQOOPDIST'
+    units = ParameterDefinition('UNIT', lines=['K kjmol/A**4', 'D0 A**2'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K, q0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+            K/(kjmol/angstrom**4), q0/angstrom**2
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _cross_to_yaff(valence):
+    'construct a CROSS section of a yaff parameter file'
+    prefix = 'CROSS'
+    units = ParameterDefinition(
+        'UNIT',
+        lines=[
+            'KSS kjmol/angstrom**2', 'KBS0 kjmol/(angstrom*rad)',
+            'KBS1 kjmol/(angstrom*rad)', 'R0 angstrom', 'R1 angstrom',
+            'THETA0 deg'
+        ]
+    )
+    done = []
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix+'/')):
+        if valence.is_negligible(i): continue
+        prefix, ffatypes, suffix = master.basename.split('/')
+        label = prefix+'/'+ffatypes+'/'
+        if label in done: continue
+        bb, b0a, b1a = None, None, None
+        for j, other in enumerate(valence.iter_masters(label=label)):
+            if 'bb' in other.basename:
+                bb = valence.get_params(other.index)
+            elif 'b0a' in other.basename:
+                b0a = valence.get_params(other.index)
+            elif 'b1a' in other.basename:
+                b1a = valence.get_params(other.index)
+            else:
+                raise ValueError('Invalid Cross term %s' %other.basename)
+        Kss, Kbs0, Kbs1 = 0.0, 0.0, 0.0
+        r0, r1, theta0 = 0.0, 0.0, 0.0
+        if bb is not None: Kss, r0, r1 = bb
+        if b0a is not None: Kbs0, r0, theta0 = b0a
+        if b1a is not None: Kbs1, r1, theta0 = b1a
+        ffatypes = ffatypes.split('.')
+        pars.lines.append(
+            '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1], ffatypes[2],
+                Kss/(kjmol/angstrom**2), Kbs0/(kjmol/angstrom),
+                Kbs1/(kjmol/angstrom), r0/angstrom, r1/angstrom, theta0/deg,
+        ))
+        done.append(label)
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _crosscbend_to_yaff(valence):
+    'construct a CROSSCBEND section of a yaff parameter file'
+    prefix = 'CROSSCBEND'
+    units = ParameterDefinition(
+        'UNIT',
+        lines=[
+            'KSS kjmol/angstrom**2', 'KBS0 kjmol/angstrom',
+            'KBS1 kjmol/angstrom', 'R0 angstrom', 'R1 angstrom',
+            'COS0 au'
+        ]
+    )
+    done = []
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix+'/')):
+        if valence.is_negligible(i): continue
+        prefix, ffatypes, suffix = master.basename.split('/')
+        label = prefix+'/'+ffatypes+'/'
+        if label in done: continue
+        bb, b0a, b1a = None, None, None
+        for j, other in enumerate(valence.iter_masters(label=label)):
+            if 'bb' in other.basename:
+                bb = valence.get_params(other.index)
+            elif 'b0a' in other.basename:
+                b0a = valence.get_params(other.index)
+            elif 'b1a' in other.basename:
+                b1a = valence.get_params(other.index)
+            else:
+                raise ValueError('Invalid Cross term %s' %other.basename)
+        Kss, Kbs0, Kbs1 = 0.0, 0.0, 0.0
+        r0, r1, cos0 = 0.0, 0.0, 0.0
+        if bb is not None: Kss, r0, r1 = bb
+        if b0a is not None: Kbs0, r0, cos0 = b0a
+        if b1a is not None: Kbs1, r1, cos0 = b1a
+        ffatypes = ffatypes.split('.')
+        pars.lines.append(
+            '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1], ffatypes[2],
+                Kss/(kjmol/angstrom**2), Kbs0/(kjmol/angstrom),
+                Kbs1/(kjmol/angstrom), r0/angstrom, r1/angstrom, cos0,
+        ))
+        done.append(label)
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def dump_yaff(valence, fn):
+    sections = [
+        _bonds_to_yaff(valence),
+        _bendaharm_to_yaff(valence), _bendcharm_to_yaff(valence),
+        _bendcos_to_yaff(valence), _bendclin_to_yaff(valence),
+        _torsions_to_yaff(valence), _torsc2harm_to_yaff(valence),
+        _torscheby_to_yaff(valence,1), _torscheby_to_yaff(valence,2),
+        _torscheby_to_yaff(valence,3), _torscheby_to_yaff(valence,4),
+        _torscheby_to_yaff(valence,6), _dihedharm_to_yaff(valence),
+        _opdists_to_yaff(valence), _sqopdists_to_yaff(valence),
+        _cross_to_yaff(valence), _crosscbend_to_yaff(valence)
+    ]
+    f = open(fn, 'w')
+    for section in sections:
+        if len(section['PARS'].lines)==0: continue
+        print >> f, '# %s' %section.prefix
+        print >> f, '#-%s' %('-'*len(section.prefix))
+        for line in section['UNIT'].lines:
+            print >> f, '%s:UNIT  %s' %(section.prefix, line)
+        print >> f, ''
+        for line in section['PARS'].lines:
+            print >> f, '%s:PARS  %s' %(section.prefix, line)
+        print >> f, ''
+        print >> f, ''
+    f.close()
