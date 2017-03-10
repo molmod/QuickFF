@@ -79,7 +79,7 @@ def parse():
     #General settings options
     settings = parser.add_argument_group(title='General QuickFF specifications')
     settings.add_argument(
-        '-m', '--program-mode', default='DeriveNonDiagFF',
+        '-m', '--program-mode', default='DeriveNonDiagMassWeighingFF',
         choices=[prog for prog in allowed_programs if not prog=='BaseProgram'],
         help='Specify the program mode which defines the set of instructions '
              'that will be executed.'

@@ -511,19 +511,19 @@ def _bendaharm_to_yaff(valence):
         ))
     return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
-def _bendclin_to_yaff(valence):
-    'construct a BENDCLIN section of a yaff parameter file'
-    prefix = 'BENDCLIN'
-    units = ParameterDefinition('UNIT', lines=['A kjmol'])
-    pars = ParameterDefinition('PARS')
-    for i, master in enumerate(valence.iter_masters(label=prefix)):
-        if valence.is_negligible(i): continue
-        ffatypes = master.basename.split('/')[1].split('.')
-        K = valence.get_params(master.index, only='fc')
-        pars.lines.append('%8s  %8s  %8s  %.10e' %(
-            ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol
-        ))
-    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+#def _bendclin_to_yaff(valence):
+#    'construct a BENDCLIN section of a yaff parameter file'
+#    prefix = 'BENDCLIN'
+#    units = ParameterDefinition('UNIT', lines=['A kjmol'])
+#    pars = ParameterDefinition('PARS')
+#    for i, master in enumerate(valence.iter_masters(label=prefix)):
+#        if valence.is_negligible(i): continue
+#        ffatypes = master.basename.split('/')[1].split('.')
+#        K = valence.get_params(master.index, only='fc')
+#        pars.lines.append('%8s  %8s  %8s  %.10e' %(
+#            ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol
+#        ))
+#    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
 def _bendcharm_to_yaff(valence):
     'construct a BENDCHARM section of a yaff parameter file'
@@ -539,15 +539,17 @@ def _bendcharm_to_yaff(valence):
         ))
     return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
-def _bendcos_to_yaff(valence):
-    'construct a BENDCOS section of a yaff parameter file'
+def _bendcheby_to_yaff(valence, m):
+    'construct a BENDCHEBY section of a yaff parameter file'
     prefix = 'BENDCOS'
     units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
     pars = ParameterDefinition('PARS')
-    for i, master in enumerate(valence.iter_masters(label=prefix)):
+    for i, master in enumerate(valence.iter_masters(label='BendCheby%i'%m)):
         if valence.is_negligible(i): continue
         ffatypes = master.basename.split('/')[1].split('.')
-        m, K, q0 = valence.get_params(master.index)
+        K, sign = valence.get_params(master.index)
+        if sign==-1: q0=0.0
+        else: q0=np.pi/m
         pars.lines.append('%8s  %8s  %8s  %1i %.10e  %.10e' %(
             ffatypes[0], ffatypes[1], ffatypes[2], m, K/kjmol, q0/deg
         ))
@@ -734,17 +736,158 @@ def _crosscbend_to_yaff(valence):
         done.append(label)
     return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
+def _crossbonddihed_to_yaff(valence, m):
+    'construct a CROSS section of a yaff parameter file'
+    prefix = 'CROSSBONDDIH%i' %m
+    prefix.rstrip('1')
+    units = ParameterDefinition(
+        'UNIT',        
+        lines=[
+            'KSS kjmol/angstrom**2', 'KSD0 kjmol/angstrom',
+            'KSD1 kjmol/angstrom', 'KSD2 kjmol/angstrom',
+            'R0 angstrom', 'R1 angstrom', 'R2 angstrom', 'CPSI0 au'
+        ]
+    )
+    done = []
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix+'/')):
+        if valence.is_negligible(i): continue
+        prefix, ffatypes, suffix = master.basename.split('/')
+        label = prefix+'/'+ffatypes+'/'
+        if label in done: continue
+        bb, b0d, b1d, b2d = None, None, None, None
+        for j, other in enumerate(valence.iter_masters(label=label)):
+            if 'bb' in other.basename:
+                bb = valence.get_params(other.index)
+            elif 'b0d' in other.basename:
+                b0d = valence.get_params(other.index)
+            elif 'b1d' in other.basename:
+                b1d = valence.get_params(other.index)
+            elif 'b2d' in other.basename:
+                b2d = valence.get_params(other.index)
+            else:
+                raise ValueError('Invalid Cross term %s' %other.basename)
+        Kss, Ksd0, Ksd1, Ksd2 = 0.0, 0.0, 0.0, 0.0
+        r0, r1, r2, cpsi0 = 0.0, 0.0, 0.0, 0.0
+        if bb is not None: Kss, r0, r2 = bb
+        if b0d is not None: Ksd0, r0, cpsi0 = b0d
+        if b1d is not None: Ksd1, r1, cpsi0 = b1d
+        if b2d is not None: Ksd2, r2, cpsi0 = b2d
+        ffatypes = ffatypes.split('.')
+        pars.lines.append(
+            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                Kss/(kjmol/angstrom**2), Ksd0/(kjmol/angstrom),
+                Ksd1/(kjmol/angstrom), Ksd2/(kjmol/angstrom),
+                r0/angstrom, r1/angstrom, r2/angstrom, cpsi0,
+        ))
+        done.append(label)
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _crossbenddihed_to_yaff(valence, m):
+    'construct a CROSS section of a yaff parameter file'
+    prefix = 'CROSSBENDDIH%i' %m
+    prefix.rstrip('1')
+    units = ParameterDefinition(
+        'UNIT',
+        lines=[
+            'KBB kjmol/rad**2', 'KBD0 kjmol', 'KBD1 kjmol',
+            'THETA0 deg', 'THETA1 deg', 'CPSI0 au',
+        ]
+    )
+    done = []
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix+'/')):
+        if valence.is_negligible(i): continue
+        prefix, ffatypes, suffix = master.basename.split('/')
+        label = prefix+'/'+ffatypes+'/'
+        if label in done: continue
+        aa, a0d, a1d = None, None, None
+        for j, other in enumerate(valence.iter_masters(label=label)):
+            if 'aa' in other.basename:
+                aa = valence.get_params(other.index)
+            elif 'a0d' in other.basename:
+                a0d = valence.get_params(other.index)
+            elif 'a1d' in other.basename:
+                a1d = valence.get_params(other.index)
+            else:
+                raise ValueError('Invalid Cross term %s' %other.basename)
+        Kaa, Kad0, Kad1 = 0.0, 0.0, 0.0
+        theta0, theta1, cpsi0 = 0.0, 0.0, 0.0
+        if aa is not None: Kaa, theta0, theta1 = aa
+        if a0d is not None: Kad0, theta0, cpsi0 = a0d
+        if a1d is not None: Kad1, theta1, cpsi0 = a1d
+        ffatypes = ffatypes.split('.')
+        pars.lines.append(
+            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                Kaa/kjmol, Kad0/kjmol, Kad1/kjmol,
+                theta0/deg, theta1/deg, cpsi0,
+        ))
+        done.append(label)
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _crosscbenddihed_to_yaff(valence):
+    'construct a CROSS section of a yaff parameter file'
+    prefix = 'CROSSCBENDDIH'
+    units = ParameterDefinition(
+        'UNIT',
+        lines=[
+            'KBB kjmol', 'KBD0 kjmol', 'KBD1 kjmol',
+            'CTHETA0 au', 'CTHETA1 au', 'CPSI0 au'
+        ]
+    )
+    done = []
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix+'/')):
+        if valence.is_negligible(i): continue
+        prefix, ffatypes, suffix = master.basename.split('/')
+        label = prefix+'/'+ffatypes+'/'
+        if label in done: continue
+        aa, a0d, a1d = None, None, None
+        for j, other in enumerate(valence.iter_masters(label=label)):
+            if 'aa' in other.basename:
+                aa = valence.get_params(other.index)
+            elif 'a0d' in other.basename:
+                a0d = valence.get_params(other.index)
+            elif 'a1d' in other.basename:
+                a1d = valence.get_params(other.index)
+            else:
+                raise ValueError('Invalid Cross term %s' %other.basename)
+        Kaa, Kad0, Kad1 = 0.0, 0.0, 0.0
+        ctheta0, ctheta1, cpsi0 = 0.0, 0.0, 0.0
+        if aa is not None: Kaa, ctheta0, ctheta1 = aa
+        if a0d is not None: Kad0, ctheta0, cpsi0 = a0d
+        if a1d is not None: Kad1, ctheta1, cpsi0 = a1d
+        ffatypes = ffatypes.split('.')
+        pars.lines.append(
+            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                Kaa/kjmol, Kad0/kjmol, Kad1/kjmol,
+                ctheta0, ctheta1, cpsi0,
+        ))
+        done.append(label)
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+
 def dump_yaff(valence, fn):
     sections = [
         _bonds_to_yaff(valence),
         _bendaharm_to_yaff(valence), _bendcharm_to_yaff(valence),
-        _bendcos_to_yaff(valence), _bendclin_to_yaff(valence),
+        _bendcheby_to_yaff(valence, 1), _bendcheby_to_yaff(valence, 4),
         _torsions_to_yaff(valence), _torsc2harm_to_yaff(valence),
         _torscheby_to_yaff(valence,1), _torscheby_to_yaff(valence,2),
         _torscheby_to_yaff(valence,3), _torscheby_to_yaff(valence,4),
         _torscheby_to_yaff(valence,6), _dihedharm_to_yaff(valence),
         _opdists_to_yaff(valence), _sqopdists_to_yaff(valence),
-        _cross_to_yaff(valence), _crosscbend_to_yaff(valence)
+        _cross_to_yaff(valence), _crosscbend_to_yaff(valence),
+        _crossbonddihed_to_yaff(valence,1), _crossbonddihed_to_yaff(valence,2),
+        _crossbonddihed_to_yaff(valence,3), _crossbonddihed_to_yaff(valence,4),
+        _crossbonddihed_to_yaff(valence,6),
+        _crossbenddihed_to_yaff(valence,1), _crossbenddihed_to_yaff(valence,2),
+        _crossbenddihed_to_yaff(valence,3), _crossbenddihed_to_yaff(valence,4),
+        _crossbenddihed_to_yaff(valence,6),
+        _crosscbenddihed_to_yaff(valence), 
     ]
     f = open(fn, 'w')
     for section in sections:

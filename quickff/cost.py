@@ -36,7 +36,7 @@ class HessianFCCost(object):
         A class to implement the least-square cost function to fit the force
         field hessian to the ab initio hessian.
     '''
-    def __init__(self, system, ai, valence, fit_indices, ffrefs=[]):
+    def __init__(self, system, ai, valence, fit_indices, ffrefs=[], do_mass_weighing=True):
         '''
             **Arguments**
 
@@ -67,18 +67,30 @@ class HessianFCCost(object):
         self.A = np.zeros([len(fit_indices), len(fit_indices)], float)
         self.B = np.zeros([len(fit_indices)], float)
         ndofs = 3*system.natom
+        masses3 = np.array([[mass,]*3 for mass in system.masses]).reshape(len(system.masses)*3)
+        masses3_inv_sqrt = np.diag(1.0/np.sqrt(masses3))
         #compute the reference hessian
-        href = ai.phess0.reshape([ndofs, ndofs]).copy()
+        if do_mass_weighing:
+            href = np.dot(masses3_inv_sqrt, np.dot(ai.phess0.reshape([ndofs, ndofs]).copy(), masses3_inv_sqrt))
+        else:
+            href = ai.phess0.reshape([ndofs, ndofs]).copy()
         for ffref in ffrefs:
-            href -= ffref.hessian(system.pos).reshape([ndofs, ndofs])
+            if do_mass_weighing:
+                href -= np.dot(masses3_inv_sqrt, np.dot(ffref.hessian(system.pos).reshape([ndofs, ndofs]), masses3_inv_sqrt))
+            else:
+                href -= ffref.hessian(system.pos).reshape([ndofs, ndofs])
         #loop over valence terms and add to reference (if not in fit_indices or
         #its slaves) or add to covalent hessians hcovs (if in fit_indices)
         hcovs = [None,]*len(fit_indices)
         for master in valence.iter_masters():
             if master.index in fit_indices:
                 i = fit_indices.index(master.index)
+                #self.init[i] = valence.get_params(master.index, only='fc')
                 #add to covalent hessians (includes slaves as well)
-                hcov = valence.get_hessian_contrib(master.index, fc=1.0)
+                if do_mass_weighing:
+                    hcov = np.dot(masses3_inv_sqrt, np.dot(valence.get_hessian_contrib(master.index, fc=1.0), masses3_inv_sqrt))
+                else:
+                    hcov = valence.get_hessian_contrib(master.index, fc=1.0)
                 hcovs[i] = hcov
                 #set upper and lower
                 if master.kind==4:
@@ -86,7 +98,10 @@ class HessianFCCost(object):
                 if master.kind==3:
                     self.lower[i] = -np.inf
             else:
-                hcov = valence.get_hessian_contrib(master.index)
+                if do_mass_weighing:
+                    hcov = np.dot(masses3_inv_sqrt, np.dot(valence.get_hessian_contrib(master.index), masses3_inv_sqrt))
+                else:
+                    hcov = valence.get_hessian_contrib(master.index)
                 href -= hcov
         #construct the cost matrices A and B
         for index1, hcov1 in enumerate(hcovs):
@@ -97,7 +112,8 @@ class HessianFCCost(object):
                 self.A[index1,index2] = tmp
                 self.A[index2,index1] = tmp
 
-    def estimate(self, init=None, lower=None, upper=None):
+
+    def estimate(self, init=None, lower=None, upper=None, do_svd=False):
         '''
             Estimate the force constants by minimizing the cost function
 
@@ -111,6 +127,17 @@ class HessianFCCost(object):
         if upper is None:
             assert self.upper is not None, 'No upper limit fcs defined'
             upper = self.upper.copy()
-        #U, S, Vt = np.linalg.svd(self.A)
-        x = boxqp(self.A, self.B, lower, upper, init)
+        if do_svd:
+            #perform SVD
+            U, S, Vt = np.linalg.svd(self.A, full_matrices=True)
+            mask = S/max(S)>1e-8
+            a = np.diag(S[mask])
+            b = np.dot(U.T, self.B)[mask]
+            vtx0 = np.dot(Vt, init)[mask]
+            vtlower = -np.inf*np.ones(len(b),float)
+            vtupper =  np.inf*np.ones(len(b),float)
+            vtx = boxqp(a, b, vtlower, vtupper, vtx0)
+            x = np.dot(Vt.T[:,mask], vtx)
+        else:
+            x = boxqp(self.A, self.B, lower, upper, init)
         return x

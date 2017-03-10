@@ -30,16 +30,19 @@ from quickff.cost import HessianFCCost
 from quickff.paracontext import paracontext
 from quickff.io import dump_charmm22_prm, dump_charmm22_psf, dump_yaff
 from quickff.log import log
+from quickff.tools import chebychev
 
 from yaff.system import System
-from yaff.pes.vlist import Cosine, Harmonic
+from yaff.pes.vlist import Cosine, Harmonic, Chebychev1, Chebychev4
 from yaff.pes.iclist import BendAngle, BendCos, OopDist
 
 import os, cPickle, numpy as np, datetime
 
 __all__ = [
     'BaseProgram', 'MakeTrajectories', 'PlotTrajectories',
-    'DeriveDiagFF', 'DeriveNonDiagFF', 'DeriveNonDiagFFNoQRef',
+    'DeriveDiagFF', 'DeriveDiagMassWeighingFF',
+    'DeriveNonDiagFF', 'DeriveNonDiagMassWeighingFF',
+    'DeriveNonDiag2FF', 'DeriveNonDiag2MassWeighingFF'
 ]
 
 class BaseProgram(object):
@@ -354,7 +357,7 @@ class BaseProgram(object):
             self.valence.dump_logger(print_level=logger_level)
             self.average_pars()
 
-    def do_hc_estimatefc(self, tasks, logger_level=3):
+    def do_hc_estimatefc(self, tasks, logger_level=3, do_svd=False, do_mass_weighing=True):
         '''
             Refine force constants using Hessian Cost function.
 
@@ -375,6 +378,14 @@ class BaseProgram(object):
                 print level at which the resulting parameters should be dumped to
                 the logger. By default, the parameters will only be dumped at
                 the highest log level.
+            
+            do_svd
+                whether or not to do an SVD decomposition before solving the
+                set of equations.
+            
+            do_mass_weighing
+                whether or not to apply mass weighing to the ab initio hessian
+                and the force field contributions before doing the fitting.
         '''
         with log.section('HCEST', 2, timer='HC Estimate FC'):
             self.reset_system()
@@ -402,8 +413,8 @@ class BaseProgram(object):
                     if term.kind==1: self.valence.check_params(term, ['a0', 'a1', 'a2', 'a3'])
                     if term.kind==3: self.valence.check_params(term, ['fc', 'rv0','rv1'])
                     if term.kind==4: self.valence.check_params(term, ['fc', 'rv', 'm'])
-            cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=ffrefs)
-            fcs = cost.estimate()
+            cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=ffrefs, do_mass_weighing=do_mass_weighing)
+            fcs = cost.estimate(do_svd=do_svd)
             for index, fc in zip(term_indices, fcs):
                 master = self.valence.terms[index]
                 assert master.is_master()
@@ -420,45 +431,165 @@ class BaseProgram(object):
         '''
         with log.section('VAL', 2, 'Initializing'):
             self.reset_system()
-            self.valence.init_cross_terms()
-            for index in xrange(self.valence.vlist.nv):
-                term = self.valence.vlist.vtab[index]
-                if term['kind']!=3: continue
-                rv0, rv1 = None, None
-                for index2 in xrange(self.valence.vlist.nv):
-                    term2 = self.valence.vlist.vtab[index2]
-                    if term2['kind']==3: continue
-                    if term['ic0']==term2['ic0']:
-                        assert rv0 is None
-                        #for harmonic potential
-                        if term2['kind']==0:
-                            rv0 = self.valence.get_params(index2, only='rv')
-                        #for linear potential in cosine of angle (chebychev1)
-                        #then take rv0, which is cos(angle0), equal to sign.
-                        #Indeed a chebychev1 term of 1+cos(theta) should
-                        #correspond to rv0=-1 while 1-cos(theta)=-[cos(theta)-1]
-                        #corresponds to rv0=1
-                        elif term2['kind']==5:
-                            rv0 = -self.valence.get_params(index2, only='sign')
-                        else:
-                            raise ValueError('Could not find rest value of ic0 in %s' %self.valence.terms[index].basename)
-                    if term['ic1']==term2['ic0']:
-                        assert rv1 is None
-                        #for harmonic potential
-                        if term2['kind']==0:
-                            rv1 = self.valence.get_params(index2, only='rv')
-                        #for linear potential in cosine of angle (chebychev1)
-                        #then take rv0, which is cos(angle0), equal to sign.
-                        #Indeed a chebychev1 term of 1+cos(theta) should
-                        #correspond to rv0=1 while 1-cos(theta)=-[cos(theta)-1]
-                        #corresponds to rv0=-1
-                        elif term2['kind']==5:
-                            rv1 = -self.valence.get_params(index2, only='sign')
-                        else:
-                            raise ValueError('Could not find rest value of ic1 in %s' %self.valence.terms[index].basename)
-                if rv0 is None or rv1 is None:
-                    raise ValueError('No rest values found for %s' %self.valence.terms[index].basename)
-                self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+            self.valence.init_cross_angle_terms()
+            
+            #function to find rest value
+            def find_rest_value(label):
+                candidates = [cand for cand in self.valence.iter_masters(label='^'+label+'$', use_re=True)]
+                assert len(candidates)<2, 'Multiple masters found for %s: %s' %(label, ','.join([cand.basename for cand in candidates]))
+                if len(candidates)==0:
+                    prefix, types = label.split('/')
+                    prefix = prefix.lstrip('^')
+                    if prefix.startswith('Bond') or prefix.startswith('Bend') or prefix.startswith('Tors'):
+                        label = prefix+'/'+'\.'.join(types.split('.')[::-1])
+                        candidates = [cand for cand in self.valence.iter_masters(label='^'+label+'$', use_re=True)]
+                        assert len(candidates)<2, 'Multiple masters found for %s: %s' %(label, ','.join([cand.basename for cand in candidates]))
+                        if len(candidates)==0:
+                            return None
+                can = candidates[0]
+                if can.basename.startswith('TorsCheby') or can.basename.startswith('BendCheby'):
+                    return -self.valence.get_params(can.index, only='sign')
+                else:
+                    return self.valence.get_params(can.index, only='rv')
+            
+            #set rest values and initialize fc for bond-bond cross
+            for term in self.valence.iter_masters('^Cross/.*/bb$', use_re=True):
+                types = term.basename.split('/')[1].split('.')
+                assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
+                rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[:2])))
+                rv1 = find_rest_value('BondHarm/%s' %('.'.join(types[1:])))
+                assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[:2]))
+                assert rv1 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[1:]))
+                self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+
+            #set rest values and initialize fc for bond-angle cross
+            for term in self.valence.iter_masters('^Cross/.*/b0a$', use_re=True):
+                types = term.basename.split('/')[1].split('.')
+                assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
+                rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[:2])))
+                rv1 = find_rest_value('BendAHarm/%s' %('.'.join(types)))
+                assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[:2]))
+                assert rv1 is not None, 'Rest value of BendAHarm/%s not found' %('.'.join(types))
+                self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                
+            for term in self.valence.iter_masters('^Cross/.*/b1a$', use_re=True):
+                types = term.basename.split('/')[1].split('.')
+                assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
+                rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[1:])))
+                rv1 = find_rest_value('BendAHarm/%s' %('.'.join(types)))
+                assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[1:]))
+                assert rv1 is not None, 'Rest value of BendAHarm/%s not found' %('.'.join(types))
+                self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+
+#            for term in self.valence.iter_masters('^CrossCBend/.*/b0a$', use_re=True):
+#                types = term.basename.split('/')[1].split('.')
+#                assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
+#                rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[:2])))
+#                assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[:2]))
+#                rv1 = find_rest_value('BendCheby1/%s' %('.'.join(types)))
+#                if rv1 is None:
+#                    rv1 = find_rest_value('BendCheby4/%s' %('.'.join(types)))
+#                    assert rv1 is not None, 'Rest value of BendCheby(1,4)/%s not found' %('.'.join(types))
+#                self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+#                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+#                
+#            for term in self.valence.iter_masters('^CrossCBend/.*/b1a$', use_re=True):
+#                types = term.basename.split('/')[1].split('.')
+#                assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
+#                rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[1:])))
+#                assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[1:]))
+#                rv1 = find_rest_value('BendCheby1/%s' %('.'.join(types)))
+#                if rv1 is None:
+#                    rv1 = find_rest_value('BendCheby4/%s' %('.'.join(types)))
+#                    assert rv1 is not None, 'Rest value of BendCheby(1,4)/%s not found' %('.'.join(types))
+#                self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+#                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)            
+            
+            self.valence.init_cross_dihed_terms()
+            #set rest values and initialize fc for bond-bond cross
+            for m in [1,2,3,4,6]:
+                for term in self.valence.iter_masters('^CrossBondDih%i/.*/bb$' %m, use_re=True):
+                    types = term.basename.split('/')[1].split('.')
+                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                    rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[:2])))
+                    rv1 = find_rest_value('BondHarm/%s' %('.'.join(types[2:])))
+                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                    
+            #set rest values and initialize fc for bond-dihed cross
+            for m in [1,2,3,4,6]:
+                for term in self.valence.iter_masters('^CrossBondDih%i/.*/b0d$' %m, use_re=True):
+                    types = term.basename.split('/')[1].split('.')
+                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                    rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[:2])))
+                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+
+                for term in self.valence.iter_masters('^CrossBondDih%i/.*/b1d$' %m, use_re=True):
+                    types = term.basename.split('/')[1].split('.')
+                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                    rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[1:3])))
+                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                
+                for term in self.valence.iter_masters('^CrossBondDih%i/.*/b2d$' %m, use_re=True):
+                    types = term.basename.split('/')[1].split('.')
+                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                    rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[2:])))
+                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+
+            #set rest values and initialize fc for angle-angle cross
+            for m in [1,2,3,4,6]:
+                for term in self.valence.iter_masters('^CrossBendDih%i/.*/aa$' %m, use_re=True):
+                    types = term.basename.split('/')[1].split('.')
+                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                    rv0 = find_rest_value('BendAHarm/%s' %('.'.join(types[:3])))
+                    rv1 = find_rest_value('BendAHarm/%s' %('.'.join(types[1:])))
+                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+            
+            #set rest values and initialize fc for angle-dihed cross
+            for m in [1,2,3,4,6]:
+                for term in self.valence.iter_masters('^CrossBendDih%i/.*/a0d$' %m, use_re=True):
+                    types = term.basename.split('/')[1].split('.')
+                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                    rv0 = find_rest_value('BendAHarm/%s' %('.'.join(types[:3])))
+                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+             
+                for term in self.valence.iter_masters('^CrossBendDih%i/.*/a1d$' %m, use_re=True):
+                    types = term.basename.split('/')[1].split('.')
+                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                    rv0 = find_rest_value('BendAHarm/%s' %('.'.join(types[1:])))
+                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                
+                for term in self.valence.iter_masters('^CrossCBendDih%i/.*/a0d$' %m, use_re=True):
+                    types = term.basename.split('/')[1].split('.')
+                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                    rv0 = find_rest_value('BendCLin/%s' %('.'.join(types[:3])))
+                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+             
+                for term in self.valence.iter_masters('^CrossCBendDih%i/.*/a1d$' %m, use_re=True):
+                    types = term.basename.split('/')[1].split('.')
+                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                    rv0 = find_rest_value('BendCLin/%s' %('.'.join(types[1:])))
+                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+
+
 
     def do_squarebend(self, thresshold=10*deg):
         '''
@@ -466,7 +597,8 @@ class BaseProgram(object):
             atom of type B with A-B-A angles of 90/180 degrees. A simple
             harmonic pattern will not be adequate since a rest value of 90 and
             180 degrees is possible for the same A-B-A term. Therefore, a
-            cosine term with multiplicity of 4 is used:
+            cosine term with multiplicity of 4 is used (which corresponds to a
+            chebychev4 potential with sign=-1):
 
                   V = K/2*[1-cos(4*theta)]
 
@@ -496,7 +628,7 @@ class BaseProgram(object):
                 elif 180*deg-thresshold<=rv and rv<=180*deg+thresshold: n180 += 1
                 else: nother += 1
             if n90>0 and n180>0:
-                log.dump('%s has rest values around 90 deg and 180 deg, converted to BendCos with m=4' %master.basename)
+                log.dump('%s has rest values around 90 deg and 180 deg, converted to BendCheby4' %master.basename)
                 #modify master and slaves
                 indices = [master.index]
                 for slave in master.slaves: indices.append(slave)
@@ -504,22 +636,25 @@ class BaseProgram(object):
                     term = self.valence.terms[index]
                     self.valence.modify_term(
                         index,
-                        Cosine, [BendAngle(*term.get_atoms())],
-                        term.basename.replace('BendAHarm', 'BendCos'),
-                        ['HC_FC_DIAG'], ['au', 'kjmol', 'deg']
+                        Chebychev4, [BendCos(*term.get_atoms())],
+                        term.basename.replace('BendAHarm', 'BendCheby4'),
+                        ['HC_FC_DIAG'], ['kjmol', 'au']
                     )
-                    self.valence.set_params(index, rv0=0.0, m=4)
+                    self.valence.set_params(index, sign=-1)
                     for traj in self.trajectories:
                         if traj.term.index==index:
                             traj.active = False
                             traj.fc = None
                             traj.rv = None
 
-    def do_bendclin(self, thresshold=2*deg):
+    def do_bendclin(self, thresshold=5*deg):
         '''
             No Harmonic bend can have a rest value equal to are large than
             180 deg - thresshold. If a master (or its slaves) has such a rest
-            value, convert master and all slaves to BendCLin: 0.5*K*[1-cos(theta)]
+            value, convert master and all slaves to BendCLin (which corresponds
+            to a chebychev1 potential with sign=+1):
+            
+                0.5*K*[1+cos(theta)]
         '''
         for master in self.valence.iter_masters(label='BendAHarm'):
             indices = [master.index]
@@ -531,13 +666,13 @@ class BaseProgram(object):
                     found = True
                     break
             if found:
-                log.dump('%s has rest value > 180-%.0f deg, converted to BendCHarm with cos(phi0)=-1' %(master.basename, thresshold/deg))
+                log.dump('%s has rest value > 180-%.0f deg, converted to BendCheby1' %(master.basename, thresshold/deg))
                 for index in indices:
                     term = self.valence.terms[index]
                     self.valence.modify_term(
                         index,
                         Chebychev1, [BendCos(*term.get_atoms())],
-                        term.basename.replace('BendAHarm', 'BendCLin'),
+                        term.basename.replace('BendAHarm', 'BendCheby1'),
                         ['HC_FC_DIAG'], ['kjmol', 'au']
                     )
                     self.valence.set_params(index, fc=0.0, sign=1.0)
@@ -611,13 +746,14 @@ class PlotTrajectories(BaseProgram):
             self.do_pt_estimate()
             self.plot_trajectories()
 
-class DeriveDiagFF(BaseProgram):
+class DeriveDiagMassWeighingFF(BaseProgram):
     '''
-        Derive a diagonal force field, i.e. without cross terms. After the
-        hessian fit of the force constants, the rest values are refined by
-        revisiting the perturbation trajectories with an extra a priori term
-        representing the present valence contribution. Finally, the force 
-        constants are refined by means of a final hessian fit.
+        Derive a diagonal force field, i.e. without cross terms. The hessian
+        fit is done with mass weighing. After the hessian fit of the force
+        constants, the rest values are refined by revisiting the perturbation
+        trajectories with an extra a priori term representing the present
+        valence contribution. Finally, the force constants are refined by means
+        of a final hessian fit.
     '''
     def run(self):
         with log.section('PROGRAM', 2):
@@ -630,9 +766,10 @@ class DeriveDiagFF(BaseProgram):
             self.do_hc_estimatefc(['HC_FC_DIAG'], logger_level=1)
             self.make_output()
 
-class DeriveNonDiagFF(BaseProgram):
+class DeriveDiagFF(BaseProgram):
     '''
-        Derive a non-diagonal force field, i.e. with cross terms. After the
+        Derive a diagonal force field, i.e. without cross terms. The hessian
+        fit is done without mass weighing. After the
         hessian fit of the force constants, the rest values are refined by
         revisiting the perturbation trajectories with an extra a priori term
         representing the present valence contribution. Finally, the force 
@@ -644,18 +781,19 @@ class DeriveNonDiagFF(BaseProgram):
             self.do_pt_generate()
             self.do_pt_estimate()
             self.do_pt_postprocess()
-            self.do_cross_init()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'])
+            self.do_hc_estimatefc(['HC_FC_DIAG'], do_mass_weighing=False)
             self.do_pt_estimate(do_valence=True)
-            self.do_pt_postprocess()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], logger_level=1)
+            self.do_hc_estimatefc(['HC_FC_DIAG'], do_mass_weighing=False, logger_level=1)
             self.make_output()
 
-class DeriveNonDiagFFNoQRef(BaseProgram):
+class DeriveNonDiagMassWeighingFF(BaseProgram):
     '''
-        Derive a non-diagonal force field, i.e. with cross terms, whitout
-        the refinement of the rest value by revisiting the perturbation
-        trajectories.
+        Derive a non-diagonal force field containing stretch-stretch and
+        stretch-angle cross terms. The hessian fit is done with mass weighing.
+        After the hessian fit of the force constants, the rest values are
+        refined by revisiting the perturbation trajectories with an extra a
+        priori term representing the present valence contribution. Finally, the
+        force constants are refined by means of a final hessian fit.
     '''
     def run(self):
         with log.section('PROGRAM', 2):
@@ -664,5 +802,78 @@ class DeriveNonDiagFFNoQRef(BaseProgram):
             self.do_pt_estimate()
             self.do_pt_postprocess()
             self.do_cross_init()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS'], logger_level=1)
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'])
+            self.do_pt_estimate(do_valence=True)
+            self.do_pt_postprocess()
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'])
+            self.make_output()
+
+class DeriveNonDiagFF(BaseProgram):
+    '''
+        Derive a non-diagonal force field containing stretch-stretch and
+        stretch-angle cross terms. The hessian fit is done without mass weighing.
+        After the hessian fit of the force constants, the rest values are
+        refined by revisiting the perturbation trajectories with an extra a
+        priori term representing the present valence contribution. Finally, the
+        force constants are refined by means of a final hessian fit.
+    '''
+    def run(self):
+        with log.section('PROGRAM', 2):
+            self.do_eq_setrv(['EQ_RV'])
+            self.do_pt_generate()
+            self.do_pt_estimate()
+            self.do_pt_postprocess()
+            self.do_cross_init()
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'], do_mass_weighing=False)
+            self.do_pt_estimate(do_valence=True)
+            self.do_pt_postprocess()
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'], do_mass_weighing=False)
+            self.make_output()
+
+class DeriveNonDiag2MassWeighingFF(BaseProgram):
+    '''
+        Derive a non-diagonal force field containing stretch-stretch, 
+        stretch-angle and stretch-dihedral cross terms. The hessian
+        fit is done with mass weighing. After the hessian fit of the force
+        constants, the rest values are refined by revisiting the perturbation
+        trajectories with an extra a priori term representing the present
+        valence contribution. Finally, the force constants are refined by means
+        of a final hessian fit.
+    '''
+    def run(self):
+        with log.section('PROGRAM', 2):
+            self.do_eq_setrv(['EQ_RV'])
+            self.do_pt_generate()
+            self.do_pt_estimate()
+            self.do_pt_postprocess()
+            self.do_cross_init()
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'])
+            self.do_pt_estimate(do_valence=True)
+            self.do_pt_postprocess()
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'])
+            self.do_hc_estimatefc(['HC_FC_CROSS_A', 'HC_FC_CROSS_DSS', 'HC_FC_CROSS_DSD'], logger_level=1, do_svd=True)
+            self.make_output()
+
+class DeriveNonDiag2FF(BaseProgram):
+    '''
+        Derive a non-diagonal force field containing stretch-stretch, 
+        stretch-angle and stretch-dihedral cross terms. The hessian
+        fit is done without mass weighing. After the hessian fit of the force
+        constants, the rest values are refined by revisiting the perturbation
+        trajectories with an extra a priori term representing the present
+        valence contribution. Finally, the force constants are refined by means
+        of a final hessian fit.
+    '''
+    def run(self):
+        with log.section('PROGRAM', 2):
+            self.do_eq_setrv(['EQ_RV'])
+            self.do_pt_generate()
+            self.do_pt_estimate()
+            self.do_pt_postprocess()
+            self.do_cross_init()
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'], do_mass_weighing=False)
+            self.do_pt_estimate(do_valence=True)
+            self.do_pt_postprocess()
+            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'], do_mass_weighing=False)
+            self.do_hc_estimatefc(['HC_FC_CROSS_A', 'HC_FC_CROSS_DSS', 'HC_FC_CROSS_DSD'], do_mass_weighing=False, logger_level=1, do_svd=True)
             self.make_output()

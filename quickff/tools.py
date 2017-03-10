@@ -32,7 +32,7 @@ import numpy as np, math
 __all__ = [
     'global_translation', 'global_rotation', 'fitpar',
     'boxqp', 'guess_ffatypes', 'term_sort_atypes', 'get_multiplicity',
-    'get_restvalue', 'get_ei_radii', 'digits', 'average'
+    'get_restvalue', 'get_ei_radii', 'digits', 'average', 'chebychev'
 ]
 
 
@@ -625,3 +625,11 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     for slave, (master, sign) in masterof.iteritems():
         result[slave] = result[master]*sign
     return result
+
+def chebychev(m, x):
+    if m==0:
+        return 1
+    elif m==1:
+        return x
+    else:
+        return 2.0*x*chebychev(m-1,x)-chebychev(m-2,x)

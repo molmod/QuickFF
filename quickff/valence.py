@@ -30,7 +30,8 @@ from yaff.pes.vlist import ValenceList
 from yaff.pes.vlist import Harmonic, PolyFour, Fues, Cosine, Cross, \
     Chebychev1, Chebychev2, Chebychev3, Chebychev4, Chebychev6
 from yaff.pes.iclist import InternalCoordinateList
-from yaff.pes.iclist import Bond, BendAngle, BendCos, DihedCos, DihedAngle, OopDist, SqOopDist
+from yaff.pes.iclist import Bond, BendAngle, BendCos, DihedCos, DihedCos2, \
+    DihedCos3, DihedCos4, DihedCos6, DihedAngle, OopDist, SqOopDist
 from yaff.pes.dlist import DeltaList
 from yaff.sampling.harmonic import estimate_cart_hessian
 
@@ -38,7 +39,7 @@ from quickff.tools import term_sort_atypes, get_multiplicity, get_restvalue, \
     digits
 from quickff.log import log
 
-import numpy as np
+import numpy as np, re
 
 __all__ = ['ValenceFF']
 
@@ -63,25 +64,40 @@ class Term(object):
     def get_atoms(self):
         'Get the ordered list of indexes of the atoms involved'
         atoms = None
+        ic = None
         if self.kind==3:#cross
-            if self.ics[0].kind==0 and self.ics[1].kind in [1,2]:
-                ic = self.ics[1]
-            elif self.ics[0].kin in [1,2] and self.ics[1].kind==0:
-                ic = self.ics[0]
-            elif self.ics[0].kind==0 and self.ics[1].kind==0:
+            #check if one of ics is dihedral
+            for testic in self.ics:
+                if testic.kind in [3,4,12,13,14,15]:
+                    ic = testic
+                    break
+            #check if one of ics is angle
+            if ic is None:
+                for testic in self.ics:
+                    if testic.kind in [1,2]:
+                        ic = testic
+                        break
+            #only bonds in ics, either r01,r12 or r01,r23
+            if ic is None:
+                assert self.ics[0].kind==0 and self.ics[1].kind==0, 'IC other than bond, bendangle, bendcos, dihedangle or dihedcos in cross term. Not implemented!'
                 a0 = self.ics[0].index_pairs[0]
                 a1 = self.ics[1].index_pairs[0]
-                if   a0[1]==a1[0]: return [a0[0], a0[1], a1[1]]
-                elif a0[0]==a1[1]: return [a1[0], a1[1], a0[1]]
+                if   a0[1]==a1[0]:
+                    return [a0[0], a0[1], a1[1]]
+                elif a0[0]==a1[1]:
+                    return [a1[0], a1[1], a0[1]]
+                else:
+                    return [a0[0], a0[1], a1[0], a1[1]]
         else:
             ic = self.ics[0]
+        assert ic is not None
         if ic.kind==0:#Bond
             atoms = ic.index_pairs[0]
         elif ic.kind in [1,2]: #bend
             a0 = ic.index_pairs[0]
             a1 = ic.index_pairs[1]
             atoms = [a0[1], a0[0], a1[1]]
-        elif ic.kind in [3,4]: #dihedral
+        elif ic.kind in [3,4,12,13,14,15]: #dihedral
             a0 = ic.index_pairs[0]
             a1 = ic.index_pairs[1]
             a2 = ic.index_pairs[2]
@@ -193,7 +209,7 @@ class ValenceFF(ForcePartValence):
             self.init_dihedral_terms()
             self.init_oop_terms()
 
-    def add_term(self, pot, ics, atypes, tasks, units):
+    def add_term(self, pot, ics, basename, tasks, units):
         '''
             Adds new term both to the Yaff vlist object and a new QuickFF
             list (self.terms) which holds all information about the term
@@ -208,9 +224,8 @@ class ValenceFF(ForcePartValence):
             ics
                 list of InternalCoordinate instances from `yaff.pes.iclist.py`
 
-            atypes
-                ordered string of atom types (required to assign name to the
-                term)
+            basename
+                base name for the term, identical for master and each slave
 
             tasks
                 List of strings defining all tasks that have to be performed for
@@ -222,42 +237,6 @@ class ValenceFF(ForcePartValence):
                 way as parameters are stored in `yaff.vlist.vtab`)
         '''
         index = len(self.terms)
-        #define the name
-        if len(ics)==1:
-            tmp = {
-                (0,0) : 'BondHarm/'  ,
-                (1,5) : 'BendCLin/'  , (2,0) : 'BendAHarm/' ,
-                (3,5) : 'TorsCheby1/', (3,6) : 'TorsCheby2/',
-                (3,7) : 'TorsCheby3/', (3,8) : 'TorsCheby4/',
-                (3,9) : 'TorsCheby6/', 
-                (4,4) : 'Torsion/'   , (3,1) : 'TorsC2Harm/',
-                (10,0): 'Oopdist/'   , (11,0): 'SqOopdist/' ,
-            }
-            prefix = tmp[(ics[0].kind, pot.kind)]
-            suffix = ''
-        else:
-            assert len(ics)==2 and pot.kind==3
-            #one of two ics is cosine(angle)
-            if ics[0].kind==1 or ics[1].kind==1:
-                prefix = 'CrossCBend/'
-            #all other cases
-            else:
-                prefix = 'Cross/'
-            #first bond and second bond
-            if ics[0].kind==0 and ics[1].kind==0:
-                suffix = '/bb'
-            elif ics[0].kind==0 and ics[1].kind in [1,2]:
-                #first bond and angle
-                if set(ics[0].index_pairs[0])==set(ics[1].index_pairs[0]):
-                    suffix = '/b0a'
-                #second bond and angle
-                elif set(ics[0].index_pairs[0])==set(ics[1].index_pairs[1]):
-                    suffix = '/b1a'
-                else:
-                    raise ValueError('Incompatible bond/angle given in cross term')
-            else:
-                raise ValueError('Incompatible ICs given in cross term')
-        basename = prefix+'.'.join(atypes)+suffix
         #search for possible master and update slaves
         master = None
         slaves = None
@@ -303,6 +282,8 @@ class ValenceFF(ForcePartValence):
             vterm = self.vlist.vtab[term_index]
             if pot.kind==1:#all 4 parameters of PolyFour are given as 1 tuple
                 args = [(None,)*len(units)] + ics
+            elif pot.kind in [5,6,7,8,9]: #chebychev potentials
+                args = [None,]+ics
             else:
                 args = [None,]*len(units) + ics
             new = pot(*args)
@@ -313,26 +294,32 @@ class ValenceFF(ForcePartValence):
             for i in xrange(len(ic_indexes)):
                 vterm['ic%i'%i] = ic_indexes[i]
 
-    def iter_terms(self, label=None):
+    def iter_terms(self, label=None, use_re=False):
         '''
             Iterate over all terms in the valence force field. If label is
-            given, only iterate over terms with the label its name.
+            given, only iterate over terms that matches label.
         '''
         for term in self.terms:
             if label is None:
                 yield term
-            elif label.startswith('/'):
-                if term.basename.lower().startswith(label.lower()[1:]):
+            elif use_re:
+                pattern = re.compile(label)
+                if pattern.match(term.basename):
                     yield term
-            elif label.lower() in term.basename.lower():
-                yield term
+                else:
+                    continue
+            else:
+                if label.lower() in term.basename.lower():
+                    yield term
+                else:
+                    continue
 
-    def iter_masters(self, label=None):
+    def iter_masters(self, label=None, use_re=False):
         '''
             Iterate over all master terms in the valence force field. If label
             is given, only iterate of the terms with the label in its name.
         '''
-        for term in self.iter_terms(label=label):
+        for term in self.iter_terms(label=label, use_re=use_re):
             if term.is_master():
                 yield term
 
@@ -348,12 +335,13 @@ class ValenceFF(ForcePartValence):
             nbonds = 0
             for bond in self.system.iter_bonds():
                 bond, types = term_sort_atypes(ffatypes, bond, 'bond')
+                basename = 'BondHarm/'+'.'.join(types)
                 units = ['kjmol/A**2', 'A']
-                self.add_term(Harmonic, [Bond(*bond)], types, ['PT_ALL', 'HC_FC_DIAG'], units)
+                self.add_term(Harmonic, [Bond(*bond)], basename, ['PT_ALL', 'HC_FC_DIAG'], units)
                 nbonds += 1
         log.dump('Added %i Harmonic bond terms' %nbonds)
 
-    def init_bend_terms(self):
+    def init_bend_terms(self, thresshold=10*deg):
         '''
             Initialize all bend terms in the system based on the bends attribute
             of the system instance. All bend terms are given harmonic
@@ -372,32 +360,54 @@ class ValenceFF(ForcePartValence):
             #loop over all distinct angle types
             nabends = 0
             ncbends = 0
+            nsqbends = 0
             for types, bends in angles.iteritems():
-                do_cos = False
+                potkind = None
+                rvs = []
                 for i, bend in enumerate(bends):
                     if self.system.cell.nvec>0:
                         d10 = self.system.pos[bend[0]] - self.system.pos[bend[1]]
                         d12 = self.system.pos[bend[2]] - self.system.pos[bend[1]]
                         self.system.cell.mic(d10)
                         self.system.cell.mic(d12)
-                        if _bend_angle_low(d10, d12, 0)[0] > 175*deg:
-                            do_cos = True
-                            break
+                        rvs.append(_bend_angle_low(d10, d12, 0)[0])
                     else:
                         rs = np.array([self.system.pos[j] for j in bend])
-                        if bend_angle(rs)[0]>175*deg:
-                            do_cos = True
-                            break
-                #add term harmonic in angle or cos(angle)
+                        rvs.append(bend_angle(rs)[0])
+                #sort rvs in rvs in [90-thresshold, 90+thresshol], rvs in 
+                #[180-thresshold,180] and others
+                rvs90 = [rv for rv in rvs if 90*deg-thresshold<rv<90*deg+thresshold]
+                rvs180 = [rv for rv in rvs if 180*deg-thresshold<rv<180*deg]
+                rvsother = [rv for rv in rvs if rv not in rvs90 and rv not in rvs180]
+                #detect whether rvs are centered around 90 and 180, then
+                #use 1-cos(4*theta) term
+                if len(rvs90)>0 and len(rvs180)>0 and len(rvsother)==0:
+                    log.dump('%s has equilibrium values around 90/180 deg, using 1-cos(4*theta) potential' %('.'.join(types)))
+                    potkind='squarebend'
+                elif len(rvs180)>0 and len(rvs90)==0 and len(rvsother)==0:
+                    log.dump('%s has equilibrium values around 180 deg, using 1+cos(theta) potential' %('.'.join(types)))
+                    potkind='lincos'
+                else:
+                    potkind='angleharm'
+                #add term
                 for bend in bends:
-                    if do_cos:
-                        term = self.add_term(Chebychev1, [BendCos(*bend)], types, ['HC_FC_DIAG'], ['kjmol'])
+                    if potkind=='lincos':
+                        basename = 'BendCheby1/'+'.'.join(types)
+                        term = self.add_term(Chebychev1, [BendCos(*bend)], basename, ['HC_FC_DIAG'], ['kjmol', 'au'])
                         self.set_params(term.index, sign=1)
                         ncbends += 1
-                    else:
-                        self.add_term(Harmonic, [BendAngle(*bend)], types, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/rad**2', 'deg'])
+                    elif potkind=='squarebend':
+                        basename = 'BendCheby4/'+'.'.join(types)
+                        term = self.add_term(Chebychev4, [BendCos(*bend)], basename, ['HC_FC_DIAG'], ['kjmol', 'au'])
+                        self.set_params(term.index, sign=-1)
+                        nsqbends += 1
+                    elif potkind=='angleharm':
+                        basename = 'BendAHarm/'+'.'.join(types)
+                        self.add_term(Harmonic, [BendAngle(*bend)], basename, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/rad**2', 'deg'])
                         nabends += 1
-        log.dump('Added %i bend terms harmonic in the angle and %i bend terms linear in cos(angle)' %(nabends, ncbends))
+                    else:
+                        raise ValueError('')
+        log.dump('Added %i bend terms harmonic in the angle, %i bend terms with 1+cos(angle) potential and %i bend terms with 1-cos(4*theta) potential.' %(nabends, ncbends, nsqbends))
 
     def init_dihedral_terms(self, thresshold=20*deg):
         '''
@@ -500,11 +510,13 @@ class ValenceFF(ForcePartValence):
                     for dihed in diheds:
                         if do_chebychev:
                             assert chebypot is not None
-                            term = self.add_term(chebypot, [DihedCos(*dihed)], types, ['HC_FC_DIAG'], ['kjmol', 'au'])
+                            basename = 'TorsCheby%i/' %m+'.'.join(types)
+                            term = self.add_term(chebypot, [DihedCos(*dihed)], basename, ['HC_FC_DIAG'], ['kjmol', 'au'])
                             self.set_params(term.index, sign=sign)
                             ncheb += 1
                         else:
-                            term = self.add_term(Cosine, [DihedAngle(*dihed)], types, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
+                            basename = 'Torsion/'+'.'.join(types)
+                            term = self.add_term(Cosine, [DihedAngle(*dihed)], basename, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
                             self.set_params(term.index, rv0=rv, m=m)
                             ncos += 1
                 else:
@@ -555,65 +567,199 @@ class ValenceFF(ForcePartValence):
                 if d0s.mean()<thresshold_zero: #TODO: check this thresshold
                     #add regular term harmonic in oopdist
                     for oop in oops:
-                        term = self.add_term(Harmonic, [OopDist(*oop)], types, ['HC_FC_DIAG'], ['kjmol/A**2', 'A'])
+                        basename = 'Oopdist/'+'.'.join(types)
+                        term = self.add_term(Harmonic, [OopDist(*oop)], basename, ['HC_FC_DIAG'], ['kjmol/A**2', 'A'])
                         self.set_params(term.index, rv0=0.0)
                         nharm += 1
                 else:
                     #add term harmonic in square of oopdist
                     log.dump('Mean absolute value of OopDist %s is %.3e A, used SQOOPDIST' %('.'.join(types), d0s.mean()/angstrom))
                     for oop in oops:
-                        self.add_term(Harmonic, [SqOopDist(*oop)], types, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/A**4', 'A**2'])
+                        basename = 'SqOopdist/'+'.'.join(types)
+                        self.add_term(Harmonic, [SqOopDist(*oop)], basename, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/A**4', 'A**2'])
                         nsq += 1
         log.dump('Added %i Harmonic and %i SquareHarmonic out-of-plane distance terms' %(nharm, nsq))
 
-    def init_cross_terms(self, specs=None):
+    def init_cross_angle_terms(self, specs=None):
         '''
             Initialize cross terms between bonds and bends.
         '''
         with log.section('VAL', 3, 'Initializing'):
             ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
+            #add cross terms for angle patterns
             nbend = 0
             for angle in self.system.iter_angles():
                 angle, types = term_sort_atypes(ffatypes, angle, 'angle')
-                angleIC = None
-                angleunit = None
-                for term in self.iter_masters('.'.join(types)):
+                anglekind = None
+                for term in self.iter_masters('^.*/'+'\.'.join(types)+'$', use_re=True):
+                    if len(term.get_atoms())!=3: continue
                     if len(term.ics)>1: continue
-                    ickind = term.ics[0].kind
-                    potkind = term.kind
-                    #if bend term is harmonic in angle:
-                    if ickind==2 and potkind==0:
-                        assert angleIC is None and angleunit is None, '2 masters detected for %s' %('.'.join(types))
-                        angleIC = BendAngle(*angle)
-                        angleunit = 'deg'
-                    #if bend term is linear or harmonic in cosine
-                    elif ickind==1 and potkind in [0,5]:
-                        assert angleIC is None and angleunit is None, '2 masters detected for %s' %('.'.join(types))
-                        angleIC = BendCos(*angle)
-                        angleunit = 'au'
-                    else:
-                        log.dump('Skipped stretch-angle cross term for %s due to incompatible diagonal bend term with potkind=%i and ickind=%i' %('.'.join(types), potkind, ickind))
-                        break
+                    assert anglekind is None, '2 masters detected for angle %s' %('.'.join(types))
+                    anglekind = term.ics[0].kind
+                assert anglekind is not None, 'No master found for angle %s' %('.'.join(types))
                 bond0, btypes = term_sort_atypes(ffatypes, angle[:2], 'bond')
                 bond1, btypes = term_sort_atypes(ffatypes, angle[1:], 'bond')
                 #add stretch-stretch
-                self.add_term(Cross,
-                    [Bond(*bond0), Bond(*bond1)],
-                    types, ['HC_FC_CROSS'], ['kjmol/A**2', 'A', 'A']
+                self.add_term(
+                    Cross, [Bond(*bond0), Bond(*bond1)],
+                    'Cross/'+'.'.join(types)+'/bb', ['HC_FC_CROSS_A'], ['kjmol/A**2', 'A', 'A']
                 )
-                if angleIC is not None and angleunit is not None:
-                    #add stretch0-bend
-                    self.add_term(Cross,
-                        [Bond(*bond0), angleIC],
-                        types, ['HC_FC_CROSS'], ['kjmol/A', 'A', angleunit]
-                    )
-                    #add stretch1-bend
-                    self.add_term(Cross,
-                        [Bond(*bond1), angleIC],
-                        types, ['HC_FC_CROSS'], ['kjmol/A', 'A', angleunit]
-                    )
+                #add stretch-bends
+                if anglekind == 2:
+                    basename = 'Cross/'+'.'.join(types)
+                    ic = BendAngle(*angle)
+                    unit = 'deg'
+                #elif anglekind == 1:
+                #TODO: this is switched off, does not make much difference and
+                #gives issues in the case of diagonal BendCheby4 terms
+                #    basename = 'CrossCBend/'+'.'.join(types)
+                #    ic = BendCos(*angle)
+                #    unit = 'au'
+                else:
+                    log.dump('Skipped stretch-angle cross term for %s due to incompatible diagonal bend term with ickind=%i' %('.'.join(types), anglekind))
+                    continue
+                self.add_term(
+                    Cross, [Bond(*bond0), ic],
+                    basename+'/b0a', ['HC_FC_CROSS_A'], ['kjmol/A', 'A', unit]
+                )
+                self.add_term(
+                    Cross, [Bond(*bond1), ic],
+                    basename+'/b1a', ['HC_FC_CROSS_A'], ['kjmol/A', 'A', unit]
+                )
                 nbend += 1
-        log.dump('Added %i cross terms for angle patterns' %nbend)
+            log.dump('Added %i cross terms for angle patterns' %(nbend))
+            
+    def init_cross_dihed_terms(self, do_ss=True, do_sd=True, do_ad=False, do_aa=False, specs=None):
+        '''
+            Initialize cross terms between diheds and bonds,bends.
+        '''
+        with log.section('VAL', 3, 'Initializing'):
+            ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
+            #add cross terms for dihedral patterns
+            ndihed = 0
+            for dihed in self.system.iter_dihedrals():
+                bond01, btypes01 = term_sort_atypes(ffatypes, dihed[0:2], 'bond')
+                bond12, btypes12 = term_sort_atypes(ffatypes, dihed[1:3], 'bond')
+                bond23, btypes23 = term_sort_atypes(ffatypes, dihed[2:4], 'bond')
+                angle012, atypes012 = term_sort_atypes(ffatypes, dihed[0:3], 'angle')
+                angle123, atypes123 = term_sort_atypes(ffatypes, dihed[1:4], 'angle')
+                dihed, types = term_sort_atypes(ffatypes, dihed, 'dihedral')
+                #get multiplicity of dihedral term to determine which DihedCos
+                m, DihedIC = None, None
+                for term in self.iter_masters('^.*/'+'\.'.join(types)+'$', use_re=True):
+                    if term.kind == 4:
+                        assert DihedIC is None and m is None
+                        m=self.get_params(term.index, only='m')
+                        if   m==1: DihedIC = DihedCos
+                        elif m==2: DihedIC = DihedCos2
+                        elif m==3: DihedIC = DihedCos3
+                        elif m==4: DihedIC = DihedCos4
+                        elif m==6: DihedIC = DihedCos6
+                    elif term.kind == 5:
+                        assert DihedIC is None and m is None
+                        m, DihedIC = 1, DihedCos
+                    elif term.kind == 6:
+                        assert DihedIC is None and m is None
+                        m, DihedIC = 2, DihedCos2
+                    elif term.kind == 7:
+                        assert DihedIC is None and m is None
+                        m, DihedIC = 3, DihedCos3
+                    elif term.kind == 8:
+                        assert DihedIC is None and m is None
+                        m, DihedIC = 4, DihedCos4
+                    elif term.kind == 9:
+                        assert DihedIC is None and m is None
+                        m, DihedIC = 6, DihedCos6
+                if m is None or DihedIC is None:
+                    log.dump('No multiplicity found for %s, skipping' %'.'.join(types))
+                    continue
+                #get type of angle012 and angle123
+                angle012_type = None
+                angle123_type = None
+                for term in self.iter_masters('^.*/'+'\.'.join(atypes012)+'$', use_re=True):
+                    if len(term.get_atoms())!=3: continue
+                    if len(term.ics)>1: continue
+                    assert angle012_type is None, 'Two masters found for angle %s' %(str(types[:4]))
+                    angle012_type = term.ics[0].kind
+                for term in self.iter_masters('^.*/'+'\.'.join(atypes123)+'$', use_re=True):
+                    if len(term.get_atoms())!=3: continue
+                    if len(term.ics)>1: continue
+                    assert angle123_type is None, 'Two masters found for angle %s' %(str(types[1:]))
+                    angle123_type = term.ics[0].kind
+                
+                #add stretch-stretch term:
+                if do_ss:
+                    basename = 'CrossBondDih%i/'%m+'.'.join(types)
+                    self.add_term(
+                        Cross, [Bond(*bond01), Bond(*bond23)],
+                        basename+'/bb', ['HC_FC_CROSS_DSS'], ['kjmol/A**2', 'A', 'A']
+                    )
+
+                #add stretch-dihedral terms:
+                if do_sd:
+                    basename = 'CrossBondDih%i/'%m+'.'.join(types)
+                    self.add_term(
+                        Cross, [Bond(*bond01), DihedIC(*dihed)],
+                        basename+'/b0d', ['HC_FC_CROSS_DSD'], ['kjmol/A', 'A', 'au']
+                    )
+                    self.add_term(
+                        Cross, [Bond(*bond12), DihedIC(*dihed)],
+                        basename+'/b1d', [], ['kjmol/A', 'A', 'au']
+                    )
+                    self.add_term(
+                        Cross, [Bond(*bond23), DihedIC(*dihed)],
+                        basename+'/b2d', ['HC_FC_CROSS_DSD'], ['kjmol/A', 'A', 'au']
+                    )
+                
+                #add angle-angle term:
+                if do_aa:
+                    assert angle012_type is not None, 'No master found for angle012 in %s' %('.'.join(types))
+                    assert angle123_type is not None, 'No master found for angle123 in %s' %('.'.join(types))
+                    #add angle-angle term:
+                    if angle012_type == 2 and angle123_type == 2:
+                        self.add_term(
+                            Cross, [BendAngle(*angle012), BendAngle(*angle123)],
+                            'CrossBendDih%i/'%m+'.'.join(types)+'/aa',
+                            ['HC_FC_CROSS_DAA'], ['kjmol', 'deg', 'deg']
+                        )
+                    else:
+                        log.dump('Skipped angle-angle cross term for %s due to incompatible bend kinds' %('.'.join(types)))
+                        continue
+                    
+                if do_ad:
+                    #add angle-dihedral terms:
+                    if angle012_type == 2:
+                        self.add_term(
+                            Cross, [BendAngle(*angle012), DihedIC(*dihed)],
+                            'CrossBendDih%i/'%m+'.'.join(types)+'/a0d',
+                            ['HC_FC_CROSS_DAD'], ['kjmol', 'deg', 'au']
+                        )
+                    elif angle012_type == 1:
+                        self.add_term(
+                            Cross, [BendCos(*angle012), DihedIC(*dihed)],
+                            'CrossCBendDih%i/'%m+'.'.join(types)+'/a0d',
+                            ['HC_FC_CROSS_DAD'], ['kjmol', 'au', 'au']
+                        )
+                    else:
+                        log.dump('Skipped angle-dihedral cross term for %s due to incompatible diagonal bend term with ickind=%i' %('.'.join(types), angle012_type))
+                        continue
+                    if angle123_type == 2:
+                        self.add_term(
+                            Cross, [BendAngle(*angle123), DihedIC(*dihed)],
+                            'CrossBendDih%i/'%m+'.'.join(types)+'/a1d',
+                            ['HC_FC_CROSS_DAD'], ['kjmol', 'deg', 'au']
+                        )
+                    elif angle123_type == 1:
+                        self.add_term(
+                            Cross, [BendCos(*angle123), DihedIC(*dihed)],
+                            'CrossCBendDih%i/'%m+'.'.join(types)+'/a1d',
+                            ['HC_FC_CROSS_DAD'], ['kjmol', 'au', 'au']
+                        )
+                    else:
+                        log.dump('Skipped angle-dihedral cross term for %s due to incompatible diagonal bend term with ickind=%i' %('.'.join(types), angle132_type))
+                        continue
+                ndihed += 1    
+        log.dump('Added %i cross terms for dihedral patterns' %(ndihed))
 
     def apply_constraints(self, constraints):
         '''
@@ -826,7 +972,7 @@ class ValenceFF(ForcePartValence):
         with log.section('', print_level):
             sequence = [
                 'bondharm',
-                'bendaharm', 'bendclin', 'bendcharm', 'bendcos',
+                'bendaharm', 'bendcheby1', 'bendcheby4', 'bendcharm',
                 'torscheby', 'torsion', 'torsc2harm', 'dihedharm',
                 'oopdist', 'cross'
             ]
