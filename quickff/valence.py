@@ -186,7 +186,7 @@ class ValenceFF(ForcePartValence):
         Class to collect all valence terms in the force field for which
         parameters need to be estimated.
     '''
-    def __init__(self, system, specs=None):
+    def __init__(self, system, settings):
         '''
             **Arguments**
 
@@ -194,20 +194,23 @@ class ValenceFF(ForcePartValence):
                 an instance of the Yaff System class containing all system
                 properties
 
-            **Keyword Arguments**
-
-            specs
-                Not yet implemented
+            settings
+                an instance of `Settings` containing all QuickFF settings
         '''
         with log.section('VAL', 2, timer='Initializing'):
             log.dump('Initializing valence force field')
             self.system = system
+            self.settings = settings
             self.terms = []
             ForcePartValence.__init__(self, system)
-            self.init_bond_terms()
-            self.init_bend_terms()
-            self.init_dihedral_terms()
-            self.init_oop_terms()
+            if self.settings.do_bonds:
+                self.init_bond_terms()
+            if self.settings.do_bends:
+                self.init_bend_terms()
+            if self.settings.do_dihedrals:
+                self.init_dihedral_terms()
+            if self.settings.do_oops:
+                self.init_oop_terms()
 
     def add_term(self, pot, ics, basename, tasks, units):
         '''
@@ -374,7 +377,7 @@ class ValenceFF(ForcePartValence):
                     else:
                         rs = np.array([self.system.pos[j] for j in bend])
                         rvs.append(bend_angle(rs)[0])
-                #sort rvs in rvs in [90-thresshold, 90+thresshol], rvs in 
+                #sort rvs in rvs in [90-thresshold, 90+thresshold], rvs in 
                 #[180-thresshold,180] and others
                 rvs90 = [rv for rv in rvs if 90*deg-thresshold<rv<90*deg+thresshold]
                 rvs180 = [rv for rv in rvs if 180*deg-thresshold<rv<180*deg]
@@ -580,14 +583,15 @@ class ValenceFF(ForcePartValence):
                         nsq += 1
         log.dump('Added %i Harmonic and %i SquareHarmonic out-of-plane distance terms' %(nharm, nsq))
 
-    def init_cross_angle_terms(self, specs=None):
+    def init_cross_angle_terms(self):
         '''
             Initialize cross terms between bonds and bends.
         '''
         with log.section('VAL', 3, 'Initializing'):
             ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
             #add cross terms for angle patterns
-            nbend = 0
+            nss = 0
+            nsa = 0
             for angle in self.system.iter_angles():
                 angle, types = term_sort_atypes(ffatypes, angle, 'angle')
                 anglekind = None
@@ -600,43 +604,49 @@ class ValenceFF(ForcePartValence):
                 bond0, btypes = term_sort_atypes(ffatypes, angle[:2], 'bond')
                 bond1, btypes = term_sort_atypes(ffatypes, angle[1:], 'bond')
                 #add stretch-stretch
-                self.add_term(
-                    Cross, [Bond(*bond0), Bond(*bond1)],
-                    'Cross/'+'.'.join(types)+'/bb', ['HC_FC_CROSS_A'], ['kjmol/A**2', 'A', 'A']
-                )
+                if self.settings.do_cross_ASS:
+                    self.add_term(
+                        Cross, [Bond(*bond0), Bond(*bond1)],
+                        'Cross/'+'.'.join(types)+'/bb', ['HC_FC_CROSS_A'], ['kjmol/A**2', 'A', 'A']
+                    )
+                    nss += 1
                 #add stretch-bends
-                if anglekind == 2:
-                    basename = 'Cross/'+'.'.join(types)
-                    ic = BendAngle(*angle)
-                    unit = 'deg'
-                #elif anglekind == 1:
-                #TODO: this is switched off, does not make much difference and
-                #gives issues in the case of diagonal BendCheby4 terms
-                #    basename = 'CrossCBend/'+'.'.join(types)
-                #    ic = BendCos(*angle)
-                #    unit = 'au'
-                else:
-                    log.dump('Skipped stretch-angle cross term for %s due to incompatible diagonal bend term with ickind=%i' %('.'.join(types), anglekind))
-                    continue
-                self.add_term(
-                    Cross, [Bond(*bond0), ic],
-                    basename+'/b0a', ['HC_FC_CROSS_A'], ['kjmol/A', 'A', unit]
-                )
-                self.add_term(
-                    Cross, [Bond(*bond1), ic],
-                    basename+'/b1a', ['HC_FC_CROSS_A'], ['kjmol/A', 'A', unit]
-                )
-                nbend += 1
-            log.dump('Added %i cross terms for angle patterns' %(nbend))
+                if self.settings.do_cross_ASA:
+                    if anglekind == 2:
+                        basename = 'Cross/'+'.'.join(types)
+                        ic = BendAngle(*angle)
+                        unit = 'deg'
+                    #elif anglekind == 1:
+                    #TODO: this is switched off, does not make much difference and
+                    #gives issues in the case of diagonal BendCheby4 terms
+                    #    basename = 'CrossCBend/'+'.'.join(types)
+                    #    ic = BendCos(*angle)
+                    #    unit = 'au'
+                    else:
+                        log.dump('Skipped stretch-angle cross term for %s due to incompatible diagonal bend term with ickind=%i' %('.'.join(types), anglekind))
+                        continue
+                    self.add_term(
+                        Cross, [Bond(*bond0), ic],
+                        basename+'/b0a', ['HC_FC_CROSS_A'], ['kjmol/A', 'A', unit]
+                    )
+                    self.add_term(
+                        Cross, [Bond(*bond1), ic],
+                        basename+'/b1a', ['HC_FC_CROSS_A'], ['kjmol/A', 'A', unit]
+                    )
+                    nsa += 1
+            log.dump('Added %i stretch-stretch and %i stretch-angle cross terms from angle patterns' %(nss, nsa))
             
-    def init_cross_dihed_terms(self, do_ss=True, do_sd=True, do_ad=False, do_aa=False, specs=None):
+    def init_cross_dihed_terms(self):
         '''
             Initialize cross terms between diheds and bonds,bends.
         '''
         with log.section('VAL', 3, 'Initializing'):
             ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
             #add cross terms for dihedral patterns
-            ndihed = 0
+            nss = 0
+            nsd = 0
+            naa = 0
+            nad = 0
             for dihed in self.system.iter_dihedrals():
                 bond01, btypes01 = term_sort_atypes(ffatypes, dihed[0:2], 'bond')
                 bond12, btypes12 = term_sort_atypes(ffatypes, dihed[1:3], 'bond')
@@ -688,15 +698,15 @@ class ValenceFF(ForcePartValence):
                     angle123_type = term.ics[0].kind
                 
                 #add stretch-stretch term:
-                if do_ss:
+                if self.settings.do_cross_DSS:
                     basename = 'CrossBondDih%i/'%m+'.'.join(types)
                     self.add_term(
                         Cross, [Bond(*bond01), Bond(*bond23)],
                         basename+'/bb', ['HC_FC_CROSS_DSS'], ['kjmol/A**2', 'A', 'A']
                     )
-
+                    nss += 1
                 #add stretch-dihedral terms:
-                if do_sd:
+                if self.settings.do_cross_DSD:
                     basename = 'CrossBondDih%i/'%m+'.'.join(types)
                     self.add_term(
                         Cross, [Bond(*bond01), DihedIC(*dihed)],
@@ -710,9 +720,9 @@ class ValenceFF(ForcePartValence):
                         Cross, [Bond(*bond23), DihedIC(*dihed)],
                         basename+'/b2d', ['HC_FC_CROSS_DSD'], ['kjmol/A', 'A', 'au']
                     )
-                
+                    nsd += 3
                 #add angle-angle term:
-                if do_aa:
+                if self.settings.do_cross_DAA:
                     assert angle012_type is not None, 'No master found for angle012 in %s' %('.'.join(types))
                     assert angle123_type is not None, 'No master found for angle123 in %s' %('.'.join(types))
                     #add angle-angle term:
@@ -722,11 +732,12 @@ class ValenceFF(ForcePartValence):
                             'CrossBendDih%i/'%m+'.'.join(types)+'/aa',
                             ['HC_FC_CROSS_DAA'], ['kjmol', 'deg', 'deg']
                         )
+                        nad += 1
                     else:
                         log.dump('Skipped angle-angle cross term for %s due to incompatible bend kinds' %('.'.join(types)))
                         continue
                     
-                if do_ad:
+                if self.settings.do_cross_DAD:
                     #add angle-dihedral terms:
                     if angle012_type == 2:
                         self.add_term(
@@ -734,12 +745,14 @@ class ValenceFF(ForcePartValence):
                             'CrossBendDih%i/'%m+'.'.join(types)+'/a0d',
                             ['HC_FC_CROSS_DAD'], ['kjmol', 'deg', 'au']
                         )
+                        nad += 1
                     elif angle012_type == 1:
                         self.add_term(
                             Cross, [BendCos(*angle012), DihedIC(*dihed)],
                             'CrossCBendDih%i/'%m+'.'.join(types)+'/a0d',
                             ['HC_FC_CROSS_DAD'], ['kjmol', 'au', 'au']
                         )
+                        nad += 1
                     else:
                         log.dump('Skipped angle-dihedral cross term for %s due to incompatible diagonal bend term with ickind=%i' %('.'.join(types), angle012_type))
                         continue
@@ -749,17 +762,18 @@ class ValenceFF(ForcePartValence):
                             'CrossBendDih%i/'%m+'.'.join(types)+'/a1d',
                             ['HC_FC_CROSS_DAD'], ['kjmol', 'deg', 'au']
                         )
+                        nad += 1
                     elif angle123_type == 1:
                         self.add_term(
                             Cross, [BendCos(*angle123), DihedIC(*dihed)],
                             'CrossCBendDih%i/'%m+'.'.join(types)+'/a1d',
                             ['HC_FC_CROSS_DAD'], ['kjmol', 'au', 'au']
                         )
+                        nad += 1
                     else:
                         log.dump('Skipped angle-dihedral cross term for %s due to incompatible diagonal bend term with ickind=%i' %('.'.join(types), angle132_type))
                         continue
-                ndihed += 1    
-        log.dump('Added %i cross terms for dihedral patterns' %(ndihed))
+        log.dump('Added %i stretch-stretch, %i stretch-dihedral, %i angle-angle and %i angle-dihedral cross terms from dihedral patterns' %(nss, nsd, naa, nad))
 
     def apply_constraints(self, constraints):
         '''

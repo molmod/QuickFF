@@ -31,7 +31,7 @@ import numpy as np, math
 
 __all__ = [
     'global_translation', 'global_rotation', 'fitpar',
-    'boxqp', 'guess_ffatypes', 'term_sort_atypes', 'get_multiplicity',
+    'boxqp', 'set_ffatypes', 'term_sort_atypes', 'get_multiplicity',
     'get_restvalue', 'get_ei_radii', 'digits', 'average', 'chebychev'
 ]
 
@@ -191,7 +191,7 @@ def boxqp(A, B, bndl, bndu, x0, threshold=1e-9, status=False):
     else: return x1
 
 
-def guess_ffatypes(system, level):
+def set_ffatypes(system, level):
     '''
        A method to guess atom types. This will overwrite ffatypes
        that are already defined in the system.
@@ -202,7 +202,10 @@ def guess_ffatypes(system, level):
             A yaff system instance
 
        level
-            A string used for guessing atom types:
+            If level is a string containing comma's, it is assumed to be an
+            ordered list containing the atom type of each atom in the system.
+            Otherwise, level is assumed to be a string defining how to guess
+            the atom types from the local topology. Possible levels are:
 
                 * low:     based on atomic number
                 * medium:  based on atomic number and number of neighbors
@@ -212,7 +215,9 @@ def guess_ffatypes(system, level):
     '''
     if system.ffatypes is not None:
         raise ValueError('Atom types are already defined in the system.')
-    if level == 'low':
+    if ',' in level:
+        atypes = level.split(',')
+    elif level == 'low':
         atypes = np.array([pt[number].symbol for number in system.numbers])
     elif level == 'medium':
         atypes = []

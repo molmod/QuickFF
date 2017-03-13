@@ -49,8 +49,9 @@ def parse_args():
     )
     parser.add_argument(
         '--ffatypes', default=None,
-        choices=['None','low','medium','high','highest'],
-        help='Assign atom types in the system through the automatic built-in '
+        choices=['None','list_of_atypes', 'low','medium','high','highest'],
+        help='Assign atom types in the system by parsing an ordered list of'
+             'atom types as argument or through the automatic built-in '
              'detection (see documentation). By default (or if None is given), '
              'the atom types are assumed to be defined in the input files. '
              '[default=%(default)s]'

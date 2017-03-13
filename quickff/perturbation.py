@@ -195,7 +195,7 @@ class Trajectory(object):
 
 
 class RelaxedStrain(object):
-    def __init__(self, system, valence):
+    def __init__(self, system, valence, settings):
         '''
             **Arguments**
 
@@ -204,10 +204,14 @@ class RelaxedStrain(object):
 
             valence
                 an instance of ValenceFF defining the valence force field
+            
+            settings
+                a `Settings` instance defining all QuickFF settings
         '''
         self.system0 = system
         self.system_rvecs = system.cell.rvecs.copy()
         self.valence = valence
+        self.settings = settings
 
     def _get_system_copy(self):
         'Routine to get a copy of the equilibrium system'

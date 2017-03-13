@@ -417,8 +417,12 @@ def _atoms_to_charmm22_psf(system):
         ffatype = system.get_ffatype(iatom)
         if len(ffatype) > 4:
             log.warning('Atom type too long for CHARMM PSF file: {}'.format(ffatype))
+        if system.charges is None:
+            charge = 0.0
+        else:
+            charge = system.charges[iatom]
         result.append('{:8d} A    1    MOL  {:4} {:4} {:10.6f} {:13.4f}           0'.format(
-            iatom+1, ffatype, ffatype, system.charges[iatom], system.masses[iatom]/amu))
+            iatom+1, ffatype, ffatype, charge, system.masses[iatom]/amu))
     return '\n'.join(result)
 
 

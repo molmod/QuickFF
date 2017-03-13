@@ -26,9 +26,10 @@
 
 from quickff.program import __all__ as allowed_programs, __dict__ as program_modes
 from quickff.log import log, version
-from quickff.tools import guess_ffatypes
+from quickff.tools import set_ffatypes
 from quickff.reference import SecondOrderTaylor, YaffForceField
 from quickff.io import read_abinitio
+from quickff.settings import Settings
 from quickff.paracontext import paracontext
 
 from yaff import System, ForceField, Cell
@@ -79,7 +80,11 @@ def parse():
     #General settings options
     settings = parser.add_argument_group(title='General QuickFF specifications')
     settings.add_argument(
-        '-m', '--program-mode', default='DeriveNonDiagMassWeighingFF',
+        '-c', '--config-file', default=None,
+        help='Specify a configuration file to read all QuickFF settings from.'
+    )
+    settings.add_argument(
+        '-m', '--program-mode', default='DeriveFF',
         choices=[prog for prog in allowed_programs if not prog=='BaseProgram'],
         help='Specify the program mode which defines the set of instructions '
              'that will be executed.'
@@ -106,7 +111,7 @@ def parse():
         help='Write the perturbation trajectories in XYZ format. '
     )
     settings.add_argument(
-        '--suffix', default='',
+        '--suffix', default=None,
         help = 'Suffix that will be added to all output files.'
     )
     #Force field options
@@ -117,9 +122,19 @@ def parse():
              'of the force field.'
     )
     ff.add_argument(
+        '--ei-rcut', default=None,
+        help='The real space cut off for the electrostatic interactions. If '
+             'the system is periodic, the ewald parameters will be adjusted '
+             'to this cut off.'
+    )
+    ff.add_argument(
         '--vdw', default=None,
         help='A Yaff parameters file defining the van der Waals contribution '
              'of the force field.'
+    )
+    ff.add_argument(
+        '--vdw-rcut', default=None,
+        help='The real space cut off for the van der Waals interactions.'
     )
     ff.add_argument(
         '--covres', default=None,
@@ -130,8 +145,9 @@ def parse():
     system = parser.add_argument_group(title='Options related to the definition of the system')
     system.add_argument(
         '--ffatypes', default=None,
-        choices=['None','low','medium','high','highest'],
-        help='Assign atom types in the system through the automatic built-in '
+        choices=['None','list_of_atypes','low','medium','high','highest'],
+        help='Assign atom types in the system by parsing an ordered list of'
+             'atom types as argument or through the automatic built-in '
              'detection (see documentation). By default (or if None is given), '
              'the atom types are assumed to be defined in the input files. '
              '[default=%(default)s]'
@@ -157,15 +173,32 @@ def parse():
 def main():
     args = parse()
     #define logger
+    verbosity = None
     if args.silent:
-        log.set_level('silent')
+        verbosity = 'silent'
     else:
         if args.very_verbose:
-            log.set_level('highest')
+            verbosity = 'highest'
         elif args.verbose:
-            log.set_level('high')
-        if args.logfile is not None and isinstance(args.logfile, str):
-            log.write_to_file(args.logfile)
+            verbosity = 'high'
+    #get settings
+    kwargs = {
+        'fn_traj':      args.fn_traj,
+        'only_traj':    args.only_traj,
+        'program_mode': args.program_mode,
+        'ener_traj':    args.ener_traj,
+        'xyz_traj':     args.xyz_traj,
+        'suffix':       args.suffix,
+        'log_level':    verbosity,
+        'log_file':     args.logfile,
+        'ffatypes':     args.ffatypes,
+        'ei':           args.ei,
+        'ei_rcut':      args.ei_rcut,
+        'vdw':          args.vdw,
+        'vdw_rcut':     args.vdw_rcut,
+        'covres':       args.covres,
+    }
+    settings = Settings(fn=args.config_file, **kwargs)
     with log.section('QFF', 1, timer='Initializing'):
         log.dump('Initializing system')
         #read system and ab initio reference
@@ -218,43 +251,42 @@ def main():
         if system.bonds is None: system.detect_bonds()
         if system.masses is None: system.set_standard_masses()
         if system.ffatypes is None:
-            if args.ffatypes in ['low', 'medium', 'high', 'highest']:
-                guess_ffatypes(system, args.ffatypes)
-            elif args.ffatypes is not None:
-                raise NotImplementedError('Guessing atom types from %s not implemented' %args.ffatypes)
+            if settings.ffatypes is not None:
+                set_ffatypes(system, settings.ffatypes)
             else:
                 raise AssertionError('No atom types defined')
         #construct ab initio reference
         ai = SecondOrderTaylor('ai', coords=system.pos.copy(), energy=energy, grad=grad, hess=hess, pbc=pbc)
         #detect a priori defined contributions to the force field
         refs = []
-        if args.ei is not None:
+        if settings.ei is not None:
             if rvecs is None:
-                ff = ForceField.generate(system, args.ei, rcut=50*angstrom)
+                if settings.ei_rcut is None:
+                    rcut=50*angstrom
+                else:
+                    rcut = settings.ei_rcut
+                ff = ForceField.generate(system, settings.ei, rcut=rcut)
             else:
-                ff = ForceField.generate(system, args.ei, rcut=20*angstrom, alpha_scale=3.2, gcut_scale=1.5, smooth_ei=True)
+                if settings.ei_rcut is None:
+                    rcut = 20*angstrom
+                else:
+                    rcut = settings.ei_rcut
+                ff = ForceField.generate(system, settings.ei, rcut=rcut, alpha_scale=3.2, gcut_scale=1.5, smooth_ei=True)
             refs.append(YaffForceField('EI', ff))
-        if args.vdw is not None:
-            ff = ForceField.generate(system, args.vdw, rcut=20*angstrom)
+        if settings.vdw is not None:
+            ff = ForceField.generate(system, settings.vdw, rcut=settings.vdw_rcut)
             refs.append(YaffForceField('vdW', ff))
-        if args.covres is not None:
-            ff = ForceField.generate(system, args.covres)
+        if settings.covres is not None:
+            ff = ForceField.generate(system, settings.covres)
             refs.append(YaffForceField('Cov res', ff))
     #define quickff program
-    assert args.program_mode in allowed_programs, \
+    assert settings.program_mode in allowed_programs, \
         'Given program mode %s not allowed. Choose one of %s' %(
-            args.program_mode,
+            settings.program_mode,
             ', '.join([prog for prog in allowed_programs if not prog=='BaseProgram'])
         )
-    mode = program_modes[args.program_mode]
-    only_traj = 'PT_ALL'
-    if args.only_traj is not None: only_traj = args.only_traj.split(',')
-    program = mode(
-        system, ai, ffrefs=refs,
-        fn_traj=args.fn_traj, only_traj=only_traj,
-        plot_traj=args.ener_traj, xyz_traj=args.xyz_traj,
-        suffix=args.suffix
-    )
+    mode = program_modes[settings.program_mode]
+    program = mode(system, ai, settings, ffrefs=refs)
     #run program
     program.run()
 

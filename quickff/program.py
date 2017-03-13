@@ -39,10 +39,7 @@ from yaff.pes.iclist import BendAngle, BendCos, OopDist
 import os, cPickle, numpy as np, datetime
 
 __all__ = [
-    'BaseProgram', 'MakeTrajectories', 'PlotTrajectories',
-    'DeriveDiagFF', 'DeriveDiagMassWeighingFF',
-    'DeriveNonDiagFF', 'DeriveNonDiagMassWeighingFF',
-    'DeriveNonDiag2FF', 'DeriveNonDiag2MassWeighingFF'
+    'BaseProgram', 'MakeTrajectories', 'PlotTrajectories', 'DeriveFF',
 ]
 
 class BaseProgram(object):
@@ -51,66 +48,33 @@ class BaseProgram(object):
         fitting program. The actual sequence of the steps are defined in the
         deriving classes.
     '''
-    def __init__(self, system, ai, **kwargs):
+    def __init__(self, system, ai, settings, ffrefs=[]):
         '''
             **Arguments**
 
             system
-                a Yaff `System` object defining the system
+                a Yaff `System` instance defining the system
 
             ai
                 a `Reference` instance corresponding to the ab initio input data
 
-            **Keyword Arguments**
-
+            settings
+                a `Settings` instance defining all QuickFF settings
+            
+            **Optional Arguments**
+            
             ffrefs
-                a list of `Reference` objects corresponding to a priori determined
-                contributions to the force field (such as eg. electrostatics
-                or van der Waals contributions)
-
-            fn_yaff
-                the name of the file to write the final parameters to in Yaff
-                format. The default is `pars.txt`.
-
-            fn_charmm22_prm
-                the name of a CHARMM parameter file. If not given, the file is not written
-
-            fn_charmm22_psf
-                the name of a CHARMM topology file. If not given, the file is not written
-
-            fn_sys
-                the name of the file to write the system to. The default is
-                `system.chk`.
-
-            fn_traj
-                a cPickle filename to read/write the perturbation trajectories
-                from/to. If the file exists, the trajectories are read from the
-                file. If the file does not exist, the trajectories are written
-                to the file.
-
-            only_traj
-                specifier to determine for which terms a perturbation trajectory
-                needs to be constructed. If ONLY_TRAJ is a single string, it is
-                interpreted as a task (only terms that have this task in their
-                tasks attribute will get a trajectory). If ONLY_TRAJ is a list
-                of strings, each string is interpreted as the basename of the
-                term for which a trajectory will be constructed.
-
-            plot_traj
-                if set to True, all energy contributions along each perturbation
-                trajectory will be plotted using the final force field.
-
-            xyz_traj
-                if set to True, each perturbation trajectory will be written to
-                an XYZ file.
+                a list of `Reference` instances defining the a-priori force
+                field contributions.
         '''
         with log.section('PROG', 2, timer='Initializing'):
             log.dump('Initializing program')
+            self.settings = settings
             self.system = system
             self.ai = ai
-            self.kwargs = kwargs
-            self.valence = ValenceFF(system)
-            self.perturbation = RelaxedStrain(system, self.valence)
+            self.ffrefs = ffrefs
+            self.valence = ValenceFF(system, settings)
+            self.perturbation = RelaxedStrain(system, self.valence, settings)
             self.trajectories = None
 
     def reset_system(self):
@@ -207,20 +171,18 @@ class BaseProgram(object):
             perturbation trajectories and dump perturbation trajectories to XYZ
             files.
         '''
-        fn_yaff = self.kwargs.get('fn_yaff', None)
-        if fn_yaff is None:
-            fn_yaff = 'pars_cov%s.txt' %(self.kwargs.get('suffix', ''))
-        dump_yaff(self.valence, fn_yaff)
-        fn_charmm22_prm = self.kwargs.get('fn_charmm22_prm')
+        fn_yaff = self.settings.fn_yaff
+        if fn_yaff is not None:
+            dump_yaff(self.valence, fn_yaff)
+        fn_charmm22_prm = self.settings.fn_charmm22_prm
         if fn_charmm22_prm is not None:
             dump_charmm22_prm(self.valence, fn_charmm22_prm)
-        fn_charmm22_psf = self.kwargs.get('fn_charmm22_psf')
+        fn_charmm22_psf = self.settings.fn_charmm22_psf
         if fn_charmm22_psf is not None:
             dump_charmm22_psf(self.system, self.valence, fn_charmm22_psf)
-        fn_sys = self.kwargs.get('fn_sys', None)
-        if fn_sys is None:
-            fn_sys = 'system%s.chk' %(self.kwargs.get('suffix', ''))
-        self.system.to_file(fn_sys)
+        fn_sys = self.settings.fn_sys
+        if fn_sys is not None:
+            self.system.to_file(fn_sys)
         self.plot_trajectories(do_valence=True)
 
     def plot_trajectories(self, do_valence=False):
@@ -228,20 +190,19 @@ class BaseProgram(object):
             Plot energy contributions along perturbation trajectories and dump
             perturbation trajectories to XYZ files.
         '''
-        only = self.kwargs.get('only_traj', 'PT_ALL')
+        only = self.settings.only_traj
         if not isinstance(only, list): only = [only]
         with log.section('PLOT', 3, timer='PT plot energy'):
-            if self.kwargs.get('plot_traj', False):
-                ffrefs = self.kwargs.get('ffrefs', [])
+            if self.settings.plot_traj:
                 valence = None
                 if do_valence: valence=self.valence
                 for trajectory in self.trajectories:
                     if trajectory is None: continue
                     for pattern in only:
                         if pattern=='PT_ALL' or pattern in trajectory.term.basename:
-                            trajectory.plot(self.ai, ffrefs=ffrefs, valence=valence)
+                            trajectory.plot(self.ai, ffrefs=self.ffrefs, valence=valence)
         with log.section('XYZ', 3, timer='PT dump XYZ'):
-            if self.kwargs.get('xyz_traj', False):
+            if self.settings.xyz_traj:
                 for trajectory in self.trajectories:
                     if trajectory is None: continue
                     for pattern in only:
@@ -252,7 +213,7 @@ class BaseProgram(object):
         'Generate perturbation trajectories.'
         with log.section('PTGEN', 2, timer='PT Generate'):
             #read if an existing file was specified through fn_traj
-            fn_traj = self.kwargs.get('fn_traj', None)
+            fn_traj = self.settings.fn_traj
             if fn_traj is not None and os.path.isfile(fn_traj):
                 self.trajectories = cPickle.load(open(fn_traj, 'r'))
                 log.dump('Trajectories read from file %s' %fn_traj)
@@ -262,7 +223,7 @@ class BaseProgram(object):
                 return
             #configure
             self.reset_system()
-            only = self.kwargs.get('only_traj', 'PT_ALL')
+            only = self.settings.only_traj
             if isinstance(only, str):
                 do_terms = [term for term in self.valence.terms if only in term.tasks]
             else:
@@ -296,11 +257,10 @@ class BaseProgram(object):
             message = 'Estimating FF parameters from perturbation trajectories'
             if do_valence: message += ' with valence reference'
             log.dump(message)
-            ffrefs = self.kwargs.get('ffrefs', [])
             #compute fc and rv from trajectory
             for traj in self.trajectories:
                 if traj is None: continue
-                self.perturbation.estimate(traj, self.ai, ffrefs=ffrefs, do_valence=do_valence)
+                self.perturbation.estimate(traj, self.ai, ffrefs=self.ffrefs, do_valence=do_valence)
             #set force field parameters to computed fc and rv
             for traj in self.trajectories:
                 if traj is None: continue
@@ -318,12 +278,16 @@ class BaseProgram(object):
 
                 * detecting bend patterns with rest values of 90 and 180 deg
                 * detecting bend patterns with rest values only close to 180 deg
+                * transforming SqOopDist with rv=0.0 to OopDist
                 * averaging parameters
         '''
         with log.section('PTPOST', 2, timer='PT Post process'):
-            self.do_squarebend()
-            self.do_bendclin()
-            #self.do_sqoopdist_to_oopdist()
+            if self.settings.do_squarebend:
+                self.do_squarebend()
+            if self.settings.do_bendclin:
+                self.do_bendclin()
+            if self.settings.do_sqoopdist_to_oopdist:
+                self.do_sqoopdist_to_oopdist()
             self.average_pars()
 
     def do_eq_setrv(self, tasks, logger_level=3):
@@ -390,7 +354,6 @@ class BaseProgram(object):
         with log.section('HCEST', 2, timer='HC Estimate FC'):
             self.reset_system()
             log.dump('Estimating force constants from Hessian cost for tasks %s' %' '.join(tasks))
-            ffrefs = self.kwargs.get('ffrefs', [])
             term_indices = []
             for index in xrange(self.valence.vlist.nv):
                 term = self.valence.terms[index]
@@ -413,7 +376,10 @@ class BaseProgram(object):
                     if term.kind==1: self.valence.check_params(term, ['a0', 'a1', 'a2', 'a3'])
                     if term.kind==3: self.valence.check_params(term, ['fc', 'rv0','rv1'])
                     if term.kind==4: self.valence.check_params(term, ['fc', 'rv', 'm'])
-            cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=ffrefs, do_mass_weighing=do_mass_weighing)
+            if len(term_indices)==0:
+                log.dump('No terms (with task in %s) found to estimate FC from HC' %(str(tasks)))
+                return
+            cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=self.ffrefs, do_mass_weighing=do_mass_weighing)
             fcs = cost.estimate(do_svd=do_svd)
             for index, fc in zip(term_indices, fcs):
                 master = self.valence.terms[index]
@@ -482,31 +448,7 @@ class BaseProgram(object):
                 assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[1:]))
                 assert rv1 is not None, 'Rest value of BendAHarm/%s not found' %('.'.join(types))
                 self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-
-#            for term in self.valence.iter_masters('^CrossCBend/.*/b0a$', use_re=True):
-#                types = term.basename.split('/')[1].split('.')
-#                assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
-#                rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[:2])))
-#                assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[:2]))
-#                rv1 = find_rest_value('BendCheby1/%s' %('.'.join(types)))
-#                if rv1 is None:
-#                    rv1 = find_rest_value('BendCheby4/%s' %('.'.join(types)))
-#                    assert rv1 is not None, 'Rest value of BendCheby(1,4)/%s not found' %('.'.join(types))
-#                self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-#                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-#                
-#            for term in self.valence.iter_masters('^CrossCBend/.*/b1a$', use_re=True):
-#                types = term.basename.split('/')[1].split('.')
-#                assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
-#                rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[1:])))
-#                assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[1:]))
-#                rv1 = find_rest_value('BendCheby1/%s' %('.'.join(types)))
-#                if rv1 is None:
-#                    rv1 = find_rest_value('BendCheby4/%s' %('.'.join(types)))
-#                    assert rv1 is not None, 'Rest value of BendCheby(1,4)/%s not found' %('.'.join(types))
-#                self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-#                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)            
+                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)    
             
             self.valence.init_cross_dihed_terms()
             #set rest values and initialize fc for bond-bond cross
@@ -588,8 +530,6 @@ class BaseProgram(object):
                     rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
                     self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                     for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-
-
 
     def do_squarebend(self, thresshold=10*deg):
         '''
@@ -725,9 +665,8 @@ class MakeTrajectories(BaseProgram):
     '''
     def run(self):
         with log.section('PROGRAM', 2):
-            fn_traj = self.kwargs.get('fn_traj', None)
-            assert fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
-            assert not os.path.isfile(fn_traj), 'Given file %s to store trajectories to already exists!' %fn_traj
+            assert self.settings.fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
+            assert not os.path.isfile(self.settings.fn_traj), 'Given file %s to store trajectories to already exists!' %fn_traj
             self.do_pt_generate()
 
 class PlotTrajectories(BaseProgram):
@@ -737,63 +676,21 @@ class PlotTrajectories(BaseProgram):
     '''
     def run(self):
         with log.section('PROGRAM', 2):
-            fn_traj = self.kwargs.get('fn_traj', None)
-            assert fn_traj is not None, 'The PlotTrajectories program requires a trajectory filename fn_traj!'
-            assert os.path.isfile(fn_traj), 'Given file %s to read trajectories does not exists!' %fn_traj
-            self.kwargs['xyz_traj'] = True
-            self.kwargs['plot_traj'] = True
+            assert self.settings.fn_traj is not None, 'The PlotTrajectories program requires a trajectory filename fn_traj!'
+            assert os.path.isfile(self.settings.fn_traj), 'Given file %s to read trajectories does not exists!' %fn_traj
+            self.settings.set('xyz_traj', True)
+            self.settings.set('plot_traj', True)
             self.do_pt_generate()
             self.do_pt_estimate()
             self.plot_trajectories()
 
-class DeriveDiagMassWeighingFF(BaseProgram):
+class DeriveFF(BaseProgram):
     '''
-        Derive a diagonal force field, i.e. without cross terms. The hessian
-        fit is done with mass weighing. After the hessian fit of the force
-        constants, the rest values are refined by revisiting the perturbation
-        trajectories with an extra a priori term representing the present
-        valence contribution. Finally, the force constants are refined by means
-        of a final hessian fit.
-    '''
-    def run(self):
-        with log.section('PROGRAM', 2):
-            self.do_eq_setrv(['EQ_RV'])
-            self.do_pt_generate()
-            self.do_pt_estimate()
-            self.do_pt_postprocess()
-            self.do_hc_estimatefc(['HC_FC_DIAG'])
-            self.do_pt_estimate(do_valence=True)
-            self.do_hc_estimatefc(['HC_FC_DIAG'], logger_level=1)
-            self.make_output()
-
-class DeriveDiagFF(BaseProgram):
-    '''
-        Derive a diagonal force field, i.e. without cross terms. The hessian
-        fit is done without mass weighing. After the
-        hessian fit of the force constants, the rest values are refined by
-        revisiting the perturbation trajectories with an extra a priori term
-        representing the present valence contribution. Finally, the force 
-        constants are refined by means of a final hessian fit.
-    '''
-    def run(self):
-        with log.section('PROGRAM', 2):
-            self.do_eq_setrv(['EQ_RV'])
-            self.do_pt_generate()
-            self.do_pt_estimate()
-            self.do_pt_postprocess()
-            self.do_hc_estimatefc(['HC_FC_DIAG'], do_mass_weighing=False)
-            self.do_pt_estimate(do_valence=True)
-            self.do_hc_estimatefc(['HC_FC_DIAG'], do_mass_weighing=False, logger_level=1)
-            self.make_output()
-
-class DeriveNonDiagMassWeighingFF(BaseProgram):
-    '''
-        Derive a non-diagonal force field containing stretch-stretch and
-        stretch-angle cross terms. The hessian fit is done with mass weighing.
-        After the hessian fit of the force constants, the rest values are
-        refined by revisiting the perturbation trajectories with an extra a
-        priori term representing the present valence contribution. Finally, the
-        force constants are refined by means of a final hessian fit.
+        Derive a force field for the given system. After the hessian fit of the
+        force constants, the rest values are refined by revisiting the 
+        perturbation trajectories with an extra a priori term representing the 
+        current valence contribution. Finally, the force constants are refined 
+        by means of a final hessian fit.
     '''
     def run(self):
         with log.section('PROGRAM', 2):
@@ -802,78 +699,12 @@ class DeriveNonDiagMassWeighingFF(BaseProgram):
             self.do_pt_estimate()
             self.do_pt_postprocess()
             self.do_cross_init()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'])
+            self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighing=self.settings.do_hess_mass_weighing)
             self.do_pt_estimate(do_valence=True)
             self.do_pt_postprocess()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'])
-            self.make_output()
-
-class DeriveNonDiagFF(BaseProgram):
-    '''
-        Derive a non-diagonal force field containing stretch-stretch and
-        stretch-angle cross terms. The hessian fit is done without mass weighing.
-        After the hessian fit of the force constants, the rest values are
-        refined by revisiting the perturbation trajectories with an extra a
-        priori term representing the present valence contribution. Finally, the
-        force constants are refined by means of a final hessian fit.
-    '''
-    def run(self):
-        with log.section('PROGRAM', 2):
-            self.do_eq_setrv(['EQ_RV'])
-            self.do_pt_generate()
-            self.do_pt_estimate()
-            self.do_pt_postprocess()
-            self.do_cross_init()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'], do_mass_weighing=False)
-            self.do_pt_estimate(do_valence=True)
-            self.do_pt_postprocess()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'], do_mass_weighing=False)
-            self.make_output()
-
-class DeriveNonDiag2MassWeighingFF(BaseProgram):
-    '''
-        Derive a non-diagonal force field containing stretch-stretch, 
-        stretch-angle and stretch-dihedral cross terms. The hessian
-        fit is done with mass weighing. After the hessian fit of the force
-        constants, the rest values are refined by revisiting the perturbation
-        trajectories with an extra a priori term representing the present
-        valence contribution. Finally, the force constants are refined by means
-        of a final hessian fit.
-    '''
-    def run(self):
-        with log.section('PROGRAM', 2):
-            self.do_eq_setrv(['EQ_RV'])
-            self.do_pt_generate()
-            self.do_pt_estimate()
-            self.do_pt_postprocess()
-            self.do_cross_init()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'])
-            self.do_pt_estimate(do_valence=True)
-            self.do_pt_postprocess()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'])
-            self.do_hc_estimatefc(['HC_FC_CROSS_A', 'HC_FC_CROSS_DSS', 'HC_FC_CROSS_DSD'], logger_level=1, do_svd=True)
-            self.make_output()
-
-class DeriveNonDiag2FF(BaseProgram):
-    '''
-        Derive a non-diagonal force field containing stretch-stretch, 
-        stretch-angle and stretch-dihedral cross terms. The hessian
-        fit is done without mass weighing. After the hessian fit of the force
-        constants, the rest values are refined by revisiting the perturbation
-        trajectories with an extra a priori term representing the present
-        valence contribution. Finally, the force constants are refined by means
-        of a final hessian fit.
-    '''
-    def run(self):
-        with log.section('PROGRAM', 2):
-            self.do_eq_setrv(['EQ_RV'])
-            self.do_pt_generate()
-            self.do_pt_estimate()
-            self.do_pt_postprocess()
-            self.do_cross_init()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'], do_mass_weighing=False)
-            self.do_pt_estimate(do_valence=True)
-            self.do_pt_postprocess()
-            self.do_hc_estimatefc(['HC_FC_DIAG','HC_FC_CROSS_A'], do_mass_weighing=False)
-            self.do_hc_estimatefc(['HC_FC_CROSS_A', 'HC_FC_CROSS_DSS', 'HC_FC_CROSS_DSD'], do_mass_weighing=False, logger_level=1, do_svd=True)
+            self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighing=self.settings.do_hess_mass_weighing)
+            self.do_hc_estimatefc([
+                'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA', 'HC_FC_CROSS_DSS',
+                'HC_FC_CROSS_DSD', 'HC_FC_CROSS_DAA', 'HC_FC_CROSS_DAD'
+            ], logger_level=1, do_mass_weighing=self.settings.do_hess_mass_weighing, do_svd=self.settings.do_cross_svd)
             self.make_output()
