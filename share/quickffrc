@@ -1,0 +1,43 @@
+#IO
+fn_yaff                 :   pars_yaff.txt
+fn_charmm22_prm         :   None
+fn_charmm22_psf         :   None
+fn_sys                  :   system.chk
+plot_traj               :   False
+xyz_traj                :   False
+fn_traj                 :   None
+log_level               :   medium
+log_file                :   None
+
+#Program
+program_mode            :   DeriveFF
+
+#FF config
+only_traj               :   PT_ALL
+ffatypes                :   None
+ei                      :   None
+ei_rcut                 :   None #default is 20 (periodic) or 50 (non-per) A
+vdw                     :   None
+vdw_rcut                :   20*angstrom
+covres                  :   None
+
+do_hess_mass_weighing   :   True
+do_cross_svd            :   True
+
+do_bonds                :   True
+do_bends                :   True
+do_dihedrals            :   True
+do_oops                 :   True
+do_cross_ASS            :   True
+do_cross_ASA            :   True
+do_cross_DSS            :   True
+do_cross_DSD            :   True
+do_cross_DAA            :   False
+do_cross_DAD            :   False
+
+bond_term               :   BondHarm
+bend_term               :   BendAHarm
+
+do_squarebend           :   True
+do_bendclin             :   True
+do_sqoopdist_to_oopdist :   True
