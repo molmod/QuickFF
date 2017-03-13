@@ -405,9 +405,14 @@ class BaseProgram(object):
                 assert len(candidates)<2, 'Multiple masters found for %s: %s' %(label, ','.join([cand.basename for cand in candidates]))
                 if len(candidates)==0:
                     prefix, types = label.split('/')
-                    prefix = prefix.lstrip('^')
                     if prefix.startswith('Bond') or prefix.startswith('Bend') or prefix.startswith('Tors'):
-                        label = prefix+'/'+'\.'.join(types.split('.')[::-1])
+                        sublabels = label.split('|')
+                        prefix0, types0 = sublabels[0].split('/')
+                        label  = prefix0+'/'+'\.'.join(types0.split('.')[::-1])
+                        if len(sublabels)>1:
+                            prefix1, types1 = sublabels[1].split('/')
+                            label += '|'
+                            label += prefix1+'/'+'\.'.join(types1.split('.')[::-1])
                         candidates = [cand for cand in self.valence.iter_masters(label='^'+label+'$', use_re=True)]
                         assert len(candidates)<2, 'Multiple masters found for %s: %s' %(label, ','.join([cand.basename for cand in candidates]))
                         if len(candidates)==0:
@@ -422,8 +427,8 @@ class BaseProgram(object):
             for term in self.valence.iter_masters('^Cross/.*/bb$', use_re=True):
                 types = term.basename.split('/')[1].split('.')
                 assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
-                rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[:2])))
-                rv1 = find_rest_value('BondHarm/%s' %('.'.join(types[1:])))
+                rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[:2])))
+                rv1 = find_rest_value('Bond.*/%s' %('.'.join(types[1:])))
                 assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[:2]))
                 assert rv1 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[1:]))
                 self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
@@ -433,20 +438,20 @@ class BaseProgram(object):
             for term in self.valence.iter_masters('^Cross/.*/b0a$', use_re=True):
                 types = term.basename.split('/')[1].split('.')
                 assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
-                rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[:2])))
-                rv1 = find_rest_value('BendAHarm/%s' %('.'.join(types)))
+                rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[:2])))
+                rv1 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types),'.'.join(types)))
                 assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[:2]))
-                assert rv1 is not None, 'Rest value of BendAHarm/%s not found' %('.'.join(types))
+                assert rv1 is not None, 'Rest value of BendAHarm|BendMM3/%s not found' %('.'.join(types))
                 self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                 for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
                 
             for term in self.valence.iter_masters('^Cross/.*/b1a$', use_re=True):
                 types = term.basename.split('/')[1].split('.')
                 assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
-                rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[1:])))
-                rv1 = find_rest_value('BendAHarm/%s' %('.'.join(types)))
+                rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[1:])))
+                rv1 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types),'.'.join(types)))
                 assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[1:]))
-                assert rv1 is not None, 'Rest value of BendAHarm/%s not found' %('.'.join(types))
+                assert rv1 is not None, 'Rest value of BendAHarm|BendMM3/%s not found' %('.'.join(types))
                 self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                 for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)    
             
@@ -456,8 +461,8 @@ class BaseProgram(object):
                 for term in self.valence.iter_masters('^CrossBondDih%i/.*/bb$' %m, use_re=True):
                     types = term.basename.split('/')[1].split('.')
                     assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[:2])))
-                    rv1 = find_rest_value('BondHarm/%s' %('.'.join(types[2:])))
+                    rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[:2])))
+                    rv1 = find_rest_value('Bond.*/%s' %('.'.join(types[2:])))
                     self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                     for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
                     
@@ -466,7 +471,7 @@ class BaseProgram(object):
                 for term in self.valence.iter_masters('^CrossBondDih%i/.*/b0d$' %m, use_re=True):
                     types = term.basename.split('/')[1].split('.')
                     assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[:2])))
+                    rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[:2])))
                     rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
                     self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                     for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
@@ -474,7 +479,7 @@ class BaseProgram(object):
                 for term in self.valence.iter_masters('^CrossBondDih%i/.*/b1d$' %m, use_re=True):
                     types = term.basename.split('/')[1].split('.')
                     assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[1:3])))
+                    rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[1:3])))
                     rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
                     self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                     for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
@@ -482,7 +487,7 @@ class BaseProgram(object):
                 for term in self.valence.iter_masters('^CrossBondDih%i/.*/b2d$' %m, use_re=True):
                     types = term.basename.split('/')[1].split('.')
                     assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BondHarm/%s' %('.'.join(types[2:])))
+                    rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[2:])))
                     rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
                     self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                     for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
@@ -492,8 +497,8 @@ class BaseProgram(object):
                 for term in self.valence.iter_masters('^CrossBendDih%i/.*/aa$' %m, use_re=True):
                     types = term.basename.split('/')[1].split('.')
                     assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BendAHarm/%s' %('.'.join(types[:3])))
-                    rv1 = find_rest_value('BendAHarm/%s' %('.'.join(types[1:])))
+                    rv0 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[:3]),'.'.join(types[:3])))
+                    rv1 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[1:]),'.'.join(types[1:])))
                     self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                     for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
             
@@ -502,7 +507,7 @@ class BaseProgram(object):
                 for term in self.valence.iter_masters('^CrossBendDih%i/.*/a0d$' %m, use_re=True):
                     types = term.basename.split('/')[1].split('.')
                     assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BendAHarm/%s' %('.'.join(types[:3])))
+                    rv0 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[:3]),'.'.join(types[:3])))
                     rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
                     self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                     for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
@@ -510,7 +515,7 @@ class BaseProgram(object):
                 for term in self.valence.iter_masters('^CrossBendDih%i/.*/a1d$' %m, use_re=True):
                     types = term.basename.split('/')[1].split('.')
                     assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BendAHarm/%s' %('.'.join(types[1:])))
+                    rv0 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[1:]),'.'.join(types[1:])))
                     rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
                     self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                     for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)

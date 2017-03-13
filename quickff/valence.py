@@ -619,7 +619,7 @@ class ValenceFF(ForcePartValence):
                 if self.settings.do_cross_ASS:
                     self.add_term(
                         Cross, [Bond(*bond0), Bond(*bond1)],
-                        'Cross/'+'.'.join(types)+'/bb', ['HC_FC_CROSS_A'], ['kjmol/A**2', 'A', 'A']
+                        'Cross/'+'.'.join(types)+'/bb', ['HC_FC_CROSS_ASS'], ['kjmol/A**2', 'A', 'A']
                     )
                     nss += 1
                 #add stretch-bends
@@ -639,11 +639,11 @@ class ValenceFF(ForcePartValence):
                         continue
                     self.add_term(
                         Cross, [Bond(*bond0), ic],
-                        basename+'/b0a', ['HC_FC_CROSS_A'], ['kjmol/A', 'A', unit]
+                        basename+'/b0a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit]
                     )
                     self.add_term(
                         Cross, [Bond(*bond1), ic],
-                        basename+'/b1a', ['HC_FC_CROSS_A'], ['kjmol/A', 'A', unit]
+                        basename+'/b1a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit]
                     )
                     nsa += 1
             log.dump('Added %i stretch-stretch and %i stretch-angle cross terms from angle patterns' %(nss, nsa))
