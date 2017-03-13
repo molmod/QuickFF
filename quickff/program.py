@@ -135,7 +135,7 @@ class BaseProgram(object):
             pars[0,:] = np.array(self.valence.get_params(master.index))
             for i, islave in enumerate(master.slaves):
                 pars[1+i,:] = np.array(self.valence.get_params(islave))
-            if master.kind==0:#harmonic
+            if master.kind in [0,2,11,12]:#harmonic,fues,MM3Quartic,MM3Bend
                 fc, rv = pars.mean(axis=0)
                 self.valence.set_params(master.index, fc=fc, rv0=rv)
                 for islave in master.slaves:

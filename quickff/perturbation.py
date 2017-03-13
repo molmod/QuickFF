@@ -71,8 +71,8 @@ class Trajectory(object):
                 an integer defining the number of steps in the perturbation
                 trajectory. The default value is 11 steps.
         '''
-        if not term.kind in [0]:
-            raise NotImplementedError('Perturbation trajectory only implemented for Harmonic terms')
+        if not term.kind in [0,2,11,12]:
+            raise NotImplementedError('Perturbation trajectory only implemented for Harmonic, Fues, MM3Quartic or MM3Bend terms')
         self.term = term
         self.numbers = numbers
         self.qunit = term.units[1]
@@ -237,7 +237,7 @@ class RelaxedStrain(object):
         '''
         trajectories = []
         for term in do_terms:
-            assert term.kind==0, 'Only harmonic terms supported for pert traj'
+            assert term.kind in [0,2,11,12], 'Only Harmonic, Fues, MM3Quartic or MM3Bend terms supported for pert traj'
             ic = self.valence.iclist.ictab[self.valence.vlist.vtab[term.index]['ic0']]
             kunit, qunit = term.units
             if ic['kind'] in [0]:

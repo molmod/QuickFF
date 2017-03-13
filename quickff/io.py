@@ -487,12 +487,40 @@ def dump_charmm22_psf(system, valence, fn):
             _dihedrals_to_charmm22_psf(valence)))
 
 
-def _bonds_to_yaff(valence):
+def _bondharm_to_yaff(valence):
     'construct a BONDHARM section of a yaff parameter file'
     prefix = 'BONDHARM'
     units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'R0 A'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K, q0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1], K/(kjmol/angstrom**2), q0/angstrom
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _bondfues_to_yaff(valence):
+    'construct a BONDHARM section of a yaff parameter file'
+    prefix = 'BONDFUES'
+    units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'R0 A'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label=prefix)):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K, q0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1], K/(kjmol/angstrom**2), q0/angstrom
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+
+def _bondmm3_to_yaff(valence):
+    'construct a BONDHARM section of a yaff parameter file'
+    prefix = 'MM3QUART'
+    units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'R0 A'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label='BondMM3')):
         if valence.is_negligible(i): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
@@ -515,19 +543,19 @@ def _bendaharm_to_yaff(valence):
         ))
     return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
-#def _bendclin_to_yaff(valence):
-#    'construct a BENDCLIN section of a yaff parameter file'
-#    prefix = 'BENDCLIN'
-#    units = ParameterDefinition('UNIT', lines=['A kjmol'])
-#    pars = ParameterDefinition('PARS')
-#    for i, master in enumerate(valence.iter_masters(label=prefix)):
-#        if valence.is_negligible(i): continue
-#        ffatypes = master.basename.split('/')[1].split('.')
-#        K = valence.get_params(master.index, only='fc')
-#        pars.lines.append('%8s  %8s  %8s  %.10e' %(
-#            ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol
-#        ))
-#    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
+def _bendmm3_to_yaff(valence):
+    'construct a BENDAHARM section of a yaff parameter file'
+    prefix = 'MM3BENDA'
+    units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'THETA0 deg'])
+    pars = ParameterDefinition('PARS')
+    for i, master in enumerate(valence.iter_masters(label='BendMM3')):
+        if valence.is_negligible(i): continue
+        ffatypes = master.basename.split('/')[1].split('.')
+        K, q0 = valence.get_params(master.index)
+        pars.lines.append('%8s  %8s  %8s  %.10e  %.10e' %(
+            ffatypes[0], ffatypes[1], ffatypes[2], K/kjmol, q0/deg
+        ))
+    return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
 def _bendcharm_to_yaff(valence):
     'construct a BENDCHARM section of a yaff parameter file'
@@ -876,9 +904,11 @@ def _crosscbenddihed_to_yaff(valence):
 
 def dump_yaff(valence, fn):
     sections = [
-        _bonds_to_yaff(valence),
-        _bendaharm_to_yaff(valence), _bendcharm_to_yaff(valence),
-        _bendcheby_to_yaff(valence, 1), _bendcheby_to_yaff(valence, 4),
+        _bondharm_to_yaff(valence), _bondfues_to_yaff(valence),
+        _bondmm3_to_yaff(valence),
+        _bendaharm_to_yaff(valence), _bendmm3_to_yaff(valence),
+        _bendcharm_to_yaff(valence), _bendcheby_to_yaff(valence, 1),
+        _bendcheby_to_yaff(valence, 4),
         _torsions_to_yaff(valence), _torsc2harm_to_yaff(valence),
         _torscheby_to_yaff(valence,1), _torscheby_to_yaff(valence,2),
         _torscheby_to_yaff(valence,3), _torscheby_to_yaff(valence,4),

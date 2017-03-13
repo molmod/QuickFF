@@ -26,9 +26,7 @@ from molmod.units import *
 from molmod.ic import bend_angle, _bend_angle_low, dihed_angle, _dihed_angle_low
 
 from yaff.pes.ff import ForceField, ForcePartValence
-from yaff.pes.vlist import ValenceList
-from yaff.pes.vlist import Harmonic, PolyFour, Fues, Cosine, Cross, \
-    Chebychev1, Chebychev2, Chebychev3, Chebychev4, Chebychev6
+from yaff.pes.vlist import *
 from yaff.pes.iclist import InternalCoordinateList
 from yaff.pes.iclist import Bond, BendAngle, BendCos, DihedCos, DihedCos2, \
     DihedCos3, DihedCos4, DihedCos6, DihedAngle, OopDist, SqOopDist
@@ -338,11 +336,19 @@ class ValenceFF(ForcePartValence):
             nbonds = 0
             for bond in self.system.iter_bonds():
                 bond, types = term_sort_atypes(ffatypes, bond, 'bond')
-                basename = 'BondHarm/'+'.'.join(types)
                 units = ['kjmol/A**2', 'A']
-                self.add_term(Harmonic, [Bond(*bond)], basename, ['PT_ALL', 'HC_FC_DIAG'], units)
+                basename = self.settings.bond_term+'/'+'.'.join(types)
+                if self.settings.bond_term.lower()   == 'bondharm':
+                    pot = Harmonic
+                elif self.settings.bond_term.lower() == 'bondmm3':
+                    pot = MM3Quartic
+                elif self.settings.bond_term.lower() == 'bondfues':
+                    pot = Fues
+                else:
+                    raise ValueError('Bond kind %s not supported' %self.settings.bond_term)
+                term = self.add_term(pot, [Bond(*bond)], basename, ['PT_ALL', 'HC_FC_DIAG'], units)
                 nbonds += 1
-        log.dump('Added %i Harmonic bond terms' %nbonds)
+        log.dump('Added %i bond terms' %nbonds)
 
     def init_bend_terms(self, thresshold=10*deg):
         '''
@@ -405,12 +411,18 @@ class ValenceFF(ForcePartValence):
                         self.set_params(term.index, sign=-1)
                         nsqbends += 1
                     elif potkind=='angleharm':
-                        basename = 'BendAHarm/'+'.'.join(types)
-                        self.add_term(Harmonic, [BendAngle(*bend)], basename, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/rad**2', 'deg'])
+                        basename = self.settings.bend_term+'/'+'.'.join(types)
+                        if self.settings.bend_term.lower()   == 'bendaharm':
+                            pot = Harmonic
+                        elif self.settings.bend_term.lower() == 'bendmm3':
+                            pot = MM3Bend
+                        else:
+                            raise ValueError('Bond kind %s not supported' %self.settings.bend_term)
+                        self.add_term(pot, [BendAngle(*bend)], basename, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/rad**2', 'deg'])
                         nabends += 1
                     else:
                         raise ValueError('')
-        log.dump('Added %i bend terms harmonic in the angle, %i bend terms with 1+cos(angle) potential and %i bend terms with 1-cos(4*theta) potential.' %(nabends, ncbends, nsqbends))
+        log.dump('Added %i bend terms (an)harmonic in the angle, %i bend terms with 1+cos(angle) potential and %i bend terms with 1-cos(4*theta) potential.' %(nabends, ncbends, nsqbends))
 
     def init_dihedral_terms(self, thresshold=20*deg):
         '''
@@ -851,13 +863,14 @@ class ValenceFF(ForcePartValence):
                 ics = self.terms[jterm].ics
                 args = ([0.0,a1,0.0,a3],)+tuple(ics)
                 val.add_term(PolyFour(*args))
-        elif kind==0:#Harmonic:
+        elif kind in [0,2,11,12]:#[Harmonic,Fues,MM3Quartic,MM3Bend]
+            potentials={0:Harmonic,2:Fues,11:MM3Quartic,12:MM3Bend}
             k, rv = self.get_params(index)
             if fc is not None: k = fc
             for jterm in masterslaves:
                 ics = self.terms[jterm].ics
                 args = (k, rv) + tuple(ics)
-                val.add_term(Harmonic(*args))
+                val.add_term(potentials[kind](*args))
         else:
             raise ValueError('Term kind %i not supported' %kind)
         ff = ForceField(self.system, [val])
@@ -865,9 +878,9 @@ class ValenceFF(ForcePartValence):
         return hcov
 
     def set_params(self, term_index, fc=None, rv0=None, rv1=None, m=None,
-            a0=None, a1=None, a2=None, a3=None, sign=None):
+            a0=None, a1=None, a2=None, a3=None, sign=None, ediss=None, exp=None):
         term = self.vlist.vtab[term_index]
-        if term['kind'] in [0,2]:#['Harmonic', 'Fues']
+        if term['kind'] in [0,2,11,12]:#['Harmonic', 'Fues', 'MM3Quartic', 'MM3Bend']
             if fc is not None:  term['par0'] = fc
             if rv0 is not None: term['par1'] = rv0
         elif term['kind'] in [1]:#['PolyFour']
@@ -893,13 +906,22 @@ class ValenceFF(ForcePartValence):
             if fc is not None:  term['par0'] = fc
             if rv0 is not None: term['par1'] = rv0
             if rv1 is not None: term['par2'] = rv1
+        elif term['kind'] in [14]: #Morse
+            if ediss is not None: term['par0'] = ediss
+            if fc is not None:
+                if exp is not None: raise IOError('When fc is set in Morse, exp cannot be set, but will be adapted to Ediss and fc')
+                term['par1'] = np.sqrt(fc/(2.0*term['par0']))
+            if exp is not None:
+                if fc is not None: raise IOError('When exp is set in Morse, fc cannot be set, but will be adapted to Ediss and exp')
+                term['par1'] = exp
+            if rv0 is not None:   term['par2'] = rv0            
         else:
             raise NotImplementedError, \
                 'set_params not implemented for Yaff %s term' %term['kind']
 
     def get_params(self, term_index, only='all'):
         term = self.vlist.vtab[term_index]
-        if term['kind'] in [0,2]:#['Harmonic', 'Fues']
+        if term['kind'] in [0,2,11,12]:#['Harmonic', 'Fues', 'MM3Quartic', 'MM3Bend']
             if only.lower()=='all': return term['par0'], term['par1']
             elif only.lower()=='fc': return term['par0']
             elif only.lower()=='rv': return term['par1']
@@ -930,6 +952,13 @@ class ValenceFF(ForcePartValence):
             elif only.lower()=='rv0': return term['par1']
             elif only.lower()=='rv1': return term['par2']
             else: raise ValueError('Invalid par kind definition %s' %only)
+        elif term['kind'] in [14]: #Morse
+            if only.lower()=='all': return term['par0'], term['par1'], term['par2']
+            elif only.lower()=='ediss': return term['par0']
+            elif only.lower()=='exp': return term['par1']
+            elif only.lower()=='rv0': return term['par2']
+            elif only.lower()=='fc': return 2.0*term['par0']*term['par1']**2
+            else: raise ValueError('Invalid par kind definition %s' %only)
         else:
             raise NotImplementedError(
                 'get_params not implemented for Yaff %s term' % term['kind'])
@@ -941,8 +970,10 @@ class ValenceFF(ForcePartValence):
         # magnitude of the threshold, it is not worth adding such complications to the
         # code.
         term = self.vlist.vtab[term_index]
-        if term['kind'] in [0, 2]:  # ['Harmonic', 'Fues']
+        if term['kind'] in [0, 2, 11, 12]:  # ['Harmonic', 'Fues', 'MM3Quartic']
             return abs(term['par0']) < 1e-6*kjmol
+        elif term['kind'] in [14]: #['Morse']
+            return abs(2.0*term['par0']*term['par1']**2) < 1e-6*kjmol
         elif term['kind'] in [1]:   # ['PolyFour']
             # Not sure how to handle this one...
             # For now, never neglect.
@@ -985,8 +1016,9 @@ class ValenceFF(ForcePartValence):
         if log.log_level<print_level: return
         with log.section('', print_level):
             sequence = [
-                'bondharm',
-                'bendaharm', 'bendcheby1', 'bendcheby4', 'bendcharm',
+                'bondharm', 'bondmm3', 'bondfues',
+                'bendaharm', 'bendmm3',
+                'bendcheby1', 'bendcheby4', 'bendcharm',
                 'torscheby', 'torsion', 'torsc2harm', 'dihedharm',
                 'oopdist', 'cross'
             ]
