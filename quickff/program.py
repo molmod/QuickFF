@@ -345,7 +345,8 @@ class BaseProgram(object):
             
             do_svd
                 whether or not to do an SVD decomposition before solving the
-                set of equations.
+                set of equations and explicitly throw out the degrees of
+                freedom that correspond to the lowest singular values.
             
             do_mass_weighing
                 whether or not to apply mass weighing to the ab initio hessian
