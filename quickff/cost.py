@@ -36,7 +36,7 @@ class HessianFCCost(object):
         A class to implement the least-square cost function to fit the force
         field hessian to the ab initio hessian.
     '''
-    def __init__(self, system, ai, valence, fit_indices, ffrefs=[], do_mass_weighing=True):
+    def __init__(self, system, ai, valence, fit_indices, ffrefs=[], do_mass_weighting=True):
         '''
             **Arguments**
 
@@ -59,6 +59,9 @@ class HessianFCCost(object):
                 a list of Reference instances representing possible a priori
                 determined contributions to the force field (such as eg.
                 electrostatics and van der Waals)
+           
+            do_mass_weighting
+                
         '''
         #initialization
         self.init = np.zeros(len(fit_indices), float)
@@ -70,12 +73,12 @@ class HessianFCCost(object):
         masses3 = np.array([[mass,]*3 for mass in system.masses]).reshape(len(system.masses)*3)
         masses3_inv_sqrt = np.diag(1.0/np.sqrt(masses3))
         #compute the reference hessian
-        if do_mass_weighing:
+        if do_mass_weighting:
             href = np.dot(masses3_inv_sqrt, np.dot(ai.phess0.reshape([ndofs, ndofs]).copy(), masses3_inv_sqrt))
         else:
             href = ai.phess0.reshape([ndofs, ndofs]).copy()
         for ffref in ffrefs:
-            if do_mass_weighing:
+            if do_mass_weighting:
                 href -= np.dot(masses3_inv_sqrt, np.dot(ffref.hessian(system.pos).reshape([ndofs, ndofs]), masses3_inv_sqrt))
             else:
                 href -= ffref.hessian(system.pos).reshape([ndofs, ndofs])
@@ -87,7 +90,7 @@ class HessianFCCost(object):
                 i = fit_indices.index(master.index)
                 #self.init[i] = valence.get_params(master.index, only='fc')
                 #add to covalent hessians (includes slaves as well)
-                if do_mass_weighing:
+                if do_mass_weighting:
                     hcov = np.dot(masses3_inv_sqrt, np.dot(valence.get_hessian_contrib(master.index, fc=1.0), masses3_inv_sqrt))
                 else:
                     hcov = valence.get_hessian_contrib(master.index, fc=1.0)
@@ -98,7 +101,7 @@ class HessianFCCost(object):
                 if master.kind==3:
                     self.lower[i] = -np.inf
             else:
-                if do_mass_weighing:
+                if do_mass_weighting:
                     hcov = np.dot(masses3_inv_sqrt, np.dot(valence.get_hessian_contrib(master.index), masses3_inv_sqrt))
                 else:
                     hcov = valence.get_hessian_contrib(master.index)

@@ -21,7 +21,7 @@ vdw                     :   None
 vdw_rcut                :   20*angstrom
 covres                  :   None
 
-do_hess_mass_weighing   :   True
+do_hess_mass_weighting  :   True
 do_cross_svd            :   True
 
 do_bonds                :   True
@@ -30,8 +30,8 @@ do_dihedrals            :   True
 do_oops                 :   True
 do_cross_ASS            :   True
 do_cross_ASA            :   True
-do_cross_DSS            :   True
-do_cross_DSD            :   True
+do_cross_DSS            :   False
+do_cross_DSD            :   False
 do_cross_DAA            :   False
 do_cross_DAD            :   False
 

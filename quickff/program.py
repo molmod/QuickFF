@@ -321,7 +321,7 @@ class BaseProgram(object):
             self.valence.dump_logger(print_level=logger_level)
             self.average_pars()
 
-    def do_hc_estimatefc(self, tasks, logger_level=3, do_svd=False, do_mass_weighing=True):
+    def do_hc_estimatefc(self, tasks, logger_level=3, do_svd=False, do_mass_weighting=True):
         '''
             Refine force constants using Hessian Cost function.
 
@@ -348,7 +348,7 @@ class BaseProgram(object):
                 set of equations and explicitly throw out the degrees of
                 freedom that correspond to the lowest singular values.
             
-            do_mass_weighing
+            do_mass_weighting
                 whether or not to apply mass weighing to the ab initio hessian
                 and the force field contributions before doing the fitting.
         '''
@@ -380,7 +380,7 @@ class BaseProgram(object):
             if len(term_indices)==0:
                 log.dump('No terms (with task in %s) found to estimate FC from HC' %(str(tasks)))
                 return
-            cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=self.ffrefs, do_mass_weighing=do_mass_weighing)
+            cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=self.ffrefs, do_mass_weighting=do_mass_weighting)
             fcs = cost.estimate(do_svd=do_svd)
             for index, fc in zip(term_indices, fcs):
                 master = self.valence.terms[index]
@@ -705,12 +705,12 @@ class DeriveFF(BaseProgram):
             self.do_pt_estimate()
             self.do_pt_postprocess()
             self.do_cross_init()
-            self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighing=self.settings.do_hess_mass_weighing)
+            self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighting=self.settings.do_hess_mass_weighting)
             self.do_pt_estimate(do_valence=True)
             self.do_pt_postprocess()
-            self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighing=self.settings.do_hess_mass_weighing)
+            self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighting=self.settings.do_hess_mass_weighting)
             self.do_hc_estimatefc([
                 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA', 'HC_FC_CROSS_DSS',
                 'HC_FC_CROSS_DSD', 'HC_FC_CROSS_DAA', 'HC_FC_CROSS_DAD'
-            ], logger_level=1, do_mass_weighing=self.settings.do_hess_mass_weighing, do_svd=self.settings.do_cross_svd)
+            ], logger_level=1, do_mass_weighting=self.settings.do_hess_mass_weighting, do_svd=self.settings.do_cross_svd)
             self.make_output()
