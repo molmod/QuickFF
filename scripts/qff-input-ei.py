@@ -32,7 +32,7 @@ import h5py as h5
 from molmod.io.chk import load_chk
 from yaff import System
 
-from quickff.tools import guess_ffatypes, get_ei_radii, average, charges_to_bcis
+from quickff.tools import set_ffatypes, get_ei_radii, average, charges_to_bcis
 from quickff.io import read_abinitio, make_yaff_ei, read_bci_constraints
 
 
@@ -120,7 +120,7 @@ def main():
 
     # Guess atom types if needed
     if args.ffatypes is not None:
-        guess_ffatypes(system, args.ffatypes)
+        set_ffatypes(system, args.ffatypes)
     ffatypes = [system.ffatypes[i] for i in system.ffatype_ids]
 
     # Load atomic charges

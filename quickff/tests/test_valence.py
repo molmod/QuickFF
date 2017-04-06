@@ -2,7 +2,8 @@ from molmod.units import angstrom, kjmol, rad, deg
 from molmod.ic import _dihed_angle_low, dihed_angle
 
 from quickff.valence import ValenceFF
-from quickff.tools import guess_ffatypes
+from quickff.settings import Settings
+from quickff.tools import set_ffatypes
 
 from itertools import permutations
 
@@ -15,8 +16,8 @@ def check_terms(name):
     #TODO: CROSS terms
     with log.section('NOSETST', 2):
         system, ref = read_system(name)
-        guess_ffatypes(system, 'high')
-        valence = ValenceFF(system)
+        set_ffatypes(system, 'high')
+        valence = ValenceFF(system, Settings())
     #check if every bond is present and harmonic
     for bond in system.iter_bonds():
         found = False
@@ -50,8 +51,9 @@ def check_terms(name):
     #check if every oop distance is present and Harm for rv of 0 and SQHARM else
     for oop in system.iter_oops():
         found = False
-        for term in valence.iter_terms('/OOPDIST'):
+        for term in valence.iter_terms('^OOPDIST/.*$', use_re=True):
             at0, at1, at2, at3 = term.get_atoms()
+            print at0, at1, at2, at3
             for p0, p1, p2 in permutations([at0, at1, at2]):
                 if oop[0]==p0 and oop[1]==p1 and oop[2]==p2 and oop[3]==at3:
                     assert not found, 'OopDist term %s was already found!' %str(oop)
@@ -132,8 +134,8 @@ def get_dihedral_angle(term, system):
 def check_hessian_bonds(name, tol=1e-3*kjmol/angstrom**2):
     with log.section('NOSETST', 2):
         system, ref = read_system(name)
-        guess_ffatypes(system, 'highest')
-        valence = ValenceFF(system)
+        set_ffatypes(system, 'highest')
+        valence = ValenceFF(system, Settings())
     for term in valence.iter_terms('BONDHARM'):
         inonzero, izero = get_indices_zero_nonzero(term, len(system.numbers))
         rv = np.random.uniform(low=1.00, high=2.00)*angstrom
@@ -153,8 +155,8 @@ def check_hessian_bonds(name, tol=1e-3*kjmol/angstrom**2):
 def check_hessian_bends(name, tol=1e-3*kjmol/angstrom**2):
     with log.section('NOSETST', 2):
         system, ref = read_system(name)
-        guess_ffatypes(system, 'highest')
-        valence = ValenceFF(system)
+        set_ffatypes(system, 'highest')
+        valence = ValenceFF(system, Settings())
     for term in valence.iter_terms('BENDAHARM'):
         inonzero, izero = get_indices_zero_nonzero(term, len(system.numbers))
         rv = np.random.uniform(low=10, high=170)*deg
@@ -174,8 +176,8 @@ def check_hessian_bends(name, tol=1e-3*kjmol/angstrom**2):
 def check_hessian_dihedrals(name, tol=1e-3*kjmol/angstrom**2):
     with log.section('NOSETST', 2):
         system, ref = read_system(name)
-        guess_ffatypes(system, 'highest')
-        valence = ValenceFF(system)
+        set_ffatypes(system, 'highest')
+        valence = ValenceFF(system, Settings())
     ref, num = None, None
     for term in valence.iter_terms('TORS'):
         psi0 = get_dihedral_angle(term, system)
@@ -199,8 +201,8 @@ def check_hessian_dihedrals(name, tol=1e-3*kjmol/angstrom**2):
 def check_hessian_oops(name, tol=1e-3*kjmol/angstrom**2):
     with log.section('PROGRAM', 2):
         system, ref = read_system(name)
-        guess_ffatypes(system, 'highest')
-        valence = ValenceFF(system)
+        set_ffatypes(system, 'highest')
+        valence = ValenceFF(system, Settings())
     for term in valence.iter_terms('/OOPDIST'):
         inonzero, izero = get_indices_zero_nonzero(term, len(system.numbers))
         rv = 0.0
@@ -217,6 +219,7 @@ def check_hessian_oops(name, tol=1e-3*kjmol/angstrom**2):
             term.basename, fc/(kjmol/angstrom**2), rv/angstrom, iM, jM, M/(kjmol/angstrom**2)
         )
         assert M<tol
+        del ref, num    
     for term in valence.iter_terms('SQOOPDIST'):
         inonzero, izero = get_indices_zero_nonzero(term, len(system.numbers))
         rv = np.random.uniform(low=0.01, high=0.1)*angstrom**2
@@ -231,7 +234,8 @@ def check_hessian_oops(name, tol=1e-3*kjmol/angstrom**2):
         iM, jM = np.where(abs(ref-num)==M)[0][0], np.where(abs(ref-num)==M)[1][0]
         print '%25s (random FC=%8.3f kjmol/A^4    RV=%7.3f A^2):   MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(term.basename, fc/(kjmol/angstrom**4), rv/angstrom**2, iM, jM, M/(kjmol/angstrom**2))
         assert M<tol
-    del system, valence, ref, num
+        del ref, num
+    del system, valence
 
 
 

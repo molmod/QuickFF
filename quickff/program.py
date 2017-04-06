@@ -171,18 +171,14 @@ class BaseProgram(object):
             perturbation trajectories and dump perturbation trajectories to XYZ
             files.
         '''
-        fn_yaff = self.settings.fn_yaff
-        if fn_yaff is not None:
-            dump_yaff(self.valence, fn_yaff)
-        fn_charmm22_prm = self.settings.fn_charmm22_prm
-        if fn_charmm22_prm is not None:
-            dump_charmm22_prm(self.valence, fn_charmm22_prm)
-        fn_charmm22_psf = self.settings.fn_charmm22_psf
-        if fn_charmm22_psf is not None:
-            dump_charmm22_psf(self.system, self.valence, fn_charmm22_psf)
-        fn_sys = self.settings.fn_sys
-        if fn_sys is not None:
-            self.system.to_file(fn_sys)
+        if self.settings.fn_yaff is not None:
+            dump_yaff(self.valence, self.settings.fn_yaff)
+        if self.settings.fn_charmm22_prm is not None:
+            dump_charmm22_prm(self.valence, self.settings.fn_charmm22_prm)
+        if self.settings.fn_charmm22_psf is not None:
+            dump_charmm22_psf(self.system, self.valence, self.settings.fn_charmm22_psf)
+        if self.settings.fn_sys is not None:
+            self.system.to_file(self.settings.fn_sys)
         self.plot_trajectories(do_valence=True)
 
     def plot_trajectories(self, do_valence=False):
@@ -456,86 +452,87 @@ class BaseProgram(object):
                 self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                 for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)    
             
-            self.valence.init_cross_dihed_terms()
-            #set rest values and initialize fc for bond-bond cross
-            for m in [1,2,3,4,6]:
-                for term in self.valence.iter_masters('^CrossBondDih%i/.*/bb$' %m, use_re=True):
-                    types = term.basename.split('/')[1].split('.')
-                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[:2])))
-                    rv1 = find_rest_value('Bond.*/%s' %('.'.join(types[2:])))
-                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+            if self.settings.do_cross_DSS or self.settings.do_cross_DSD or self.settings.do_cross_DAD or self.settings.do_cross_DAA:
+                self.valence.init_cross_dihed_terms()
+                #set rest values and initialize fc for bond-bond cross
+                for m in [1,2,3,4,6]:
+                    for term in self.valence.iter_masters('^CrossBondDih%i/.*/bb$' %m, use_re=True):
+                        types = term.basename.split('/')[1].split('.')
+                        assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                        rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[:2])))
+                        rv1 = find_rest_value('Bond.*/%s' %('.'.join(types[2:])))
+                        self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                        for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                        
+                #set rest values and initialize fc for bond-dihed cross
+                for m in [1,2,3,4,6]:
+                    for term in self.valence.iter_masters('^CrossBondDih%i/.*/b0d$' %m, use_re=True):
+                        types = term.basename.split('/')[1].split('.')
+                        assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                        rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[:2])))
+                        rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                        self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                        for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+
+                    for term in self.valence.iter_masters('^CrossBondDih%i/.*/b1d$' %m, use_re=True):
+                        types = term.basename.split('/')[1].split('.')
+                        assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                        rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[1:3])))
+                        rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                        self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                        for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
                     
-            #set rest values and initialize fc for bond-dihed cross
-            for m in [1,2,3,4,6]:
-                for term in self.valence.iter_masters('^CrossBondDih%i/.*/b0d$' %m, use_re=True):
-                    types = term.basename.split('/')[1].split('.')
-                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[:2])))
-                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
-                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                    for term in self.valence.iter_masters('^CrossBondDih%i/.*/b2d$' %m, use_re=True):
+                        types = term.basename.split('/')[1].split('.')
+                        assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                        rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[2:])))
+                        rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                        self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                        for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
 
-                for term in self.valence.iter_masters('^CrossBondDih%i/.*/b1d$' %m, use_re=True):
-                    types = term.basename.split('/')[1].split('.')
-                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[1:3])))
-                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
-                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                #set rest values and initialize fc for angle-angle cross
+                for m in [1,2,3,4,6]:
+                    for term in self.valence.iter_masters('^CrossBendDih%i/.*/aa$' %m, use_re=True):
+                        types = term.basename.split('/')[1].split('.')
+                        assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                        rv0 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[:3]),'.'.join(types[:3])))
+                        rv1 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[1:]),'.'.join(types[1:])))
+                        self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                        for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
                 
-                for term in self.valence.iter_masters('^CrossBondDih%i/.*/b2d$' %m, use_re=True):
-                    types = term.basename.split('/')[1].split('.')
-                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('Bond.*/%s' %('.'.join(types[2:])))
-                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
-                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-
-            #set rest values and initialize fc for angle-angle cross
-            for m in [1,2,3,4,6]:
-                for term in self.valence.iter_masters('^CrossBendDih%i/.*/aa$' %m, use_re=True):
-                    types = term.basename.split('/')[1].split('.')
-                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[:3]),'.'.join(types[:3])))
-                    rv1 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[1:]),'.'.join(types[1:])))
-                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-            
-            #set rest values and initialize fc for angle-dihed cross
-            for m in [1,2,3,4,6]:
-                for term in self.valence.iter_masters('^CrossBendDih%i/.*/a0d$' %m, use_re=True):
-                    types = term.basename.split('/')[1].split('.')
-                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[:3]),'.'.join(types[:3])))
-                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
-                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-             
-                for term in self.valence.iter_masters('^CrossBendDih%i/.*/a1d$' %m, use_re=True):
-                    types = term.basename.split('/')[1].split('.')
-                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[1:]),'.'.join(types[1:])))
-                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
-                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-                
-                for term in self.valence.iter_masters('^CrossCBendDih%i/.*/a0d$' %m, use_re=True):
-                    types = term.basename.split('/')[1].split('.')
-                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BendCLin/%s' %('.'.join(types[:3])))
-                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
-                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-             
-                for term in self.valence.iter_masters('^CrossCBendDih%i/.*/a1d$' %m, use_re=True):
-                    types = term.basename.split('/')[1].split('.')
-                    assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
-                    rv0 = find_rest_value('BendCLin/%s' %('.'.join(types[1:])))
-                    rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
-                    self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                    for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                #set rest values and initialize fc for angle-dihed cross
+                for m in [1,2,3,4,6]:
+                    for term in self.valence.iter_masters('^CrossBendDih%i/.*/a0d$' %m, use_re=True):
+                        types = term.basename.split('/')[1].split('.')
+                        assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                        rv0 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[:3]),'.'.join(types[:3])))
+                        rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                        self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                        for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                 
+                    for term in self.valence.iter_masters('^CrossBendDih%i/.*/a1d$' %m, use_re=True):
+                        types = term.basename.split('/')[1].split('.')
+                        assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                        rv0 = find_rest_value('BendAHarm/%s|BendMM3/%s' %('.'.join(types[1:]),'.'.join(types[1:])))
+                        rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                        self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                        for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                    
+                    for term in self.valence.iter_masters('^CrossCBendDih%i/.*/a0d$' %m, use_re=True):
+                        types = term.basename.split('/')[1].split('.')
+                        assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                        rv0 = find_rest_value('BendCLin/%s' %('.'.join(types[:3])))
+                        rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                        self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                        for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+                 
+                    for term in self.valence.iter_masters('^CrossCBendDih%i/.*/a1d$' %m, use_re=True):
+                        types = term.basename.split('/')[1].split('.')
+                        assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
+                        rv0 = find_rest_value('BendCLin/%s' %('.'.join(types[1:])))
+                        rv1 = find_rest_value('TorsCheby%i/%s' %(m,'.'.join(types)))
+                        self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
+                        for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
 
     def do_squarebend(self, thresshold=10*deg):
         '''

@@ -28,8 +28,8 @@ from molmod.ic import bend_angle, _bend_angle_low, dihed_angle, _dihed_angle_low
 from yaff.pes.ff import ForceField, ForcePartValence
 from yaff.pes.vlist import *
 from yaff.pes.iclist import InternalCoordinateList
-from yaff.pes.iclist import Bond, BendAngle, BendCos, DihedCos, DihedCos2, \
-    DihedCos3, DihedCos4, DihedCos6, DihedAngle, OopDist, SqOopDist
+from yaff.pes.iclist import Bond, BendAngle, BendCos, DihedCos, DihedAngle, \
+    OopDist, SqOopDist
 from yaff.pes.dlist import DeltaList
 from yaff.sampling.harmonic import estimate_cart_hessian
 
@@ -652,6 +652,7 @@ class ValenceFF(ForcePartValence):
         '''
             Initialize cross terms between diheds and bonds,bends.
         '''
+        from yaff.pes.iclist import DihedCos2, DihedCos3, DihedCos4, DihedCos6
         with log.section('VAL', 3, 'Initializing'):
             ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
             #add cross terms for dihedral patterns

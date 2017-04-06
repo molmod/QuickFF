@@ -7,8 +7,9 @@ from molmod.periodic import periodic as pt
 
 from yaff import System
 
-from quickff.tools import guess_ffatypes
-from quickff.program import DeriveNonDiagFF, DeriveDiagFF
+from quickff.tools import set_ffatypes
+from quickff.program import DeriveFF
+from quickff.settings import Settings
 from quickff.context import context
 
 from common import log, read_system, tmpdir
@@ -23,8 +24,8 @@ def test_h2():
     #Load system, model and pert. theory and estimate ff
     with log.section('NOSETST', 2):
         system, ai = read_system('H2/gaussian.fchk')
-        guess_ffatypes(system, 'low')
-        program = DeriveNonDiagFF(system, ai)
+        set_ffatypes(system, 'low')
+        program = DeriveFF(system, ai, Settings())
         program.do_pt_generate()
         program.do_pt_estimate()
         K_pt, rv_pt = program.valence.get_params(0, only='all')
@@ -48,16 +49,19 @@ def test_h2():
 def test_output_charmm22():
     with log.section('NOSETST', 2):
         system, ai = read_system('ethanol/gaussian.fchk')
-        guess_ffatypes(system, 'low')
+        set_ffatypes(system, 'low')
         with tmpdir('test_output_charmm22') as dn:
             fn_yaff = os.path.join(dn, 'pars_cov.txt')
             fn_charmm22_prm = os.path.join(dn, 'test.prm')
             fn_charmm22_psf = os.path.join(dn, 'test.psf')
             fn_sys = os.path.join(dn, 'system.chk')
-            program = DeriveDiagFF(system, ai, fn_yaff=fn_yaff,
-                                   fn_charmm22_prm=fn_charmm22_prm,
-                                   fn_charmm22_psf=fn_charmm22_psf,
-                                   fn_sys=fn_sys)
+            settings = Settings(
+                do_cross_ASS=False, do_cross_ASA=False,
+                fn_yaff=fn_yaff, fn_sys=fn_sys,
+                fn_charmm22_prm=fn_charmm22_prm,
+                fn_charmm22_psf=fn_charmm22_psf,
+            )
+            program = DeriveFF(system, ai, settings)
             program.run()
             assert os.path.isfile(fn_yaff)
             assert os.path.isfile(fn_charmm22_prm)
@@ -68,6 +72,7 @@ def test_output_charmm22():
             counts = {}
             with open(fn_charmm22_prm, 'r') as f:
                 for line in f:
+                    print line
                     line = line[:line.find('!')].strip()
                     if len(line) == 0:
                         continue
