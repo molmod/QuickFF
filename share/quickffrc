@@ -21,6 +21,11 @@ vdw                     :   None
 vdw_rcut                :   20*angstrom
 covres                  :   None
 
+excl_bonds              :   None
+excl_bends              :   None
+excl_dihs               :   None
+excl_oopds              :   None
+
 do_hess_mass_weighting  :   True
 do_cross_svd            :   True
 

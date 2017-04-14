@@ -334,20 +334,38 @@ class ValenceFF(ForcePartValence):
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
             #get the bond terms
             nbonds = 0
+      
+            #list of bonds which should be excluded
+            if self.settings.excl_bonds is not None:
+                excl_bonds = self.settings.excl_bonds.split(',')
+            
             for bond in self.system.iter_bonds():
+                skip = False
                 bond, types = term_sort_atypes(ffatypes, bond, 'bond')
-                units = ['kjmol/A**2', 'A']
-                basename = self.settings.bond_term+'/'+'.'.join(types)
-                if self.settings.bond_term.lower()   == 'bondharm':
-                    pot = Harmonic
-                elif self.settings.bond_term.lower() == 'bondmm3':
-                    pot = MM3Quartic
-                elif self.settings.bond_term.lower() == 'bondfues':
-                    pot = Fues
+                
+                if self.settings.excl_bonds is not None:
+                    bond_opt1 = '.'.join(types)
+                    bond_opt2 = '.'.join(types[::-1])
+                    for excl in excl_bonds:
+                        pattern = re.compile(excl)
+                        if pattern.match(bond_opt1) or pattern.match(bond_opt2):
+                            skip = True                
+                                       
+                if not skip:
+                    units = ['kjmol/A**2', 'A']
+                    basename = self.settings.bond_term+'/'+'.'.join(types)
+                    if self.settings.bond_term.lower()   == 'bondharm':
+                        pot = Harmonic
+                    elif self.settings.bond_term.lower() == 'bondmm3':
+                        pot = MM3Quartic
+                    elif self.settings.bond_term.lower() == 'bondfues':
+                        pot = Fues
+                    else:
+                        raise ValueError('Bond kind %s not supported' %self.settings.bond_term)
+                    term = self.add_term(pot, [Bond(*bond)], basename, ['PT_ALL', 'HC_FC_DIAG'], units)
+                    nbonds += 1
                 else:
-                    raise ValueError('Bond kind %s not supported' %self.settings.bond_term)
-                term = self.add_term(pot, [Bond(*bond)], basename, ['PT_ALL', 'HC_FC_DIAG'], units)
-                nbonds += 1
+                    log.dump('Excluded %s bond'%'.'.join(types))
         log.dump('Added %i bond terms' %nbonds)
 
     def init_bend_terms(self, thresshold=10*deg):
@@ -357,6 +375,10 @@ class ValenceFF(ForcePartValence):
             potentials either in the angle or the cosine of the angle.
         '''
         with log.section('VAL', 3, 'Initializing'):
+            #list of bends which should be excluded
+            if self.settings.excl_bends is not None:
+                excl_bends = self.settings.excl_bends.split(',')
+                
             #get the angle terms
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
             angles = {}
@@ -400,28 +422,41 @@ class ValenceFF(ForcePartValence):
                     potkind='angleharm'
                 #add term
                 for bend in bends:
-                    if potkind=='lincos':
-                        basename = 'BendCheby1/'+'.'.join(types)
-                        term = self.add_term(Chebychev1, [BendCos(*bend)], basename, ['HC_FC_DIAG'], ['kjmol', 'au'])
-                        self.set_params(term.index, sign=1)
-                        ncbends += 1
-                    elif potkind=='squarebend':
-                        basename = 'BendCheby4/'+'.'.join(types)
-                        term = self.add_term(Chebychev4, [BendCos(*bend)], basename, ['HC_FC_DIAG'], ['kjmol', 'au'])
-                        self.set_params(term.index, sign=-1)
-                        nsqbends += 1
-                    elif potkind=='angleharm':
-                        basename = self.settings.bend_term+'/'+'.'.join(types)
-                        if self.settings.bend_term.lower()   == 'bendaharm':
-                            pot = Harmonic
-                        elif self.settings.bend_term.lower() == 'bendmm3':
-                            pot = MM3Bend
+                    skip = False
+                
+                    if self.settings.excl_bends is not None:
+                        bend_opt1 = '.'.join(types)
+                        bend_opt2 = '.'.join(types[::-1])
+                        for excl in excl_bends:
+                            pattern = re.compile(excl)
+                            if pattern.match(bend_opt1) or pattern.match(bend_opt2):
+                                skip = True                
+                                             
+                    if not skip:
+                        if potkind=='lincos':
+                            basename = 'BendCheby1/'+'.'.join(types)
+                            term = self.add_term(Chebychev1, [BendCos(*bend)], basename, ['HC_FC_DIAG'], ['kjmol', 'au'])
+                            self.set_params(term.index, sign=1)
+                            ncbends += 1
+                        elif potkind=='squarebend':
+                            basename = 'BendCheby4/'+'.'.join(types)
+                            term = self.add_term(Chebychev4, [BendCos(*bend)], basename, ['HC_FC_DIAG'], ['kjmol', 'au'])
+                            self.set_params(term.index, sign=-1)
+                            nsqbends += 1
+                        elif potkind=='angleharm':
+                            basename = self.settings.bend_term+'/'+'.'.join(types)
+                            if self.settings.bend_term.lower()   == 'bendaharm':
+                                pot = Harmonic
+                            elif self.settings.bend_term.lower() == 'bendmm3':
+                                pot = MM3Bend
+                            else:
+                                raise ValueError('Bond kind %s not supported' %self.settings.bend_term)
+                            self.add_term(pot, [BendAngle(*bend)], basename, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/rad**2', 'deg'])
+                            nabends += 1
                         else:
-                            raise ValueError('Bond kind %s not supported' %self.settings.bend_term)
-                        self.add_term(pot, [BendAngle(*bend)], basename, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/rad**2', 'deg'])
-                        nabends += 1
+                            raise ValueError('')
                     else:
-                        raise ValueError('')
+                        log.dump('Excluded %s bend'%'.'.join(types))
         log.dump('Added %i bend terms (an)harmonic in the angle, %i bend terms with 1+cos(angle) potential and %i bend terms with 1-cos(4*theta) potential.' %(nabends, ncbends, nsqbends))
 
     def init_dihedral_terms(self, thresshold=20*deg):
@@ -439,6 +474,10 @@ class ValenceFF(ForcePartValence):
                     0.5*K*(1-cos(m*psi-m*psi0)) with psi0 = 0 or 360/(2*m)
         '''
         with log.section('VAL', 3, 'Initializing'):
+            #list of dihedrals which should be excluded
+            if self.settings.excl_dihs is not None:
+                excl_dihs = self.settings.excl_dihs.split(',')
+
             #get all dihedrals
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
             dihedrals = {}
@@ -523,17 +562,30 @@ class ValenceFF(ForcePartValence):
                     else:
                         do_chebychev = False
                     for dihed in diheds:
-                        if do_chebychev:
-                            assert chebypot is not None
-                            basename = 'TorsCheby%i/' %m+'.'.join(types)
-                            term = self.add_term(chebypot, [DihedCos(*dihed)], basename, ['HC_FC_DIAG'], ['kjmol', 'au'])
-                            self.set_params(term.index, sign=sign)
-                            ncheb += 1
+                        skip = False
+ 
+                        if self.settings.excl_dihs is not None:
+                            dih_opt1 = '.'.join(types)
+                            dih_opt2 = '.'.join(types[::-1])
+                            for excl in excl_dihs:
+                                pattern = re.compile(excl)
+                                if pattern.match(dih_opt1) or pattern.match(dih_opt2):
+                                    skip = True                
+ 
+                        if not skip:
+                            if do_chebychev:
+                                assert chebypot is not None
+                                basename = 'TorsCheby%i/' %m+'.'.join(types)
+                                term = self.add_term(chebypot, [DihedCos(*dihed)], basename, ['HC_FC_DIAG'], ['kjmol', 'au'])
+                                self.set_params(term.index, sign=sign)
+                                ncheb += 1
+                            else:
+                                basename = 'Torsion/'+'.'.join(types)
+                                term = self.add_term(Cosine, [DihedAngle(*dihed)], basename, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
+                                self.set_params(term.index, rv0=rv, m=m)
+                                ncos += 1
                         else:
-                            basename = 'Torsion/'+'.'.join(types)
-                            term = self.add_term(Cosine, [DihedAngle(*dihed)], basename, ['HC_FC_DIAG'], ['au', 'kjmol', 'deg'])
-                            self.set_params(term.index, rv0=rv, m=m)
-                            ncos += 1
+                            log.dump('Excluded %s dihedral'%'.'.join(types))
                 else:
                     #no dihedral potential could be determine, hence it is ignored
                     log.warning('missing dihedral for %s (could not determine rest value from %s)' %('.'.join(types), str(psi0s/deg)))
@@ -547,6 +599,10 @@ class ValenceFF(ForcePartValence):
             potentials.
         '''
         with log.section('VAL', 3, 'Initializing'):
+            #list of oopds which should be excluded
+            if self.settings.excl_oopds is not None:
+                excl_oopds = self.settings.excl_oopds.split(',')
+
             #get all dihedrals
             from molmod.ic import opbend_dist, _opdist_low
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
@@ -561,38 +617,55 @@ class ValenceFF(ForcePartValence):
             nharm = 0
             nsq = 0
             for types, oops in opdists.iteritems():
-                d0s = np.zeros(len(oops), float)
-                for i, oop in enumerate(oops):
-                    if self.system.cell.nvec>0:
-                        d01 = self.system.pos[oop[1]]-self.system.pos[oop[0]]
-                        d02 = self.system.pos[oop[2]]-self.system.pos[oop[0]]
-                        d03 = self.system.pos[oop[3]]-self.system.pos[oop[0]]
-                        self.system.cell.mic(d01)
-                        self.system.cell.mic(d02)
-                        self.system.cell.mic(d03)
-                        d0s[i] = abs(_opdist_low(d01, d02, d03, 0)[0])
+                skip = False
+ 
+                if self.settings.excl_oopds is not None:
+                    oopd_opt1 = '.'.join(types)
+                    oopd_opt2 = '.'.join([types[0],types[2],types[1],types[3]])
+                    oopd_opt3 = '.'.join([types[1],types[0],types[2],types[3]])
+                    oopd_opt4 = '.'.join([types[1],types[2],types[0],types[3]])
+                    oopd_opt5 = '.'.join([types[2],types[0],types[1],types[3]])
+                    oopd_opt6 = '.'.join([types[2],types[1],types[0],types[3]])
+                    for excl in excl_oopds:
+                        pattern = re.compile(excl)
+                        if pattern.match(oopd_opt1) or pattern.match(oopd_opt2) or pattern.match(oopd_opt3) or pattern.match(oopd_opt4) or pattern.match(oopd_opt5) or pattern.match(oopd_opt6):
+                            skip = True                
+                if not skip:
+                    d0s = np.zeros(len(oops), float)
+                    for i, oop in enumerate(oops):
+                        if self.system.cell.nvec>0:
+                            d01 = self.system.pos[oop[1]]-self.system.pos[oop[0]]
+                            d02 = self.system.pos[oop[2]]-self.system.pos[oop[0]]
+                            d03 = self.system.pos[oop[3]]-self.system.pos[oop[0]]
+                            self.system.cell.mic(d01)
+                            self.system.cell.mic(d02)
+                            self.system.cell.mic(d03)
+                            d0s[i] = abs(_opdist_low(d01, d02, d03, 0)[0])
+                        else:
+                            rs = np.array([#mind the order, is(or was) wrongly documented in molmod
+                                self.system.pos[oop[0]],
+                                self.system.pos[oop[1]],
+                                self.system.pos[oop[2]],
+                                self.system.pos[oop[3]],
+                            ])
+                            d0s[i] = abs(opbend_dist(rs)[0])
+                            
+                    if d0s.mean()<thresshold_zero: #TODO: check this thresshold
+                        #add regular term harmonic in oopdist
+                        for oop in oops:
+                            basename = 'Oopdist/'+'.'.join(types)
+                            term = self.add_term(Harmonic, [OopDist(*oop)], basename, ['HC_FC_DIAG'], ['kjmol/A**2', 'A'])
+                            self.set_params(term.index, rv0=0.0)
+                            nharm += 1
                     else:
-                        rs = np.array([#mind the order, is(or was) wrongly documented in molmod
-                            self.system.pos[oop[0]],
-                            self.system.pos[oop[1]],
-                            self.system.pos[oop[2]],
-                            self.system.pos[oop[3]],
-                        ])
-                        d0s[i] = abs(opbend_dist(rs)[0])
-                if d0s.mean()<thresshold_zero: #TODO: check this thresshold
-                    #add regular term harmonic in oopdist
-                    for oop in oops:
-                        basename = 'Oopdist/'+'.'.join(types)
-                        term = self.add_term(Harmonic, [OopDist(*oop)], basename, ['HC_FC_DIAG'], ['kjmol/A**2', 'A'])
-                        self.set_params(term.index, rv0=0.0)
-                        nharm += 1
+                        #add term harmonic in square of oopdist
+                        log.dump('Mean absolute value of OopDist %s is %.3e A, used SQOOPDIST' %('.'.join(types), d0s.mean()/angstrom))
+                        for oop in oops:
+                            basename = 'SqOopdist/'+'.'.join(types)
+                            self.add_term(Harmonic, [SqOopDist(*oop)], basename, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/A**4', 'A**2'])
+                            nsq += 1
                 else:
-                    #add term harmonic in square of oopdist
-                    log.dump('Mean absolute value of OopDist %s is %.3e A, used SQOOPDIST' %('.'.join(types), d0s.mean()/angstrom))
-                    for oop in oops:
-                        basename = 'SqOopdist/'+'.'.join(types)
-                        self.add_term(Harmonic, [SqOopDist(*oop)], basename, ['PT_ALL', 'HC_FC_DIAG'], ['kjmol/A**4', 'A**2'])
-                        nsq += 1
+                    log.dump('Excluded %s oopd'%'.'.join(types))
         log.dump('Added %i Harmonic and %i SquareHarmonic out-of-plane distance terms' %(nharm, nsq))
 
     def init_cross_angle_terms(self):
@@ -600,52 +673,83 @@ class ValenceFF(ForcePartValence):
             Initialize cross terms between bonds and bends.
         '''
         with log.section('VAL', 3, 'Initializing'):
+            #list of bonds which should be excluded
+            if self.settings.excl_bonds is not None:
+                excl_bonds = self.settings.excl_bonds.split(',')
+
+            #list of bends which should be excluded
+            if self.settings.excl_bends is not None:
+                excl_bends = self.settings.excl_bends.split(',')
+
             ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
             #add cross terms for angle patterns
             nss = 0
             nsa = 0
             for angle in self.system.iter_angles():
+                skip = False
                 angle, types = term_sort_atypes(ffatypes, angle, 'angle')
                 anglekind = None
-                for term in self.iter_masters('^.*/'+'\.'.join(types)+'$', use_re=True):
-                    if len(term.get_atoms())!=3: continue
-                    if len(term.ics)>1: continue
-                    assert anglekind is None, '2 masters detected for angle %s' %('.'.join(types))
-                    anglekind = term.ics[0].kind
-                assert anglekind is not None, 'No master found for angle %s' %('.'.join(types))
-                bond0, btypes = term_sort_atypes(ffatypes, angle[:2], 'bond')
-                bond1, btypes = term_sort_atypes(ffatypes, angle[1:], 'bond')
-                #add stretch-stretch
-                if self.settings.do_cross_ASS:
-                    self.add_term(
-                        Cross, [Bond(*bond0), Bond(*bond1)],
-                        'Cross/'+'.'.join(types)+'/bb', ['HC_FC_CROSS_ASS'], ['kjmol/A**2', 'A', 'A']
-                    )
-                    nss += 1
-                #add stretch-bends
-                if self.settings.do_cross_ASA:
-                    if anglekind == 2:
-                        basename = 'Cross/'+'.'.join(types)
-                        ic = BendAngle(*angle)
-                        unit = 'deg'
-                    #elif anglekind == 1:
-                    #TODO: this is switched off, does not make much difference and
-                    #gives issues in the case of diagonal BendCheby4 terms
-                    #    basename = 'CrossCBend/'+'.'.join(types)
-                    #    ic = BendCos(*angle)
-                    #    unit = 'au'
-                    else:
-                        log.dump('Skipped stretch-angle cross term for %s due to incompatible diagonal bend term with ickind=%i' %('.'.join(types), anglekind))
-                        continue
-                    self.add_term(
-                        Cross, [Bond(*bond0), ic],
-                        basename+'/b0a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit]
-                    )
-                    self.add_term(
-                        Cross, [Bond(*bond1), ic],
-                        basename+'/b1a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit]
-                    )
-                    nsa += 1
+                
+                if self.settings.excl_bends is not None:
+                    bend_opt1 = '.'.join(types)
+                    bend_opt2 = '.'.join(types[::-1])
+                    for excl in excl_bends:
+                        pattern = re.compile(excl)
+                        if pattern.match(bend_opt1) or pattern.match(bend_opt2):
+                            skip = True                                
+
+                if not skip:
+                    for term in self.iter_masters('^.*/'+'\.'.join(types)+'$', use_re=True):
+                        if len(term.get_atoms())!=3: continue
+                        if len(term.ics)>1: continue
+                        assert anglekind is None, '2 masters detected for angle %s' %('.'.join(types))
+                        anglekind = term.ics[0].kind
+                    assert anglekind is not None, 'No master found for angle %s' %('.'.join(types))
+                    bond0, btypes0 = term_sort_atypes(ffatypes, angle[:2], 'bond')
+                    bond1, btypes1 = term_sort_atypes(ffatypes, angle[1:], 'bond')
+
+                    if self.settings.excl_bonds is not None:
+                        bond_opt1 = '.'.join(btypes0)
+                        bond_opt2 = '.'.join(btypes0[::-1])
+                        bond_opt3 = '.'.join(btypes1)
+                        bond_opt4 = '.'.join(btypes1[::-1])
+                        for excl in excl_bonds:
+                            pattern = re.compile(excl)
+                            if pattern.match(bond_opt1) or pattern.match(bond_opt2) or pattern.match(bond_opt3) or pattern.match(bond_opt4):
+                                skip = True                
+                                 
+                    if not skip:
+                        #add stretch-stretch
+                        if self.settings.do_cross_ASS:
+                            self.add_term(
+                                Cross, [Bond(*bond0), Bond(*bond1)],
+                                'Cross/'+'.'.join(types)+'/bb', ['HC_FC_CROSS_ASS'], ['kjmol/A**2', 'A', 'A']
+                            )
+                            nss += 1
+                        #add stretch-bends
+                        if self.settings.do_cross_ASA:
+                            if anglekind == 2:
+                                basename = 'Cross/'+'.'.join(types)
+                                ic = BendAngle(*angle)
+                                unit = 'deg'
+                            #elif anglekind == 1:
+                            #TODO: this is switched off, does not make much difference and
+                            #gives issues in the case of diagonal BendCheby4 terms
+                            #    basename = 'CrossCBend/'+'.'.join(types)
+                            #    ic = BendCos(*angle)
+                            #    unit = 'au'
+                            else:
+                                log.dump('Skipped stretch-angle cross term for %s due to incompatible diagonal bend term with ickind=%i' %('.'.join(types), anglekind))
+                                continue
+                            self.add_term(
+                                Cross, [Bond(*bond0), ic],
+                                basename+'/b0a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit]
+                            )
+                            self.add_term(
+                                Cross, [Bond(*bond1), ic],
+                                basename+'/b1a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit]
+                            )
+                            nsa += 1
             log.dump('Added %i stretch-stretch and %i stretch-angle cross terms from angle patterns' %(nss, nsa))
             
     def init_cross_dihed_terms(self):
@@ -653,6 +757,7 @@ class ValenceFF(ForcePartValence):
             Initialize cross terms between diheds and bonds,bends.
         '''
         from yaff.pes.iclist import DihedCos2, DihedCos3, DihedCos4, DihedCos6
+          
         with log.section('VAL', 3, 'Initializing'):
             ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
             #add cross terms for dihedral patterns
@@ -712,6 +817,14 @@ class ValenceFF(ForcePartValence):
                 
                 #add stretch-stretch term:
                 if self.settings.do_cross_DSS:
+                
+                    if self.settings.excl_bonds is not None:
+                        raise NotImplementedError                
+                    if self.settings.excl_bends is not None:
+                        raise NotImplementedError
+                    if self.settings.excl_dihs is not None:
+                        raise NotImplementedError
+                        
                     basename = 'CrossBondDih%i/'%m+'.'.join(types)
                     self.add_term(
                         Cross, [Bond(*bond01), Bond(*bond23)],
@@ -736,6 +849,14 @@ class ValenceFF(ForcePartValence):
                     nsd += 3
                 #add angle-angle term:
                 if self.settings.do_cross_DAA:
+                
+                    if self.settings.excl_bonds is not None:
+                        raise NotImplementedError                
+                    if self.settings.excl_bends is not None:
+                        raise NotImplementedError
+                    if self.settings.excl_dihs is not None:
+                        raise NotImplementedError
+                         
                     assert angle012_type is not None, 'No master found for angle012 in %s' %('.'.join(types))
                     assert angle123_type is not None, 'No master found for angle123 in %s' %('.'.join(types))
                     #add angle-angle term:
