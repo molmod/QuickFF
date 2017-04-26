@@ -304,7 +304,7 @@ class ValenceFF(ForcePartValence):
             if label is None:
                 yield term
             elif use_re:
-                pattern = re.compile(label)
+                pattern = re.compile(label, re.IGNORECASE)
                 if pattern.match(term.basename):
                     yield term
                 else:
@@ -347,7 +347,7 @@ class ValenceFF(ForcePartValence):
                     bond_opt1 = '.'.join(types)
                     bond_opt2 = '.'.join(types[::-1])
                     for excl in excl_bonds:
-                        pattern = re.compile(excl)
+                        pattern = re.compile(excl, re.IGNORECASE)
                         if pattern.match(bond_opt1) or pattern.match(bond_opt2):
                             skip = True                
                                        
@@ -428,7 +428,7 @@ class ValenceFF(ForcePartValence):
                         bend_opt1 = '.'.join(types)
                         bend_opt2 = '.'.join(types[::-1])
                         for excl in excl_bends:
-                            pattern = re.compile(excl)
+                            pattern = re.compile(excl, re.IGNORECASE)
                             if pattern.match(bend_opt1) or pattern.match(bend_opt2):
                                 skip = True                
                                              
@@ -568,7 +568,7 @@ class ValenceFF(ForcePartValence):
                             dih_opt1 = '.'.join(types)
                             dih_opt2 = '.'.join(types[::-1])
                             for excl in excl_dihs:
-                                pattern = re.compile(excl)
+                                pattern = re.compile(excl, re.IGNORECASE)
                                 if pattern.match(dih_opt1) or pattern.match(dih_opt2):
                                     skip = True                
  
@@ -603,7 +603,7 @@ class ValenceFF(ForcePartValence):
             if self.settings.excl_oopds is not None:
                 excl_oopds = self.settings.excl_oopds.split(',')
 
-            #get all dihedrals
+            #get all out-of-plane distances
             from molmod.ic import opbend_dist, _opdist_low
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
             opdists = {}
@@ -627,7 +627,7 @@ class ValenceFF(ForcePartValence):
                     oopd_opt5 = '.'.join([types[2],types[0],types[1],types[3]])
                     oopd_opt6 = '.'.join([types[2],types[1],types[0],types[3]])
                     for excl in excl_oopds:
-                        pattern = re.compile(excl)
+                        pattern = re.compile(excl, re.IGNORECASE)
                         if pattern.match(oopd_opt1) or pattern.match(oopd_opt2) or pattern.match(oopd_opt3) or pattern.match(oopd_opt4) or pattern.match(oopd_opt5) or pattern.match(oopd_opt6):
                             skip = True                
                 if not skip:
@@ -694,7 +694,7 @@ class ValenceFF(ForcePartValence):
                     bend_opt1 = '.'.join(types)
                     bend_opt2 = '.'.join(types[::-1])
                     for excl in excl_bends:
-                        pattern = re.compile(excl)
+                        pattern = re.compile(excl, re.IGNORECASE)
                         if pattern.match(bend_opt1) or pattern.match(bend_opt2):
                             skip = True                                
 
@@ -714,7 +714,7 @@ class ValenceFF(ForcePartValence):
                         bond_opt3 = '.'.join(btypes1)
                         bond_opt4 = '.'.join(btypes1[::-1])
                         for excl in excl_bonds:
-                            pattern = re.compile(excl)
+                            pattern = re.compile(excl, re.IGNORECASE)
                             if pattern.match(bond_opt1) or pattern.match(bond_opt2) or pattern.match(bond_opt3) or pattern.match(bond_opt4):
                                 skip = True                
                                  
@@ -1092,11 +1092,11 @@ class ValenceFF(ForcePartValence):
         # magnitude of the threshold, it is not worth adding such complications to the
         # code.
         term = self.vlist.vtab[term_index]
-        if term['kind'] in [0, 2, 11, 12]:  # ['Harmonic', 'Fues', 'MM3Quartic']
+        if term['kind'] in [0, 2, 11, 12]:  # ['Harmonic', 'Fues', 'MM3Quartic', 'MM3Bend']
             return abs(term['par0']) < 1e-6*kjmol
         elif term['kind'] in [14]: #['Morse']
             return abs(2.0*term['par0']*term['par1']**2) < 1e-6*kjmol
-        elif term['kind'] in [1]:   # ['PolyFour']
+        elif term['kind'] in [1,13]:   # ['PolyFour', 'BondDoubleWell']
             # Not sure how to handle this one...
             # For now, never neglect.
             return False

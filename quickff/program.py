@@ -108,7 +108,9 @@ class BaseProgram(object):
                             log.dump('PT_ALL not in tasks of %s-%i, deactivated PT' %(term.basename, term.index))
                             traj.active = False
                         found = True
-                if not found: log.warning('No term found for trajectory %s with atom indices %s' %(traj.term.basename, str(traj.term.get_atoms())))
+                if not found:
+                    log.warning('No term found for trajectory %s with atom indices %s, deactivating trajectory' %(traj.term.basename, str(traj.term.get_atoms())))
+                    traj.active = False
             #check if every term with task PT_ALL has a trajectory associated
             #with it. It a trajectory is missing, generate it.
             for term in self.valence.iter_terms():

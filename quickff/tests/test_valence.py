@@ -53,7 +53,6 @@ def check_terms(name):
         found = False
         for term in valence.iter_terms('^OOPDIST/.*$', use_re=True):
             at0, at1, at2, at3 = term.get_atoms()
-            print at0, at1, at2, at3
             for p0, p1, p2 in permutations([at0, at1, at2]):
                 if oop[0]==p0 and oop[1]==p1 and oop[2]==p2 and oop[3]==at3:
                     assert not found, 'OopDist term %s was already found!' %str(oop)
@@ -64,7 +63,10 @@ def check_terms(name):
                 if oop[0]==p0 and oop[1]==p1 and oop[2]==p2 and oop[3]==at3:
                     assert not found, 'SqOopDist term %s was already found!' %str(oop)
                     found = True
-        assert found, 'No (Sq)OopDist term found for bond %s' %str(oop)
+        assert found, 'No (Sq)OopDist term found for bond %s (which is %s)' %(
+            str(oop), 
+            ' '.join([system.ffatypes[system.ffatype_ids[i]] for i in [at0,at1,at2,at3]])
+        )
 
 def get_analytic_numeric_hessian(valence, term, **ffpars):
     #setup ff

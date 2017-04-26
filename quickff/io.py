@@ -493,7 +493,7 @@ def _bondharm_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'R0 A'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
         pars.lines.append('%8s  %8s  %.10e  %.10e' %(
@@ -507,7 +507,7 @@ def _bondfues_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'R0 A'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
         pars.lines.append('%8s  %8s  %.10e  %.10e' %(
@@ -521,7 +521,7 @@ def _bondmm3_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'R0 A'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label='BondMM3')):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
         pars.lines.append('%8s  %8s  %.10e  %.10e' %(
@@ -535,7 +535,7 @@ def _bendaharm_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'THETA0 deg'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
         pars.lines.append('%8s  %8s  %8s  %.10e  %.10e' %(
@@ -549,7 +549,7 @@ def _bendmm3_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'THETA0 deg'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label='BendMM3')):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
         pars.lines.append('%8s  %8s  %8s  %.10e  %.10e' %(
@@ -563,7 +563,7 @@ def _bendcharm_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['K kjmol', 'COS0 au'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
         pars.lines.append('%8s  %8s  %8s  %.10e  %.10e' %(
@@ -577,7 +577,7 @@ def _bendcheby_to_yaff(valence, m):
     units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label='BendCheby%i'%m)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, sign = valence.get_params(master.index)
         if sign==-1: q0=0.0
@@ -593,7 +593,7 @@ def _torsions_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         m, K, q0 = valence.get_params(master.index)
         pars.lines.append('%8s  %8s  %8s  %8s  %1i %.10e  %.10e' %(
@@ -608,7 +608,7 @@ def _torscheby_to_yaff(valence, m):
     units = ParameterDefinition('UNIT', lines=['A kjmol', 'PHI0 deg'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label='TorsCheby%i' %m)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, sign = valence.get_params(master.index)
         if sign<0: q0 = 0.0
@@ -625,7 +625,7 @@ def _torsc2harm_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['A kjmol', 'COS0 au'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         a = valence.get_params(master.index)
         K = 0.5*a[3]
@@ -642,7 +642,7 @@ def _dihedharm_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['K kjmol/rad**2', 'PHI0 deg'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, phi0 = valence.get_params(master.index)
         pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
@@ -657,7 +657,7 @@ def _opdists_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['K kjmol/A**2', 'D0 A'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         if 'sqoopdist' in master.basename.lower(): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
@@ -673,7 +673,7 @@ def _sqopdists_to_yaff(valence):
     units = ParameterDefinition('UNIT', lines=['K kjmol/A**4', 'D0 A**2'])
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix)):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         ffatypes = master.basename.split('/')[1].split('.')
         K, q0 = valence.get_params(master.index)
         pars.lines.append('%8s  %8s  %8s  %8s  %.10e  %.10e' %(
@@ -696,7 +696,7 @@ def _cross_to_yaff(valence):
     done = []
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix+'/')):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         prefix, ffatypes, suffix = master.basename.split('/')
         label = prefix+'/'+ffatypes+'/'
         if label in done: continue
@@ -739,7 +739,7 @@ def _crosscbend_to_yaff(valence):
     done = []
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix+'/')):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         prefix, ffatypes, suffix = master.basename.split('/')
         label = prefix+'/'+ffatypes+'/'
         if label in done: continue
@@ -783,7 +783,7 @@ def _crossbonddihed_to_yaff(valence, m):
     done = []
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix+'/')):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         prefix, ffatypes, suffix = master.basename.split('/')
         label = prefix+'/'+ffatypes+'/'
         if label in done: continue
@@ -830,7 +830,7 @@ def _crossbenddihed_to_yaff(valence, m):
     done = []
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix+'/')):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         prefix, ffatypes, suffix = master.basename.split('/')
         label = prefix+'/'+ffatypes+'/'
         if label in done: continue
@@ -872,7 +872,7 @@ def _crosscbenddihed_to_yaff(valence):
     done = []
     pars = ParameterDefinition('PARS')
     for i, master in enumerate(valence.iter_masters(label=prefix+'/')):
-        if valence.is_negligible(i): continue
+        if valence.is_negligible(master.index): continue
         prefix, ffatypes, suffix = master.basename.split('/')
         label = prefix+'/'+ffatypes+'/'
         if label in done: continue
