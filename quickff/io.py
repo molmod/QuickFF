@@ -141,8 +141,8 @@ def read_abinitio(fn, do_hess=True):
         vasprun = VASPRun(fn,field_labels=['hessian','gradient'])
         numbers = vasprun.fields['numbers']
         coords = vasprun.fields['pos_init']
-        energy = vasprun.fields['energies'][0]
-        grad = -vasprun.fields['gradient'][0]
+        energy = vasprun.fields['energies'][-1]
+        grad = -vasprun.fields['gradient'][-1]
         hess = vasprun.fields['hessian'].reshape((len(numbers),3,len(numbers),3 ))
         masses = vasprun.fields['masses']
         rvecs = vasprun.fields['rvecs_init']
