@@ -84,7 +84,7 @@ def parse():
         help='Specify a configuration file to read all QuickFF settings from.'
     )
     settings.add_argument(
-        '-m', '--program-mode', default='DeriveFF',
+        '-m', '--program-mode', default=None,
         choices=[prog for prog in allowed_programs if not prog=='BaseProgram'],
         help='Specify the program mode which defines the set of instructions '
              'that will be executed.'

@@ -749,7 +749,7 @@ class ValenceFF(ForcePartValence):
                                 Cross, [Bond(*bond1), ic],
                                 basename+'/b1a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit]
                             )
-                            nsa += 1
+                            nsa += 2
             log.dump('Added %i stretch-stretch and %i stretch-angle cross terms from angle patterns' %(nss, nsa))
             
     def init_cross_dihed_terms(self):
