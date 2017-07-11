@@ -838,7 +838,7 @@ def _crossbonddihed_to_yaff(valence, m):
         #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
-            '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
                 ffatypes[3], ffatypes[2], ffatypes[1], ffatypes[0],
                 Kss/(kjmol/angstrom**2), Ksd2/(kjmol/angstrom),
                 Ksd1/(kjmol/angstrom), Ksd0/(kjmol/angstrom), 
@@ -892,7 +892,7 @@ def _crossbenddihed_to_yaff(valence, m):
         #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
-            '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
                 ffatypes[3], ffatypes[2], ffatypes[1], ffatypes[0],
                 Kaa/kjmol, Kad1/kjmol, Kad0/kjmol, 
                 theta1/deg, theta0/deg, cpsi0,
@@ -944,7 +944,7 @@ def _crosscbenddihed_to_yaff(valence):
         #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
-            '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
                 ffatypes[3], ffatypes[2], ffatypes[1], ffatypes[0],
                 Kaa/kjmol, Kad1/kjmol, Kad0/kjmol, 
                 ctheta1, ctheta0, cpsi0,
