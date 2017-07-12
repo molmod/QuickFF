@@ -28,6 +28,19 @@ from molmod.units import parse_unit
 
 __all__  = ['Settings']
 
+allowed_keys = [
+    'fn_yaff', 'fn_charmm22_prm', 'fn_charmm22_psf', 'fn_sys', 'plot_traj',
+    'xyz_traj', 'fn_traj', 'log_level', 'log_file',
+    'program_mode',
+    'only_traj', 'ffatypes', 'ei', 'ei_rcut', 'vdw', 'vdw_rcut', 'covres',
+    'excl_bonds', 'excl_bends', 'excl_dihs', 'excl_oopds', 
+    'do_hess_mass_weighting', 'do_cross_svd',
+    'do_bonds', 'do_bends', 'do_dihedrals', 'do_oops', 'do_cross_ASS',
+    'do_cross_ASA', 'do_cross_DSS', 'do_cross_DSD', 'do_cross_DAA',
+    'do_cross_DAD', 'bond_term', 'bend_term', 'do_squarebend', 'do_bendclin', 
+    'do_sqoopdist_to_oopdist',
+]
+
 class Settings(object):
     'Class to control the behaviour of a Quickff run'
     def __init__(self, fn=None, **kwargs):
@@ -118,6 +131,7 @@ class Settings(object):
             log.write_to_file(f)
 
     def set(self, key, value):
+        assert key in allowed_keys, IOError('Key %s is not allowed in settings routine' %key)
         if isinstance(value, str) and value.lower()=='default':
             return
         if value is None and key in self.__dict__.keys():
