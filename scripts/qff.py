@@ -102,7 +102,7 @@ def parse():
              'MakeTrajectories program.'
     )
     settings.add_argument(
-        '-e', '--ener-traj', default=False, action='store_true',
+        '-p', '--plot-traj', default=False, action='store_true',
         help='Plot the various energy contributions along the perturbation '
              'trajectories to.'
     )
@@ -186,7 +186,7 @@ def main():
         'fn_traj':      args.fn_traj,
         'only_traj':    args.only_traj,
         'program_mode': args.program_mode,
-        'ener_traj':    args.ener_traj,
+        'plot_traj':    args.plot_traj,
         'xyz_traj':     args.xyz_traj,
         'suffix':       args.suffix,
         'log_level':    verbosity,
