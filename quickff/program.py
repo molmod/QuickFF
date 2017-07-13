@@ -60,9 +60,9 @@ class BaseProgram(object):
 
             settings
                 a `Settings` instance defining all QuickFF settings
-            
+
             **Optional Arguments**
-            
+
             ffrefs
                 a list of `Reference` instances defining the a-priori force
                 field contributions.
@@ -256,12 +256,25 @@ class BaseProgram(object):
             if do_valence: message += ' with valence reference'
             log.dump(message)
             #compute fc and rv from trajectory
+            only = self.settings.only_traj
             for traj in self.trajectories:
                 if traj is None: continue
+                if only is not None:
+                    basename = self.valence.terms[traj.term.master].basename
+                    if isinstance(only, list) and basename not in only:
+                        continue
+                    elif only!=basename:
+                        continue
                 self.perturbation.estimate(traj, self.ai, ffrefs=self.ffrefs, do_valence=do_valence)
             #set force field parameters to computed fc and rv
             for traj in self.trajectories:
                 if traj is None: continue
+                if only is not None:
+                    basename = self.valence.terms[traj.term.master].basename
+                    if isinstance(only, list) and basename not in only:
+                        continue
+                    elif only!=basename:
+                        continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
             #output
             self.valence.dump_logger(print_level=logger_level)
@@ -340,12 +353,12 @@ class BaseProgram(object):
                 print level at which the resulting parameters should be dumped to
                 the logger. By default, the parameters will only be dumped at
                 the highest log level.
-            
+
             do_svd
                 whether or not to do an SVD decomposition before solving the
                 set of equations and explicitly throw out the degrees of
                 freedom that correspond to the lowest singular values.
-            
+
             do_mass_weighting
                 whether or not to apply mass weighing to the ab initio hessian
                 and the force field contributions before doing the fitting.
@@ -397,7 +410,7 @@ class BaseProgram(object):
         with log.section('VAL', 2, 'Initializing'):
             self.reset_system()
             self.valence.init_cross_angle_terms()
-            
+
             #function to find rest value
             def find_rest_value(label):
                 candidates = [cand for cand in self.valence.iter_masters(label=label, use_re=True)]
@@ -420,7 +433,7 @@ class BaseProgram(object):
                     return -self.valence.get_params(can.index, only='sign')
                 else:
                     return self.valence.get_params(can.index, only='rv')
-            
+
             #set rest values and initialize fc for bond-bond cross
             for term in self.valence.iter_masters('^Cross/.*/bb$', use_re=True):
                 types = term.basename.split('/')[1].split('.')
@@ -431,7 +444,7 @@ class BaseProgram(object):
                 assert rv1 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[1:]))
                 self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                 for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-            
+
             #set rest values and initialize fc for bond-angle cross
             for term in self.valence.iter_masters('^Cross/.*/b0a$', use_re=True):
                 types = term.basename.split('/')[1].split('.')
@@ -442,7 +455,7 @@ class BaseProgram(object):
                 assert rv1 is not None, 'Rest value of BendAHarm|BendMM3/%s not found' %('.'.join(types))
                 self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                 for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-            
+
             for term in self.valence.iter_masters('^Cross/.*/b1a$', use_re=True):
                 types = term.basename.split('/')[1].split('.')
                 assert len(types)==3, 'Found angle cross terms with more/less than 3 atom types'
@@ -451,8 +464,8 @@ class BaseProgram(object):
                 assert rv0 is not None, 'Rest value of BondHarm/%s not found' %('.'.join(types[1:]))
                 assert rv1 is not None, 'Rest value of BendAHarm|BendMM3/%s not found' %('.'.join(types))
                 self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
-                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)    
-            
+                for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
+
             if self.settings.do_cross_DSS or self.settings.do_cross_DSD or self.settings.do_cross_DAD or self.settings.do_cross_DAA:
                 self.valence.init_cross_dihed_terms()
                 #set rest values and initialize fc for bond-bond cross
@@ -464,7 +477,7 @@ class BaseProgram(object):
                         rv1 = find_rest_value('^Bond.*/%s$' %('.'.join(types[2:])))
                         self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                         for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-                        
+
                 #set rest values and initialize fc for bond-dihed cross
                 for m in [1,2,3,4,6]:
                     for term in self.valence.iter_masters('^CrossBondDih%i/.*/b0d$' %m, use_re=True):
@@ -474,7 +487,7 @@ class BaseProgram(object):
                         rv1 = find_rest_value('^TorsCheby%i/%s$' %(m,'.'.join(types)))
                         self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                         for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-                    
+
                     for term in self.valence.iter_masters('^CrossBondDih%i/.*/b1d$' %m, use_re=True):
                         types = term.basename.split('/')[1].split('.')
                         assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
@@ -482,7 +495,7 @@ class BaseProgram(object):
                         rv1 = find_rest_value('^TorsCheby%i/%s$' %(m,'.'.join(types)))
                         self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                         for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-                    
+
                     for term in self.valence.iter_masters('^CrossBondDih%i/.*/b2d$' %m, use_re=True):
                         types = term.basename.split('/')[1].split('.')
                         assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
@@ -490,7 +503,7 @@ class BaseProgram(object):
                         rv1 = find_rest_value('^TorsCheby%i/%s$' %(m,'.'.join(types)))
                         self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                         for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-                
+
                 #set rest values and initialize fc for angle-angle cross
                 for m in [1,2,3,4,6]:
                     for term in self.valence.iter_masters('^CrossBendDih%i/.*/aa$' %m, use_re=True):
@@ -500,7 +513,7 @@ class BaseProgram(object):
                         rv1 = find_rest_value('^BendAHarm/%s$|^BendMM3/%s$' %('.'.join(types[1:]),'.'.join(types[1:])))
                         self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                         for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-                
+
                 #set rest values and initialize fc for angle-dihed cross
                 for m in [1,2,3,4,6]:
                     for term in self.valence.iter_masters('^CrossBendDih%i/.*/a0d$' %m, use_re=True):
@@ -510,7 +523,7 @@ class BaseProgram(object):
                         rv1 = find_rest_value('^TorsCheby%i/%s$' %(m,'.'.join(types)))
                         self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                         for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-                    
+
                     for term in self.valence.iter_masters('^CrossBendDih%i/.*/a1d$' %m, use_re=True):
                         types = term.basename.split('/')[1].split('.')
                         assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
@@ -518,7 +531,7 @@ class BaseProgram(object):
                         rv1 = find_rest_value('^TorsCheby%i/%s$' %(m,'.'.join(types)))
                         self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                         for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-                    
+
                     for term in self.valence.iter_masters('^CrossCBendDih%i/.*/a0d$' %m, use_re=True):
                         types = term.basename.split('/')[1].split('.')
                         assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
@@ -526,7 +539,7 @@ class BaseProgram(object):
                         rv1 = find_rest_value('^TorsCheby%i/%s$' %(m,'.'.join(types)))
                         self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                         for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
-                    
+
                     for term in self.valence.iter_masters('^CrossCBendDih%i/.*/a1d$' %m, use_re=True):
                         types = term.basename.split('/')[1].split('.')
                         assert len(types)==4, 'Found angle cross terms with more/less than 4 atom types'
@@ -597,7 +610,7 @@ class BaseProgram(object):
             180 deg - thresshold. If a master (or its slaves) has such a rest
             value, convert master and all slaves to BendCLin (which corresponds
             to a chebychev1 potential with sign=+1):
-            
+
                 0.5*K*[1+cos(theta)]
         '''
         for master in self.valence.iter_masters(label='BendAHarm'):
@@ -691,9 +704,9 @@ class PlotTrajectories(BaseProgram):
 class DeriveFF(BaseProgram):
     '''
         Derive a force field for the given system. After the hessian fit of the
-        force constants, the rest values are refined by revisiting the 
-        perturbation trajectories with an extra a priori term representing the 
-        current valence contribution. Finally, the force constants are refined 
+        force constants, the rest values are refined by revisiting the
+        perturbation trajectories with an extra a priori term representing the
+        current valence contribution. Finally, the force constants are refined
         by means of a final hessian fit.
     '''
     def run(self):

@@ -204,7 +204,7 @@ class RelaxedStrain(object):
 
             valence
                 an instance of ValenceFF defining the valence force field
-            
+
             settings
                 a `Settings` instance defining all QuickFF settings
         '''
@@ -425,11 +425,11 @@ class Strain(ForceField):
             term
                 a Term instance representing the term of the perturbation
                 trajectory of the current strain
-            
+
             other_terms
                 a list of Term instances representing all other terms for ICs
                 for which a strain contribution should be added
-            
+
             **Keyword Arguments**
 
             cart_penalty

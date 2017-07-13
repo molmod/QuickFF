@@ -59,9 +59,9 @@ class HessianFCCost(object):
                 a list of Reference instances representing possible a priori
                 determined contributions to the force field (such as eg.
                 electrostatics and van der Waals)
-           
+
             do_mass_weighting
-                
+
         '''
         #initialization
         self.init = np.zeros(len(fit_indices), float)

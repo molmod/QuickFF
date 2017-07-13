@@ -334,23 +334,23 @@ class ValenceFF(ForcePartValence):
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
             #get the bond terms
             nbonds = 0
-      
+
             #list of bonds which should be excluded
             if self.settings.excl_bonds is not None:
                 excl_bonds = self.settings.excl_bonds.split(',')
-            
+
             for bond in self.system.iter_bonds():
                 skip = False
                 bond, types = term_sort_atypes(ffatypes, bond, 'bond')
-                
+
                 if self.settings.excl_bonds is not None:
                     bond_opt1 = '.'.join(types)
                     bond_opt2 = '.'.join(types[::-1])
                     for excl in excl_bonds:
                         pattern = re.compile(excl, re.IGNORECASE)
                         if pattern.match(bond_opt1) or pattern.match(bond_opt2):
-                            skip = True                
-                                       
+                            skip = True
+
                 if not skip:
                     units = ['kjmol/A**2', 'A']
                     basename = self.settings.bond_term+'/'+'.'.join(types)
@@ -378,7 +378,7 @@ class ValenceFF(ForcePartValence):
             #list of bends which should be excluded
             if self.settings.excl_bends is not None:
                 excl_bends = self.settings.excl_bends.split(',')
-                
+
             #get the angle terms
             ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
             angles = {}
@@ -405,7 +405,7 @@ class ValenceFF(ForcePartValence):
                     else:
                         rs = np.array([self.system.pos[j] for j in bend])
                         rvs.append(bend_angle(rs)[0])
-                #sort rvs in rvs in [90-thresshold, 90+thresshold], rvs in 
+                #sort rvs in rvs in [90-thresshold, 90+thresshold], rvs in
                 #[180-thresshold,180] and others
                 rvs90 = [rv for rv in rvs if 90*deg-thresshold<rv<90*deg+thresshold]
                 rvs180 = [rv for rv in rvs if 180*deg-thresshold<rv<180*deg]
@@ -423,15 +423,15 @@ class ValenceFF(ForcePartValence):
                 #add term
                 for bend in bends:
                     skip = False
-                
+
                     if self.settings.excl_bends is not None:
                         bend_opt1 = '.'.join(types)
                         bend_opt2 = '.'.join(types[::-1])
                         for excl in excl_bends:
                             pattern = re.compile(excl, re.IGNORECASE)
                             if pattern.match(bend_opt1) or pattern.match(bend_opt2):
-                                skip = True                
-                                             
+                                skip = True
+
                     if not skip:
                         if potkind=='lincos':
                             basename = 'BendCheby1/'+'.'.join(types)
@@ -563,15 +563,15 @@ class ValenceFF(ForcePartValence):
                         do_chebychev = False
                     for dihed in diheds:
                         skip = False
- 
+
                         if self.settings.excl_dihs is not None:
                             dih_opt1 = '.'.join(types)
                             dih_opt2 = '.'.join(types[::-1])
                             for excl in excl_dihs:
                                 pattern = re.compile(excl, re.IGNORECASE)
                                 if pattern.match(dih_opt1) or pattern.match(dih_opt2):
-                                    skip = True                
- 
+                                    skip = True
+
                         if not skip:
                             if do_chebychev:
                                 assert chebypot is not None
@@ -618,7 +618,7 @@ class ValenceFF(ForcePartValence):
             nsq = 0
             for types, oops in opdists.iteritems():
                 skip = False
- 
+
                 if self.settings.excl_oopds is not None:
                     oopd_opt1 = '.'.join(types)
                     oopd_opt2 = '.'.join([types[0],types[2],types[1],types[3]])
@@ -629,7 +629,7 @@ class ValenceFF(ForcePartValence):
                     for excl in excl_oopds:
                         pattern = re.compile(excl, re.IGNORECASE)
                         if pattern.match(oopd_opt1) or pattern.match(oopd_opt2) or pattern.match(oopd_opt3) or pattern.match(oopd_opt4) or pattern.match(oopd_opt5) or pattern.match(oopd_opt6):
-                            skip = True                
+                            skip = True
                 if not skip:
                     d0s = np.zeros(len(oops), float)
                     for i, oop in enumerate(oops):
@@ -649,7 +649,7 @@ class ValenceFF(ForcePartValence):
                                 self.system.pos[oop[3]],
                             ])
                             d0s[i] = abs(opbend_dist(rs)[0])
-                            
+
                     if d0s.mean()<thresshold_zero: #TODO: check this thresshold
                         #add regular term harmonic in oopdist
                         for oop in oops:
@@ -689,14 +689,14 @@ class ValenceFF(ForcePartValence):
                 skip = False
                 angle, types = term_sort_atypes(ffatypes, angle, 'angle')
                 anglekind = None
-                
+
                 if self.settings.excl_bends is not None:
                     bend_opt1 = '.'.join(types)
                     bend_opt2 = '.'.join(types[::-1])
                     for excl in excl_bends:
                         pattern = re.compile(excl, re.IGNORECASE)
                         if pattern.match(bend_opt1) or pattern.match(bend_opt2):
-                            skip = True                                
+                            skip = True
 
                 if not skip:
                     for term in self.iter_masters('^.*/'+'\.'.join(types)+'$', use_re=True):
@@ -716,8 +716,8 @@ class ValenceFF(ForcePartValence):
                         for excl in excl_bonds:
                             pattern = re.compile(excl, re.IGNORECASE)
                             if pattern.match(bond_opt1) or pattern.match(bond_opt2) or pattern.match(bond_opt3) or pattern.match(bond_opt4):
-                                skip = True                
-                                 
+                                skip = True
+
                     if not skip:
                         #add stretch-stretch
                         if self.settings.do_cross_ASS:
@@ -751,13 +751,13 @@ class ValenceFF(ForcePartValence):
                             )
                             nsa += 2
             log.dump('Added %i stretch-stretch and %i stretch-angle cross terms from angle patterns' %(nss, nsa))
-            
+
     def init_cross_dihed_terms(self):
         '''
             Initialize cross terms between diheds and bonds,bends.
         '''
         from yaff.pes.iclist import DihedCos2, DihedCos3, DihedCos4, DihedCos6
-          
+
         with log.section('VAL', 3, 'Initializing'):
             ffatypes = [self.system.ffatypes[i] for i in self.system.ffatype_ids]
             #add cross terms for dihedral patterns
@@ -814,17 +814,17 @@ class ValenceFF(ForcePartValence):
                     if len(term.ics)>1: continue
                     assert angle123_type is None, 'Two masters found for angle %s' %(str(types[1:]))
                     angle123_type = term.ics[0].kind
-                
+
                 #add stretch-stretch term:
                 if self.settings.do_cross_DSS:
-                
+
                     if self.settings.excl_bonds is not None:
-                        raise NotImplementedError                
+                        raise NotImplementedError
                     if self.settings.excl_bends is not None:
                         raise NotImplementedError
                     if self.settings.excl_dihs is not None:
                         raise NotImplementedError
-                        
+
                     basename = 'CrossBondDih%i/'%m+'.'.join(types)
                     self.add_term(
                         Cross, [Bond(*bond01), Bond(*bond23)],
@@ -849,14 +849,14 @@ class ValenceFF(ForcePartValence):
                     nsd += 3
                 #add angle-angle term:
                 if self.settings.do_cross_DAA:
-                
+
                     if self.settings.excl_bonds is not None:
-                        raise NotImplementedError                
+                        raise NotImplementedError
                     if self.settings.excl_bends is not None:
                         raise NotImplementedError
                     if self.settings.excl_dihs is not None:
                         raise NotImplementedError
-                         
+
                     assert angle012_type is not None, 'No master found for angle012 in %s' %('.'.join(types))
                     assert angle123_type is not None, 'No master found for angle123 in %s' %('.'.join(types))
                     #add angle-angle term:
@@ -870,7 +870,7 @@ class ValenceFF(ForcePartValence):
                     else:
                         log.dump('Skipped angle-angle cross term for %s due to incompatible bend kinds' %('.'.join(types)))
                         continue
-                    
+
                 if self.settings.do_cross_DAD:
                     #add angle-dihedral terms:
                     if angle012_type == 2:
@@ -1036,7 +1036,7 @@ class ValenceFF(ForcePartValence):
             if exp is not None:
                 if fc is not None: raise IOError('When exp is set in Morse, fc cannot be set, but will be adapted to Ediss and exp')
                 term['par1'] = exp
-            if rv0 is not None:   term['par2'] = rv0            
+            if rv0 is not None:   term['par2'] = rv0
         else:
             raise NotImplementedError, \
                 'set_params not implemented for Yaff %s term' %term['kind']

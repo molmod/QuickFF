@@ -43,7 +43,7 @@ import sys, os
 description  = '''\
 This script will apply QuickFF to derive a covalent force field for the given
 system from the ab initio input given in the input files.'''
-#The arguments fn1, fn2, ... represent all input files that specify the system and the ab initio reference data. 
+#The arguments fn1, fn2, ... represent all input files that specify the system and the ab initio reference data.
 
 def parse():
     parser = ArgumentParser(description=description)

@@ -723,7 +723,7 @@ def _cross_to_yaff(valence):
                 Kbs1/(kjmol/angstrom), r0/angstrom, r1/angstrom, theta0/deg,
         ))
         #add identical line with inversed order of atom types to ensure all
-        #angle patterns have corresponding ff parameters. Only do this if 
+        #angle patterns have corresponding ff parameters. Only do this if
         #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
@@ -776,7 +776,7 @@ def _crosscbend_to_yaff(valence):
                 Kbs1/(kjmol/angstrom), r0/angstrom, r1/angstrom, cos0,
         ))
         #add identical line with inversed order of atom types to ensure all
-        #angle patterns have corresponding ff parameters. Only do this if 
+        #angle patterns have corresponding ff parameters. Only do this if
         #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
@@ -793,7 +793,7 @@ def _crossbonddihed_to_yaff(valence, m):
     prefix = 'CROSSBONDDIH%i' %m
     prefix.rstrip('1')
     units = ParameterDefinition(
-        'UNIT',        
+        'UNIT',
         lines=[
             'KSS kjmol/angstrom**2', 'KSD0 kjmol/angstrom',
             'KSD1 kjmol/angstrom', 'KSD2 kjmol/angstrom',
@@ -834,14 +834,14 @@ def _crossbonddihed_to_yaff(valence, m):
                 r0/angstrom, r1/angstrom, r2/angstrom, cpsi0,
         ))
         #add identical line with inversed order of atom types to ensure all
-        #angle patterns have corresponding ff parameters. Only do this if 
+        #angle patterns have corresponding ff parameters. Only do this if
         #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
             '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
                 ffatypes[3], ffatypes[2], ffatypes[1], ffatypes[0],
                 Kss/(kjmol/angstrom**2), Ksd2/(kjmol/angstrom),
-                Ksd1/(kjmol/angstrom), Ksd0/(kjmol/angstrom), 
+                Ksd1/(kjmol/angstrom), Ksd0/(kjmol/angstrom),
                 r2/angstrom, r1/angstrom, r0/angstrom, cpsi0,
         ))
         done.append(label)
@@ -888,13 +888,13 @@ def _crossbenddihed_to_yaff(valence, m):
                 theta0/deg, theta1/deg, cpsi0,
         ))
         #add identical line with inversed order of atom types to ensure all
-        #angle patterns have corresponding ff parameters. Only do this if 
+        #angle patterns have corresponding ff parameters. Only do this if
         #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
             '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
                 ffatypes[3], ffatypes[2], ffatypes[1], ffatypes[0],
-                Kaa/kjmol, Kad1/kjmol, Kad0/kjmol, 
+                Kaa/kjmol, Kad1/kjmol, Kad0/kjmol,
                 theta1/deg, theta0/deg, cpsi0,
         ))
         done.append(label)
@@ -940,13 +940,13 @@ def _crosscbenddihed_to_yaff(valence):
                 ctheta0, ctheta1, cpsi0,
         ))
         #add identical line with inversed order of atom types to ensure all
-        #angle patterns have corresponding ff parameters. Only do this if 
+        #angle patterns have corresponding ff parameters. Only do this if
         #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
             '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
                 ffatypes[3], ffatypes[2], ffatypes[1], ffatypes[0],
-                Kaa/kjmol, Kad1/kjmol, Kad0/kjmol, 
+                Kaa/kjmol, Kad1/kjmol, Kad0/kjmol,
                 ctheta1, ctheta0, cpsi0,
         ))
         done.append(label)
@@ -972,7 +972,7 @@ def dump_yaff(valence, fn):
         _crossbenddihed_to_yaff(valence,1), _crossbenddihed_to_yaff(valence,2),
         _crossbenddihed_to_yaff(valence,3), _crossbenddihed_to_yaff(valence,4),
         _crossbenddihed_to_yaff(valence,6),
-        _crosscbenddihed_to_yaff(valence), 
+        _crosscbenddihed_to_yaff(valence),
     ]
     f = open(fn, 'w')
     for section in sections:

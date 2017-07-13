@@ -33,11 +33,11 @@ allowed_keys = [
     'xyz_traj', 'fn_traj', 'log_level', 'log_file',
     'program_mode',
     'only_traj', 'ffatypes', 'ei', 'ei_rcut', 'vdw', 'vdw_rcut', 'covres',
-    'excl_bonds', 'excl_bends', 'excl_dihs', 'excl_oopds', 
+    'excl_bonds', 'excl_bends', 'excl_dihs', 'excl_oopds',
     'do_hess_mass_weighting', 'do_cross_svd',
     'do_bonds', 'do_bends', 'do_dihedrals', 'do_oops', 'do_cross_ASS',
     'do_cross_ASA', 'do_cross_DSS', 'do_cross_DSD', 'do_cross_DAA',
-    'do_cross_DAD', 'bond_term', 'bend_term', 'do_squarebend', 'do_bendclin', 
+    'do_cross_DAD', 'bond_term', 'bend_term', 'do_squarebend', 'do_bendclin',
     'do_sqoopdist_to_oopdist',
 ]
 
@@ -70,7 +70,7 @@ class Settings(object):
             if fn is not None:
                 self.read_config_file(fn)
             #if settings are defined through keyword arguments to this init
-            #constructor, read these settings and overwrite general RC as 
+            #constructor, read these settings and overwrite general RC as
             #wel as config file settings
             for key, value in kwargs.iteritems():
                 key = key.lstrip().rstrip()

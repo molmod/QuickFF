@@ -64,7 +64,7 @@ def check_terms(name):
                     assert not found, 'SqOopDist term %s was already found!' %str(oop)
                     found = True
         assert found, 'No (Sq)OopDist term found for bond %s (which is %s)' %(
-            str(oop), 
+            str(oop),
             ' '.join([system.ffatypes[system.ffatype_ids[i]] for i in [at0,at1,at2,at3]])
         )
 
@@ -221,7 +221,7 @@ def check_hessian_oops(name, tol=1e-3*kjmol/angstrom**2):
             term.basename, fc/(kjmol/angstrom**2), rv/angstrom, iM, jM, M/(kjmol/angstrom**2)
         )
         assert M<tol
-        del ref, num    
+        del ref, num
     for term in valence.iter_terms('SQOOPDIST'):
         inonzero, izero = get_indices_zero_nonzero(term, len(system.numbers))
         rv = np.random.uniform(low=0.01, high=0.1)*angstrom**2
