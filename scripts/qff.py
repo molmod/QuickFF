@@ -102,12 +102,12 @@ def parse():
              'MakeTrajectories program.'
     )
     settings.add_argument(
-        '-p', '--plot-traj', default=False, action='store_true',
+        '-p', '--plot-traj', default=None,
         help='Plot the various energy contributions along the perturbation '
              'trajectories to.'
     )
     settings.add_argument(
-        '-x', '--xyz-traj', default=False, action='store_true',
+        '-x', '--xyz-traj', default=None,
         help='Write the perturbation trajectories in XYZ format. '
     )
     settings.add_argument(

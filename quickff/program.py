@@ -222,9 +222,10 @@ class BaseProgram(object):
             #configure
             self.reset_system()
             only = self.settings.only_traj
-            if isinstance(only, str):
-                do_terms = [term for term in self.valence.terms if only in term.tasks]
+            if only is None or only=='PT_ALL' or only=='pt_all':
+                do_terms = [term for term in self.valence.terms]
             else:
+                if isinstance(only, str): only = [only]
                 do_terms = []
                 for pattern in only:
                     for term in self.valence.iter_terms(pattern):
@@ -259,22 +260,18 @@ class BaseProgram(object):
             only = self.settings.only_traj
             for traj in self.trajectories:
                 if traj is None: continue
-                if only is not None:
+                if not (only is None or only=='PT_ALL' or only=='pt_all'):
+                    if isinstance(only, str): only = [only]
                     basename = self.valence.terms[traj.term.master].basename
-                    if isinstance(only, list) and basename not in only:
-                        continue
-                    elif only!=basename:
-                        continue
+                    if basename not in only: continue
                 self.perturbation.estimate(traj, self.ai, ffrefs=self.ffrefs, do_valence=do_valence)
             #set force field parameters to computed fc and rv
             for traj in self.trajectories:
                 if traj is None: continue
-                if only is not None:
+                if not (only is None or only=='PT_ALL' or only=='pt_all'):
+                    if isinstance(only, str): only = [only]
                     basename = self.valence.terms[traj.term.master].basename
-                    if isinstance(only, list) and basename not in only:
-                        continue
-                    elif only!=basename:
-                        continue
+                    if basename not in only: continue
                 self.valence.set_params(traj.term.index, fc=traj.fc, rv0=traj.rv)
             #output
             self.valence.dump_logger(print_level=logger_level)

@@ -25,21 +25,107 @@
 
 from quickff.log import log
 from molmod.units import parse_unit
+import os
 
 __all__  = ['Settings']
 
-allowed_keys = [
-    'fn_yaff', 'fn_charmm22_prm', 'fn_charmm22_psf', 'fn_sys', 'plot_traj',
-    'xyz_traj', 'fn_traj', 'log_level', 'log_file',
-    'program_mode',
-    'only_traj', 'ffatypes', 'ei', 'ei_rcut', 'vdw', 'vdw_rcut', 'covres',
-    'excl_bonds', 'excl_bends', 'excl_dihs', 'excl_oopds',
-    'do_hess_mass_weighting', 'do_cross_svd',
-    'do_bonds', 'do_bends', 'do_dihedrals', 'do_oops', 'do_cross_ASS',
-    'do_cross_ASA', 'do_cross_DSS', 'do_cross_DSD', 'do_cross_DAA',
-    'do_cross_DAD', 'bond_term', 'bend_term', 'do_squarebend', 'do_bendclin',
-    'do_sqoopdist_to_oopdist',
-]
+def is_not_none(key, value):
+    if value is None:
+        raise IOError('Setting for key %s should be specified, is now None.' %(key))
+
+def has_value(values):
+    if values is None: return
+    values = [v.lower() for v in values]
+    def check(key, value):
+        if value is None: return
+        if value.lower() not in values:
+            raise IOError('Setting for key %s should be one of %s. Got %s' %(key, str(values), value))
+    return check
+
+
+def is_float(key, value):
+    if value is None: return
+    try:
+        value = float(value)
+    except ValueError:
+        raise IOError('Setting for key %s should be of type float. Got %s.' %(key, str(value)))
+
+
+def is_bool(key, value):
+    if not isinstance(value, bool):
+        raise IOError('Setting for key %s should be of type bool. Got %s.' %(key, str(value)))
+
+
+def is_string(key, value):
+    if value is None: return
+    if not isinstance(value, str):
+        raise IOError('Setting for key %s should be of type string. Got %s.' %(key, str(value)))
+
+
+def is_list_strings(key, value):
+    if value is None: return
+    if ',' in value:
+        value = value.split(',')
+        for i,v in enumerate(value):
+            if not isinstance(v,str):
+                raise IOError('Setting for key %s should be a string or a list of strings. Element %i is %s.' %(key, i, v))
+    else:
+        if not isinstance(value, str):
+            raise IOError('Setting for key %s should be a string or a list of strings. Got %s.' %(key, str(value)))
+
+
+def is_nonexisting_file_name(key, value):
+    if value is None: return
+    if os.path.isfile(value):
+        raise IOError('Setting for key %s should be non-existing file name, got %s which already exists.' %(key, value))
+
+
+def is_existing_file_name(key, value):
+    if value is None: return
+    if not os.path.isfile(value):
+        raise IOError('Setting for key %s should be existing file name, got %s which does not exist.' %(key, value))
+
+key_checks = {
+    'fn_yaff'               : [is_string, is_nonexisting_file_name],
+    'fn_charmm22_prm'       : [is_string, is_nonexisting_file_name],
+    'fn_charmm22_psf'       : [is_string, is_nonexisting_file_name],
+    'fn_sys'                : [is_string, is_nonexisting_file_name],
+    'plot_traj'             : [is_bool],
+    'xyz_traj'              : [is_bool],
+    'fn_traj'               : [is_string, is_existing_file_name],
+    'log_level'             : [is_not_none, is_string, has_value(['silent','low','medium','high','highest'])],
+    'log_file'              : [is_string, is_nonexisting_file_name],
+    'program_mode'          : [is_not_none, has_value(['DeriveFF','MakeTrajectories','PlotTrajectories'])],
+    'only_traj'             : [is_not_none, is_string],
+    'ffatypes'              : [is_list_strings],
+    'ei'                    : [is_string, is_existing_file_name],
+    'ei_rcut'               : [is_float],
+    'vdw'                   : [is_string, is_existing_file_name],
+    'vdw_rcut'              : [is_float],
+    'covres'                : [is_string, is_existing_file_name],
+    'excl_bonds'            : [is_list_strings],
+    'excl_bends'            : [is_list_strings],
+    'excl_dihs'             : [is_list_strings],
+    'excl_oopds'            : [is_list_strings],
+    'do_hess_mass_weighting': [is_bool],
+    'do_cross_svd'          : [is_bool],
+    'do_bonds'              : [is_bool],
+    'do_bends'              : [is_bool],
+    'do_dihedrals'          : [is_bool],
+    'do_oops'               : [is_bool],
+    'do_cross_ASS'          : [is_bool],
+    'do_cross_ASA'          : [is_bool],
+    'do_cross_DSS'          : [is_bool],
+    'do_cross_DSD'          : [is_bool],
+    'do_cross_DAA'          : [is_bool],
+    'do_cross_DAD'          : [is_bool],
+    'bond_term'             : [is_not_none, is_string, has_value(['bondharm','bondfues','bondmm3'])],
+    'bend_term'             : [is_not_none, is_string, has_value(['bendaharm','bendmm3'])],
+    'do_squarebend'         : [is_bool],
+    'do_bendclin'           : [is_bool],
+    'do_sqoopdist_to_oopdist': [is_bool],
+}
+
 
 class Settings(object):
     'Class to control the behaviour of a Quickff run'
@@ -73,12 +159,15 @@ class Settings(object):
             #constructor, read these settings and overwrite general RC as
             #wel as config file settings
             for key, value in kwargs.iteritems():
+                #don't impose keyword argument that hasn't been set
+                if value is None: continue
                 key = key.lstrip().rstrip()
                 if key=='suffix':
                     continue
                 self.set(key, value)
             if 'suffix' in kwargs.keys() and kwargs['suffix'] is not None:
                 self._set_suffix(kwargs['suffix'])
+            self.check()
             self._set_log()
             self.dump_log()
 
@@ -131,13 +220,17 @@ class Settings(object):
             log.write_to_file(f)
 
     def set(self, key, value):
-        assert key in allowed_keys, IOError('Key %s is not allowed in settings routine' %key)
+        if key not in key_checks.keys():
+            IOError('Key %s is not allowed in settings routine' %key)
         if isinstance(value, str) and value.lower()=='default':
-            return
-        if value is None and key in self.__dict__.keys():
             return
         self.__dict__[key] = value
 
+    def check(self):
+        for key, value in self.__dict__.iteritems():
+            for check_function in key_checks[key]:
+                check_function(key,value)
+    
     def dump_log(self):
         sorted_keys = sorted(self.__dict__.keys())
         with log.section('SETT', 3):
