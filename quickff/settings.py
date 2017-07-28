@@ -92,7 +92,7 @@ key_checks = {
     'fn_sys'                : [is_string, is_nonexisting_file_name],
     'plot_traj'             : [is_bool],
     'xyz_traj'              : [is_bool],
-    'fn_traj'               : [is_string, is_existing_file_name],
+    'fn_traj'               : [is_string],
     'log_level'             : [is_not_none, is_string, has_value(['silent','low','medium','high','highest'])],
     'log_file'              : [is_string, is_nonexisting_file_name],
     'program_mode'          : [is_not_none, has_value(['DeriveFF','MakeTrajectories','PlotTrajectories'])],
