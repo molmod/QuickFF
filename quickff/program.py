@@ -223,13 +223,14 @@ class BaseProgram(object):
             self.reset_system()
             only = self.settings.only_traj
             if only is None or only=='PT_ALL' or only=='pt_all':
-                do_terms = [term for term in self.valence.terms]
+                do_terms = [term for term in self.valence.terms if term.kind in [0,2,11,12]]
             else:
                 if isinstance(only, str): only = [only]
                 do_terms = []
                 for pattern in only:
                     for term in self.valence.iter_terms(pattern):
-                        do_terms.append(term)
+                        if term.kind in [0,2,11,12]:
+                            do_terms.append(term)
             trajectories = self.perturbation.prepare(do_terms)
             #compute
             log.dump('Constructing trajectories')

@@ -237,7 +237,7 @@ class RelaxedStrain(object):
         '''
         trajectories = []
         for term in do_terms:
-            assert term.kind in [0,2,11,12], 'Only Harmonic, Fues, MM3Quartic or MM3Bend terms supported for pert traj'
+            assert term.kind in [0,2,11,12], 'Only Harmonic, Fues, MM3Quartic or MM3Bend terms supported for pert traj, got term.kind=%i' %term.kind
             ic = self.valence.iclist.ictab[self.valence.vlist.vtab[term.index]['ic0']]
             kunit, qunit = term.units
             if ic['kind'] in [0]:
