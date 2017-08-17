@@ -27,6 +27,7 @@ excl_dihs               :   None
 excl_oopds              :   None
 
 do_hess_mass_weighting  :   True
+do_hess_negfreq_proj    :   False
 do_cross_svd            :   True
 
 do_bonds                :   True

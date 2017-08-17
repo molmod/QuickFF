@@ -26,7 +26,7 @@
 
 from quickff.program import __all__ as allowed_programs, __dict__ as program_modes
 from quickff.log import log, version
-from quickff.tools import set_ffatypes
+from quickff.tools import set_ffatypes, project_negative_freqs
 from quickff.reference import SecondOrderTaylor, YaffForceField
 from quickff.io import read_abinitio
 from quickff.settings import Settings
@@ -183,20 +183,20 @@ def main():
             verbosity = 'high'
     #get settings
     kwargs = {
-        'fn_traj':      args.fn_traj,
-        'only_traj':    args.only_traj,
-        'program_mode': args.program_mode,
-        'plot_traj':    args.plot_traj,
-        'xyz_traj':     args.xyz_traj,
-        'suffix':       args.suffix,
-        'log_level':    verbosity,
-        'log_file':     args.logfile,
-        'ffatypes':     args.ffatypes,
-        'ei':           args.ei,
-        'ei_rcut':      args.ei_rcut,
-        'vdw':          args.vdw,
-        'vdw_rcut':     args.vdw_rcut,
-        'covres':       args.covres,
+        'fn_traj':          args.fn_traj,
+        'only_traj':        args.only_traj,
+        'program_mode':     args.program_mode,
+        'plot_traj':        args.plot_traj,
+        'xyz_traj':         args.xyz_traj,
+        'suffix':           args.suffix,
+        'log_level':        verbosity,
+        'log_file':         args.logfile,
+        'ffatypes':         args.ffatypes,
+        'ei':               args.ei,
+        'ei_rcut':          args.ei_rcut,
+        'vdw':              args.vdw,
+        'vdw_rcut':         args.vdw_rcut,
+        'covres':           args.covres,
     }
     settings = Settings(fn=args.config_file, **kwargs)
     with log.section('QFF', 1, timer='Initializing'):
@@ -247,6 +247,10 @@ def main():
         assert system is not None, 'No system could be defined from input'
         assert grad is not None, 'No ab initio gradient found in input'
         assert hess is not None, 'No ab initio hessian found in input'
+        if settings.do_hess_negfreq_proj:
+            log.dump('Projecting negative frequencies out of the mass-weighted hessian.')
+            with log.section('QFF', 3, 'Initializing'):
+                hess = project_negative_freqs(hess, system.masses)
         #complete the system information
         if system.bonds is None: system.detect_bonds()
         if system.masses is None: system.set_standard_masses()

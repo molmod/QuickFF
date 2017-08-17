@@ -23,16 +23,21 @@
 #
 #--
 
-from molmod.units import deg, angstrom
+from molmod.units import deg, angstrom, centimeter
+from molmod.constants import lightspeed
 from molmod.periodic import periodic as pt
+
 from yaff import Chebychev1, Chebychev2, Chebychev3, Chebychev4, Chebychev6
+
+from quickff.log import log
 
 import numpy as np, math
 
 __all__ = [
     'global_translation', 'global_rotation', 'fitpar',
     'boxqp', 'set_ffatypes', 'term_sort_atypes', 'get_multiplicity',
-    'get_restvalue', 'get_ei_radii', 'digits', 'average', 'chebychev'
+    'get_restvalue', 'get_ei_radii', 'digits', 'average', 'chebychev',
+    'project_negative_freqs'
 ]
 
 
@@ -396,6 +401,8 @@ def get_ei_radii(numbers):
         #Therefore, the Br to Cl ratio (both elements reported in Chen and
         #Slater) is extrapolated to Al-Ga
         'Ga': 2.1325*angstrom,
+        #radius of Zn taken from Bureekaew, S. et al. Phys. Stat. Sol. (B), 2013, 250(6), 1128-1141, https://doi.org/10.1002/pssb.201248460
+        'Zn': 2.073*angstrom,
     }
     values = np.zeros(len(numbers), float)
     for i, number in enumerate(numbers):
@@ -638,3 +645,33 @@ def chebychev(m, x):
         return x
     else:
         return 2.0*x*chebychev(m-1,x)-chebychev(m-2,x)
+
+def project_negative_freqs(hessian, masses, thresshold=0.0):
+    N = len(masses)
+    sqrt_mass_matrix = np.diag(np.sqrt((np.array([masses, masses, masses]).T).ravel()))
+    isqrt_mass_matrix = np.linalg.inv(sqrt_mass_matrix)
+    matrix = np.dot(isqrt_mass_matrix, np.dot(hessian.reshape([3*N,3*N]), isqrt_mass_matrix))
+    #diagonalize
+    if ((matrix-matrix.T)<1e-6*lightspeed/centimeter).all():
+        evals, evecs = np.linalg.eigh(matrix)
+    else:
+        evals, evecs = np.linalg.eig(matrix)
+    log.dump('20 lowest frequencies [1/cm] before projection:')
+    log.dump(str(evals[:4]/(lightspeed/centimeter)))
+    log.dump(str(evals[4:8]/(lightspeed/centimeter)))
+    log.dump(str(evals[8:12]/(lightspeed/centimeter)))
+    log.dump(str(evals[12:16]/(lightspeed/centimeter)))
+    log.dump(str(evals[16:20]/(lightspeed/centimeter)))
+    #set negative eigenvalues to zero
+    evals[evals<thresshold] = 0.0
+    projected_matrix = np.dot(evecs, np.dot(np.diag(evals), evecs.T))
+    projected_hessian = np.dot(sqrt_mass_matrix, np.dot(projected_matrix, sqrt_mass_matrix))
+    #dump freqs after projection as check
+    evals, evecs = np.linalg.eigh(projected_matrix)
+    log.dump('20 lowest frequencies [1/cm] after projection:')
+    log.dump(str(evals[:4]/(lightspeed/centimeter)))
+    log.dump(str(evals[4:8]/(lightspeed/centimeter)))
+    log.dump(str(evals[8:12]/(lightspeed/centimeter)))
+    log.dump(str(evals[12:16]/(lightspeed/centimeter)))
+    log.dump(str(evals[16:20]/(lightspeed/centimeter)))
+    return projected_hessian.reshape([N, 3, N, 3])

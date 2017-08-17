@@ -108,6 +108,7 @@ key_checks = {
     'excl_dihs'             : [is_list_strings],
     'excl_oopds'            : [is_list_strings],
     'do_hess_mass_weighting': [is_bool],
+    'do_hess_negfreq_proj'  : [is_bool],
     'do_cross_svd'          : [is_bool],
     'do_bonds'              : [is_bool],
     'do_bends'              : [is_bool],
