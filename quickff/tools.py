@@ -404,6 +404,7 @@ def get_ei_radii(numbers):
         #radius of Zn taken from Bureekaew, S. et al. Phys. Stat. Sol. (B), 2013, 250(6), 1128-1141, https://doi.org/10.1002/pssb.201248460
         'Zn': 2.073*angstrom,
     }
+
     values = np.zeros(len(numbers), float)
     for i, number in enumerate(numbers):
         symbol = pt[number].symbol

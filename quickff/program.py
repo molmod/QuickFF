@@ -181,7 +181,7 @@ class BaseProgram(object):
             dump_charmm22_psf(self.system, self.valence, self.settings.fn_charmm22_psf)
         if self.settings.fn_sys is not None:
             self.system.to_file(self.settings.fn_sys)
-        if self.settings.plot_traj.lower() in ['true', 'all']:
+        if self.settings.plot_traj.lower() in ['final', 'all']:
             self.plot_trajectories(do_valence=True, suffix='_Ehc3')
         if self.settings.xyz_traj:
             self.write_trajectories()

@@ -90,7 +90,7 @@ key_checks = {
     'fn_charmm22_prm'       : [is_string, is_nonexisting_file_name],
     'fn_charmm22_psf'       : [is_string, is_nonexisting_file_name],
     'fn_sys'                : [is_string, is_nonexisting_file_name],
-    'plot_traj'             : [is_string, has_value(['False', 'True', 'All'])],
+    'plot_traj'             : [is_string, has_value(['None', 'Final', 'All'])],
     'xyz_traj'              : [is_bool],
     'fn_traj'               : [is_string],
     'log_level'             : [is_not_none, is_string, has_value(['silent','low','medium','high','highest'])],

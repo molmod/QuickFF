@@ -3,7 +3,7 @@ fn_yaff                 :   pars_yaff.txt
 fn_charmm22_prm         :   None
 fn_charmm22_psf         :   None
 fn_sys                  :   system.chk
-plot_traj               :   False
+plot_traj               :   None
 xyz_traj                :   False
 fn_traj                 :   None
 log_level               :   medium

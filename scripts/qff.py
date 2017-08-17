@@ -103,8 +103,12 @@ def parse():
     )
     settings.add_argument(
         '-p', '--plot-traj', default=None,
-        help='Plot the various energy contributions along the perturbation '
-             'trajectories to.'
+        help='If set to final, plots the various energy contributions along '
+             'the perturbation trajectories to using the final force field. '
+             'If set to all, plots the contributions along the trajectories '
+             'using all intermediate force fields (given suffixes _Apt1, '
+             '_Bhc1, _Cpt2 and _Dhc2) as well as the final force field '
+             '(given the suffix _Ehc3).'
     )
     settings.add_argument(
         '-x', '--xyz-traj', default=None,
