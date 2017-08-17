@@ -90,7 +90,7 @@ key_checks = {
     'fn_charmm22_prm'       : [is_string, is_nonexisting_file_name],
     'fn_charmm22_psf'       : [is_string, is_nonexisting_file_name],
     'fn_sys'                : [is_string, is_nonexisting_file_name],
-    'plot_traj'             : [is_bool],
+    'plot_traj'             : [is_string, has_value(['False', 'True', 'All'])],
     'xyz_traj'              : [is_bool],
     'fn_traj'               : [is_string],
     'log_level'             : [is_not_none, is_string, has_value(['silent','low','medium','high','highest'])],
@@ -231,7 +231,7 @@ class Settings(object):
         for key, value in self.__dict__.iteritems():
             for check_function in key_checks[key]:
                 check_function(key,value)
-    
+
     def dump_log(self):
         sorted_keys = sorted(self.__dict__.keys())
         with log.section('SETT', 3):

@@ -85,7 +85,7 @@ class Trajectory(object):
         self.fc = None
         self.rv = None
 
-    def plot(self, ai, ffrefs=[], valence=None, fn=None, eunit='kjmol'):
+    def plot(self, ai, ffrefs=[], valence=None, fn=None, eunit='kjmol', suffix=''):
         '''
             Method to plot the energy contributions along a perturbation
             trajectory associated to a given ic. This method assumes that the
@@ -116,6 +116,10 @@ class Trajectory(object):
                 a string describing the conversion of the unit of energy. More
                 info regarding possible strings can be found in the
                 `MolMod documentation <http://molmod.github.io/molmod/reference/const.html#module-molmod.units>`_.
+
+            suffix
+                a string to be added to the filename at the end. Is overwritten
+                when fn is specified.
         '''
         import matplotlib.pyplot as pp
         if 'active' in self.__dict__.keys() and not self.active: return
@@ -170,7 +174,7 @@ class Trajectory(object):
         ax.legend(loc='upper center', fontsize=16)
         fig.set_size_inches([8, 8])
         if fn is None:
-            fn = 'trajectory-%s-%i.png' %(self.term.basename.replace('/', '-'),self.term.index)
+            fn = 'trajectory-%s-%i%s.png' %(self.term.basename.replace('/', '-'),self.term.index,suffix)
         fig.savefig(fn)
         pp.close()
 

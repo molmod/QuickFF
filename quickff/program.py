@@ -181,34 +181,43 @@ class BaseProgram(object):
             dump_charmm22_psf(self.system, self.valence, self.settings.fn_charmm22_psf)
         if self.settings.fn_sys is not None:
             self.system.to_file(self.settings.fn_sys)
-        self.plot_trajectories(do_valence=True)
+        if self.settings.plot_traj.lower() in ['true', 'all']:
+            self.plot_trajectories(do_valence=True, suffix='_Ehc3')
+        if self.settings.xyz_traj:
+            self.write_trajectories()
 
-    def plot_trajectories(self, do_valence=False):
+    def plot_trajectories(self, do_valence=False, suffix=''):
         '''
-            Plot energy contributions along perturbation trajectories and dump
-            perturbation trajectories to XYZ files.
+            Plot energy contributions along perturbation trajectories and
         '''
         only = self.settings.only_traj
         if not isinstance(only, list): only = [only]
         with log.section('PLOT', 3, timer='PT plot energy'):
-            if self.settings.plot_traj:
-                valence = None
-                if do_valence: valence=self.valence
-                for trajectory in self.trajectories:
-                    if trajectory is None: continue
-                    for pattern in only:
-                        if pattern=='PT_ALL' or pattern in trajectory.term.basename:
-                            trajectory.plot(self.ai, ffrefs=self.ffrefs, valence=valence)
+            valence = None
+            if do_valence: valence=self.valence
+            for trajectory in self.trajectories:
+                if trajectory is None: continue
+                for pattern in only:
+                    if pattern=='PT_ALL' or pattern in trajectory.term.basename:
+                        trajectory.plot(self.ai, ffrefs=self.ffrefs, valence=valence, suffix=suffix)
+
+    def write_trajectories(self):
+        '''
+            Write perturbation trajectories to XYZ files.
+        '''
+        only = self.settings.only_traj
+        if not isinstance(only, list): only = [only]
         with log.section('XYZ', 3, timer='PT dump XYZ'):
-            if self.settings.xyz_traj:
-                for trajectory in self.trajectories:
-                    if trajectory is None: continue
-                    for pattern in only:
-                        if pattern=='PT_ALL' or pattern in trajectory.term.basename:
-                            trajectory.to_xyz()
+            for trajectory in self.trajectories:
+                if trajectory is None: continue
+                for pattern in only:
+                    if pattern=='PT_ALL' or pattern in trajectory.term.basename:
+                        trajectory.to_xyz()
 
     def do_pt_generate(self):
-        'Generate perturbation trajectories.'
+        '''
+            Generate perturbation trajectories.
+        '''
         with log.section('PTGEN', 2, timer='PT Generate'):
             #read if an existing file was specified through fn_traj
             fn_traj = self.settings.fn_traj
@@ -697,7 +706,7 @@ class PlotTrajectories(BaseProgram):
             self.settings.set('plot_traj', True)
             self.do_pt_generate()
             self.do_pt_estimate()
-            self.plot_trajectories()
+            self.plot_trajectories(suffix='_Apt1')
 
 class DeriveFF(BaseProgram):
     '''
@@ -712,12 +721,20 @@ class DeriveFF(BaseProgram):
             self.do_eq_setrv(['EQ_RV'])
             self.do_pt_generate()
             self.do_pt_estimate()
+            if self.settings.plot_traj.lower()=='all':
+                self.plot_trajectories(do_valence=False, suffix='_Apt1')
             self.do_pt_postprocess()
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighting=self.settings.do_hess_mass_weighting)
+            if self.settings.plot_traj.lower()=='all':
+                self.plot_trajectories(do_valence=True, suffix='_Bhc1')
             self.do_pt_estimate(do_valence=True)
+            if self.settings.plot_traj.lower()=='all':
+                self.plot_trajectories(do_valence=True, suffix='_Cpt2')
             self.do_pt_postprocess()
             self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighting=self.settings.do_hess_mass_weighting)
+            if self.settings.plot_traj.lower()=='all':
+                self.plot_trajectories(do_valence=True, suffix='_Dhc2')
             self.do_hc_estimatefc([
                 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA', 'HC_FC_CROSS_DSS',
                 'HC_FC_CROSS_DSD', 'HC_FC_CROSS_DAA', 'HC_FC_CROSS_DAD'
