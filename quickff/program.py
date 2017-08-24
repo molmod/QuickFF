@@ -181,7 +181,7 @@ class BaseProgram(object):
             dump_charmm22_psf(self.system, self.valence, self.settings.fn_charmm22_psf)
         if self.settings.fn_sys is not None:
             self.system.to_file(self.settings.fn_sys)
-        if self.settings.plot_traj.lower() in ['final', 'all']:
+        if self.settings.plot_traj is not None and self.settings.plot_traj.lower() in ['final', 'all']:
             self.plot_trajectories(do_valence=True, suffix='_Ehc3')
         if self.settings.xyz_traj:
             self.write_trajectories()
@@ -703,7 +703,7 @@ class PlotTrajectories(BaseProgram):
             assert self.settings.fn_traj is not None, 'The PlotTrajectories program requires a trajectory filename fn_traj!'
             assert os.path.isfile(self.settings.fn_traj), 'Given file %s to read trajectories does not exists!' %fn_traj
             self.settings.set('xyz_traj', True)
-            self.settings.set('plot_traj', True)
+            self.settings.set('plot_traj', 'all')
             self.do_pt_generate()
             self.do_pt_estimate()
             self.plot_trajectories(suffix='_Apt1')
@@ -721,19 +721,19 @@ class DeriveFF(BaseProgram):
             self.do_eq_setrv(['EQ_RV'])
             self.do_pt_generate()
             self.do_pt_estimate()
-            if self.settings.plot_traj.lower()=='all':
+            if self.settings.plot_traj is not None and self.settings.plot_traj.lower()=='all':
                 self.plot_trajectories(do_valence=False, suffix='_Apt1')
             self.do_pt_postprocess()
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighting=self.settings.do_hess_mass_weighting)
-            if self.settings.plot_traj.lower()=='all':
+            if self.settings.plot_traj is not None and self.settings.plot_traj.lower()=='all':
                 self.plot_trajectories(do_valence=True, suffix='_Bhc1')
             self.do_pt_estimate(do_valence=True)
-            if self.settings.plot_traj.lower()=='all':
+            if self.settings.plot_traj is not None and self.settings.plot_traj.lower()=='all':
                 self.plot_trajectories(do_valence=True, suffix='_Cpt2')
             self.do_pt_postprocess()
             self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighting=self.settings.do_hess_mass_weighting)
-            if self.settings.plot_traj.lower()=='all':
+            if self.settings.plot_traj is not None and self.settings.plot_traj.lower()=='all':
                 self.plot_trajectories(do_valence=True, suffix='_Dhc2')
             self.do_hc_estimatefc([
                 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA', 'HC_FC_CROSS_DSS',
