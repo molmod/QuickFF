@@ -22,6 +22,9 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
+
+from __future__ import absolute_import
+
 from yaff.pes.ff import ForceField, ForcePartValence, ForcePartPair
 from yaff.pes.ext import PairPotEI
 from yaff.pes.nlist import NeighborList

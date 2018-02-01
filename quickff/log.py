@@ -23,6 +23,8 @@
 #
 #--
 
+from __future__ import print_function, absolute_import, unicode_literals
+from io import IOBase
 import os, sys, datetime, getpass, atexit
 import numpy, scipy, matplotlib
 
@@ -132,7 +134,7 @@ class Logger(object):
     def write_to_file(self, f):
         if isinstance(f, str):
             self._f = open(f, 'w')
-        elif isinstance(f, file):
+        elif isinstance(f, IOBase):
             self._f = f
         else:
             raise ValueError('File argument f should be a string representing a filename or a File instance')
@@ -151,16 +153,16 @@ class Logger(object):
                 self.print_header()
             assert self.label is not None
             if new_line and self.add_blank_line:
-                print >> self._f , ''
+                print('', file=self._f)
                 self.add_blank_line = False
             line = ''
             for piece in splitstring(message, self.ll-self.mll):
                 line += ' ' + self.label[:self.mll-2] + ' '
                 line += ' '*(self.mll-2 - len(self.label[:self.mll-2]))
-                line += piece.encode('utf-8')
+                line += piece
                 line += '\n'
             line = line.rstrip('\n')
-            print >> self._f, line
+            print(line, file=self._f)
 
     def warning(self, message, new_line=True):
         '''
@@ -173,7 +175,7 @@ class Logger(object):
                 self.print_header()
             assert self.label is not None
             if new_line and self.add_blank_line:
-                print >> self._f , ''
+                print('', file=self._f)
                 self.add_blank_line = False
             line = ''
             for piece in splitstring('WARNING: '+message, self.ll-self.mll):
@@ -182,12 +184,12 @@ class Logger(object):
                 line += piece.encode('utf-8')
                 line += '\n'
             line = line.rstrip('\n')
-            print >> self._f, line
+            print(line, file=self._f)
 
     def print_header(self):
         if self.log_level>0:
-            print >> self._f, header
-            print >> self._f, ''
+            print(header, file=self._f)
+            print('', file=self._f)
         mll = self.mll
         self.mll = 20
         with self.section('USER', 1): self.dump(getpass.getuser(), new_line=False)
@@ -202,8 +204,8 @@ class Logger(object):
         with self.section('COMMAND LINE', 1): self.dump(' '.join(sys.argv), new_line=False)
         self.mll = mll
         if self.log_level>0:
-            print >> self._f, ''
-            print >> self._f, '~'*80
+            print('', file=self._f)
+            print('~'*80, file=self._f)
 
     def exit(self):
         if self._active:
@@ -213,12 +215,12 @@ class Logger(object):
 
     def print_footer(self):
         if self.log_level>0:
-            print >> self._f, footer
+            print(footer, file=self._f)
 
     def print_timetable(self):
         if self.log_level>0:
-            print >> self._f, '~'*80
-            print >> self._f, ''
+            print('~'*80, file=self._f)
+            print('', file=self._f)
         with self.section('TIMING', 1):
             for label, time in self.timetable:
                 line = '%30s  ' %(label+' '*(30-len(label)))
@@ -226,7 +228,7 @@ class Logger(object):
                 self.dump(line)
 
     def close(self):
-        if isinstance(self._f, file):
+        if isinstance(self._f, IOBase):
             self._f.close()
 
 

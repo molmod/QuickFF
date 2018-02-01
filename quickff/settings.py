@@ -23,6 +23,8 @@
 #
 #--
 
+from __future__ import absolute_import
+from io import IOBase
 from quickff.log import log
 from molmod.units import parse_unit
 import os
@@ -148,28 +150,29 @@ class Settings(object):
                 overwrite those in the config file.
 
         '''
+        #first read general RC settings from .quickffrc file
+        from .context import context
+        self.read_config_file(context.get_fn('quickffrc'))
+        #if a config file is provided, read settings from this file and
+        #overwrite the general RC settings
+        if fn is not None:
+            self.read_config_file(fn)
+        #if settings are defined through keyword arguments to this init
+        #constructor, read these settings and overwrite general RC as
+        #wel as config file settings
+        for key, value in kwargs.items():
+            #don't impose keyword argument that hasn't been set
+            if value is None: continue
+            key = key.lstrip().rstrip()
+            if key=='suffix':
+                continue
+            self.set(key, value)
+        if 'suffix' in list(kwargs.keys()) and kwargs['suffix'] is not None:
+            self._set_suffix(kwargs['suffix'])
+        self.check()
+        self._set_log()
+        
         with log.section('SETT', 2, 'Initializing'):
-            #first read general RC settings from .quickffrc file
-            from context import context
-            self.read_config_file(context.get_fn('quickffrc'))
-            #if a config file is provided, read settings from this file and
-            #overwrite the general RC settings
-            if fn is not None:
-                self.read_config_file(fn)
-            #if settings are defined through keyword arguments to this init
-            #constructor, read these settings and overwrite general RC as
-            #wel as config file settings
-            for key, value in kwargs.iteritems():
-                #don't impose keyword argument that hasn't been set
-                if value is None: continue
-                key = key.lstrip().rstrip()
-                if key=='suffix':
-                    continue
-                self.set(key, value)
-            if 'suffix' in kwargs.keys() and kwargs['suffix'] is not None:
-                self._set_suffix(kwargs['suffix'])
-            self.check()
-            self._set_log()
             self.dump_log()
 
     def read_config_file(self, fn):
@@ -209,7 +212,7 @@ class Settings(object):
                     self.set(key, value)
 
     def _set_suffix(self, suffix):
-        for key, fn in self.__dict__.iteritems():
+        for key, fn in self.__dict__.items():
             if not key.startswith('fn_') or key=='fn_traj': continue
             prefix, extension = fn.split('.')
             self.__dict__[key] = '%s%s.%s' %(prefix, suffix, extension)
@@ -217,18 +220,18 @@ class Settings(object):
     def _set_log(self):
         log.set_level(self.log_level)
         f = self.log_file
-        if f is not None and (isinstance(f, str) or isinstance(f, file)):
+        if f is not None and (isinstance(f, str) or isinstance(f, IOBase)):
             log.write_to_file(f)
 
     def set(self, key, value):
-        if key not in key_checks.keys():
+        if key not in list(key_checks.keys()):
             IOError('Key %s is not allowed in settings routine' %key)
         if isinstance(value, str) and value.lower()=='default':
             return
         self.__dict__[key] = value
 
     def check(self):
-        for key, value in self.__dict__.iteritems():
+        for key, value in self.__dict__.items():
             for check_function in key_checks[key]:
                 check_function(key,value)
 

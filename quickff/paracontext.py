@@ -23,6 +23,8 @@
 #
 #--
 
+from __future__ import print_function, absolute_import
+
 '''
     Convenience functions to enable using scoop.
 '''
@@ -51,7 +53,7 @@ class ParaContext(object):
             return fs[:1], fs[1:]
         def debug_log(*args):
             with open('debug.log', 'a') as f:
-                print >> f, ' '.join(str(arg) for arg in args)
+                print(' '.join(str(arg) for arg in args), file=f)
             return 0
         self.map = my_map
         self.wait_first = my_wait_first
@@ -67,7 +69,7 @@ class ParaContext(object):
             return futures.wait(fs, return_when=futures.FIRST_COMPLETED)
         def debug_log(*args):
             with open('debug_%s.log' % WORKER_NAME, 'a') as f:
-                print >> f, ' '.join(str(arg) for arg in args)
+                print(' '.join(str(arg) for arg in args), file=f)
             return 0
         self.map = my_map
         self.wait_first = my_wait_first

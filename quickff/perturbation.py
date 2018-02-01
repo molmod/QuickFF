@@ -23,6 +23,8 @@
 #
 #--
 
+from __future__ import absolute_import
+
 from molmod.io.xyz import XYZWriter
 from molmod.units import *
 from molmod.periodic import periodic as pt
@@ -78,7 +80,7 @@ class Trajectory(object):
         self.qunit = term.units[1]
         self.kunit = term.units[0]
         self.step = (end-start)/(nsteps-1)
-        self.targets = start + (end-start)/(nsteps-1)*np.array(range(nsteps), float)
+        self.targets = start + (end-start)/(nsteps-1)*np.array(list(range(nsteps)), float)
         self.values = np.zeros(nsteps, float)
         self.coords = np.zeros([nsteps, len(numbers), 3], float)
         self.active = True
@@ -122,7 +124,7 @@ class Trajectory(object):
                 when fn is specified.
         '''
         import matplotlib.pyplot as pp
-        if 'active' in self.__dict__.keys() and not self.active: return
+        if 'active' in list(self.__dict__.keys()) and not self.active: return
         fig, ax = pp.subplots()
         def add_plot(xs, ys, prefix, kwargs):
             pars = fitpar(xs, ys, rcond=1e-6)
@@ -188,7 +190,7 @@ class Trajectory(object):
             fn
                 a string defining the name of the output file
         '''
-        if 'active' in self.__dict__.keys() and not self.active: return
+        if 'active' in list(self.__dict__.keys()) and not self.active: return
         if fn is None:
             fn = 'trajectory-%s-%i.xyz' %(self.term.basename.replace('/', '-'),self.term.index)
         f = open(fn, 'w')
@@ -331,7 +333,7 @@ class RelaxedStrain(object):
                 log.dump('    Converged (value=%.3f, lagmult=%.3e)' %(strain.constrain_value,sol[3*natom]))
                 if remove_com:
                     com = (x.T*self.system0.masses.copy()).sum(axis=1)/self.system0.masses.sum()
-                    for i in xrange(natom):
+                    for i in range(natom):
                         x[i,:] -= com
                 trajectory.coords[iq,:,:] = x
             #delete flagged frames
@@ -377,7 +379,7 @@ class RelaxedStrain(object):
             term = trajectory.term
             index = term.index
             basename = term.basename
-            if 'active' in trajectory.__dict__.keys() and not trajectory.active:
+            if 'active' in list(trajectory.__dict__.keys()) and not trajectory.active:
                 log.dump('Trajectory of %s was deactivated: skipping' %(basename))
                 return
             qs = trajectory.values.copy()
@@ -403,7 +405,7 @@ class RelaxedStrain(object):
                 trajectory.rv = -pars[1]/(2.0*pars[0])
             else:
                 trajectory.fc = 0.0
-                trajectory.rv = qs[len(qs)/2]
+                trajectory.rv = qs[len(qs)//2]
                 log.dump('force constant of %s is zero: rest value set to middle value' %basename)
             #no negative rest values for all ics except dihedrals and bendcos
             if term.ics[0].kind not in [1,3,4,11]:
@@ -456,7 +458,7 @@ class Strain(ForceField):
         #set the rest values to the equilibrium values
         strain.dlist.forward()
         strain.iclist.forward()
-        for iterm in xrange(strain.vlist.nv):
+        for iterm in range(strain.vlist.nv):
             vterm = strain.vlist.vtab[iterm]
             ic = strain.iclist.ictab[vterm['ic0']]
             vterm['par1'] = ic['value']
@@ -490,7 +492,7 @@ class Strain(ForceField):
         grad[:self.ndof] = gstrain.reshape((-1,)) + X[self.ndof]*gconstraint.reshape((-1,))
         grad[self.ndof] = self.constrain_value - self.constrain_target
         #cartesian penalty, i.e. extra penalty for deviation w.r.t. cartesian equilibrium coords
-        indices = np.array([[3*i,3*i+1,3*i+2] for i in xrange(self.ndof/3) if i not in self.cons_ic_atindexes]).ravel()
+        indices = np.array([[3*i,3*i+1,3*i+2] for i in range(self.ndof//3) if i not in self.cons_ic_atindexes]).ravel()
         if len(indices)>0:
             grad[indices] += X[indices]/(self.ndof*self.cart_penalty**2)
         with log.section('PTGEN', 4, timer='PT Generate'):

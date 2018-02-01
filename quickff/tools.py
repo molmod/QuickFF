@@ -23,6 +23,8 @@
 #
 #--
 
+from __future__ import print_function, absolute_import
+
 from molmod.units import deg, angstrom, centimeter
 from molmod.constants import lightspeed
 from molmod.periodic import periodic as pt
@@ -247,11 +249,11 @@ def set_ffatypes(system, level):
                 neighs = {}
                 for nsym in nsyms:
                     if nsym=='h': continue
-                    if nsym in neighs.keys():
+                    if nsym in list(neighs.keys()):
                         neighs[nsym] += 1
                     else:
                         neighs[nsym] = 1
-                for nsym, nnum in neighs.iteritems():
+                for nsym, nnum in neighs.items():
                     atype += '_%s%i' %(nsym, nnum)
             atypes.append(atype)
     elif level == 'highest':
@@ -408,7 +410,7 @@ def get_ei_radii(numbers):
     values = np.zeros(len(numbers), float)
     for i, number in enumerate(numbers):
         symbol = pt[number].symbol
-        if not symbol in radii.keys():
+        if not symbol in list(radii.keys()):
             raise ValueError('No electrostatic Gaussian radii found for %s' %symbol)
         values[i] = radii[symbol]
     return values
@@ -476,13 +478,13 @@ def average(data, ffatypes, fmt='full', verbose=False):
     '''
     data_atypes = {}
     for value, ffatype in zip(data,ffatypes):
-        if ffatype in data_atypes.keys():
+        if ffatype in list(data_atypes.keys()):
             data_atypes[ffatype].append(value)
         else:
             data_atypes[ffatype] = [value]
     if fmt=='sort':
         output = {}
-        for ffatype, data in data_atypes.iteritems():
+        for ffatype, data in data_atypes.items():
             output[ffatype] = np.array(data)
     elif fmt=='full':
         output = np.zeros(len(data))
@@ -490,21 +492,21 @@ def average(data, ffatypes, fmt='full', verbose=False):
         for i, ffatype in enumerate(ffatypes):
             std = np.array(data_atypes[ffatype]).std()
             if not std < 1e-2 and ffatype not in printed:
-                print 'WARNING: charge of atom type %s has a large std: %.3e' %(ffatype, std)
+                print('WARNING: charge of atom type %s has a large std: %.3e' %(ffatype, std))
                 printed.append(ffatype)
             output[i] = np.array(data_atypes[ffatype]).mean()
     elif fmt=='dict':
         output = {}
-        for ffatype, values in data_atypes.iteritems():
+        for ffatype, values in data_atypes.items():
             output[ffatype] = np.array(values).mean()
     else:
         raise IOError('Format %s not supported, should be full or dict' %fmt)
     if verbose:
-        print 'Averaged Atomic Charges:'
-        print '------------------------'
-        for ffatype, values in data_atypes.iteritems():
-            print '  %4s    % .3f +- % .3f (N=%i)' %(ffatype, np.array(values).mean(), np.array(values).std(), len(values))
-        print ''
+        print('Averaged Atomic Charges:')
+        print('------------------------')
+        for ffatype, values in data_atypes.items():
+            print('  %4s    % .3f +- % .3f (N=%i)' %(ffatype, np.array(values).mean(), np.array(values).std(), len(values)))
+        print('')
     return output
 
 def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
@@ -552,32 +554,32 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
             signs[i] = -1.0
     #decompile constraints
     masterof = {}
-    for m, s in constraints.iteritems():
+    for m, s in constraints.items():
         types = m.split('.')
         if types[0]>=types[1]: m = '.'.join(types[::-1])
         for slave, sign in s:
             types = slave.split('.')
             if types[0]>=types[1]: slave = '.'.join(types[::-1])
-            assert slave not in masterof.keys(), \
+            assert slave not in list(masterof.keys()), \
                 'Slave %s has multiple masters in constraints' %slave
             masterof[slave] = (m, sign)
     masterlist = []
     for btype in btypes:
-        if btype in masterof.keys() : continue
+        if btype in list(masterof.keys()) : continue
         if btype in masterlist: continue
         masterlist.append(btype)
     for master in masterlist:
-        assert not master in masterof.keys(), 'master %s encountered in slaves' %master
-    for slave in masterof.keys():
+        assert not master in list(masterof.keys()), 'master %s encountered in slaves' %master
+    for slave in list(masterof.keys()):
         assert not slave in masterlist, 'slave %s encountered in masters' %slave
     if verbose:
-        print 'Master-slaves relations:'
-        print '------------------------'
-        for slave in masterof.keys():
-            print slave, masterof[slave]
-        if len(masterof.keys())==0:
-            print '(None)'
-        print ''
+        print('Master-slaves relations:')
+        print('------------------------')
+        for slave in list(masterof.keys()):
+            print(slave, masterof[slave])
+        if len(list(masterof.keys()))==0:
+            print('(None)')
+        print('')
     #construct the matrix to convert bci's to charges
     #matrix[i,n] is the contribution to charge i from bci n
     #bci p_AB is a charge transfer from B to A, hence qA+=p_AB and qB-=p_AB
@@ -586,7 +588,7 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
         if btype in masterlist:
             index = masterlist.index(btype)
             sign_switch = 1.0
-        elif btype in masterof.keys():
+        elif btype in list(masterof.keys()):
             master, sign_switch = masterof[btype]
             index = masterlist.index(master)
         else:
@@ -598,44 +600,44 @@ def charges_to_bcis(charges, ffatypes, bonds, constraints={}, verbose=True):
     bcis, res, rank, svals = np.linalg.lstsq(matrix, charges, rcond=1e-6)
     #print statistics if required
     if verbose:
-        print 'Fitting SQ to charges:'
-        print '----------------------'
-        print '    sing vals = ', svals
+        print('Fitting SQ to charges:')
+        print('----------------------')
+        print('    sing vals = ', svals)
         if min(svals)>0:
-            print '    cond numb = ', max(svals)/min(svals)
+            print('    cond numb = ', max(svals)/min(svals))
         else:
-            print '    cond numb = inf'
-        print ''
-        print 'Resulting split charges:'
-        print '------------------------'
+            print('    cond numb = inf')
+        print('')
+        print('Resulting split charges:')
+        print('------------------------')
         for btype, sq in zip(masterlist, bcis):
-            print '  %10s    % .3f' %(btype, sq)
-        print ''
-        print 'Statistics of the BCI charges:'
-        print '------------------------------'
+            print('  %10s    % .3f' %(btype, sq))
+        print('')
+        print('Statistics of the BCI charges:')
+        print('------------------------------')
         apriori_values  = average(charges, ffatypes, 'sort')
         aposteriori_values = average(np.dot(matrix, bcis), ffatypes, 'sort')
-        print ' %10s |  %6s +- %5s (%2s)  |  %6s +- %5s (%2s)  | %9s ' %('Atype', '<Qin>', 'std', 'N', '<Qbci>', 'std', 'N', 'RMSD')
-        print '    '+'-'*71
+        print(' %10s |  %6s +- %5s (%2s)  |  %6s +- %5s (%2s)  | %9s ' %('Atype', '<Qin>', 'std', 'N', '<Qbci>', 'std', 'N', 'RMSD'))
+        print('    '+'-'*71)
         sums = np.array([0.0, 0.0, 0.0])
-        for atype, qins in apriori_values.iteritems():
+        for atype, qins in apriori_values.items():
             qouts = aposteriori_values[atype]
-            print ' %10s |  % 6.3f +- %5.3f (%2i)  |  % 6.3f +- %5.3f (%2i)  | % 9.6f ' %(atype,
+            print(' %10s |  % 6.3f +- %5.3f (%2i)  |  % 6.3f +- %5.3f (%2i)  | % 9.6f ' %(atype,
                 qins.mean(), qins.std(), len(qins),
                 qouts.mean(), qouts.std(), len(qouts),
                 np.sqrt(((qouts-qins)**2).mean())
-            )
+            ))
             sums += np.array([qins.sum(), qouts.sum(), ((qouts-qins)**2).sum()])
-        print '    '+'-'*71
-        print ' %10s |  % 9.6f             |  % 9.6f             | % 9.6f ' %('ALL',
+        print('    '+'-'*71)
+        print(' %10s |  % 9.6f             |  % 9.6f             | % 9.6f ' %('ALL',
             sums[0],
             sums[1],
             np.sqrt(sums[2]/len(ffatypes))
-        )
-        print ''
+        ))
+        print('')
     #construct output dictionnary containing also bci's of slaves
     result = dict((btype, bci) for btype, bci in zip(masterlist, bcis))
-    for slave, (master, sign) in masterof.iteritems():
+    for slave, (master, sign) in masterof.items():
         result[slave] = result[master]*sign
     return result
 

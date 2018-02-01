@@ -22,6 +22,9 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
+
+from __future__ import absolute_import
+
 from molmod.units import *
 
 from quickff.tools import boxqp

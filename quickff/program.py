@@ -22,6 +22,9 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
+
+from __future__ import print_function, absolute_import
+
 from molmod.units import *
 
 from quickff.valence import ValenceFF
@@ -36,7 +39,7 @@ from yaff.system import System
 from yaff.pes.vlist import Cosine, Harmonic, Chebychev1, Chebychev4
 from yaff.pes.iclist import BendAngle, BendCos, OopDist
 
-import os, cPickle, numpy as np, datetime
+import os, pickle, numpy as np, datetime
 
 __all__ = [
     'BaseProgram', 'MakeTrajectories', 'PlotTrajectories', 'DeriveFF',
@@ -222,11 +225,11 @@ class BaseProgram(object):
             #read if an existing file was specified through fn_traj
             fn_traj = self.settings.fn_traj
             if fn_traj is not None and os.path.isfile(fn_traj):
-                self.trajectories = cPickle.load(open(fn_traj, 'r'))
+                self.trajectories = pickle.load(open(fn_traj, 'r'))
                 log.dump('Trajectories read from file %s' %fn_traj)
                 self.update_trajectory_terms()
                 newname = 'updated_'+fn_traj.split('/')[-1]
-                cPickle.dump(self.trajectories, open(newname, 'w'))
+                pickle.dump(self.trajectories, open(newname, 'w'))
                 return
             #configure
             self.reset_system()
@@ -247,7 +250,7 @@ class BaseProgram(object):
             #write the trajectories to the non-existing file fn_traj
             if fn_traj is not None:
                 assert not os.path.isfile(fn_traj)
-                cPickle.dump(self.trajectories, open(fn_traj, 'w'))
+                pickle.dump(self.trajectories, open(fn_traj, 'w'))
                 log.dump('Trajectories stored to file %s' %fn_traj)
 
     def do_pt_estimate(self, do_valence=False, logger_level=3):
@@ -374,7 +377,7 @@ class BaseProgram(object):
             self.reset_system()
             log.dump('Estimating force constants from Hessian cost for tasks %s' %' '.join(tasks))
             term_indices = []
-            for index in xrange(self.valence.vlist.nv):
+            for index in range(self.valence.vlist.nv):
                 term = self.valence.terms[index]
                 flagged = False
                 for flag in tasks:

@@ -22,6 +22,9 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
+
+from __future__ import unicode_literals, absolute_import
+
 from molmod.units import *
 from molmod.ic import bend_angle, _bend_angle_low, dihed_angle, _dihed_angle_low
 
@@ -124,8 +127,8 @@ class Term(object):
         means = pars.mean(axis=0)
         stds = pars.std(axis=0)
         formats = [
-            'fc = %%5s %s %%4s' %(u"\u00B1"),
-            'rv = %%5s %s %%4s' %(u"\u00B1"),
+            'fc = %%5s %s %%4s' %("\u00B1"),
+            'rv = %%5s %s %%4s' %("\u00B1"),
         ]
         ndigits = [(5,4), (5,4)]
         units = self.units
@@ -138,9 +141,9 @@ class Term(object):
             units = [self.units[3], 'deg']
         elif self.kind==3:#cross
             formats = [
-                'fc = %%4s %s %%2s' %(u"\u00B1"),
-                'rv0 = %%4s %s %%3s' %(u"\u00B1"),
-                'rv1 = %%4s %s %%3s' %(u"\u00B1")
+                'fc = %%4s %s %%2s' %("\u00B1"),
+                'rv0 = %%4s %s %%3s' %("\u00B1"),
+                'rv1 = %%4s %s %%3s' %("\u00B1")
             ]
             ndigits = [(4,2), (4,3), (4,3)]
         elif self.kind==4:#cosine
@@ -149,8 +152,8 @@ class Term(object):
             means = fc, rv, m
             stds = dfc, drv, np.nan
             formats = [
-                'fc = %%4s %s %%3s' %(u"\u00B1"),
-                'rv = %%4s %s %%3s' %(u"\u00B1"),
+                'fc = %%4s %s %%3s' %("\u00B1"),
+                'rv = %%4s %s %%3s' %("\u00B1"),
                 'm = %1s%0s'
             ]
             units = [self.units[1], self.units[2], 'au']
@@ -161,7 +164,7 @@ class Term(object):
             means = fcs.mean(), sign
             stds = fcs.std(), np.nan
             formats = [
-                'fc  = %%4s %s %%3s' %(u"\u00B1"),
+                'fc  = %%4s %s %%3s' %("\u00B1"),
                 'sgn = %3s%0s',
             ]
             units = [self.units[0], 'au']
@@ -289,10 +292,10 @@ class ValenceFF(ForcePartValence):
                 args = [None,]*len(units) + ics
             new = pot(*args)
             vterm['kind'] = new.kind
-            for i in xrange(len(new.pars)):
+            for i in range(len(new.pars)):
                 vterm['par%i'%i] = new.pars[i]
             ic_indexes = new.get_ic_indexes(self.iclist)
-            for i in xrange(len(ic_indexes)):
+            for i in range(len(ic_indexes)):
                 vterm['ic%i'%i] = ic_indexes[i]
 
     def iter_terms(self, label=None, use_re=False):
@@ -384,7 +387,7 @@ class ValenceFF(ForcePartValence):
             angles = {}
             for angle in self.system.iter_angles():
                 angle, types = term_sort_atypes(ffatypes, angle, 'dihedral')
-                if types in angles.keys():
+                if types in list(angles.keys()):
                     angles[types].append(angle)
                 else:
                     angles[types] = [angle]
@@ -392,7 +395,7 @@ class ValenceFF(ForcePartValence):
             nabends = 0
             ncbends = 0
             nsqbends = 0
-            for types, bends in angles.iteritems():
+            for types, bends in angles.items():
                 potkind = None
                 rvs = []
                 for i, bend in enumerate(bends):
@@ -483,14 +486,14 @@ class ValenceFF(ForcePartValence):
             dihedrals = {}
             for dihedral in self.system.iter_dihedrals():
                 dihedral, types = term_sort_atypes(ffatypes, dihedral, 'dihedral')
-                if types in dihedrals.keys():
+                if types in list(dihedrals.keys()):
                     dihedrals[types].append(dihedral)
                 else:
                     dihedrals[types] = [dihedral]
             #loop over all distinct dihedral types
             ncheb = 0
             ncos = 0
-            for types, diheds in dihedrals.iteritems():
+            for types, diheds in dihedrals.items():
                 psi0s = np.zeros(len(diheds), float)
                 ms = np.zeros(len(diheds), float)
                 bendskip = False
@@ -609,14 +612,14 @@ class ValenceFF(ForcePartValence):
             opdists = {}
             for opdist in self.system.iter_oops():
                 opdist, types = term_sort_atypes(ffatypes, opdist, 'opdist')
-                if types in opdists.keys():
+                if types in list(opdists.keys()):
                     opdists[types].append(opdist)
                 else:
                     opdists[types] = [opdist]
             #loop over all distinct opdist types
             nharm = 0
             nsq = 0
-            for types, oops in opdists.iteritems():
+            for types, oops in opdists.items():
                 skip = False
 
                 if self.settings.excl_oopds is not None:
@@ -920,7 +923,7 @@ class ValenceFF(ForcePartValence):
                 master is a string defining the master basename and slaves is a
                 list of strings defining the slave basenames.
         '''
-        for mastername, slavenames in constraints.iteritems():
+        for mastername, slavenames in constraints.items():
             masters = [term for term in self.iter_masters(mastername)]
             assert len(masters)==1, 'Master %s is not uniquely defined' %mastername
             master = masters[0]
@@ -1038,8 +1041,7 @@ class ValenceFF(ForcePartValence):
                 term['par1'] = exp
             if rv0 is not None:   term['par2'] = rv0
         else:
-            raise NotImplementedError, \
-                'set_params not implemented for Yaff %s term' %term['kind']
+            raise NotImplementedError('set_params not implemented for Yaff %s term' %term['kind'])
 
     def get_params(self, term_index, only='all'):
         term = self.vlist.vtab[term_index]

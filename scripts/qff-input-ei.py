@@ -41,7 +41,7 @@ This script reads atomic charges from an input file and makes a Yaff parameters 
 suitable for the QuickFF option --ei.'''
 
 
-def parse_args():
+def parse_args(args=None):
     parser = ArgumentParser(description=description)
     parser.add_argument(
         '-v', '--verbose', default=False, action='store_true',
@@ -101,15 +101,20 @@ def parse_args():
         'fn_out', default='pars_ei.txt', nargs='?',
         help='Name of the Yaff file to write the parameters to. [default=%(default)s]'
     )
-    args = parser.parse_args()
+    if args is None:
+        args = parser.parse_args()
+    else:
+        args = parser.parse_args(args.split())
     if args.charges.count(':') != 1:
         parser.error('The argument charges must contain exactly one colon.')
     return args
 
 
-def main():
-    args = parse_args()
-
+def main(args=None):
+    if args is None:
+        args = parse_args()
+    else:
+        args = parse_args(args)
     # Load system file
     if args.fn_sys.endswith('.fchk'):
         numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(args.fn_sys, do_hess=False)
@@ -139,13 +144,13 @@ def main():
                     radii = average(get_ei_radii(system.numbers), ffatypes, fmt='dict')
     elif fn_charges.endswith('.chk'):
         sample = load_chk(fn_charges)
-        if path in sample.keys():
+        if path in list(sample.keys()):
             charges = sample[path]
         else:
             raise IOError('Given CHK file %s does not contain a dataset with label %s' % (fn_charges, path))
         radii = None
         if args.gaussian:
-            if 'radii' in sample.keys():
+            if 'radii' in list(sample.keys()):
                 radii = average(sample['radii'], ffatypes, fmt='dict')
     else:
         raise IOError('Invalid extension, fn_charges should be a HDF5 or a CHK file.')

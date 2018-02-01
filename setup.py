@@ -24,6 +24,7 @@
 #
 #--
 
+from __future__ import print_function
 
 from glob import glob
 import os, sys
@@ -45,10 +46,10 @@ class my_install_data(install_data):
         for name in dist.packages:
             if '.' not in name:
                 destination = os.path.join(libdir, name, "share_dir.txt")
-                print "Creating %s" % destination
+                print("Creating %s" % destination)
                 if not self.dry_run:
-                    f = file(destination, "w")
-                    print >> f, self.install_dir
+                    f = open(destination, "w")
+                    print(self.install_dir, file=f)
                     f.close()
 
 def find_all_data_files(dn):

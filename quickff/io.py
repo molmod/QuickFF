@@ -23,6 +23,8 @@
 #
 #--
 
+from __future__ import print_function, absolute_import
+
 '''Readers ab initio vibrational calculations.
 '''
 
@@ -84,20 +86,20 @@ class VASPRun(object):
         # Read atomic masses for atomtype
         masses = np.asarray([float(atom.findall('c')[2].text) for atom in self.root.findall(".//*[@name='atomtypes']/set")[0]])*amu
         self.fields['masses'] = np.zeros(self.fields['numbers'].shape)
-        for iatype in xrange(masses.shape[0]):
+        for iatype in range(masses.shape[0]):
             self.fields['masses'][atomtypes==iatype] = masses[iatype]
         # Read SCF energies
         self.fields['energies'] = np.array([float(step.find('energy/i[@name="e_fr_energy"]').text)*electronvolt\
                  for step in self.root.findall('.//calculation')])
         # Read all requested arrays
         for label in field_labels:
-            if not label in tag_dictionary.keys():
-                raise NotImplementedError, "Failed to read %s from xml file" % label
+            if not label in list(tag_dictionary.keys()):
+                raise NotImplementedError("Failed to read %s from xml file" % label)
             self.fields[label] = self.read_array(tag_dictionary[label][0], unit=tag_dictionary[label][1])
         # Convert fractional to Cartesian coordinates
         self.fields['pos_init'] = np.dot(self.fields['pos_init'], self.fields['rvecs_init'])
         # Hessian is mass-weighted, we want the pure second derivatives
-        if 'hessian' in self.fields.keys():
+        if 'hessian' in list(self.fields.keys()):
             m3 = np.sqrt(np.array(sum([[m,m,m] for m in self.fields['masses']],[])))
             self.fields['hessian'] = m3.reshape((-1,1))*self.fields['hessian']*m3
 
@@ -154,39 +156,39 @@ def read_abinitio(fn, do_hess=True):
 def make_yaff_ei(fn, charges, bcis=None, radii=None):
     assert charges is not None or bcis is not None, 'Either charges or bcis should be parsed'
     f = open(fn, 'w')
-    print >> f, '#Fixed charges'
-    print >> f, '#---------------'
-    print >> f, ''
-    print >> f, 'FIXQ:UNIT Q0 e'
-    print >> f, 'FIXQ:UNIT P e'
-    print >> f, 'FIXQ:UNIT R angstrom'
-    print >> f, 'FIXQ:SCALE 1 1.0'
-    print >> f, 'FIXQ:SCALE 2 1.0'
-    print >> f, 'FIXQ:SCALE 3 1.0'
-    print >> f, 'FIXQ:DIELECTRIC 1.0'
-    print >> f, ''
+    print('#Fixed charges', file=f)
+    print('#---------------', file=f)
+    print('', file=f)
+    print('FIXQ:UNIT Q0 e', file=f)
+    print('FIXQ:UNIT P e', file=f)
+    print('FIXQ:UNIT R angstrom', file=f)
+    print('FIXQ:SCALE 1 1.0', file=f)
+    print('FIXQ:SCALE 2 1.0', file=f)
+    print('FIXQ:SCALE 3 1.0', file=f)
+    print('FIXQ:DIELECTRIC 1.0', file=f)
+    print('', file=f)
     if charges is not None or radii is not None:
-        print >> f, '# Atomic parameters'
-        print >> f, '# ----------------------------------------------------'
-        print >> f, '# KEY        label  Q_0A              R_A'
-        print >> f, '# ----------------------------------------------------'
+        print('# Atomic parameters', file=f)
+        print('# ----------------------------------------------------', file=f)
+        print('# KEY        label  Q_0A              R_A', file=f)
+        print('# ----------------------------------------------------', file=f)
         if charges is not None:
-            ffatypes = charges.keys()
+            ffatypes = list(charges.keys())
         else:
-            ffatypes = radii.keys()
+            ffatypes = list(radii.keys())
         for ffatype in ffatypes:
             charge, radius = 0.0, 0.0
             if charges is not None: charge = charges[ffatype]
             if radii is not None: radius = radii[ffatype]
-            print >> f, 'FIXQ:ATOM %8s % 13.10f  %12.10f' %(ffatype, charge, radius/angstrom)
+            print('FIXQ:ATOM %8s % 13.10f  %12.10f' %(ffatype, charge, radius/angstrom), file=f)
     if bcis is not None:
-        print >> f, '# Bond parameters'
-        print >> f, '# ----------------------------------------------------'
-        print >> f, '# KEY         label0   label1           P_AB          '
-        print >> f, '# ----------------------------------------------------'
-        for key, bci in bcis.iteritems():
+        print('# Bond parameters', file=f)
+        print('# ----------------------------------------------------', file=f)
+        print('# KEY         label0   label1           P_AB          ', file=f)
+        print('# ----------------------------------------------------', file=f)
+        for key, bci in bcis.items():
             ffatype1, ffatype2 = key.split('.')
-            print >> f, 'FIXQ:BOND  %8s  %8s  % 12.10f' %(ffatype1, ffatype2, bci)
+            print('FIXQ:BOND  %8s  %8s  % 12.10f' %(ffatype1, ffatype2, bci), file=f)
     f.close()
 
 
@@ -211,7 +213,7 @@ def read_bci_constraints(fn):
             master, suffix, sign = line.split(':')
             slaves = [(slave.strip(), float(sign)) for slave in suffix.split(',')]
             label = master.strip()
-            if label in constraints.keys():
+            if label in list(constraints.keys()):
                 for slave in slaves: constraints[label].append(slave)
             else:
                 constraints[label] = slaves
@@ -413,7 +415,7 @@ PSF
 
 def _atoms_to_charmm22_psf(system):
     result = ['{:8d} !NATOM'.format(system.natom)]
-    for iatom in xrange(system.natom):
+    for iatom in range(system.natom):
         ffatype = system.get_ffatype(iatom)
         if len(ffatype) > 4:
             log.warning('Atom type too long for CHARMM PSF file: {}'.format(ffatype))
@@ -977,13 +979,13 @@ def dump_yaff(valence, fn):
     f = open(fn, 'w')
     for section in sections:
         if len(section['PARS'].lines)==0: continue
-        print >> f, '# %s' %section.prefix
-        print >> f, '#-%s' %('-'*len(section.prefix))
+        print('# %s' %section.prefix, file=f)
+        print('#-%s' %('-'*len(section.prefix)), file=f)
         for line in section['UNIT'].lines:
-            print >> f, '%s:UNIT  %s' %(section.prefix, line)
-        print >> f, ''
+            print('%s:UNIT  %s' %(section.prefix, line), file=f)
+        print('', file=f)
         for line in section['PARS'].lines:
-            print >> f, '%s:PARS  %s' %(section.prefix, line)
-        print >> f, ''
-        print >> f, ''
+            print('%s:PARS  %s' %(section.prefix, line), file=f)
+        print('', file=f)
+        print('', file=f)
     f.close()

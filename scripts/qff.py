@@ -24,6 +24,8 @@
 #
 #--
 
+from __future__ import print_function
+
 from quickff.program import __all__ as allowed_programs, __dict__ as program_modes
 from quickff.log import log, version
 from quickff.tools import set_ffatypes, project_negative_freqs
@@ -168,7 +170,7 @@ def parse():
     )
     args = parser.parse_args()
     if args.version:
-        print version
+        print(version)
         sys.exit()
     if not args.ffatypes is None and args.ffatypes.lower()=='none':
         args.ffatypes = None
@@ -228,23 +230,23 @@ def main():
                     system._init_derived()
             elif fn.endswith('.chk'):
                 sample = load_chk(fn)
-                if 'energy' in sample.keys():       energy = sample['energy']
-                if 'grad' in sample.keys():         grad = sample['grad']
-                elif 'gradient' in sample.keys():   grad = sample['gradient']
-                if 'hess' in sample.keys():         hess = sample['hess']
-                elif 'hessian' in sample.keys():    hess = sample['hessian']
-                if 'rvecs' in sample.keys():        pbc = [1,1,1]
+                if 'energy' in list(sample.keys()):       energy = sample['energy']
+                if 'grad' in list(sample.keys()):         grad = sample['grad']
+                elif 'gradient' in list(sample.keys()):   grad = sample['gradient']
+                if 'hess' in list(sample.keys()):         hess = sample['hess']
+                elif 'hessian' in list(sample.keys()):    hess = sample['hessian']
+                if 'rvecs' in list(sample.keys()):        pbc = [1,1,1]
                 else:                               pbc = [0,0,0]
                 if system is None:
                     system = System.from_file(fn)
                 else:
-                    if 'pos' in sample.keys():          system.pos = sample['pos']
-                    elif 'coords' in sample.keys():     system.pos = sample['coords']
-                    if 'rvecs' in sample.keys():        system.cell = Cell(sample['rvecs'])
-                    elif 'cell' in sample.keys():       system.cell = Cell(sample['cell'])
-                    if 'bonds' in sample.keys():        system.bonds = sample['bonds']
-                    if 'ffatypes' in sample.keys():     system.ffatypes = sample['ffatypes']
-                    if 'ffatype_ids' in sample.keys():  system.ffatype_ids = sample['ffatype_ids']
+                    if 'pos' in list(sample.keys()):          system.pos = sample['pos']
+                    elif 'coords' in list(sample.keys()):     system.pos = sample['coords']
+                    if 'rvecs' in list(sample.keys()):        system.cell = Cell(sample['rvecs'])
+                    elif 'cell' in list(sample.keys()):       system.cell = Cell(sample['cell'])
+                    if 'bonds' in list(sample.keys()):        system.bonds = sample['bonds']
+                    if 'ffatypes' in list(sample.keys()):     system.ffatypes = sample['ffatypes']
+                    if 'ffatype_ids' in list(sample.keys()):  system.ffatype_ids = sample['ffatype_ids']
                     system._init_derived()
             else:
                 raise NotImplementedError('File format for %s not supported' %fn)
