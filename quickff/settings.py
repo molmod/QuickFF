@@ -23,7 +23,7 @@
 #
 #--
 
-from __future__ import absolute_import
+from __future__ import print_function, absolute_import
 from io import IOBase
 from quickff.log import log
 from molmod.units import parse_unit
@@ -241,3 +241,10 @@ class Settings(object):
             for key in sorted_keys:
                 value = str(self.__dict__[key])
                 log.dump('%s  %s' %(key+' '*(30-len(key)), value))
+
+    def dump_file(self, fn):
+        sorted_keys = sorted(self.__dict__.keys())
+        with open(fn, 'w') as f:
+            for key in sorted_keys:
+                value = str(self.__dict__[key])
+                print('%s:   %s' %(key+' '*(30-len(key)), value), file=f)

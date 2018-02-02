@@ -87,7 +87,7 @@ class Trajectory(object):
         self.fc = None
         self.rv = None
 
-    def plot(self, ai, ffrefs=[], valence=None, fn=None, eunit='kjmol', suffix=''):
+    def plot(self, ai, ffrefs=[], valence=None, fn='default', eunit='kjmol', suffix=''):
         '''
             Method to plot the energy contributions along a perturbation
             trajectory associated to a given ic. This method assumes that the
@@ -175,9 +175,12 @@ class Trajectory(object):
         ax.grid()
         ax.legend(loc='upper center', fontsize=16)
         fig.set_size_inches([8, 8])
-        if fn is None:
-            fn = 'trajectory-%s-%i%s.png' %(self.term.basename.replace('/', '-'),self.term.index,suffix)
-        fig.savefig(fn)
+        if fn is 'show':
+            pp.show()
+        else:
+            if fn is 'default':
+                fn = 'trajectory-%s-%i%s.png' %(self.term.basename.replace('/', '-'),self.term.index,suffix)
+            fig.savefig(fn)
         pp.close()
 
     def to_xyz(self, fn=None):

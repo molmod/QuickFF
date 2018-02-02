@@ -225,11 +225,11 @@ class BaseProgram(object):
             #read if an existing file was specified through fn_traj
             fn_traj = self.settings.fn_traj
             if fn_traj is not None and os.path.isfile(fn_traj):
-                self.trajectories = pickle.load(open(fn_traj, 'r'))
+                self.trajectories = pickle.load(open(fn_traj, 'rb'))
                 log.dump('Trajectories read from file %s' %fn_traj)
                 self.update_trajectory_terms()
                 newname = 'updated_'+fn_traj.split('/')[-1]
-                pickle.dump(self.trajectories, open(newname, 'w'))
+                pickle.dump(self.trajectories, open(newname, 'wb'))
                 return
             #configure
             self.reset_system()
@@ -250,7 +250,7 @@ class BaseProgram(object):
             #write the trajectories to the non-existing file fn_traj
             if fn_traj is not None:
                 assert not os.path.isfile(fn_traj)
-                pickle.dump(self.trajectories, open(fn_traj, 'w'))
+                pickle.dump(self.trajectories, open(fn_traj, 'wb'))
                 log.dump('Trajectories stored to file %s' %fn_traj)
 
     def do_pt_estimate(self, do_valence=False, logger_level=3):
@@ -692,8 +692,9 @@ class MakeTrajectories(BaseProgram):
     '''
     def run(self):
         with log.section('PROGRAM', 2):
-            assert self.settings.fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
-            assert not os.path.isfile(self.settings.fn_traj), 'Given file %s to store trajectories to already exists!' %fn_traj
+            fn_traj = self.settings.fn_traj
+            assert fn_traj is not None, 'It is useless to run the MakeTrajectories program without specifying a trajectory filename fn_traj!'
+            assert not os.path.isfile(fn_traj), 'Given file %s to store trajectories to already exists!' %fn_traj
             self.do_pt_generate()
 
 class PlotTrajectories(BaseProgram):
@@ -703,8 +704,9 @@ class PlotTrajectories(BaseProgram):
     '''
     def run(self):
         with log.section('PROGRAM', 2):
-            assert self.settings.fn_traj is not None, 'The PlotTrajectories program requires a trajectory filename fn_traj!'
-            assert os.path.isfile(self.settings.fn_traj), 'Given file %s to read trajectories does not exists!' %fn_traj
+            fn_traj = self.settings.fn_traj
+            assert fn_traj is not None, 'The PlotTrajectories program requires a trajectory filename fn_traj!'
+            assert os.path.isfile(fn_traj), 'Given file %s to read trajectories does not exists!' %fn_traj
             self.settings.set('xyz_traj', True)
             self.settings.set('plot_traj', 'all')
             self.do_pt_generate()

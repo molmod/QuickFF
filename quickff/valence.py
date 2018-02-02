@@ -127,8 +127,8 @@ class Term(object):
         means = pars.mean(axis=0)
         stds = pars.std(axis=0)
         formats = [
-            'fc = %%5s %s %%4s' %("\u00B1"),
-            'rv = %%5s %s %%4s' %("\u00B1"),
+            'fc = %%5s %s %%4s' %("+-"),
+            'rv = %%5s %s %%4s' %("+-"),
         ]
         ndigits = [(5,4), (5,4)]
         units = self.units
@@ -141,9 +141,9 @@ class Term(object):
             units = [self.units[3], 'deg']
         elif self.kind==3:#cross
             formats = [
-                'fc = %%4s %s %%2s' %("\u00B1"),
-                'rv0 = %%4s %s %%3s' %("\u00B1"),
-                'rv1 = %%4s %s %%3s' %("\u00B1")
+                'fc = %%4s %s %%2s' %("+-"),
+                'rv0 = %%4s %s %%3s' %("+-"),
+                'rv1 = %%4s %s %%3s' %("+-")
             ]
             ndigits = [(4,2), (4,3), (4,3)]
         elif self.kind==4:#cosine
@@ -152,8 +152,8 @@ class Term(object):
             means = fc, rv, m
             stds = dfc, drv, np.nan
             formats = [
-                'fc = %%4s %s %%3s' %("\u00B1"),
-                'rv = %%4s %s %%3s' %("\u00B1"),
+                'fc = %%4s %s %%3s' %("+-"),
+                'rv = %%4s %s %%3s' %("+-"),
                 'm = %1s%0s'
             ]
             units = [self.units[1], self.units[2], 'au']
@@ -164,7 +164,7 @@ class Term(object):
             means = fcs.mean(), sign
             stds = fcs.std(), np.nan
             formats = [
-                'fc  = %%4s %s %%3s' %("\u00B1"),
+                'fc  = %%4s %s %%3s' %("+-"),
                 'sgn = %3s%0s',
             ]
             units = [self.units[0], 'au']
