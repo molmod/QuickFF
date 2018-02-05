@@ -39,6 +39,7 @@ from quickff.io import *
 from quickff.tools import *
 from quickff.log import *
 from quickff.settings import *
+from quickff.scripts import *
 
 import numpy
 numpy.set_printoptions(linewidth=170)
