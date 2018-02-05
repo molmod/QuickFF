@@ -23,7 +23,7 @@
 #
 #--
 
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, unicode_literals
 
 '''Readers ab initio vibrational calculations.
 '''
@@ -718,22 +718,22 @@ def _cross_to_yaff(valence):
         if b0a is not None: Kbs0, r0, theta0 = b0a
         if b1a is not None: Kbs1, r1, theta0 = b1a
         ffatypes = ffatypes.split('.')
-        pars.lines.append(
-            '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
-                ffatypes[0], ffatypes[1], ffatypes[2],
-                Kss/(kjmol/angstrom**2), Kbs0/(kjmol/angstrom),
-                Kbs1/(kjmol/angstrom), r0/angstrom, r1/angstrom, theta0/deg,
-        ))
-        #add identical line with inversed order of atom types to ensure all
-        #angle patterns have corresponding ff parameters. Only do this if
-        #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
+            pars.lines.append(
+                '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                    ffatypes[0], ffatypes[1], ffatypes[2],
+                    Kss/(kjmol/angstrom**2), Kbs0/(kjmol/angstrom),
+                    Kbs1/(kjmol/angstrom), r0/angstrom, r1/angstrom, theta0/deg,
+            ))
+        #average parameters for symmetric terms
+        else:
             pars.lines.append(
             '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
                 ffatypes[2], ffatypes[1], ffatypes[0],
-                Kss/(kjmol/angstrom**2), Kbs1/(kjmol/angstrom),
-                Kbs0/(kjmol/angstrom), r1/angstrom, r0/angstrom, theta0/deg,
-        ))
+                Kss/(kjmol/angstrom**2), 0.5*(Kbs0+Kbs1)/(kjmol/angstrom),
+                0.5*(Kbs0+Kbs1)/(kjmol/angstrom), r1/angstrom, r0/angstrom,
+                theta0/deg,
+            ))
         done.append(label)
     return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
@@ -771,22 +771,20 @@ def _crosscbend_to_yaff(valence):
         if b0a is not None: Kbs0, r0, cos0 = b0a
         if b1a is not None: Kbs1, r1, cos0 = b1a
         ffatypes = ffatypes.split('.')
-        pars.lines.append(
-            '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
-                ffatypes[0], ffatypes[1], ffatypes[2],
-                Kss/(kjmol/angstrom**2), Kbs0/(kjmol/angstrom),
-                Kbs1/(kjmol/angstrom), r0/angstrom, r1/angstrom, cos0,
-        ))
-        #add identical line with inversed order of atom types to ensure all
-        #angle patterns have corresponding ff parameters. Only do this if
-        #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
-            '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
-                ffatypes[2], ffatypes[1], ffatypes[0],
-                Kss/(kjmol/angstrom**2), Kbs1/(kjmol/angstrom),
-                Kbs0/(kjmol/angstrom), r1/angstrom, r0/angstrom, cos0,
-        ))
+                '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                    ffatypes[0], ffatypes[1], ffatypes[2],
+                    Kss/(kjmol/angstrom**2), Kbs0/(kjmol/angstrom),
+                    Kbs1/(kjmol/angstrom), r0/angstrom, r1/angstrom, cos0,
+            ))
+        else:
+            pars.lines.append(
+                '%8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                    ffatypes[0], ffatypes[1], ffatypes[2],
+                    Kss/(kjmol/angstrom**2), 0.5*(Kbs0+Kbs1)/(kjmol/angstrom),
+                    0.5*(Kbs0+Kbs1)/(kjmol/angstrom), r0/angstrom, r1/angstrom, cos0,
+            ))
         done.append(label)
     return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
@@ -828,24 +826,22 @@ def _crossbonddihed_to_yaff(valence, m):
         if b1d is not None: Ksd1, r1, cpsi0 = b1d
         if b2d is not None: Ksd2, r2, cpsi0 = b2d
         ffatypes = ffatypes.split('.')
-        pars.lines.append(
-            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
-                ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
-                Kss/(kjmol/angstrom**2), Ksd0/(kjmol/angstrom),
-                Ksd1/(kjmol/angstrom), Ksd2/(kjmol/angstrom),
-                r0/angstrom, r1/angstrom, r2/angstrom, cpsi0,
-        ))
-        #add identical line with inversed order of atom types to ensure all
-        #angle patterns have corresponding ff parameters. Only do this if
-        #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
+                '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
+                    ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                    Kss/(kjmol/angstrom**2), Ksd0/(kjmol/angstrom),
+                    Ksd1/(kjmol/angstrom), Ksd2/(kjmol/angstrom),
+                    r0/angstrom, r1/angstrom, r2/angstrom, cpsi0,
+            ))
+        else:
+            pars.lines.append(
             '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e  %.10e  %.10e' %(
-                ffatypes[3], ffatypes[2], ffatypes[1], ffatypes[0],
-                Kss/(kjmol/angstrom**2), Ksd2/(kjmol/angstrom),
-                Ksd1/(kjmol/angstrom), Ksd0/(kjmol/angstrom),
-                r2/angstrom, r1/angstrom, r0/angstrom, cpsi0,
-        ))
+                ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                Kss/(kjmol/angstrom**2), 0.5*(Ksd0+Ksd2)/(kjmol/angstrom),
+                Ksd1/(kjmol/angstrom), 0.5*(Ksd0+Ksd2)/(kjmol/angstrom),
+                r0/angstrom, r1/angstrom, r2/angstrom, cpsi0,
+            ))
         done.append(label)
     return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
@@ -883,22 +879,20 @@ def _crossbenddihed_to_yaff(valence, m):
         if a0d is not None: Kad0, theta0, cpsi0 = a0d
         if a1d is not None: Kad1, theta1, cpsi0 = a1d
         ffatypes = ffatypes.split('.')
-        pars.lines.append(
-            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
-                ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
-                Kaa/kjmol, Kad0/kjmol, Kad1/kjmol,
-                theta0/deg, theta1/deg, cpsi0,
-        ))
-        #add identical line with inversed order of atom types to ensure all
-        #angle patterns have corresponding ff parameters. Only do this if
-        #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
-            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
-                ffatypes[3], ffatypes[2], ffatypes[1], ffatypes[0],
-                Kaa/kjmol, Kad1/kjmol, Kad0/kjmol,
-                theta1/deg, theta0/deg, cpsi0,
-        ))
+                '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                    ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                    Kaa/kjmol, Kad0/kjmol, Kad1/kjmol,
+                    theta0/deg, theta1/deg, cpsi0,
+            ))
+        else:
+            pars.lines.append(
+                '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                    ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                    Kaa/kjmol, 0.5*(Kad0+Kad1)/kjmol, 0.5*(Kad0+Kad1)/kjmol,
+                    theta0/deg, theta1/deg, cpsi0,
+            ))
         done.append(label)
     return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 
@@ -935,22 +929,20 @@ def _crosscbenddihed_to_yaff(valence):
         if a0d is not None: Kad0, ctheta0, cpsi0 = a0d
         if a1d is not None: Kad1, ctheta1, cpsi0 = a1d
         ffatypes = ffatypes.split('.')
-        pars.lines.append(
-            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
-                ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
-                Kaa/kjmol, Kad0/kjmol, Kad1/kjmol,
-                ctheta0, ctheta1, cpsi0,
-        ))
-        #add identical line with inversed order of atom types to ensure all
-        #angle patterns have corresponding ff parameters. Only do this if
-        #inversed angle pattern is different from original
         if ffatypes[::-1]!=ffatypes:
             pars.lines.append(
-            '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
-                ffatypes[3], ffatypes[2], ffatypes[1], ffatypes[0],
-                Kaa/kjmol, Kad1/kjmol, Kad0/kjmol,
-                ctheta1, ctheta0, cpsi0,
-        ))
+                '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                    ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                    Kaa/kjmol, Kad0/kjmol, Kad1/kjmol,
+                    ctheta0, ctheta1, cpsi0,
+            ))
+        else:
+            pars.lines.append(
+                '%8s  %8s  %8s  %8s  % .10e  % .10e  % .10e  %.10e  %.10e  %.10e' %(
+                    ffatypes[0], ffatypes[1], ffatypes[2], ffatypes[3],
+                    Kaa/kjmol, 0.5*(Kad0+Kad1)/kjmol, 0.5*(Kad0+Kad1)/kjmol,
+                    ctheta0, ctheta1, cpsi0,
+            ))
         done.append(label)
     return ParameterSection(prefix, definitions={'UNIT': units, 'PARS': pars})
 

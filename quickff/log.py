@@ -181,7 +181,7 @@ class Logger(object):
             for piece in splitstring('WARNING: '+message, self.ll-self.mll):
                 line += ' ' + self.label[:self.mll-2] + ' '
                 line += ' '*(self.mll-2 - len(self.label[:self.mll-2]))
-                line += piece.encode('utf-8')
+                line += piece #.encode('utf-8')
                 line += '\n'
             line = line.rstrip('\n')
             print(line, file=self._f)
