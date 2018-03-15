@@ -712,6 +712,7 @@ class PlotTrajectories(BaseProgram):
             self.do_pt_generate()
             self.do_pt_estimate()
             self.plot_trajectories(suffix='_Apt1')
+            self.write_trajectories()
 
 class DeriveFF(BaseProgram):
     '''
