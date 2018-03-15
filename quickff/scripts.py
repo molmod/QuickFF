@@ -397,10 +397,6 @@ def qff(args=None):
         assert system is not None, 'No system could be defined from input'
         assert grad is not None, 'No ab initio gradient found in input'
         assert hess is not None, 'No ab initio hessian found in input'
-        if settings.do_hess_negfreq_proj:
-            log.dump('Projecting negative frequencies out of the mass-weighted hessian.')
-            with log.section('QFF', 3, 'Initializing'):
-                hess = project_negative_freqs(hess, system.masses)
         #complete the system information
         if system.bonds is None: system.detect_bonds()
         if system.masses is None: system.set_standard_masses()
@@ -409,6 +405,10 @@ def qff(args=None):
                 set_ffatypes(system, settings.ffatypes)
             else:
                 raise AssertionError('No atom types defined')
+        if settings.do_hess_negfreq_proj:
+            log.dump('Projecting negative frequencies out of the mass-weighted hessian.')
+            with log.section('QFF', 3, 'Initializing'):
+                hess = project_negative_freqs(hess, system.masses)
         #construct ab initio reference
         ai = SecondOrderTaylor('ai', coords=system.pos.copy(), energy=energy, grad=grad, hess=hess, pbc=pbc)
         #detect a priori defined contributions to the force field
