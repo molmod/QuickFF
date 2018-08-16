@@ -393,18 +393,16 @@ def get_ei_radii(numbers):
         Slater orbitals and over Gaussian orbitals.
     '''
     radii = {
-        'H' : 0.7309*angstrom,
-        'Li': 1.2951*angstrom, 'B' : 1.2020*angstrom, 'C' : 1.1646*angstrom,
-        'N' : 1.1039*angstrom, 'O' : 1.1325*angstrom, 'F' : 1.1097*angstrom,
-        'Na': 1.7093*angstrom, 'Al': 1.6744*angstrom, 'Si': 1.6378*angstrom,
-        'P' : 1.5730*angstrom, 'S' : 1.6022*angstrom, 'Cl': 1.5789*angstrom,
-        #Could not compute Ga due to missing Taylor expansion in to compute
-        #the electrostatic interaction between two ns-STO densities with n=5
-        #Therefore, the Br to Cl ratio (both elements reported in Chen and
-        #Slater) is extrapolated to Al-Ga
-        'Ga': 2.1325*angstrom,
-        #radius of Zn taken from Bureekaew, S. et al. Phys. Stat. Sol. (B), 2013, 250(6), 1128-1141, https://doi.org/10.1002/pssb.201248460
-        'Zn': 2.073*angstrom,
+        'H' : 0.7308*angstrom,
+        'Li': 1.2951*angstrom, 'B' : 1.2020*angstrom, 'C' : 1.1703*angstrom,
+        'N' : 1.1048*angstrom, 'O' : 1.1325*angstrom, 'F' : 1.1096*angstrom,
+        'Na': 1.7093*angstrom, 'Al': 1.6742*angstrom, 'Si': 1.6376*angstrom,
+        'P' : 1.5727*angstrom, 'S' : 1.6011*angstrom, 'Cl': 1.5798*angstrom,
+        'Ca': 1.6541*angstrom, 'Sc': 2.0559*angstrom, 'Ti': 2.0502*angstrom,
+        'V' : 2.0654*angstrom, 'Cr': 2.0692*angstrom, 'Mn': 2.0323*angstrom,
+        'Fe': 2.0695*angstrom, 'Co': 2.0377*angstrom, 'Ni': 2.0579*angstrom, 
+        'Cu': 2.0573*angstrom, 'Zn': 1.9896*angstrom, 'Ga': 2.0820*angstrom,
+        'Br': 2.0088*angstrom,
     }
 
     values = np.zeros(len(numbers), float)
