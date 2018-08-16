@@ -558,7 +558,7 @@ class BaseProgram(object):
                         self.valence.set_params(term.index, fc=0.0, rv0=rv0, rv1=rv1)
                         for index in term.slaves: self.valence.set_params(index, fc=0.0, rv0=rv0, rv1=rv1)
 
-    def do_squarebend(self, thresshold=10*deg):
+    def do_squarebend(self, thresshold=20*deg):
         '''
             Identify bend patterns in which 4 atoms of type A surround a central
             atom of type B with A-B-A angles of 90/180 degrees. A simple
@@ -729,6 +729,8 @@ class DeriveFF(BaseProgram):
             self.do_pt_estimate()
             if self.settings.plot_traj is not None and self.settings.plot_traj.lower()=='all':
                 self.plot_trajectories(do_valence=False, suffix='_Apt1')
+            if self.settings.xyz_traj is not None and self.settings.xyz_traj:
+                self.write_trajectories()
             self.do_pt_postprocess()
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighting=self.settings.do_hess_mass_weighting)
