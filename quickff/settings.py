@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2016 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
+# Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 # (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
 # stated.
@@ -112,6 +113,8 @@ key_checks = {
     'do_hess_mass_weighting': [is_bool],
     'do_hess_negfreq_proj'  : [is_bool],
     'do_cross_svd'          : [is_bool],
+    'cross_svd_rcond'       : [is_float],
+    'pert_traj_tol'         : [is_float],
     'do_bonds'              : [is_bool],
     'do_bends'              : [is_bool],
     'do_dihedrals'          : [is_bool],

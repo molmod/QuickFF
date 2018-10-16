@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2016 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
+# Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 # (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
 # stated.
@@ -70,7 +71,7 @@ class BaseProgram(object):
                 a list of `Reference` instances defining the a-priori force
                 field contributions.
         '''
-        with log.section('PROG', 2, timer='Initializing'):
+        with log.section('INIT', 1, timer='Initializing'):
             log.dump('Initializing program')
             self.settings = settings
             self.system = system
@@ -79,6 +80,33 @@ class BaseProgram(object):
             self.valence = ValenceFF(system, settings)
             self.perturbation = RelaxedStrain(system, self.valence, settings)
             self.trajectories = None
+            self.print_system()
+
+    def print_system(self):
+        '''
+            dump overview of atoms (and associated parameters) in the system
+        '''
+        with log.section('SYS', 3, timer='Initializing'):
+            log.dump('Atomic configuration of the system:')
+            log.dump('')
+            log.dump('  index  |  x [A]  |  y [A]  |  z [A]  | ffatype |    q    |  R [A]  ')
+            log.dump('---------------------------------------------------------------------')
+            for i in range(len(self.system.numbers)):
+                x, y, z = self.system.pos[i,0], self.system.pos[i,1], self.system.pos[i,2]
+                if self.system.charges is not None:
+                    q = self.system.charges[i]
+                else:
+                    q = np.nan
+                if self.system.radii is not None:
+                    R = self.system.radii[i]
+                else:
+                    R = np.nan
+                log.dump('  %4i   | % 7.3f | % 7.3f | % 7.3f |  %6s | % 7.3f | % 7.3f ' %(
+                    i, x/angstrom, y/angstrom, z/angstrom,
+                    self.system.ffatypes[self.system.ffatype_ids[i]], 
+                    q, R/angstrom
+                ))
+                
 
     def reset_system(self):
         '''
@@ -746,5 +774,5 @@ class DeriveFF(BaseProgram):
             self.do_hc_estimatefc([
                 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA', 'HC_FC_CROSS_DSS',
                 'HC_FC_CROSS_DSD', 'HC_FC_CROSS_DAA', 'HC_FC_CROSS_DAD'
-            ], logger_level=1, do_mass_weighting=self.settings.do_hess_mass_weighting, do_svd=self.settings.do_cross_svd)
+            ], logger_level=1, do_mass_weighting=self.settings.do_hess_mass_weighting, do_svd=self.settings.do_cross_svd, svd_rcond=self.settings.cross_svd_rcond)
             self.make_output()

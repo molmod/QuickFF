@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2016 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
+# Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 # (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
 # stated.
@@ -312,7 +313,7 @@ class RelaxedStrain(object):
                     else:
                         init = np.zeros([3*natom+1], float)
                     init[-1] = np.sign(q0-target)
-                    sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
+                    sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=self.settings.pert_traj_tol, full_output=True, diag=diag)
                     if ier!=1:
                         #fsolve did not converge, try again after adding small random noise
                         log.dump('      %s' %mesg.replace('\n', ' '))
@@ -322,7 +323,7 @@ class RelaxedStrain(object):
                         #try one more time
                         init = sol.copy()
                         init[:3*natom] += np.random.normal(0.0, 0.01, [3*natom])*angstrom
-                        sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=1e-3, full_output=True, diag=diag)
+                        sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=self.settings.pert_traj_tol, full_output=True, diag=diag)
                         #fsolve did STILL not converge, flag this frame for deletion
                         if ier!=1:
                             log.dump('      %s' %mesg.replace('\n', ' '))

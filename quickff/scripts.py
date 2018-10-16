@@ -1,8 +1,9 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2016 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
+# Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 # (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
 # stated.
@@ -349,7 +350,7 @@ def qff(args=None):
         'covres':           args.covres,
     }
     settings = Settings(fn=args.config_file, **kwargs)
-    with log.section('QFF', 1, timer='Initializing'):
+    with log.section('INIT', 1, timer='Initializing'):
         log.dump('Initializing system')
         #read system and ab initio reference
         system = None
@@ -374,13 +375,13 @@ def qff(args=None):
                     system._init_derived()
             elif fn.endswith('.chk'):
                 sample = load_chk(fn)
-                if 'energy' in list(sample.keys()):       energy = sample['energy']
-                if 'grad' in list(sample.keys()):         grad = sample['grad']
-                elif 'gradient' in list(sample.keys()):   grad = sample['gradient']
-                if 'hess' in list(sample.keys()):         hess = sample['hess']
-                elif 'hessian' in list(sample.keys()):    hess = sample['hessian']
-                if 'rvecs' in list(sample.keys()):        pbc = [1,1,1]
-                else:                               pbc = [0,0,0]
+                if 'energy' in list(sample.keys()):     energy = sample['energy']
+                if 'grad' in list(sample.keys()):       grad = sample['grad']
+                elif 'gradient' in list(sample.keys()): grad = sample['gradient']
+                if 'hess' in list(sample.keys()):       hess = sample['hess']
+                elif 'hessian' in list(sample.keys()):  hess = sample['hessian']
+                if 'rvecs' in list(sample.keys()):      pbc = [1,1,1]
+                else:                                   pbc = [0,0,0]
                 if system is None:
                     system = System.from_file(fn)
                 else:

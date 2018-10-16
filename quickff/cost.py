@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2016 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
+# Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 # (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
 # stated.
@@ -119,7 +120,7 @@ class HessianFCCost(object):
                 self.A[index2,index1] = tmp
 
 
-    def estimate(self, init=None, lower=None, upper=None, do_svd=False):
+    def estimate(self, init=None, lower=None, upper=None, do_svd=False, svd_rcond=1e-8):
         '''
             Estimate the force constants by minimizing the cost function
 
@@ -136,7 +137,7 @@ class HessianFCCost(object):
         if do_svd:
             #perform SVD
             U, S, Vt = np.linalg.svd(self.A, full_matrices=True)
-            mask = S/max(S)>1e-8
+            mask = S/max(S)>svd_rcond
             a = np.diag(S[mask])
             b = np.dot(U.T, self.B)[mask]
             vtx0 = np.dot(Vt, init)[mask]

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2015 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
+# Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 # (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
 # stated.
@@ -24,6 +25,7 @@
 #
 #--
 
+from __future__ import print_function, absolute_import
 
 from glob import glob
 import os, sys
@@ -73,12 +75,12 @@ def main(fns):
             continue
         for ext, fixer in fixers:
             if fn.endswith(ext):
-                print 'Fixing  ', fn
-                f = file(fn)
+                print('Fixing  ', fn)
+                f = open(fn)
                 lines = f.readlines()
                 f.close()
                 fixer(lines, header_lines)
-                f = file(fn, 'w')
+                f = open(fn, 'w')
                 f.writelines(lines)
                 f.close()
                 break

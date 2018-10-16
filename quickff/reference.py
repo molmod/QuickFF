@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2016 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
+# Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
 # (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise
 # stated.
@@ -242,6 +243,8 @@ def get_ei_ff(name, system, charges, scales, radii=None, average=True, pbc=[0,0,
             if radii is not None:
                 radii[i] = np.array(rs[atype]).mean()
     if radii is None: radii = np.zeros(len(system.ffatype_ids), float)
+    if system.charges is None: system.charges = charges.copy()
+    if system.radii is None: system.radii = radii.copy()
     pair_pot = PairPotEI(charges.astype(np.float), 0.0, 50*angstrom, None, 1.0, radii.astype(np.float))
     nlist = NeighborList(system, 0)
     scalings = Scalings(system, scale1=scales[0], scale2=scales[1], scale3=scales[2], scale4=scales[3])
