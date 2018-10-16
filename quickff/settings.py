@@ -171,7 +171,7 @@ class Settings(object):
             self._set_suffix(kwargs['suffix'])
         self.check()
         self._set_log()
-        
+
         with log.section('SETT', 2, 'Initializing'):
             self.dump_log()
 

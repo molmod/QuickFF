@@ -400,7 +400,7 @@ def get_ei_radii(numbers):
         'P' : 1.5727*angstrom, 'S' : 1.6011*angstrom, 'Cl': 1.5798*angstrom,
         'Ca': 1.6541*angstrom, 'Sc': 2.0559*angstrom, 'Ti': 2.0502*angstrom,
         'V' : 2.0654*angstrom, 'Cr': 2.0692*angstrom, 'Mn': 2.0323*angstrom,
-        'Fe': 2.0695*angstrom, 'Co': 2.0377*angstrom, 'Ni': 2.0579*angstrom, 
+        'Fe': 2.0695*angstrom, 'Co': 2.0377*angstrom, 'Ni': 2.0579*angstrom,
         'Cu': 2.0573*angstrom, 'Zn': 1.9896*angstrom, 'Ga': 2.0820*angstrom,
         'Br': 2.0088*angstrom,
     }

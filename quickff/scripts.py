@@ -185,7 +185,7 @@ def qff_parse_args(args=None):
     description  = '''\
     This script will apply QuickFF to derive a covalent force field for the given
     system from the ab initio input given in the input files.'''
-    
+
     parser = ArgumentParser(description=description)
     parser.add_argument(
         '--version', default=False, action='store_true',
