@@ -103,10 +103,10 @@ class BaseProgram(object):
                     R = np.nan
                 log.dump('  %4i   | % 7.3f | % 7.3f | % 7.3f |  %6s | % 7.3f | % 7.3f ' %(
                     i, x/angstrom, y/angstrom, z/angstrom,
-                    self.system.ffatypes[self.system.ffatype_ids[i]], 
+                    self.system.ffatypes[self.system.ffatype_ids[i]],
                     q, R/angstrom
                 ))
-                
+
 
     def reset_system(self):
         '''
