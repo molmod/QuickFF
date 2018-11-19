@@ -138,7 +138,7 @@ class Trajectory(object):
         #ai
         data = np.array([ai.energy(pos) for pos in self.coords])
         e_max = max(np.ceil(max(data-min(data))/parse_unit(eunit)), 1.0)
-        add_plot(self.values, data-min(data), 'AI ref', {'linestyle': 'none', 'marker': 'o', 'markerfacecolor': 'k', 'markersize': 12})
+        add_plot(self.values, data-min(data), 'AI ref', {'linestyle': 'none', 'marker': 'o', 'markerfacecolor': 'k', 'markersize': 12, 'markeredgecolor': 'k'})
         #ffrefs
         totff = np.zeros([len(self.coords)], float)
         colors = ['b', 'g', 'm', 'y', 'c']

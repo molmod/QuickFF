@@ -216,7 +216,7 @@ class Settings(object):
 
     def _set_suffix(self, suffix):
         for key, fn in self.__dict__.items():
-            if not key.startswith('fn_') or key=='fn_traj': continue
+            if fn is None or not key.startswith('fn_') or key=='fn_traj': continue
             prefix, extension = fn.split('.')
             self.__dict__[key] = '%s%s.%s' %(prefix, suffix, extension)
 

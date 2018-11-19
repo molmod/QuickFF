@@ -397,13 +397,13 @@ def get_ei_radii(numbers):
         'H' : 0.7308*angstrom,
         'Li': 1.2951*angstrom, 'B' : 1.2020*angstrom, 'C' : 1.1703*angstrom,
         'N' : 1.1048*angstrom, 'O' : 1.1325*angstrom, 'F' : 1.1096*angstrom,
-        'Na': 1.7093*angstrom, 'Al': 1.6742*angstrom, 'Si': 1.6376*angstrom,
-        'P' : 1.5727*angstrom, 'S' : 1.6011*angstrom, 'Cl': 1.5798*angstrom,
-        'Ca': 1.6541*angstrom, 'Sc': 2.0559*angstrom, 'Ti': 2.0502*angstrom,
-        'V' : 2.0654*angstrom, 'Cr': 2.0692*angstrom, 'Mn': 2.0323*angstrom,
-        'Fe': 2.0695*angstrom, 'Co': 2.0377*angstrom, 'Ni': 2.0579*angstrom,
-        'Cu': 2.0573*angstrom, 'Zn': 1.9896*angstrom, 'Ga': 2.0820*angstrom,
-        'Br': 2.0088*angstrom,
+        'Na': 1.7093*angstrom, 'Mg': 1.6155*angstrom, 'Al': 1.6742*angstrom,
+        'Si': 1.6376*angstrom, 'P' : 1.5727*angstrom, 'S' : 1.6011*angstrom, 
+        'Cl': 1.5798*angstrom, 'Ca': 1.6541*angstrom, 'Sc': 2.0559*angstrom, 
+        'Ti': 2.0502*angstrom, 'V' : 2.0654*angstrom, 'Cr': 2.0692*angstrom, 
+        'Mn': 2.0323*angstrom, 'Fe': 2.0695*angstrom, 'Co': 2.0377*angstrom, 
+        'Ni': 2.0579*angstrom, 'Cu': 2.0573*angstrom, 'Zn': 1.9896*angstrom, 
+        'Ga': 2.0820*angstrom, 'Br': 2.0088*angstrom,
     }
 
     values = np.zeros(len(numbers), float)

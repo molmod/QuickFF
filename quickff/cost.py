@@ -120,7 +120,7 @@ class HessianFCCost(object):
                 self.A[index2,index1] = tmp
 
 
-    def estimate(self, init=None, lower=None, upper=None, do_svd=False, svd_rcond=1e-8):
+    def estimate(self, init=None, lower=None, upper=None, do_svd=False, svd_rcond=0.0):
         '''
             Estimate the force constants by minimizing the cost function
 

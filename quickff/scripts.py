@@ -252,7 +252,7 @@ def qff_parse_args(args=None):
              '(given the suffix _Ehc3).'
     )
     settings.add_argument(
-        '-x', '--xyz-traj', default=None,
+        '-x', '--xyz-traj', default=False, action='store_true',
         help='Write the perturbation trajectories in XYZ format. '
     )
     settings.add_argument(

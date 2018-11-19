@@ -212,7 +212,7 @@ class BaseProgram(object):
             dump_charmm22_psf(self.system, self.valence, self.settings.fn_charmm22_psf)
         if self.settings.fn_sys is not None:
             self.system.to_file(self.settings.fn_sys)
-        if self.settings.plot_traj is not None and self.settings.plot_traj.lower() in ['final', 'all']:
+        if self.settings.plot_traj is not None and self.settings.plot_traj.lower() in ['Ehc3', 'final', 'all']:
             self.plot_trajectories(do_valence=True, suffix='_Ehc3')
         if self.settings.xyz_traj:
             self.write_trajectories()
@@ -370,7 +370,7 @@ class BaseProgram(object):
             self.valence.dump_logger(print_level=logger_level)
             self.average_pars()
 
-    def do_hc_estimatefc(self, tasks, logger_level=3, do_svd=False, do_mass_weighting=True):
+    def do_hc_estimatefc(self, tasks, logger_level=3, do_svd=False, svd_rcond=0.0, do_mass_weighting=True):
         '''
             Refine force constants using Hessian Cost function.
 
@@ -430,7 +430,7 @@ class BaseProgram(object):
                 log.dump('No terms (with task in %s) found to estimate FC from HC' %(str(tasks)))
                 return
             cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=self.ffrefs, do_mass_weighting=do_mass_weighting)
-            fcs = cost.estimate(do_svd=do_svd)
+            fcs = cost.estimate(do_svd=do_svd, svd_rcond=svd_rcond)
             for index, fc in zip(term_indices, fcs):
                 master = self.valence.terms[index]
                 assert master.is_master()
@@ -755,21 +755,21 @@ class DeriveFF(BaseProgram):
             self.do_eq_setrv(['EQ_RV'])
             self.do_pt_generate()
             self.do_pt_estimate()
-            if self.settings.plot_traj is not None and self.settings.plot_traj.lower()=='all':
+            if self.settings.plot_traj is not None and (self.settings.plot_traj.lower() in ['Apt1', 'all']):
                 self.plot_trajectories(do_valence=False, suffix='_Apt1')
             if self.settings.xyz_traj is not None and self.settings.xyz_traj:
                 self.write_trajectories()
             self.do_pt_postprocess()
             self.do_cross_init()
             self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighting=self.settings.do_hess_mass_weighting)
-            if self.settings.plot_traj is not None and self.settings.plot_traj.lower()=='all':
+            if self.settings.plot_traj is not None and (self.settings.plot_traj.lower() in ['Bhc1', 'all']):
                 self.plot_trajectories(do_valence=True, suffix='_Bhc1')
             self.do_pt_estimate(do_valence=True)
-            if self.settings.plot_traj is not None and self.settings.plot_traj.lower()=='all':
+            if self.settings.plot_traj is not None and (self.settings.plot_traj.lower() in ['Cpt2', 'all']):
                 self.plot_trajectories(do_valence=True, suffix='_Cpt2')
             self.do_pt_postprocess()
             self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighting=self.settings.do_hess_mass_weighting)
-            if self.settings.plot_traj is not None and self.settings.plot_traj.lower()=='all':
+            if self.settings.plot_traj is not None and (self.settings.plot_traj.lower() in ['Dhc2', 'all']):
                 self.plot_trajectories(do_valence=True, suffix='_Dhc2')
             self.do_hc_estimatefc([
                 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA', 'HC_FC_CROSS_DSS',
