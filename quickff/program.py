@@ -230,6 +230,7 @@ class BaseProgram(object):
                 if trajectory is None: continue
                 for pattern in only:
                     if pattern=='PT_ALL' or pattern in trajectory.term.basename:
+                        log.dump('Plotting trajectory for %s' %trajectory.term.basename)
                         trajectory.plot(self.ai, ffrefs=self.ffrefs, valence=valence, suffix=suffix)
 
     def write_trajectories(self):
@@ -243,6 +244,7 @@ class BaseProgram(object):
                 if trajectory is None: continue
                 for pattern in only:
                     if pattern=='PT_ALL' or pattern in trajectory.term.basename:
+                        log.dump('Writing XYZ trajectory for %s' %trajectory.term.basename)
                         trajectory.to_xyz()
 
     def do_pt_generate(self):

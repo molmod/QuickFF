@@ -57,11 +57,11 @@ def test_h2():
         program.do_hc_estimatefc(['HC_FC_DIAG'])
         K_hc, rv_hc = program.valence.get_params(0, only='all')
     #print results
-    print ''
-    print 'AI     :    K = %.3f kjmol/A^2    q0 = %.6f A' %(mass*freq**2/(kjmol/angstrom**2), r0/angstrom)
-    print 'FF (PT):    K = %.3f kjmol/A^2    q0 = %.6f A' %(K_pt/(kjmol/angstrom**2), rv_pt/angstrom)
-    print 'FF (HC):    K = %.3f kjmol/A^2    q0 = %.6f A' %(K_hc/(kjmol/angstrom**2), rv_hc/angstrom)
-    print ''
+    print('')
+    print('AI     :    K = %.3f kjmol/A^2    q0 = %.6f A' %(mass*freq**2/(kjmol/angstrom**2), r0/angstrom))
+    print('FF (PT):    K = %.3f kjmol/A^2    q0 = %.6f A' %(K_pt/(kjmol/angstrom**2), rv_pt/angstrom))
+    print('FF (HC):    K = %.3f kjmol/A^2    q0 = %.6f A' %(K_hc/(kjmol/angstrom**2), rv_hc/angstrom))
+    print('')
     #perform assertion checks
     assert abs(K_pt/(mass*freq**2)-1.0) < 1e-3
     assert abs(rv_pt/r0-1.0) < 1e-3
@@ -97,7 +97,7 @@ def test_output_charmm22():
             counts = {}
             with open(fn_charmm22_prm, 'r') as f:
                 for line in f:
-                    print line
+                    print(line)
                     line = line[:line.find('!')].strip()
                     if len(line) == 0:
                         continue
@@ -115,36 +115,36 @@ def test_output_charmm22():
             # check for consistency.
             with open(fn_charmm22_psf, 'r') as f:
                 natom = 0
-                assert f.next() == 'PSF\n'
+                assert next(f) == 'PSF\n'
                 for line in f:
                     if '!NATOM' in line:
                         natom = int(line.split()[0])
                         break
                 assert natom == system.natom
-                for iatom in xrange(natom+1):
-                    f.next()
-                line = f.next()
+                for iatom in range(natom+1):
+                    next(f)
+                line = next(f)
                 assert '!NBOND: bonds' in line
                 nbond = int(line.split()[0])
                 nline = int(np.ceil(nbond/4.0))
-                numbers = (''.join([f.next() for iline in xrange(nline)])).split()
+                numbers = (''.join([next(f) for iline in range(nline)])).split()
                 assert len(numbers) == nbond*2
-                f.next()
-                line = f.next()
+                next(f)
+                line = next(f)
                 assert '!NTHETA: angles' in line
                 ntheta = int(line.split()[0])
                 nline = int(np.ceil(ntheta/3.0))
-                numbers = (''.join([f.next() for iline in xrange(nline)])).split()
+                numbers = (''.join([next(f) for iline in range(nline)])).split()
                 assert len(numbers) == ntheta*3
-                f.next()
-                line = f.next()
+                next(f)
+                line = next(f)
                 assert '!NPHI: dihedrals' in line
                 nphi = int(line.split()[0])
                 nline = int(np.ceil(nphi/2.0))
-                numbers = (''.join([f.next() for iline in xrange(nline)])).split()
+                numbers = (''.join([next(f) for iline in range(nline)])).split()
                 assert len(numbers) == nphi*4
-                f.next()
-                line = f.next()
+                next(f)
+                line = next(f)
                 assert '!NIMPHI: impropers' in line
                 nimphi = int(line.split()[0])
                 assert nimphi == 0

@@ -106,11 +106,11 @@ def get_analytic_numeric_hessian(valence, term, **ffpars):
     eps = 1e-4
     natoms = len(valence.system.pos)
     num = np.zeros([3*natoms, 3*natoms], float)
-    for i in xrange(3*natoms):
+    for i in range(3*natoms):
         Di = np.zeros(3*natoms, float)
         Di[i] = eps
         Di = Di.reshape([natoms, 3])
-        for j in xrange(3*natoms):
+        for j in range(3*natoms):
             Dj = np.zeros(3*natoms, float)
             Dj[j] = eps
             Dj = Dj.reshape([natoms, 3])
@@ -132,9 +132,9 @@ def get_indices_zero_nonzero(term, natoms):
     '''
     inonzero = [[],[]]
     izero = [[],[]]
-    for i in xrange(natoms):
+    for i in range(natoms):
         iindices = [3*i,3*i,3*i, 3*i+1,3*i+1,3*i+1, 3*i+2,3*i+2,3*i+2]
-        for j in xrange(natoms):
+        for j in range(natoms):
             jindices = [3*j,3*j+1,3*j+2, 3*j,3*j+1,3*j+2, 3*j,3*j+1,3*j+2]
             if i in term.get_atoms() and j in term.get_atoms():
                 inonzero[0] += iindices
@@ -175,7 +175,7 @@ def check_hessian_bonds(name, tol=1e-3*kjmol/angstrom**2):
             assert (abs(num[izero])).max()<1e-12*kjmol/angstrom**2
         M = (abs(ref-num)).max()
         iM, jM = np.where(abs(ref-num)==M)[0][0], np.where(abs(ref-num)==M)[1][0]
-        print '%25s (random FC=%8.3f kjmol/A^2    RV=%7.3f A  ):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(term.basename, fc/(kjmol/angstrom**2), rv/angstrom, iM, jM, M/(kjmol/angstrom**2))
+        print('%25s (random FC=%8.3f kjmol/A^2    RV=%7.3f A  ):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(term.basename, fc/(kjmol/angstrom**2), rv/angstrom, iM, jM, M/(kjmol/angstrom**2)))
         assert M<tol
     del system, valence, ref, num
 
@@ -196,7 +196,7 @@ def check_hessian_bends(name, tol=1e-3*kjmol/angstrom**2):
             assert (abs(num[izero])).max()<1e-12*kjmol/angstrom**2
         M = (abs(ref-num)).max()
         iM, jM = np.where(abs(ref-num)==M)[0][0], np.where(abs(ref-num)==M)[1][0]
-        print '%25s (random FC=%8.3f kjmol/rad^2  RV=%7.3f deg):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(term.basename, fc/(kjmol/rad**2), rv/deg, iM, jM, M/(kjmol/angstrom**2))
+        print('%25s (random FC=%8.3f kjmol/rad^2  RV=%7.3f deg):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(term.basename, fc/(kjmol/rad**2), rv/deg, iM, jM, M/(kjmol/angstrom**2)))
         assert M<tol
     del system, valence, ref, num
 
@@ -219,9 +219,9 @@ def check_hessian_dihedrals(name, tol=1e-3*kjmol/angstrom**2):
             assert (abs(num[izero])).max()<1e-12*kjmol/angstrom**2
         M = (abs(ref-num)).max()
         iM, jM = np.where(abs(ref-num)==M)[0][0], np.where(abs(ref-num)==M)[1][0]
-        print '%25s (eq=%.1f deg    random FC=%8.3f kjmol        RV=%7.3f deg):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(
+        print('%25s (eq=%.1f deg    random FC=%8.3f kjmol        RV=%7.3f deg):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(
             term.basename, psi0/deg, fc/kjmol, rv/deg, iM, jM, M/(kjmol/angstrom**2)
-        )
+        ))
         assert M<tol
     del system, valence, ref, num
 
@@ -242,9 +242,9 @@ def check_hessian_oops(name, tol=1e-3*kjmol/angstrom**2):
             assert (abs(num[izero])).max()<1e-12*kjmol/angstrom**2
         M = (abs(ref-num)).max()
         iM, jM = np.where(abs(ref-num)==M)[0][0], np.where(abs(ref-num)==M)[1][0]
-        print '%25s (random FC=%8.3f kjmol/A^2    RV=%7.3f A  ):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(
+        print('%25s (random FC=%8.3f kjmol/A^2    RV=%7.3f A  ):  MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(
             term.basename, fc/(kjmol/angstrom**2), rv/angstrom, iM, jM, M/(kjmol/angstrom**2)
-        )
+        ))
         assert M<tol
         del ref, num
     for term in valence.iter_terms('SQOOPDIST'):
@@ -259,7 +259,7 @@ def check_hessian_oops(name, tol=1e-3*kjmol/angstrom**2):
             assert (abs(num[izero])).max()<1e-12*kjmol/angstrom**2
         M = (abs(ref-num)).max()
         iM, jM = np.where(abs(ref-num)==M)[0][0], np.where(abs(ref-num)==M)[1][0]
-        print '%25s (random FC=%8.3f kjmol/A^4    RV=%7.3f A^2):   MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(term.basename, fc/(kjmol/angstrom**4), rv/angstrom**2, iM, jM, M/(kjmol/angstrom**2))
+        print('%25s (random FC=%8.3f kjmol/A^4    RV=%7.3f A^2):   MaxDev(%2i,%2i)=%.3e kjmol/A^2' %(term.basename, fc/(kjmol/angstrom**4), rv/angstrom**2, iM, jM, M/(kjmol/angstrom**2)))
         assert M<tol
         del ref, num
     del system, valence
