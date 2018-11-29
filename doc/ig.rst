@@ -85,7 +85,7 @@ Stable release
 A stable release of the second generation of QuickFF, which includes all 
 features described on this website, can be downloaded from:
 
-    http://users.ugent.be/~lvduyfhu/QuickFF-2.2.1.tar.gz
+    http://users.ugent.be/~lvduyfhu/QuickFF-2.2.2.tar.gz
 
 Previous versions available for download can be found below:
 
