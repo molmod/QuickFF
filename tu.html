@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorials &mdash; QuickFF 2.2.1 documentation</title>
+  <title>Tutorials &mdash; QuickFF 2.2.2 documentation</title>
   
 
   
@@ -335,7 +335,7 @@ be found in the path <code class="docutils literal"><span class="pre">/charges</
 No electrostatic nor van der Waals interactions will be included in the force
 field. Furthermore, we use the <a class="reference internal" href="ug.html#seclab-ug-atype-estimator"><span class="std std-ref">built-in feature</span></a> to automatically determine atom types according to
 the level <cite>low</cite> (for benzene it does not make any difference which level is
-chosen). This can very easily be done using the <a class="reference internal" href="rg.html#seclab-rg-scripts-qff"><span class="std std-ref">qff.py</span></a> script (documentation on the available options can be
+chosen). This can very easily be done using the <a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">qff.py</span></a> script (documentation on the available options can be
 accessed by <cite>qff.py</cite> <code class="xref std std-option docutils literal"><span class="pre">--help</span></code>):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">qff</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">ffatypes</span><span class="o">=</span><span class="n">low</span> <span class="o">--</span><span class="n">suffix</span><span class="o">=</span><span class="n">_noei</span> <span class="n">gaussian</span><span class="o">.</span><span class="n">fchk</span>
 </pre></div>
@@ -450,7 +450,7 @@ Cross:PARS         C         C         C   5.2502117018e+02   5.0720240430e+01  
 <dt>Generating Yaff input</dt>
 <dd><p class="first">First we need to generate the Yaff input file for the electrostatic
 contribution to the force field. This is done using the script
-<a class="reference internal" href="rg.html#seclab-rg-scripts-inputei"><span class="std std-ref">qff_input-ei.py</span></a>. For this tutorial,
+<a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-inputei"><span class="std std-ref">qff_input-ei.py</span></a>. For this tutorial,
 we will convert the charges given in the dataset <code class="docutils literal"><span class="pre">/charges</span></code> of the
 file <code class="docutils literal"><span class="pre">gaussian_mbis.h5</span></code> for the atoms in gaussian.fchk with atom types
 according to the level <cite>medium</cite> and use Gaussian charge distributions:</p>
@@ -822,7 +822,7 @@ constructing a force field for biphenyl.</p>
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2.2.1',
+              VERSION:'2.2.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',

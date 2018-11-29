@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>quickff.program &mdash; QuickFF 2.2.1 documentation</title>
+  <title>quickff.program &mdash; QuickFF 2.2.2 documentation</title>
   
 
   
@@ -303,7 +303,7 @@
     <span class="s1">&#39;BaseProgram&#39;</span><span class="p">,</span> <span class="s1">&#39;MakeTrajectories&#39;</span><span class="p">,</span> <span class="s1">&#39;PlotTrajectories&#39;</span><span class="p">,</span> <span class="s1">&#39;DeriveFF&#39;</span><span class="p">,</span>
 <span class="p">]</span>
 
-<div class="viewcode-block" id="BaseProgram"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram">[docs]</a><span class="k">class</span> <span class="nc">BaseProgram</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram">[docs]</a><span class="k">class</span> <span class="nc">BaseProgram</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Base program which implements all possible steps of a force field</span>
 <span class="sd">        fitting program. The actual sequence of the steps are defined in the</span>
@@ -339,7 +339,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">trajectories</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">print_system</span><span class="p">()</span>
 
-<div class="viewcode-block" id="BaseProgram.print_system"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.print_system">[docs]</a>    <span class="k">def</span> <span class="nf">print_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.print_system"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.print_system">[docs]</a>    <span class="k">def</span> <span class="nf">print_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            dump overview of atoms (and associated parameters) in the system</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -365,7 +365,7 @@
                 <span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="BaseProgram.reset_system"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.reset_system">[docs]</a>    <span class="k">def</span> <span class="nf">reset_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.reset_system"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.reset_system">[docs]</a>    <span class="k">def</span> <span class="nf">reset_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            routine to reset the system coords to the ai equilbrium</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -375,7 +375,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">iclist</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="BaseProgram.update_trajectory_terms"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.update_trajectory_terms">[docs]</a>    <span class="k">def</span> <span class="nf">update_trajectory_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.update_trajectory_terms"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.update_trajectory_terms">[docs]</a>    <span class="k">def</span> <span class="nf">update_trajectory_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Routine to make ``self.valence.terms`` and the term attribute of each</span>
 <span class="sd">            trajectory in ``self.trajectories`` consistent again. This is usefull</span>
@@ -414,7 +414,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">perturbation</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">trajectory</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">trajectories</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trajectory</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseProgram.average_pars"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.average_pars">[docs]</a>    <span class="k">def</span> <span class="nf">average_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.average_pars"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.average_pars">[docs]</a>    <span class="k">def</span> <span class="nf">average_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Average force field parameters over master and slaves.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -455,7 +455,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
-<div class="viewcode-block" id="BaseProgram.make_output"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.make_output">[docs]</a>    <span class="k">def</span> <span class="nf">make_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.make_output"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.make_output">[docs]</a>    <span class="k">def</span> <span class="nf">make_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Dump Yaff parameters, Yaff system, plot energy contributions along</span>
 <span class="sd">            perturbation trajectories and dump perturbation trajectories to XYZ</span>
@@ -474,7 +474,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">xyz_traj</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">write_trajectories</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="BaseProgram.plot_trajectories"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.plot_trajectories">[docs]</a>    <span class="k">def</span> <span class="nf">plot_trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_valence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.plot_trajectories"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.plot_trajectories">[docs]</a>    <span class="k">def</span> <span class="nf">plot_trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_valence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Plot energy contributions along perturbation trajectories and</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -490,7 +490,7 @@
                         <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Plotting trajectory for </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">trajectory</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">)</span>
                         <span class="n">trajectory</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ai</span><span class="p">,</span> <span class="n">ffrefs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ffrefs</span><span class="p">,</span> <span class="n">valence</span><span class="o">=</span><span class="n">valence</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="n">suffix</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseProgram.write_trajectories"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.write_trajectories">[docs]</a>    <span class="k">def</span> <span class="nf">write_trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.write_trajectories"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.write_trajectories">[docs]</a>    <span class="k">def</span> <span class="nf">write_trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Write perturbation trajectories to XYZ files.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -504,7 +504,7 @@
                         <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Writing XYZ trajectory for </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">trajectory</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">basename</span><span class="p">)</span>
                         <span class="n">trajectory</span><span class="o">.</span><span class="n">to_xyz</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="BaseProgram.do_pt_generate"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.do_pt_generate">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_pt_generate"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.do_pt_generate">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Generate perturbation trajectories.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -540,7 +540,7 @@
                 <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn_traj</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">))</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Trajectories stored to file </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">fn_traj</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseProgram.do_pt_estimate"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.do_pt_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_valence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">energy_noise</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_pt_estimate"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.do_pt_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_valence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">energy_noise</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Estimate force constants and rest values from the perturbation</span>
 <span class="sd">            trajectories</span>
@@ -579,7 +579,7 @@
             <span class="c1">#required for do_pt_postprocess. Average will be done at the end of</span>
             <span class="c1">#do_pt_postprocess</span>
 
-<div class="viewcode-block" id="BaseProgram.do_pt_postprocess"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.do_pt_postprocess">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_postprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_pt_postprocess"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.do_pt_postprocess">[docs]</a>    <span class="k">def</span> <span class="nf">do_pt_postprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Do some first post processing of the ff parameters estimated from</span>
 <span class="sd">            the perturbation trajectories including:</span>
@@ -598,7 +598,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">do_sqoopdist_to_oopdist</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">average_pars</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="BaseProgram.do_eq_setrv"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.do_eq_setrv">[docs]</a>    <span class="k">def</span> <span class="nf">do_eq_setrv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_eq_setrv"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.do_eq_setrv">[docs]</a>    <span class="k">def</span> <span class="nf">do_eq_setrv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Set the rest values to their respective AI equilibrium values.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -629,7 +629,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">dump_logger</span><span class="p">(</span><span class="n">print_level</span><span class="o">=</span><span class="n">logger_level</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">average_pars</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="BaseProgram.do_hc_estimatefc"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.do_hc_estimatefc">[docs]</a>    <span class="k">def</span> <span class="nf">do_hc_estimatefc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">do_svd</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">svd_rcond</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">do_mass_weighting</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_hc_estimatefc"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.do_hc_estimatefc">[docs]</a>    <span class="k">def</span> <span class="nf">do_hc_estimatefc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">logger_level</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">do_svd</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">svd_rcond</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">do_mass_weighting</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Refine force constants using Hessian Cost function.</span>
 
@@ -698,7 +698,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">islave</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="n">fc</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">dump_logger</span><span class="p">(</span><span class="n">print_level</span><span class="o">=</span><span class="n">logger_level</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseProgram.do_cross_init"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.do_cross_init">[docs]</a>    <span class="k">def</span> <span class="nf">do_cross_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_cross_init"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.do_cross_init">[docs]</a>    <span class="k">def</span> <span class="nf">do_cross_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Set the rest values of cross terms to the rest values of the</span>
 <span class="sd">            corresponding diagonal terms. The force constants are initialized</span>
@@ -845,7 +845,7 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rv0</span><span class="o">=</span><span class="n">rv0</span><span class="p">,</span> <span class="n">rv1</span><span class="o">=</span><span class="n">rv1</span><span class="p">)</span>
                         <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">slaves</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rv0</span><span class="o">=</span><span class="n">rv0</span><span class="p">,</span> <span class="n">rv1</span><span class="o">=</span><span class="n">rv1</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseProgram.do_squarebend"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.do_squarebend">[docs]</a>    <span class="k">def</span> <span class="nf">do_squarebend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">20</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_squarebend"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.do_squarebend">[docs]</a>    <span class="k">def</span> <span class="nf">do_squarebend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">20</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Identify bend patterns in which 4 atoms of type A surround a central</span>
 <span class="sd">            atom of type B with A-B-A angles of 90/180 degrees. A simple</span>
@@ -901,7 +901,7 @@
                             <span class="n">traj</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="kc">None</span>
                             <span class="n">traj</span><span class="o">.</span><span class="n">rv</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="BaseProgram.do_bendclin"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.do_bendclin">[docs]</a>    <span class="k">def</span> <span class="nf">do_bendclin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">5</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_bendclin"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.do_bendclin">[docs]</a>    <span class="k">def</span> <span class="nf">do_bendclin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">5</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            No Harmonic bend can have a rest value equal to are large than</span>
 <span class="sd">            180 deg - thresshold. If a master (or its slaves) has such a rest</span>
@@ -936,7 +936,7 @@
                             <span class="n">traj</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="kc">None</span>
                             <span class="n">traj</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="BaseProgram.do_sqoopdist_to_oopdist"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.do_sqoopdist_to_oopdist">[docs]</a>    <span class="k">def</span> <span class="nf">do_sqoopdist_to_oopdist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="o">*</span><span class="n">angstrom</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.do_sqoopdist_to_oopdist"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.do_sqoopdist_to_oopdist">[docs]</a>    <span class="k">def</span> <span class="nf">do_sqoopdist_to_oopdist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="o">*</span><span class="n">angstrom</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Transform a SqOopdist term with a rest value that has been set to</span>
 <span class="sd">            zero, to a term Oopdist (harmonic in Oopdist instead of square of</span>
@@ -963,7 +963,7 @@
                     <span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">valence</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rv0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseProgram.run"><a class="viewcode-back" href="../../rg.html#quickff.program.BaseProgram.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseProgram.run"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.BaseProgram.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Sequence of instructions, should be implemented in the inheriting</span>
 <span class="sd">            classes. The various inheriting classes distinguish themselves by</span>
@@ -972,7 +972,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
 
 
-<div class="viewcode-block" id="MakeTrajectories"><a class="viewcode-back" href="../../rg.html#quickff.program.MakeTrajectories">[docs]</a><span class="k">class</span> <span class="nc">MakeTrajectories</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
+<div class="viewcode-block" id="MakeTrajectories"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.MakeTrajectories">[docs]</a><span class="k">class</span> <span class="nc">MakeTrajectories</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Construct the perturbation trajectories and store them. This program</span>
 <span class="sd">        does not derive the force field.</span>
@@ -984,7 +984,7 @@
             <span class="k">assert</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn_traj</span><span class="p">),</span> <span class="s1">&#39;Given file </span><span class="si">%s</span><span class="s1"> to store trajectories to already exists!&#39;</span> <span class="o">%</span><span class="n">fn_traj</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="PlotTrajectories"><a class="viewcode-back" href="../../rg.html#quickff.program.PlotTrajectories">[docs]</a><span class="k">class</span> <span class="nc">PlotTrajectories</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
+<div class="viewcode-block" id="PlotTrajectories"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.PlotTrajectories">[docs]</a><span class="k">class</span> <span class="nc">PlotTrajectories</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Read the perturbation trajectories, dump to XYZ files and plot the</span>
 <span class="sd">        energy contributions. This program does not derive the force field.</span>
@@ -1001,7 +1001,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">plot_trajectories</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;_Apt1&#39;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">write_trajectories</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DeriveFF"><a class="viewcode-back" href="../../rg.html#quickff.program.DeriveFF">[docs]</a><span class="k">class</span> <span class="nc">DeriveFF</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
+<div class="viewcode-block" id="DeriveFF"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.program.DeriveFF">[docs]</a><span class="k">class</span> <span class="nc">DeriveFF</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Derive a force field for the given system. After the hessian fit of the</span>
 <span class="sd">        force constants, the rest values are refined by revisiting the</span>
@@ -1071,7 +1071,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'../../',
-              VERSION:'2.2.1',
+              VERSION:'2.2.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
