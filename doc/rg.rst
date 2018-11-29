@@ -3,7 +3,16 @@
     changes as these will be overwritten. Rather edit 
     the docstrings in the source code.
 
+Reference Guide
+###############
+
 .. _seclab_rg_modules:
+
+Modules
+=======
+
+An overview is provived of all modules included in QuickFF. The information 
+below is based on the documentation provided in the source code.
 
 ``quickff.cost`` -- Least-Square cost function for hessian matching
 -------------------------------------------------------------------
@@ -62,3 +71,26 @@
     :members:
 
 
+.. _seclab_rg_scripts:
+
+Scripts
+=======
+
+An overview is provided of the scripts in QuickFF as well as their basic usage
+and options. The information below can also be obtained by running the script
+with the :option:`--help` option.
+
+.. _seclab_rg_scripts_qff:
+
+``qff.py`` -- Main script to run QuickFF calculation
+****************************************************
+
+.. program-output:: qff.py --help
+
+
+.. _seclab_rg_scripts_inputei:
+
+``qff-input-ei.py`` -- generate Yaff parameter file for electrostatics
+**********************************************************************
+
+.. program-output:: qff-input-ei.py --help

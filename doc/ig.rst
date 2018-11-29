@@ -1,8 +1,13 @@
+.. _seclab_ig:
+
+Installation Guide
+##################
+
 Dependencies
-############
+************
 
 MolMod dependency
-*****************
+=================
 
 `MolMod <http://molmod.github.com/molmod/>`_ is a Python library used by most
 Python programs developed at the CMM. It must be installed before QuickFF can
@@ -11,7 +16,7 @@ be used or installed. Installation and download instructions can be found in the
 The instructions below only work if the MolMod package is installed.
 
 Yaff dependency
-***************
+===============
 
 `Yaff <http://molmod.github.com/yaff/>`_ is a pythonic force-field (FF)
 code used at the Center for Molecular Modeling (CMM) to test-drive new FF models.
@@ -33,7 +38,7 @@ instructions given in the
 instructions below only work if the Yaff package is installed.
 
 External dependencies
-*********************
+=====================
 
 Some software packages should be installed before QuickFF can be installed or
 used. It is recommended to use the software package management of your Linux
@@ -72,35 +77,38 @@ download and install Scoop (version 0.6.0.final), run the following commands
 
 
 Downloading QuickFF
-###################
+*******************
 
 Stable release
-**************
+==============
 
 A stable release of the second generation of QuickFF, which includes all 
 features described on this website, can be downloaded from:
 
-    http://users.ugent.be/~lvduyfhu/QuickFF-2.1.3.tar.gz
+    http://users.ugent.be/~lvduyfhu/QuickFF-2.2.1.tar.gz
 
 Previous versions available for download can be found below:
 
-    http://users.ugent.be/~lvduyfhu/QuickFF-2.1.2.tar.gz
-
-    http://users.ugent.be/~lvduyfhu/QuickFF-2.0.1.tar.gz
+    http://users.ugent.be/~lvduyfhu/QuickFF-2.2.0.tar.gz
     
-    http://users.ugent.be/~lvduyfhu/quickff-1.0.1.tar.gz
+    http://users.ugent.be/~lvduyfhu/QuickFF-2.1.3.tar.gz
+    
+    http://users.ugent.be/~lvduyfhu/QuickFF-2.1.2.tar.gz
+    
+    http://users.ugent.be/~lvduyfhu/QuickFF-2.1.0.tar.gz
+    
 
 Choose a suitable directory, e.g. ``~/build``, download and unpack the archive::
 
     mkdir -p ~/build
     cd ~/build
-    wget http://users.ugent.be/~lvduyfhu/QuickFF-2.1.3.tar.gz
-    tar -xvzf QuickFF-2.1.3.tar.gz
-    cd QuickFF-2.1.3
+    wget http://users.ugent.be/~lvduyfhu/QuickFF-2.2.1.tar.gz
+    tar -xvzf QuickFF-2.2.1.tar.gz
+    cd QuickFF-2.2.1
 
 
 Latest development version (experts only)
-*****************************************
+=========================================
 
 The latest development version of QuickFF can only be downloaded using Git.
 This also allows you to upload your own changes to QuickFF. Git is free and
@@ -132,7 +140,7 @@ directory containing the quickff repository and running the command::
 
 
 Installing QuickFF
-##################
+******************
 
 Once you downloaded the source code and installed all required packages, QuickFF
 can be installed. To install QuickFF, simply go to the directory in which you
