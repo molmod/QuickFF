@@ -1,0 +1,1384 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Reference Guide &mdash; QuickFF 2.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Validation" href="vl.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> QuickFF
+          
+
+          
+            
+            <img src="_static/quickff_logo_trans_small.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="papers.html">QuickFF literature</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ig.html">Installation Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#dependencies">Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#molmod-dependency">MolMod dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#yaff-dependency">Yaff dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#external-dependencies">External dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#downloading-quickff">Downloading QuickFF</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#stable-release">Stable release</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#latest-development-version-experts-only">Latest development version (experts only)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#installing-quickff">Installing QuickFF</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ug.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#quickff-settings">QuickFF Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#settings-description">Settings description</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#general-settings">General settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#input-output-settings">Input/output settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#reference-force-field-contribution-settings">Reference force field contribution settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#force-field-expression-settings">Force field expression settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#fitting-algorithm-settings">Fitting algorithm settings</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#default-settings">Default settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#preparing-electrostatic-force-field">Preparing electrostatic force field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#quickff-main-script-qff-py">QuickFF main script qff.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#mandatory-input-files">Mandatory input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#optional-input-files">Optional input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#automatic-estimation-of-atom-types">Automatic estimation of atom types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#miscellanous-options">Miscellanous options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#output">Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#logging">Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#parallel-quickff">Parallel QuickFF</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#importing-quickff-as-a-library">Importing QuickFF as a library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-the-system">Define the system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-the-ab-initio-reference">Define the ab initio reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-force-field-reference-objects">Define force field reference objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-the-program-and-run-it">Define the program and run it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#id3">Logging</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tu.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-1-benzene">Tutorial 1 - Benzene</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tu.html#covalent-force-field-without-non-bonding-terms">Covalent force field without non-bonding terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tu.html#force-field-with-electrostatics">Force field with electrostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-2-water">Tutorial 2 - Water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-3-biphenyl">Tutorial 3 - Biphenyl</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="vl.html">Validation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vl.html#validation-methodology">Validation methodology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vl.html#validation-1-water">Validation 1 - Water</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#force-field-construction">Force field construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#force-field-evaluation">Force field evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#perturbation-trajectories">Perturbation trajectories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#geometry-and-frequencies">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vl.html#validation-2-benzene">Validation 2 - Benzene</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#id1">Force field construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#id2">Force field evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#id3">Perturbation trajectories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#id4">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reference Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-quickff.cost"><code class="docutils literal"><span class="pre">quickff.cost</span></code> – Least-Square cost function for hessian matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-quickff.io"><code class="docutils literal"><span class="pre">quickff.io</span></code> – Input/Ouput methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-quickff.settings"><code class="docutils literal"><span class="pre">quickff.settings</span></code> – QuickFF configuration settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-quickff.perturbation"><code class="docutils literal"><span class="pre">quickff.perturbation</span></code> – Perturbation trajectories for internal coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-quickff.program"><code class="docutils literal"><span class="pre">quickff.program</span></code> – Program classes implementing a sequence of fitting steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-quickff.reference"><code class="docutils literal"><span class="pre">quickff.reference</span></code> – Representation of the ab initio reference data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-quickff.tools"><code class="docutils literal"><span class="pre">quickff.tools</span></code> – Various convenient tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-quickff.valence"><code class="docutils literal"><span class="pre">quickff.valence</span></code> – ValenceFF class storing all valence ff terms</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scripts">Scripts</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QuickFF</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Reference Guide</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/rg.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="reference-guide">
+<h1>Reference Guide<a class="headerlink" href="#reference-guide" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="modules">
+<span id="seclab-rg-modules"></span><h2>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h2>
+<p>An overview is provived of all modules included in QuickFF. The information
+below is based on the documentation provided in the source code.</p>
+<div class="section" id="module-quickff.cost">
+<span id="quickff-cost-least-square-cost-function-for-hessian-matching"></span><h3><code class="docutils literal"><span class="pre">quickff.cost</span></code> – Least-Square cost function for hessian matching<a class="headerlink" href="#module-quickff.cost" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="quickff.cost.HessianFCCost">
+<em class="property">class </em><code class="descclassname">quickff.cost.</code><code class="descname">HessianFCCost</code><span class="sig-paren">(</span><em>system</em>, <em>ai</em>, <em>valence</em>, <em>fit_indices</em>, <em>ffrefs=[]</em>, <em>do_mass_weighting=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/cost.html#HessianFCCost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.cost.HessianFCCost" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to implement the least-square cost function to fit the force
+field hessian to the ab initio hessian.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>a Yaff system object</dd>
+<dt>ai</dt>
+<dd>an instance of the Reference representing the ab initio input</dd>
+<dt>valence</dt>
+<dd>A ValenceFF object containing all valence terms.</dd>
+<dt>fit_indices</dt>
+<dd>a list of indices indicating the terms for which the force
+constants should be determined.</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>ffrefs</dt>
+<dd>a list of Reference instances representing possible a priori
+determined contributions to the force field (such as eg.
+electrostatics and van der Waals)</dd>
+</dl>
+<p>do_mass_weighting</p>
+<dl class="method">
+<dt id="quickff.cost.HessianFCCost.estimate">
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>init=None</em>, <em>lower=None</em>, <em>upper=None</em>, <em>do_svd=False</em>, <em>svd_rcond=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/cost.html#HessianFCCost.estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.cost.HessianFCCost.estimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the force constants by minimizing the cost function</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-quickff.io">
+<span id="quickff-io-input-ouput-methods"></span><h3><code class="docutils literal"><span class="pre">quickff.io</span></code> – Input/Ouput methods<a class="headerlink" href="#module-quickff.io" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="quickff.io.VASPRun">
+<em class="property">class </em><code class="descclassname">quickff.io.</code><code class="descname">VASPRun</code><span class="sig-paren">(</span><em>filename</em>, <em>field_labels=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/io.html#VASPRun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.io.VASPRun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load information from a vasprun.xml file</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>filename</dt>
+<dd>Filename of vasprun.xml</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>field_labels</dt>
+<dd>List of things we want to read. If an empty list is provided,
+only numbers, masses, initial positions and initial cell
+vectors are read.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.io.read_abinitio">
+<code class="descclassname">quickff.io.</code><code class="descname">read_abinitio</code><span class="sig-paren">(</span><em>fn</em>, <em>do_hess=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/io.html#read_abinitio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.io.read_abinitio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper to read all information from an ab initio calculation that
+QuickFF needs. Currently Gaussian .fchk and VASP .xml files are
+supported.</p>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>do_hess</dt>
+<dd>Extract the hessian from the ab initio output. For qff-input-ei.py,
+it is interesting to be able to switch this off.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.io.dump_charmm22_prm">
+<code class="descclassname">quickff.io.</code><code class="descname">dump_charmm22_prm</code><span class="sig-paren">(</span><em>valence</em>, <em>fn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/io.html#dump_charmm22_prm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.io.dump_charmm22_prm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump supported parameters in a CHARMM22 parameter file.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>valence</dt>
+<dd>Instance of ValenceFF, which defines the force field.</dd>
+<dt>fn</dt>
+<dd>The filename to write to.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.io.dump_charmm22_psf">
+<code class="descclassname">quickff.io.</code><code class="descname">dump_charmm22_psf</code><span class="sig-paren">(</span><em>system</em>, <em>valence</em>, <em>fn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/io.html#dump_charmm22_psf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.io.dump_charmm22_psf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump supported internal coordinates in a CHARMM psf file.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>Instance of yaff.System class</dd>
+<dt>valence</dt>
+<dd>Instance of ValenceFF, which defines the force field.</dd>
+<dt>fn</dt>
+<dd>The filename to write to.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-quickff.settings">
+<span id="quickff-settings-quickff-configuration-settings"></span><span id="seclab-rg-modules-settings"></span><h3><code class="docutils literal"><span class="pre">quickff.settings</span></code> – QuickFF configuration settings<a class="headerlink" href="#module-quickff.settings" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="quickff.settings.Settings">
+<em class="property">class </em><code class="descclassname">quickff.settings.</code><code class="descname">Settings</code><span class="sig-paren">(</span><em>fn=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/settings.html#Settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.settings.Settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to control the behaviour of a Quickff run</p>
+<p><strong>Keyword Arguments</strong></p>
+<dl class="docutils">
+<dt>fn</dt>
+<dd><p class="first">file name of a config file from which settings can be read.
+Each line contains a single setting (except the lines starting
+with a #) and should have the following syntax</p>
+<blockquote class="last">
+<div>key: value</div></blockquote>
+</dd>
+<dt>kwargs</dt>
+<dd>each setting can also be parsed directly through the use of
+keyword arguments in the __init__ constructor with the syntax
+key=value. The settings parsed through the use of kwargs
+overwrite those in the config file.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-quickff.perturbation">
+<span id="quickff-perturbation-perturbation-trajectories-for-internal-coordinates"></span><h3><code class="docutils literal"><span class="pre">quickff.perturbation</span></code> – Perturbation trajectories for internal coordinates<a class="headerlink" href="#module-quickff.perturbation" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="quickff.perturbation.Trajectory">
+<em class="property">class </em><code class="descclassname">quickff.perturbation.</code><code class="descname">Trajectory</code><span class="sig-paren">(</span><em>term</em>, <em>start</em>, <em>end</em>, <em>numbers</em>, <em>nsteps=11</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/perturbation.html#Trajectory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.Trajectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to store a perturbation trajectory</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>term</dt>
+<dd>an instance of the Term class for which the perturbation
+trajectory will be computed</dd>
+<dt>numbers</dt>
+<dd>list of atom numbers required for dumping xyz coords</dd>
+<dt>start</dt>
+<dd>a float defining the lower limit of the perturbation value of
+the given ic. If not given, a standard value is choosen
+according to the kind of internal coordinate.</dd>
+<dt>end</dt>
+<dd>a float defining the upper limit of the perturbations value of
+the given ic. If not given, a standard value is choosen
+according to the kind of internal coordinate.</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>nsteps</dt>
+<dd>an integer defining the number of steps in the perturbation
+trajectory. The default value is 11 steps.</dd>
+</dl>
+<dl class="method">
+<dt id="quickff.perturbation.Trajectory.plot">
+<code class="descname">plot</code><span class="sig-paren">(</span><em>ai</em>, <em>ffrefs=[]</em>, <em>valence=None</em>, <em>fn='default'</em>, <em>eunit='kjmol'</em>, <em>suffix=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/perturbation.html#Trajectory.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.Trajectory.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot the energy contributions along a perturbation
+trajectory associated to a given ic. This method assumes that the
+coords, fc and rv attributes have been computed and assigned.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>ai</dt>
+<dd>an instance of the Reference representing the ab initio input</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>ffrefs</dt>
+<dd>a list of Reference instances representing possible a priori
+determined contributions to the force field (such as eg.
+electrostatics and van der Waals)</dd>
+<dt>valence</dt>
+<dd>an instance of ValenceFF which will be used to plot the covalent
+contribution. If not given, only the contribution of the IC
+corresponding to the trajectory will be plotted using the values
+of fc and rv</dd>
+<dt>fn</dt>
+<dd>a string defining the name of the figure</dd>
+<dt>eunit</dt>
+<dd>a string describing the conversion of the unit of energy. More
+info regarding possible strings can be found in the
+<a class="reference external" href="http://molmod.github.io/molmod/reference/const.html#module-molmod.units">MolMod documentation</a>.</dd>
+<dt>suffix</dt>
+<dd>a string to be added to the filename at the end. Is overwritten
+when fn is specified.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.perturbation.Trajectory.to_xyz">
+<code class="descname">to_xyz</code><span class="sig-paren">(</span><em>fn=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/perturbation.html#Trajectory.to_xyz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.perturbation.Trajectory.to_xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to write the given trajectory to an XYZ file. This method
+assumes that the coords attribute has been assigned.</p>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>fn</dt>
+<dd>a string defining the name of the output file</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-quickff.program">
+<span id="quickff-program-program-classes-implementing-a-sequence-of-fitting-steps"></span><span id="seclab-rg-modules-program"></span><h3><code class="docutils literal"><span class="pre">quickff.program</span></code> – Program classes implementing a sequence of fitting steps<a class="headerlink" href="#module-quickff.program" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="quickff.program.BaseProgram">
+<em class="property">class </em><code class="descclassname">quickff.program.</code><code class="descname">BaseProgram</code><span class="sig-paren">(</span><em>system</em>, <em>ai</em>, <em>settings</em>, <em>ffrefs=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base program which implements all possible steps of a force field
+fitting program. The actual sequence of the steps are defined in the
+deriving classes.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>a Yaff <cite>System</cite> instance defining the system</dd>
+<dt>ai</dt>
+<dd>a <cite>Reference</cite> instance corresponding to the ab initio input data</dd>
+<dt>settings</dt>
+<dd>a <cite>Settings</cite> instance defining all QuickFF settings</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> instances defining the a-priori force
+field contributions.</dd>
+</dl>
+<dl class="method">
+<dt id="quickff.program.BaseProgram.average_pars">
+<code class="descname">average_pars</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.average_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.average_pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Average force field parameters over master and slaves.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_bendclin">
+<code class="descname">do_bendclin</code><span class="sig-paren">(</span><em>thresshold=0.08726646259971647</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_bendclin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_bendclin" title="Permalink to this definition">¶</a></dt>
+<dd><p>No Harmonic bend can have a rest value equal to are large than
+180 deg - thresshold. If a master (or its slaves) has such a rest
+value, convert master and all slaves to BendCLin (which corresponds
+to a chebychev1 potential with sign=+1):</p>
+<blockquote>
+<div>0.5*K*[1+cos(theta)]</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_cross_init">
+<code class="descname">do_cross_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_cross_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_cross_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the rest values of cross terms to the rest values of the
+corresponding diagonal terms. The force constants are initialized
+to zero.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_eq_setrv">
+<code class="descname">do_eq_setrv</code><span class="sig-paren">(</span><em>tasks</em>, <em>logger_level=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_eq_setrv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_eq_setrv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the rest values to their respective AI equilibrium values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_hc_estimatefc">
+<code class="descname">do_hc_estimatefc</code><span class="sig-paren">(</span><em>tasks</em>, <em>logger_level=3</em>, <em>do_svd=False</em>, <em>svd_rcond=0.0</em>, <em>do_mass_weighting=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_hc_estimatefc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_hc_estimatefc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refine force constants using Hessian Cost function.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>tasks</dt>
+<dd>A list of strings identifying which terms should have their
+force constant estimated from the hessian cost function. Using
+such a flag, one can distinguish between for example force
+constant refinement (flag=HC_FC_DIAG) of the diagonal terms and
+force constant estimation of the cross terms (flag=HC_FC_CROSS).
+If the string ‘all’ is present in tasks, all fc’s will be
+estimated.</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>logger_level</dt>
+<dd>print level at which the resulting parameters should be dumped to
+the logger. By default, the parameters will only be dumped at
+the highest log level.</dd>
+<dt>do_svd</dt>
+<dd>whether or not to do an SVD decomposition before solving the
+set of equations and explicitly throw out the degrees of
+freedom that correspond to the lowest singular values.</dd>
+<dt>do_mass_weighting</dt>
+<dd>whether or not to apply mass weighing to the ab initio hessian
+and the force field contributions before doing the fitting.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_pt_estimate">
+<code class="descname">do_pt_estimate</code><span class="sig-paren">(</span><em>do_valence=False</em>, <em>energy_noise=None</em>, <em>logger_level=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_pt_estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_pt_estimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate force constants and rest values from the perturbation
+trajectories</p>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>do_valence</dt>
+<dd>if set to True, the current valence force field will be used to
+estimate the contribution of all other valence terms.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_pt_generate">
+<code class="descname">do_pt_generate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_pt_generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_pt_generate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate perturbation trajectories.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_pt_postprocess">
+<code class="descname">do_pt_postprocess</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_pt_postprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_pt_postprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do some first post processing of the ff parameters estimated from
+the perturbation trajectories including:</p>
+<blockquote>
+<div><ul class="simple">
+<li>detecting bend patterns with rest values of 90 and 180 deg</li>
+<li>detecting bend patterns with rest values only close to 180 deg</li>
+<li>transforming SqOopDist with rv=0.0 to OopDist</li>
+<li>averaging parameters</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_sqoopdist_to_oopdist">
+<code class="descname">do_sqoopdist_to_oopdist</code><span class="sig-paren">(</span><em>thresshold=0.0001889726133921252</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_sqoopdist_to_oopdist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_sqoopdist_to_oopdist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform a SqOopdist term with a rest value that has been set to
+zero, to a term Oopdist (harmonic in Oopdist instead of square of
+Oopdist) with a rest value of 0.0 A.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.do_squarebend">
+<code class="descname">do_squarebend</code><span class="sig-paren">(</span><em>thresshold=0.3490658503988659</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_squarebend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_squarebend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identify bend patterns in which 4 atoms of type A surround a central
+atom of type B with A-B-A angles of 90/180 degrees. A simple
+harmonic pattern will not be adequate since a rest value of 90 and
+180 degrees is possible for the same A-B-A term. Therefore, a
+cosine term with multiplicity of 4 is used (which corresponds to a
+chebychev4 potential with sign=-1):</p>
+<blockquote>
+<div>V = K/2*[1-cos(4*theta)]</div></blockquote>
+<p>To identify the patterns, it is assumed that the rest values have
+already been estimated from the perturbation trajectories. For each
+master and slave of a BENDAHARM term, its rest value is computed and
+checked if it lies either the interval [90-thresshold,90+thresshold]
+or [180-thresshold,180]. If this is the case, the new cosine term
+is used.</p>
+<p><strong>Optional arguments</strong></p>
+<dl class="docutils">
+<dt>thresshold</dt>
+<dd>the (half) the width of the interval around 180 deg (90 degrees)
+to check if a square BA4</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.make_output">
+<code class="descname">make_output</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.make_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.make_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump Yaff parameters, Yaff system, plot energy contributions along
+perturbation trajectories and dump perturbation trajectories to XYZ
+files.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.plot_trajectories">
+<code class="descname">plot_trajectories</code><span class="sig-paren">(</span><em>do_valence=False</em>, <em>suffix=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.plot_trajectories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.plot_trajectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot energy contributions along perturbation trajectories and</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.print_system">
+<code class="descname">print_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.print_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.print_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>dump overview of atoms (and associated parameters) in the system</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.reset_system">
+<code class="descname">reset_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.reset_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.reset_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>routine to reset the system coords to the ai equilbrium</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sequence of instructions, should be implemented in the inheriting
+classes. The various inheriting classes distinguish themselves by
+means of the instructions implemented in this routine.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.update_trajectory_terms">
+<code class="descname">update_trajectory_terms</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.update_trajectory_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.update_trajectory_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Routine to make <code class="docutils literal"><span class="pre">self.valence.terms</span></code> and the term attribute of each
+trajectory in <code class="docutils literal"><span class="pre">self.trajectories</span></code> consistent again. This is usefull
+if the trajectory were read from a file and the <code class="docutils literal"><span class="pre">valenceFF</span></code> instance
+was modified.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.write_trajectories">
+<code class="descname">write_trajectories</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.write_trajectories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.write_trajectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write perturbation trajectories to XYZ files.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="quickff.program.MakeTrajectories">
+<em class="property">class </em><code class="descclassname">quickff.program.</code><code class="descname">MakeTrajectories</code><span class="sig-paren">(</span><em>system</em>, <em>ai</em>, <em>settings</em>, <em>ffrefs=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#MakeTrajectories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.MakeTrajectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct the perturbation trajectories and store them. This program
+does not derive the force field.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>a Yaff <cite>System</cite> instance defining the system</dd>
+<dt>ai</dt>
+<dd>a <cite>Reference</cite> instance corresponding to the ab initio input data</dd>
+<dt>settings</dt>
+<dd>a <cite>Settings</cite> instance defining all QuickFF settings</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> instances defining the a-priori force
+field contributions.</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="quickff.program.PlotTrajectories">
+<em class="property">class </em><code class="descclassname">quickff.program.</code><code class="descname">PlotTrajectories</code><span class="sig-paren">(</span><em>system</em>, <em>ai</em>, <em>settings</em>, <em>ffrefs=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#PlotTrajectories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.PlotTrajectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the perturbation trajectories, dump to XYZ files and plot the
+energy contributions. This program does not derive the force field.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>a Yaff <cite>System</cite> instance defining the system</dd>
+<dt>ai</dt>
+<dd>a <cite>Reference</cite> instance corresponding to the ab initio input data</dd>
+<dt>settings</dt>
+<dd>a <cite>Settings</cite> instance defining all QuickFF settings</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> instances defining the a-priori force
+field contributions.</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="quickff.program.DeriveFF">
+<em class="property">class </em><code class="descclassname">quickff.program.</code><code class="descname">DeriveFF</code><span class="sig-paren">(</span><em>system</em>, <em>ai</em>, <em>settings</em>, <em>ffrefs=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#DeriveFF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.DeriveFF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derive a force field for the given system. After the hessian fit of the
+force constants, the rest values are refined by revisiting the
+perturbation trajectories with an extra a priori term representing the
+current valence contribution. Finally, the force constants are refined
+by means of a final hessian fit.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>a Yaff <cite>System</cite> instance defining the system</dd>
+<dt>ai</dt>
+<dd>a <cite>Reference</cite> instance corresponding to the ab initio input data</dd>
+<dt>settings</dt>
+<dd>a <cite>Settings</cite> instance defining all QuickFF settings</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>ffrefs</dt>
+<dd>a list of <cite>Reference</cite> instances defining the a-priori force
+field contributions.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-quickff.reference">
+<span id="quickff-reference-representation-of-the-ab-initio-reference-data"></span><h3><code class="docutils literal"><span class="pre">quickff.reference</span></code> – Representation of the ab initio reference data<a class="headerlink" href="#module-quickff.reference" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="quickff.reference.SecondOrderTaylor">
+<em class="property">class </em><code class="descclassname">quickff.reference.</code><code class="descname">SecondOrderTaylor</code><span class="sig-paren">(</span><em>name, coords=None, energy=0.0, grad=None, hess=None, pbc=[0, 0, 0]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/reference.html#SecondOrderTaylor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.reference.SecondOrderTaylor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Second-order Taylor expansion model, can be used for the ab initio input.</p>
+<dl class="method">
+<dt id="quickff.reference.SecondOrderTaylor.energy">
+<code class="descname">energy</code><span class="sig-paren">(</span><em>coords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/reference.html#SecondOrderTaylor.energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.reference.SecondOrderTaylor.energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the energy for the given positions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.reference.SecondOrderTaylor.gradient">
+<code class="descname">gradient</code><span class="sig-paren">(</span><em>coords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/reference.html#SecondOrderTaylor.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.reference.SecondOrderTaylor.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the given positions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.reference.SecondOrderTaylor.hessian">
+<code class="descname">hessian</code><span class="sig-paren">(</span><em>coords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/reference.html#SecondOrderTaylor.hessian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.reference.SecondOrderTaylor.hessian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the hessian for the given positions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.reference.SecondOrderTaylor.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>coords=None</em>, <em>grad=None</em>, <em>hess=None</em>, <em>pbc=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/reference.html#SecondOrderTaylor.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.reference.SecondOrderTaylor.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to update one or more of the attributes. The meaning of the
+optional arguments is the same as with the constructor __init__</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="quickff.reference.YaffForceField">
+<em class="property">class </em><code class="descclassname">quickff.reference.</code><code class="descname">YaffForceField</code><span class="sig-paren">(</span><em>name</em>, <em>ff</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/reference.html#YaffForceField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.reference.YaffForceField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A model object based on a YAFF force field. Such a model can be used
+to account for non-covalent interactions or residual covalent
+interactions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.reference.get_ei_ff">
+<code class="descclassname">quickff.reference.</code><code class="descname">get_ei_ff</code><span class="sig-paren">(</span><em>name, system, charges, scales, radii=None, average=True, pbc=[0, 0, 0]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/reference.html#get_ei_ff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.reference.get_ei_ff" title="Permalink to this definition">¶</a></dt>
+<dd><p>A routine to construct a Yaff force field for the electrostatics</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>name</dt>
+<dd>A string for the name of the force field. This name will show in
+possible plots visualizing contributions along perturbation
+trajectories</dd>
+<dt>system</dt>
+<dd>A Yaff System instance representing the system</dd>
+<dt>charges</dt>
+<dd>A numpy array containing the charge of each separate atom</dd>
+<dt>scales</dt>
+<dd>A list of 4 floats, representing scale1, scale2, scale3, scale4,
+i.e. the electrostatic scaling factors</dd>
+</dl>
+<p><strong>Optional Arguments</strong></p>
+<dl class="docutils">
+<dt>radii</dt>
+<dd>A numpy array containing the gaussian radii of each separate atom.
+If this argument is omitted, point charges are used.</dd>
+<dt>average</dt>
+<dd>If set to True, the charges and radii will first be averaged over
+atom types. This is True by default.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-quickff.tools">
+<span id="quickff-tools-various-convenient-tools"></span><span id="seclab-rg-modules-tools"></span><h3><code class="docutils literal"><span class="pre">quickff.tools</span></code> – Various convenient tools<a class="headerlink" href="#module-quickff.tools" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="quickff.tools.global_translation">
+<code class="descclassname">quickff.tools.</code><code class="descname">global_translation</code><span class="sig-paren">(</span><em>coords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#global_translation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.global_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to generate vectors that represent global translations
+of a system.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>coords</dt>
+<dd>a (N,3) numpy array describing the system that has to be translated</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.global_rotation">
+<code class="descclassname">quickff.tools.</code><code class="descname">global_rotation</code><span class="sig-paren">(</span><em>coords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#global_rotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.global_rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to generate vectors that represent global translations
+of a system. Rx is a matrix of rotatino around the x-axis minus
+the identity matrix. VRx is a vector of rotation around x-axis.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>coords</dt>
+<dd>a (N,3) numpy array describing the system that has to be translated</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.fitpar">
+<code class="descclassname">quickff.tools.</code><code class="descname">fitpar</code><span class="sig-paren">(</span><em>xs</em>, <em>ys</em>, <em>rcond=-1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#fitpar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.fitpar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a parabola to the samples (xs, ys):</p>
+<blockquote>
+<div>ys[:] = a*xs[:]^2 + b*xs[:] + c</div></blockquote>
+<p>Returns the parabola parameters a, b and c.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>xs</dt>
+<dd>a (N) numpy array containing the x values of the samples</dd>
+<dt>ys</dt>
+<dd>a (N) numpy array containing the x values of the samples</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.boxqp">
+<code class="descclassname">quickff.tools.</code><code class="descname">boxqp</code><span class="sig-paren">(</span><em>A</em>, <em>B</em>, <em>bndl</em>, <em>bndu</em>, <em>x0</em>, <em>threshold=1e-09</em>, <em>status=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#boxqp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.boxqp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimize the function</p>
+<blockquote>
+<div>1/2*xT.A.x - B.x</div></blockquote>
+<p>subject to</p>
+<blockquote>
+<div>bndl &lt; x &lt; bndu (element-wise)</div></blockquote>
+<p>This minimization is performed using a projected gradient method with
+step lengths computed using the Barzilai-Borwein method.
+See 10.1007/s00211-004-0569-y for a description.</p>
+<dl class="docutils">
+<dt><strong>Arguments</strong></dt>
+<dd>A       (n x n) NumPy array appearing in cost function
+B       (n) NumPy array appearing in cost function
+bndl    (n) NumPy array giving lower boundaries for the variables
+bndu    (n) NumPy array giving upper boundaries for the variables
+x0      (n) NumPy array providing an initial guess</dd>
+<dt><strong>Optional Arguments</strong></dt>
+<dd>threshold   Criterion to consider the iterations converged
+status      Return also the number of iterations performed</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.set_ffatypes">
+<code class="descclassname">quickff.tools.</code><code class="descname">set_ffatypes</code><span class="sig-paren">(</span><em>system</em>, <em>level</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#set_ffatypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.set_ffatypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>A method to guess atom types. This will overwrite ffatypes
+that are already defined in the system.</p>
+<p><strong>Arguments:</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>A yaff system instance</dd>
+<dt>level</dt>
+<dd><p class="first">If level is a string containing comma’s, it is assumed to be an
+ordered list containing the atom type of each atom in the system.
+Otherwise, level is assumed to be a string defining how to guess
+the atom types from the local topology. Possible levels are:</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li>low:     based on atomic number</li>
+<li>medium:  based on atomic number and number of neighbors</li>
+<li>high:    based on atomic number, number of neighbors and atomic number of neighbors</li>
+<li>highest: based on index in the molecule</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.term_sort_atypes">
+<code class="descclassname">quickff.tools.</code><code class="descname">term_sort_atypes</code><span class="sig-paren">(</span><em>ffatypes</em>, <em>indexes</em>, <em>kind</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#term_sort_atypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.term_sort_atypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Routine to sort the atoms defined in indexes to give consistent term
+names. This routine returns the sorted atom indexes as well as the
+corresponding atom types.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.get_multiplicity">
+<code class="descclassname">quickff.tools.</code><code class="descname">get_multiplicity</code><span class="sig-paren">(</span><em>n1</em>, <em>n2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#get_multiplicity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.get_multiplicity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Routine to estimate m from local topology</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.get_restvalue">
+<code class="descclassname">quickff.tools.</code><code class="descname">get_restvalue</code><span class="sig-paren">(</span><em>values</em>, <em>m</em>, <em>thresshold=0.3490658503988659</em>, <em>mode=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#get_restvalue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.get_restvalue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a rest value of 0.0, 360/(2*m) or None depending on the given
+equilbrium values.</p>
+<p>For mode=0, the rest value is:</p>
+<blockquote>
+<div><p>0, if all ‘values modulo per’ are in the interval
+[0,thresshold] U [per-thresshold,per]</p>
+<p>per/2, if all ‘values modulo per’ are in the interval
+[per/2-thresshold,per/2+thresshold]</p>
+<p>None, in all other cases</p>
+</div></blockquote>
+<p>For mode=1, the rest value is determined as follows:</p>
+<blockquote>
+<div>first the values are folded in the interval [0,per/2] by first
+taking the module with per and then mirroring values in [per/2,per]
+on [0,per/2]. Next, the mean and std of the folded values are
+computed. If the std is larger then the thresshold, the values are
+considered to be too scattered and no rest value can be computed
+(None is returned). If the std is small enough, the rest value will
+be determined based on the mean. If the mean is close enough to 0,
+the rest value will be 0. If the mean is close enough to per/2, the
+rest value will be per/2. In all other cases no rest value will be
+computed and None is returned.</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.get_ei_radii">
+<code class="descclassname">quickff.tools.</code><code class="descname">get_ei_radii</code><span class="sig-paren">(</span><em>numbers</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#get_ei_radii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.get_ei_radii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Routine to return atomic radii for use in the Gaussian charge
+distribution. These radii are computed according to the procedure of
+Chen and Slater:</p>
+<p>First the Slater exponent is computed from the hardness using the
+formula of Rappe and Goddard (hardness of Pearson and Parr is used)</p>
+<p>Next the gaussian exponent alpha is fitted by minimizing the
+L2-difference between the between the homonuclear Coulomb integral over
+Slater orbitals and over Gaussian orbitals.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.digits">
+<code class="descclassname">quickff.tools.</code><code class="descname">digits</code><span class="sig-paren">(</span><em>x</em>, <em>n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#digits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.digits" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a string representation of x with exactly n digits if possible.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="quickff.tools.average">
+<code class="descclassname">quickff.tools.</code><code class="descname">average</code><span class="sig-paren">(</span><em>data</em>, <em>ffatypes</em>, <em>fmt='full'</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/tools.html#average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.tools.average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Average the atomic parameters stored in data over atoms of the same atom
+type.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>data</dt>
+<dd>a list or numpy array containing the data</dd>
+<dt>ffatypes</dt>
+<dd>a listor numpy array containing the atom types. Should have equal
+length as data</dd>
+</dl>
+<p><strong>Keywork arguments</strong></p>
+<dl class="docutils">
+<dt>fmt</dt>
+<dd><p class="first">Should be either full, dict or sort. In case of full, the result will be
+returned as an numpy array of equal length as data and ffatypes. In
+case of dict, the result will be returned as a dictionairy of the
+following format:</p>
+<blockquote>
+<div>{ffatype0: value0, ffatype1: value1, …}</div></blockquote>
+<p>in which value0, … is the mean value of the given ffatype. In case
+of sort, a dictionairy of the following format will be returned:</p>
+<blockquote>
+<div>{ffatype0: values0, ffatype1: values1, …}</div></blockquote>
+<p class="last">in which values0, … is a list of the values for the given ffatype.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-quickff.valence">
+<span id="quickff-valence-valenceff-class-storing-all-valence-ff-terms"></span><h3><code class="docutils literal"><span class="pre">quickff.valence</span></code> – ValenceFF class storing all valence ff terms<a class="headerlink" href="#module-quickff.valence" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="quickff.valence.ValenceFF">
+<em class="property">class </em><code class="descclassname">quickff.valence.</code><code class="descname">ValenceFF</code><span class="sig-paren">(</span><em>system</em>, <em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to collect all valence terms in the force field for which
+parameters need to be estimated.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>system</dt>
+<dd>an instance of the Yaff System class containing all system
+properties</dd>
+<dt>settings</dt>
+<dd>an instance of <cite>Settings</cite> containing all QuickFF settings</dd>
+</dl>
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.add_term">
+<code class="descname">add_term</code><span class="sig-paren">(</span><em>pot</em>, <em>ics</em>, <em>basename</em>, <em>tasks</em>, <em>units</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.add_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.add_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds new term both to the Yaff vlist object and a new QuickFF
+list (self.terms) which holds all information about the term
+for easy access later in QuickFF.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>pot</dt>
+<dd>an instance of ValenceTerm from <cite>yaff.pes.vlist.py</cite> representing
+the potential chosen for the term</dd>
+<dt>ics</dt>
+<dd>list of InternalCoordinate instances from <cite>yaff.pes.iclist.py</cite></dd>
+<dt>basename</dt>
+<dd>base name for the term, identical for master and each slave</dd>
+<dt>tasks</dt>
+<dd>List of strings defining all tasks that have to be performed for
+this term. Possible tasks are: PT_ALL, HC_FC_DIAG, HC_FC_CROSS,
+EQ_RV.</dd>
+<dt>units</dt>
+<dd>Units for all parameters in this term (ordered in the same
+way as parameters are stored in <cite>yaff.vlist.vtab</cite>)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.apply_constraints">
+<code class="descname">apply_constraints</code><span class="sig-paren">(</span><em>constraints</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.apply_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.apply_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Routine to apply equality constraints in the force field fitting</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>contraints</dt>
+<dd>A dictionairy containing (master: slaves) definitions in which
+master is a string defining the master basename and slaves is a
+list of strings defining the slave basenames.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.check_params">
+<code class="descname">check_params</code><span class="sig-paren">(</span><em>term</em>, <em>labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.check_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.check_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the given term has all given pars defined in
+labels.</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt>term</dt>
+<dd>An instance of the Term class defining the term that has to be
+checked</dd>
+<dt>labels</dt>
+<dd>A list of strings defining which parameters should be checked.
+only arguments of the <cite>only</cite> option of Valence.get_params
+are allowed.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.get_hessian_contrib">
+<code class="descname">get_hessian_contrib</code><span class="sig-paren">(</span><em>index</em>, <em>fc=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.get_hessian_contrib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.get_hessian_contrib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the contribution to the covalent hessian of term with given
+index (and its slaves). If fc is given, set the fc of the master
+and its slave to the given fc.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.init_bend_terms">
+<code class="descname">init_bend_terms</code><span class="sig-paren">(</span><em>thresshold=0.17453292519943295</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_bend_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_bend_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize all bend terms in the system based on the bends attribute
+of the system instance. All bend terms are given harmonic
+potentials either in the angle or the cosine of the angle.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.init_bond_terms">
+<code class="descname">init_bond_terms</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_bond_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_bond_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize all bond terms in the system based on the bonds attribute
+of the system instance. All bond terms are given harmonic
+potentials.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.init_cross_angle_terms">
+<code class="descname">init_cross_angle_terms</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_cross_angle_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_cross_angle_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize cross terms between bonds and bends.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.init_cross_dihed_terms">
+<code class="descname">init_cross_dihed_terms</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_cross_dihed_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_cross_dihed_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize cross terms between diheds and bonds,bends.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.init_dihedral_terms">
+<code class="descname">init_dihedral_terms</code><span class="sig-paren">(</span><em>thresshold=0.3490658503988659</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_dihedral_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_dihedral_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the dihedral potentials from the local topology. The
+dihedral potential will be one of the two following possibilities:</p>
+<blockquote>
+<div><p>The multiplicity m is determined from the local topology, i.e.
+the number of neighbors of the central two atoms in the dihedral</p>
+<p>If the equilibrium value of all instances of the torsion are
+within <cite>thresshold</cite> of 0 deg or per/2 with per = 180deg/m,
+the following potential will be chosen:</p>
+<blockquote>
+<div>0.5*K*(1-cos(m*psi-m*psi0)) with psi0 = 0 or 360/(2*m)</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.init_oop_terms">
+<code class="descname">init_oop_terms</code><span class="sig-paren">(</span><em>thresshold_zero=0.09448630669606262</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.init_oop_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.init_oop_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize all out-of-plane terms in the system based on the oops
+attribute of the system instance. All oops are given harmonic
+potentials.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.is_negligible">
+<code class="descname">is_negligible</code><span class="sig-paren">(</span><em>term_index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.is_negligible"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.is_negligible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the given term can be neglected (e.g. in parameter files).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.iter_masters">
+<code class="descname">iter_masters</code><span class="sig-paren">(</span><em>label=None</em>, <em>use_re=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.iter_masters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.iter_masters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over all master terms in the valence force field. If label
+is given, only iterate of the terms with the label in its name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.iter_terms">
+<code class="descname">iter_terms</code><span class="sig-paren">(</span><em>label=None</em>, <em>use_re=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.iter_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.iter_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over all terms in the valence force field. If label is
+given, only iterate over terms that matches label.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.valence.ValenceFF.modify_term">
+<code class="descname">modify_term</code><span class="sig-paren">(</span><em>term_index</em>, <em>pot</em>, <em>ics</em>, <em>basename</em>, <em>tasks</em>, <em>units</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.modify_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.modify_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify the term with given index to a new valence term.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="scripts">
+<span id="seclab-rg-scripts"></span><h2>Scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h2>
+<p>An overview is provided of the scripts in QuickFF as well as their basic usage
+and options. The information below can also be obtained by running the script
+with the <code class="xref std std-option docutils literal"><span class="pre">--help</span></code> option.</p>
+<div class="highlight-text"><div class="highlight"><pre><span></span>usage: qff.py [-h] [--version] [-s] [-v] [-V] [-l LOGFILE] [--scoop]
+              [-c CONFIG_FILE]
+              [-m {MakeTrajectories,PlotTrajectories,DeriveFF}]
+              [--fn-traj FN_TRAJ] [--only-traj ONLY_TRAJ] [-p PLOT_TRAJ] [-x]
+              [--suffix SUFFIX] [--ei EI] [--ei-rcut EI_RCUT] [--vdw VDW]
+              [--vdw-rcut VDW_RCUT] [--covres COVRES]
+              [--ffatypes {None,list_of_atypes,low,medium,high,highest}]
+              fn [fn ...]
+
+This script will apply QuickFF to derive a covalent force field for the given
+system from the ab initio input given in the input files.
+
+positional arguments:
+  fn                    Input file name that specify the system and ab initio
+                        reference data. Multiple file names are allowed, but
+                        at least one should be given. Files later in the list
+                        overwrite information from earlier files. Allowed file
+                        formats are MolMod checkpoint files (file.chk),
+                        Gaussian formatted checkpoint files (file.fchk) and
+                        VASP xml files (file.xml).
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program&#39;s version number and exit
+  -s, --silent          Swith of all logging completely, overwrites all other
+                        verbosity options.
+  -v, --verbose         Increases verbosity, is overwriten if SILENT or
+                        VERY_VERBOSE is switched on.
+  -V, --very-verbose    Increases verbosity to highest level, is overwriten if
+                        SILENT is switched on.
+  -l LOGFILE, --logfile LOGFILE
+                        Redirect logger output to a file with name LOGFILE.
+  --scoop               Flag to enable parallelisation using SCOOP. With
+                        SCOOP, the command to run QuickFF is slightly
+                        different, the absolute path to quickff.py should be
+                        used. For example, to run on 4 cores: python -m scoop
+                        -n4 /path/to/qff.py --scoop [options] fns
+
+General QuickFF specifications:
+  -c CONFIG_FILE, --config-file CONFIG_FILE
+                        Specify a configuration file to read all QuickFF
+                        settings from.
+  -m {MakeTrajectories,PlotTrajectories,DeriveFF}, --program-mode {MakeTrajectories,PlotTrajectories,DeriveFF}
+                        Specify the program mode which defines the set of
+                        instructions that will be executed.
+  --fn-traj FN_TRAJ     Read/write the perturbation trajectories from/to
+                        FN_TRAJ. If the given file exists, the trajectories
+                        are read from the file. Otherwise, the trajectories
+                        are written to the given file.
+  --only-traj ONLY_TRAJ
+                        Construct the perturbation trajectory only for the
+                        terms with the given basenames. This options is only
+                        applied in the MakeTrajectories program.
+  -p PLOT_TRAJ, --plot-traj PLOT_TRAJ
+                        If set to final, plots the various energy
+                        contributions along the perturbation trajectories to
+                        using the final force field. If set to all, plots the
+                        contributions along the trajectories using all
+                        intermediate force fields (given suffixes _Apt1,
+                        _Bhc1, _Cpt2 and _Dhc2) as well as the final force
+                        field (given the suffix _Ehc3).
+  -x, --xyz-traj        Write the perturbation trajectories in XYZ format.
+  --suffix SUFFIX       Suffix that will be added to all output files.
+
+Options related to the definition and derivation of the force field:
+  --ei EI               A Yaff parameters file defining the electrostatic
+                        contribution of the force field.
+  --ei-rcut EI_RCUT     The real space cut off for the electrostatic
+                        interactions. If the system is periodic, the ewald
+                        parameters will be adjusted to this cut off.
+  --vdw VDW             A Yaff parameters file defining the van der Waals
+                        contribution of the force field.
+  --vdw-rcut VDW_RCUT   The real space cut off for the van der Waals
+                        interactions.
+  --covres COVRES       A Yaff parameters file defining a residual
+                        contribution to the covalent part of the force field.
+
+Options related to the definition of the system:
+  --ffatypes {None,list_of_atypes,low,medium,high,highest}
+                        Assign atom types in the system by parsing an ordered
+                        list ofatom types as argument or through the automatic
+                        built-in detection (see documentation). By default (or
+                        if None is given), the atom types are assumed to be
+                        defined in the input files. [default=None]
+</pre></div>
+</div>
+<div class="highlight-text"><div class="highlight"><pre><span></span>usage: qff-input-ei.py [-h] [-v]
+                       [--ffatypes {None,list_of_atypes,low,medium,high,highest}]
+                       [--gaussian] [--bci]
+                       [--bci-constraints BCI_CONSTRAINTS]
+                       fn_sys charges [fn_out]
+
+This script reads atomic charges from an input file and makes a Yaff
+parameters file suitable for the QuickFF option --ei.
+
+positional arguments:
+  fn_sys                Any file from which the system can be extracted
+                        (MolMod CHK, Gaussian FCHK, XYZ, ...).
+  charges               The atomic charges to be used. This argument has the
+                        form fn_charges:path, where fn_charges is a filename
+                        that contains the charges and path refers to a
+                        location within that file where the charges can be
+                        found. If fn_charges is an HDF5 file, path is the
+                        location of a dataset containing the charges, e.g.
+                        &#39;/charges&#39;. If fn_charges is a MolMod CHK file, path
+                        is the label of the dataset that contains the atomic
+                        charges.
+  fn_out                Name of the Yaff file to write the parameters to.
+                        [default=pars_ei.txt]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --verbose         Increase verbosity of the script [default=False].
+  --ffatypes {None,list_of_atypes,low,medium,high,highest}
+                        Assign atom types in the system by parsing an ordered
+                        list ofatom types as argument or through the automatic
+                        built-in detection (see documentation). By default (or
+                        if None is given), the atom types are assumed to be
+                        defined in the input files. [default=None]
+  --gaussian            Use gaussian smeared charges. The radii are taken from
+                        the input file fn_in (from dataset /path/radii for
+                        HDF5 file or from label `radii` for CHK file) if the
+                        data is present, otherwise the radii are estimated
+                        according to the procedure of Chen et al. See
+                        ``quickff.tools.get_ei_radii`` for more info.
+  --bci                 Convert averaged atomic charges to bond charge
+                        increments, i.e. charge transfers along the chemical
+                        bonds in the system. In this way, one is certain of
+                        ending up with a globally neutral system even if bcis
+                        from different systems are combined. This option
+                        requires the definition of bonds, if the bonds cannot
+                        be read from the system file, they will be estimated
+                        from the interatomic distances using the detect_bonds
+                        routine in the Yaff System class. [default=False]
+  --bci-constraints BCI_CONSTRAINTS
+                        A file containing constraints for the charge to bci
+                        fit in a master: slave0,slave1,...: sign format. A new
+                        line should be used for each master and the format is
+                        insensitive towards spaces.Sign should be 1.0 or -1.0
+                        indicating wheter or not a sign switch should be
+                        introduced when mapping the slaves to the master.
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="vl.html" class="btn btn-neutral" title="Validation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Louis Vanduyfhuys, Center for Molecular Modeling, Ghent University
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'2.2.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

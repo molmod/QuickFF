@@ -1,0 +1,365 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>QuickFF literature &mdash; QuickFF 2.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation Guide" href="ig.html" />
+    <link rel="prev" title="Welcome to QuickFF!" href="index.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> QuickFF
+          
+
+          
+            
+            <img src="_static/quickff_logo_trans_small.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">QuickFF literature</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ig.html">Installation Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#dependencies">Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#molmod-dependency">MolMod dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#yaff-dependency">Yaff dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#external-dependencies">External dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#downloading-quickff">Downloading QuickFF</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#stable-release">Stable release</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#latest-development-version-experts-only">Latest development version (experts only)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#installing-quickff">Installing QuickFF</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ug.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#quickff-settings">QuickFF Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#settings-description">Settings description</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#general-settings">General settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#input-output-settings">Input/output settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#reference-force-field-contribution-settings">Reference force field contribution settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#force-field-expression-settings">Force field expression settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#fitting-algorithm-settings">Fitting algorithm settings</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#default-settings">Default settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#preparing-electrostatic-force-field">Preparing electrostatic force field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#quickff-main-script-qff-py">QuickFF main script qff.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#mandatory-input-files">Mandatory input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#optional-input-files">Optional input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#automatic-estimation-of-atom-types">Automatic estimation of atom types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#miscellanous-options">Miscellanous options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#output">Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#logging">Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#parallel-quickff">Parallel QuickFF</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#importing-quickff-as-a-library">Importing QuickFF as a library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-the-system">Define the system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-the-ab-initio-reference">Define the ab initio reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-force-field-reference-objects">Define force field reference objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-the-program-and-run-it">Define the program and run it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#id3">Logging</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tu.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-1-benzene">Tutorial 1 - Benzene</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tu.html#covalent-force-field-without-non-bonding-terms">Covalent force field without non-bonding terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tu.html#force-field-with-electrostatics">Force field with electrostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-2-water">Tutorial 2 - Water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-3-biphenyl">Tutorial 3 - Biphenyl</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="vl.html">Validation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vl.html#validation-methodology">Validation methodology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vl.html#validation-1-water">Validation 1 - Water</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#force-field-construction">Force field construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#force-field-evaluation">Force field evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#perturbation-trajectories">Perturbation trajectories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#geometry-and-frequencies">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vl.html#validation-2-benzene">Validation 2 - Benzene</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#id1">Force field construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#id2">Force field evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#id3">Perturbation trajectories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#id4">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rg.html">Reference Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rg.html#modules">Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.cost"><code class="docutils literal"><span class="pre">quickff.cost</span></code> – Least-Square cost function for hessian matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.io"><code class="docutils literal"><span class="pre">quickff.io</span></code> – Input/Ouput methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.settings"><code class="docutils literal"><span class="pre">quickff.settings</span></code> – QuickFF configuration settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.perturbation"><code class="docutils literal"><span class="pre">quickff.perturbation</span></code> – Perturbation trajectories for internal coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.program"><code class="docutils literal"><span class="pre">quickff.program</span></code> – Program classes implementing a sequence of fitting steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.reference"><code class="docutils literal"><span class="pre">quickff.reference</span></code> – Representation of the ab initio reference data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.tools"><code class="docutils literal"><span class="pre">quickff.tools</span></code> – Various convenient tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.valence"><code class="docutils literal"><span class="pre">quickff.valence</span></code> – ValenceFF class storing all valence ff terms</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rg.html#scripts">Scripts</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QuickFF</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>QuickFF literature</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/papers.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="quickff-literature">
+<span id="seclab-literature"></span><h1>QuickFF literature<a class="headerlink" href="#quickff-literature" title="Permalink to this headline">¶</a></h1>
+<p><strong>QuickFF: A Program for a Quick and Easy Derivation of Force Fields for Metal-Organic Frameworks from Ab Initio Input</strong></p>
+<p><strong>Authors</strong>: L. Vanduyfhuys, S. Vandenbrande, T. Verstraelen, R. Schmid, M. Waroquier, V. Van Speybroeck</p>
+<p><strong>Journal</strong>: <em>Journal of Computational Chemistry</em>, 2015</p>
+<p><strong>Volume</strong> 36, <strong>Issue</strong> 13, <strong>Pages</strong> 1015-1027</p>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/toc1.png"><img alt="_images/toc1.png" src="_images/toc1.png" style="width: 450px;" /></a>
+</div>
+<p>QuickFF is a software package to derive accurate force fields for isolated and complex molecular systems in a quick and easy manner. Apart from its general applicability, the program has been designed to generate force fields for metal-organic frameworks in an automated fashion. The force field parameters for the covalent interaction are derived from ab initio data. The mathematical expression of the covalent energy is kept simple to ensure robustness and to avoid fitting deficiencies as much as possible. The user needs to produce an equilibrium structure and a Hessian matrix for one or more building units. Afterwards, a force field is generated for the system using a three-step method implemented in QuickFF. The first two steps of the methodology are designed to minimize correlations among the force field parameters. In the last step the parameters are refined by imposing the force field parameters to reproduce the ab initio Hessian matrix in Cartesian coordinate space as accurate as possible. The method is applied on a set of 1000 organic molecules to show the easiness of the software protocol. To illustrate its application to MOFs, QuickFF is used to determine force fields for MIL-53(Al) and MOF-5. For both materials accurate force fields were already generated in literature but they requested a lot of manual interventions. QuickFF is a tool that can easily be used by anyone with a basic knowledge of performing ab initio calculations. As a result accurate force fields are generated with minimal effort.</p>
+<p><a class="reference external" href="http://dx.doi.org/10.1002/jcc.23877">Access the paper online here</a></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><strong>Extension of the QuickFF Force Field Protocol for an Improved Accuracy of Structural, Vibrational, Mechanical and Thermal Properties of Metal-Organic Frameworks</strong></p>
+<p><strong>Authors</strong>: L. Vanduyfhuys, S. Vandenbrande, J. Wieme, M. Waroquier, T. Verstraelen, V. Van Speybroeck</p>
+<p><strong>Journal</strong>: <em>Journal of Computational Chemistry</em>, 2018</p>
+<p><strong>Volume</strong> 39, <strong>Issue</strong> 16, <strong>Pages</strong> 999-1011</p>
+<div class="figure align-left">
+<a class="reference internal image-reference" href="_images/toc2.png"><img alt="_images/toc2.png" src="_images/toc2.png" style="width: 250px;" /></a>
+</div>
+<p>QuickFF was originally launched in 2015 to derive accurate force fields for isolated and complex molecular systems in a quick and easy way. Apart from the general applicability, the functionality was especially tested for metal-organic frameworks (MOFs), a class of hybrid materials consisting of organic and inorganic building blocks. Herein, we launch a new release of the QuickFF protocol which includes new major features to predict structural, vibrational, mechanical and thermal properties with greater accuracy, without compromising its robustness and transparant workflow. First, the <em>ab initio</em> data necessary for the fitting procedure may now also be derived from periodic models for the molecular system, as opposed to the earlier cluster-based models. This is essential for an accurate description of MOFs with one dimensional metal-oxide chains. Second, cross terms that couple internal coordinates (ICs) and anharmonic contributions for bond and bend terms are implemented. These features are essential for a proper description of vibrational and thermal properties. Third, the fitting scheme was modified to improve robustness and accuracy. The new features are tested on MIL-53(Al), MOF-5, CAU-13 and NOTT-300. As expected, periodic input data is proven to be essential for a correct description of structural, vibrational and thermodynamic properties of MIL-53(Al). Bulk moduli and thermal expansion coefficients of MOF-5 are very accurately reproduced by static and dynamic simulations using the newly derived force fields which include cross terms and anharmonic corrections. For the flexible materials CAU-13 and NOTT-300, the transition pressure is accurately predicted provided cross terms are taken into account.</p>
+<p><a class="reference external" href="http://dx.doi.org/10.1002/jcc.25173">Access the paper online here</a></p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ig.html" class="btn btn-neutral float-right" title="Installation Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to QuickFF!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Louis Vanduyfhuys, Center for Molecular Modeling, Ghent University
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'2.2.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

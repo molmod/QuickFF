@@ -1,0 +1,1266 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>User Guide &mdash; QuickFF 2.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorials" href="tu.html" />
+    <link rel="prev" title="Installation Guide" href="ig.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> QuickFF
+          
+
+          
+            
+            <img src="_static/quickff_logo_trans_small.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="papers.html">QuickFF literature</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ig.html">Installation Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#dependencies">Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#molmod-dependency">MolMod dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#yaff-dependency">Yaff dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#external-dependencies">External dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#downloading-quickff">Downloading QuickFF</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#stable-release">Stable release</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#latest-development-version-experts-only">Latest development version (experts only)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#installing-quickff">Installing QuickFF</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#quickff-settings">QuickFF Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#settings-description">Settings description</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#general-settings">General settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#input-output-settings">Input/output settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#reference-force-field-contribution-settings">Reference force field contribution settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#force-field-expression-settings">Force field expression settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fitting-algorithm-settings">Fitting algorithm settings</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#default-settings">Default settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#preparing-electrostatic-force-field">Preparing electrostatic force field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quickff-main-script-qff-py">QuickFF main script qff.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mandatory-input-files">Mandatory input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optional-input-files">Optional input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#automatic-estimation-of-atom-types">Automatic estimation of atom types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#miscellanous-options">Miscellanous options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output">Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logging">Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parallel-quickff">Parallel QuickFF</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#importing-quickff-as-a-library">Importing QuickFF as a library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#define-the-system">Define the system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#define-the-ab-initio-reference">Define the ab initio reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#define-force-field-reference-objects">Define force field reference objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#define-the-program-and-run-it">Define the program and run it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Logging</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tu.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-1-benzene">Tutorial 1 - Benzene</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tu.html#covalent-force-field-without-non-bonding-terms">Covalent force field without non-bonding terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tu.html#force-field-with-electrostatics">Force field with electrostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-2-water">Tutorial 2 - Water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-3-biphenyl">Tutorial 3 - Biphenyl</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="vl.html">Validation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vl.html#validation-methodology">Validation methodology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vl.html#validation-1-water">Validation 1 - Water</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#force-field-construction">Force field construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#force-field-evaluation">Force field evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#perturbation-trajectories">Perturbation trajectories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#geometry-and-frequencies">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vl.html#validation-2-benzene">Validation 2 - Benzene</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#id1">Force field construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vl.html#id2">Force field evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#id3">Perturbation trajectories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vl.html#id4">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rg.html">Reference Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rg.html#modules">Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.cost"><code class="docutils literal"><span class="pre">quickff.cost</span></code> – Least-Square cost function for hessian matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.io"><code class="docutils literal"><span class="pre">quickff.io</span></code> – Input/Ouput methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.settings"><code class="docutils literal"><span class="pre">quickff.settings</span></code> – QuickFF configuration settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.perturbation"><code class="docutils literal"><span class="pre">quickff.perturbation</span></code> – Perturbation trajectories for internal coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.program"><code class="docutils literal"><span class="pre">quickff.program</span></code> – Program classes implementing a sequence of fitting steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.reference"><code class="docutils literal"><span class="pre">quickff.reference</span></code> – Representation of the ab initio reference data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.tools"><code class="docutils literal"><span class="pre">quickff.tools</span></code> – Various convenient tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.valence"><code class="docutils literal"><span class="pre">quickff.valence</span></code> – ValenceFF class storing all valence ff terms</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rg.html#scripts">Scripts</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QuickFF</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>User Guide</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/ug.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="user-guide">
+<span id="seclab-ug"></span><h1>User Guide<a class="headerlink" href="#user-guide" title="Permalink to this headline">¶</a></h1>
+<p id="seclab-ug-settings">Deriving a force field from <em>ab initio</em> input consists of several steps. First,
+one should first configure the QuickFF run. This configuration includes all
+settings regarding input/output, the force field energy expression and the
+applied algorithms. This is done by means of the
+<a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-settings"><span class="std std-ref">Settings module</span></a>. A settings instance is
+constructed by <a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">the qff.py script</span></a> and
+should also be constructed when
+<a class="reference internal" href="#seclab-ug-lib"><span class="std std-ref">using QuickFF as a library</span></a>. Furthermore, QuickFF
+can be used in two ways: by means of a single command using
+<a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">the qff.py script</span></a> or by
+<a class="reference internal" href="#seclab-ug-lib"><span class="std std-ref">importing it as a Python library</span></a> in an external script.
+This guide elaborates on all these aspects.</p>
+<div class="section" id="quickff-settings">
+<h2>QuickFF Settings<a class="headerlink" href="#quickff-settings" title="Permalink to this headline">¶</a></h2>
+<p>The configuration parameters for the construction of the force field are stored
+in an instance of the <a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-settings"><span class="std std-ref">Settings</span></a> class. These
+configuration settings include:</p>
+<ul class="simple">
+<li>Configuration of the logger</li>
+<li>File names for input (eg. the Yaff parameter file for the electrostatic
+contribution) and output (eg. the Yaff parameter file for the covalent force
+field, system file, trajectory file, …)</li>
+<li>Settings for the non-bonding contributions (eg. cutoff)</li>
+<li>Settings specifying the energy expression of the covalent force field
+(do_bonds, do_bends, do_dihedrals, do_oopdists, bond_term, bend_term, do_squarebend, …)</li>
+<li>Settings to finetune the fitting algorithms
+(do_hess_mass_weighting, cross_svd_rcond, …)</li>
+</ul>
+<p>These settings can be specified by either of the following means:</p>
+<ul class="simple">
+<li>the system-wide default settings defined in the config file <code class="docutils literal"><span class="pre">quickffrc</span></code> in
+the <code class="docutils literal"><span class="pre">share</span></code> directory.</li>
+<li>a QuickFF config file specified using the <code class="docutils literal"><span class="pre">--config</span></code> keyword argument of
+<code class="docutils literal"><span class="pre">qff.py</span></code> or directly to the Settings constructor in a custom written script</li>
+<li>keyword arguments given to <code class="docutils literal"><span class="pre">qff.py</span></code> or the Settings constructor in a custom
+written script</li>
+</ul>
+<p>Defining options using a keyword arguments overwrites a custom config file as
+well as the <code class="docutils literal"><span class="pre">quickffrc</span></code> file and the settings from a custom config file
+overwrite the default file <code class="docutils literal"><span class="pre">quickffrc</span></code>.</p>
+<div class="section" id="settings-description">
+<h3>Settings description<a class="headerlink" href="#settings-description" title="Permalink to this headline">¶</a></h3>
+<p>In this section, a list is included of all settings that can be configured using
+the Settings routine, either by an entry in the configuration file (CF) denoted
+in <em>italics</em> or by a keyword arguments (KA) denoted <code class="docutils literal"><span class="pre">like</span> <span class="pre">this</span></code>. The default
+value for each setting is given in the quickffrc file (see
+<a class="reference internal" href="#sec-ug-settings-default"><span class="std std-ref">below</span></a>). If you are looking for the meaning of
+a specific setting in the config file, use the search function of this web site.</p>
+<div class="section" id="general-settings">
+<h4>General settings<a class="headerlink" href="#general-settings" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p class="first"><strong>Logging level</strong> (CF: <em>log_level</em>, KA: see description below):</p>
+<blockquote>
+<div><p>Defines the level of logging of the progress of a QuickFF
+run. Four possible levels are implemented, which can be defined in CF by
+means of the string name or the corresponding integer. Some logging levels
+can also be specified using the corresponding keywork arguments given
+between paranthesis.</p>
+<blockquote>
+<div><ul class="simple">
+<li>0, <em>silent</em> (<code class="docutils literal"><span class="pre">--silent</span></code>): logging is completely switched off</li>
+<li>1, <em>low</em>: minimal logging</li>
+<li>2, <em>medium</em>: default logging level, logs on what part of the run is
+currently processed without including any details.</li>
+<li>3, <em>high</em> (<code class="docutils literal"><span class="pre">--verbose</span></code>): more details in the logging output, includes
+the force field parameters after each step in the parameterization
+protocoll.</li>
+<li>4, <em>highest</em> (<code class="docutils literal"><span class="pre">--very-verbose</span></code>): logging on every detail, usefull for
+debugging purposes. Includes detailed progress on the construction
+of the perturbation trajectories.</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Logging file</strong> (CF: <em>log_file</em>, KA: <code class="docutils literal"><span class="pre">--logfile</span></code>):</p>
+<blockquote>
+<div><p>Defines the name of file were to write the logging output to. Defaults to
+the standard output (i.e. the screen).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Program mode</strong> (CF: <em>program_mode</em>, KA: <code class="docutils literal"><span class="pre">--program-mode</span></code>):</p>
+<blockquote>
+<div><p>Specify the program to execute during the run. The following programs are
+currently supported:</p>
+<ul>
+<li><p class="first">MakeTrajectories:</p>
+<blockquote>
+<div><p>construct the perturbation trajectories and write them
+to a file for later post-processing. Can be usefull if one intends to
+generate various force fields using different settings, but all require
+the same perturbation trajectories. Requires the specification of a
+non-existing file name for the Perturbation trajectory file name (see
+further).</p>
+</div></blockquote>
+</li>
+<li><p class="first">PlotTrajectories:</p>
+<blockquote>
+<div><p>plot the energy contribution along the given
+perturbation trajectory. Requires the specification of an existing file
+name for the Perturbation trajectory file name (see further).</p>
+</div></blockquote>
+</li>
+<li><p class="first">DeriveFF:</p>
+<blockquote>
+<div><p>Complete run to construct a force field. This is the default.</p>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="input-output-settings">
+<h4>Input/output settings<a class="headerlink" href="#input-output-settings" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p class="first"><strong>Yaff file name</strong> (CG: <em>fn_yaff</em>, KA: <code class="docutils literal"><span class="pre">--fn-yaff</span></code>):</p>
+<blockquote>
+<div><p>File name for the Yaff parameter file containing the parameters of the
+covalent fitted force field. Default is <code class="docutils literal"><span class="pre">pars_yaff.txt</span></code>.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>CHARMM parameter file</strong> (CF: <em>fn_charmm22_prm</em>, KA: N/A):</p>
+<blockquote>
+<div><p>File name to write the covalent force field parameters to in CHARMM
+format. Defaults to <em>None</em>, i.e. no such file is generated.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>CHARMM PSF file name</strong> (CF: <em>fn_charmm22_psf</em>, KA: N/A):</p>
+<blockquote>
+<div><p>File name of a PSF file to write the system information to. Can be used
+in combination with the CHARMM parameter file to perform FF simulations
+using CHARMM software. Defaults to <em>None</em>, i.e. no such file is generated.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>System file name</strong> (CF: <em>fn_sys</em>, KA: N/A):</p>
+<blockquote>
+<div><p>File name for a MolMod CHK file containing the system information. Can be
+used in combination of a Yaff parameter file to perform FF simulations
+using Yaff.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Plot trajectories</strong> (CF: <em>plot_traj</em>, KA: <code class="docutils literal"><span class="pre">--plot-traj</span></code>):</p>
+<blockquote>
+<div><p>Plot the various energy contributions along the perturbation trajectories.
+If set to final, plots the various energy contributions along the
+perturbation trajectories using the final force field. If set to all, plots
+the contributions along the trajectories using all intermediate force fields
+(given suffixes _Apt1, _Bhc1, _Cpt2 and _Dhc2) as well as the final force
+field (given the suffix _Ehc3).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Write XYZ trajectories</strong> (CF: <em>xyz_traj</em> KA: <code class="docutils literal"><span class="pre">--xyz-traj</span></code>)):</p>
+<blockquote>
+<div><p>Write the perturbation trajectories in XYZ format.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Trajectory file name</strong> (CG: <em>fn_traj</em>, KA: <code class="docutils literal"><span class="pre">--fn-traj</span></code>):</p>
+<blockquote>
+<div><p>Read/write the perturbation trajectories from/to FN_TRAJ. If the given
+file exists, the trajectories are read from the file. Otherwise, the
+trajectories are written to the given file.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Only trajectories</strong> (CG: <em>only_traj</em>, KA: <code class="docutils literal"><span class="pre">--only-traj</span></code>)</p>
+<blockquote>
+<div><p>Construct the perturbation trajectory only for the terms with the given
+basenames. This options is only applied in the <em>MakeTrajectories</em> program.</p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="reference-force-field-contribution-settings">
+<h4>Reference force field contribution settings<a class="headerlink" href="#reference-force-field-contribution-settings" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p class="first"><strong>Electrostatic contribution parameter file</strong> (CG: <em>ei</em>, KA: <code class="docutils literal"><span class="pre">--ei</span></code>)</p>
+<blockquote>
+<div><p>Yaff parameter file for the electrostatic contribution.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Electrostatic cutoff</strong> (CG: <em>ei_rcut</em>, KA: <code class="docutils literal"><span class="pre">--ei-rcut</span></code>)</p>
+<blockquote>
+<div><p>Real-space cutoff for the electrostatic interactions</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Van der Waals contribution parameter file</strong> (CG: <em>vdw</em>, KA: <code class="docutils literal"><span class="pre">--vdw</span></code>)</p>
+<blockquote>
+<div><p>Yaff parameter file for the van der Waals contribution.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Van der Waals cutoff</strong> (CG: <em>vdw_rcut</em>, KA: <code class="docutils literal"><span class="pre">--vdw-rcut</span></code>)</p>
+<p>Real-space cutoff for the van der Waals interactions</p>
+</li>
+<li><p class="first"><strong>Residual covalent contribution parameter file</strong> (CG: <em>covres</em>, KA: <code class="docutils literal"><span class="pre">--covres</span></code>)</p>
+<blockquote>
+<div><p>Yaff parameter file for the residual covalent contribution.</p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="force-field-expression-settings">
+<h4>Force field expression settings<a class="headerlink" href="#force-field-expression-settings" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p class="first"><strong>Atom types</strong> (CG: <em>ffatypes</em>, KA: <code class="docutils literal"><span class="pre">--ffatypes</span></code>)</p>
+<blockquote>
+<div><p>Definition of the atom types. Can either be a list of strings, defining the
+atom type of each atom in the system. Alternatively, one can also estimate
+the atom types automatically according to one of the available levels:
+<em>low</em>, <em>medium</em>, <em>high</em> or <em>highest</em> (see
+<a class="reference internal" href="#seclab-ug-atype-estimator"><span class="std std-ref">automatic estimation of atom types</span></a> for more details).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Exclude specific bonds</strong> (CG: <em>excl_bonds</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Exclude specific bond terms from the force field. Specify which terms by
+giving a list of basenames.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Exclude specific bends</strong> (CG: <em>excl_bends</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Exclude specific bend terms from the force field. Specify which terms by
+giving a list of basenames.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Exclude specific dihedrals</strong> (CG: <em>excl_dihs</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Exclude specific dihedral terms from the force field. Specify which terms by
+giving a list of basenames.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Exclude specific out-of-plane distances</strong> (CG: <em>excl_oopds</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Exclude specific out-of-plane terms from the force field. Specify which
+terms by giving a list of basenames.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include bonds</strong> (CG: <em>do_bonds</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Boolean to specify whether bond terms are included (possibly appart from the
+terms specified through <em>excl_bonds</em>).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include bends</strong> (CG: <em>do_bends</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Boolean to specify whether bend terms are included (possibly appart from the
+terms specified through <em>excl_bends</em>).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include dihedrals</strong> (CG: <em>do_diheds</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Boolean to specify whether dihedreal terms are included (possibly appart
+from the terms specified through <em>excl_diheds</em>).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include out-of-plane distances</strong> (CG: <em>do_oops</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Boolean to specify whether out-of-plane distance terms are included
+(possibly appart from the terms specified through <em>excl_oopds</em>).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Angle-pattern Stretch-Stretch cross terms</strong> (CF: <em>do_cross_ASS</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between the two stretch terms (i.e. the bonds)
+featuring in an angle term. In other words, the coupling between neighboring
+bond terms.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Angle-pattern Stretch-Angle cross terms</strong> (CF: <em>do_cross_ASA</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between an angle term and its constituting bond
+terms.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Dihedral-pattern Stretch-Stretch cross terms</strong> (CF: <em>do_cross_DSS</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between the two outer stretch terms (i.e. the bond
+lengths) featuring in an dihedral term. In other words, the coupling between
+bond terms that are seperated by one other bond.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Dihedral-pattern Stretch-Dihedral cross terms</strong> (CF: <em>do_cross_DSD</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between an outher stretch (i.e. a bond length) in a
+dihedral and the dihdral angle.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Dihedral-pattern Angle-Angle cross terms</strong> (CF: <em>do_cross_DAA</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between the two angles terms in a dihedral term.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Dihedral-pattern Angle-Dihedral cross terms</strong> (CF: <em>do_cross_DAD</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between an bending angle in a dihedral pattern and
+the corresponding dihedral angle.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Potential for bond terms</strong> (CF: <em>bond_term</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Specify the functional form of the bond potential. Can be one of the
+following possibilities:</p>
+<ul>
+<li><p class="first"><em>bondharm</em>: harmonic potential</p>
+<p><img class="math" src="_images/math/8c23191d9fad5131d4815d4a07718a60bfc1c65d.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2"/></p>
+</li>
+<li><p class="first"><em>bondfues</em>: Fues potential, i.e. harmonic in <img class="math" src="_images/math/31d9fca010513a1f0102a8e2c9e4c188b270bda3.png" alt="\frac{1}{r}"/></p>
+<p><img class="math" src="_images/math/fdce0ec63f833f15fca79b9179733fa7a259a478.png" alt="V(r)=\frac{K}{2}\left(\frac{1}{r}-\frac{1}{r_0}\right)^2"/></p>
+</li>
+<li><p class="first"><em>bondmm3</em>:  the anharmonic bond potential from the MM3 force field (<img class="math" src="_images/math/327c8529368385a91fd6358e39fd7383a100d2fa.png" alt="\alpha=2.55 \text{\AA}^{-1}"/>)</p>
+<p><img class="math" src="_images/math/76f85782110154d90fa205ea12e84d8dec8cb321.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2\left[1-\alpha\left(r-r_0\right)+\frac{7}{12}\alpha^2\left(r-r_0\right)^2\right]"/></p>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Potential for bend terms</strong> (CF: <em>bend_term</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Specify the functional form of the bend potential. Can be one of the
+following possibilities:</p>
+<ul>
+<li><p class="first"><em>bendharm</em>: harmonic potential</p>
+<p><img class="math" src="_images/math/8c23191d9fad5131d4815d4a07718a60bfc1c65d.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2"/></p>
+</li>
+<li><p class="first"><em>bendmm3</em>:  the anharmonic bend potential from the MM3 force field</p>
+<p><img class="math" src="_images/math/c3e1b5eb792b6db4816f2dbab329993d5bfed8b5.png" alt="V(r)=\frac{K}{2}\left(\theta-\theta_0\right)^2\left[1-\alpha_1\left(\theta-\theta_0\right)+\alpha_2\left(\theta-\theta_0\right)^2-\alpha_3\left(\theta-\theta_0\right)^3+\alpha_4\left(\theta-\theta_0\right)^4\right]"/></p>
+<p><img class="math" src="_images/math/8150fb7e24a97a8ce52f305d02cb45e129c1fc66.png" alt="\alpha_1=1.4\cdot 10^{-2}\ \text{deg}^{-1}"/>, <img class="math" src="_images/math/89588976135afed9c96b1e6f65e78ed47b1b8dad.png" alt="\alpha_2=5.6\cdot 10^{-5}\ \text{deg}^{-2}"/>, <img class="math" src="_images/math/7ad40630a5ee431badd5e88f9c4017ae5ae8df9c.png" alt="\alpha_3=7.0\cdot 10^{-7}\ \text{deg}^{-3}"/> and <img class="math" src="_images/math/0e9c1b610eb5a39405f23804f7a5c8aaf74edd41.png" alt="\alpha_4=2.2\cdot 10^{-8}\ \text{deg}^{-4}"/></p>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Convert angle to SquareBend term</strong> (CF: <em>do_squarebend</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Identify bend patterns in which 4 atoms of type A surround a central atom of
+type B with A-B-A angles of 90/180 degrees. A simple harmonic pattern will
+not be adequate since a rest value of 90 and 180 degrees is possible for the
+same A-B-A term. Therefore, a cosine term with multiplicity of 4 is used
+(which corresponds to a chebychev4 potential with sign=-1):</p>
+<blockquote>
+<div><p><img class="math" src="_images/math/498ed440e04445857c06358a7839ebeb6dbb2128.png" alt="V\left(\theta\right)= \frac{K}{2}\left[1-\cos\left(4\theta\right)\right]"/></p>
+</div></blockquote>
+<p>To identify the patterns, it is assumed that the rest values have already
+been estimated from the perturbation trajectories. For each master and slave
+of a BendAHarm term, its rest value is computed and checked if it lies
+either the interval [90-thresshold,90+thresshold] or [180-thresshold,180].
+If this is the case, the new cosine term is used (the thresshold is set to
+20 degrees in the routine <a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">do_squarebond routine</span></a>)</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Convert angle to BendCLin term</strong> (CF: <em>do_bendclin</em>, KA: N/A)</p>
+<blockquote>
+<div><p>No Harmonic bend can have a rest value equal that is larger than 180° -
+thresshold. If a master (or its slaves) has such a rest value, convert
+master and all slaves to BendCLin (which corresponds to a chebychev1
+potential with sign=+1).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Convert SquareOopdist to Oopdist</strong> (CF: <em>do_sqoopdist_to_oopdist</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Transform a SqOopdist term with a rest value that has been set to zero, to
+a term Oopdist (harmonic in Oopdist instead of square of Oopdist) with a
+rest value of 0.0 A.</p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="fitting-algorithm-settings">
+<h4>Fitting algorithm settings<a class="headerlink" href="#fitting-algorithm-settings" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p class="first"><strong>Mass Weighting</strong> (CF: <em>do_hess_mass_weighting</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Set to True to apply mass weighting to the Hessian before fitting force
+constants.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Project negative frequencies</strong> (CF: <em>do_hess_negfreq_proj</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Set to True to project possible negative frequencies out of the <em>ab initio</em>
+hessian prior to fitting force constants</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Singular Value Decomposition for cross terms</strong> (CF: <em>do_cross_svd</em>, KA: NA/)</p>
+<blockquote>
+<div><p>Set to True to perform a singular value decomposition of the cost function
+to fit the force constants of the cross terms. Singular values that are
+to smaller than rcond times the largest singular value are filtered out.
+The value of rcond can be specified with the setting <em>cross_svd_rcond</em>.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Rcond of the SVD for cross terms</strong> (CF: <em>cross_svd_rcond</em>, KA: N/A)</p>
+<blockquote>
+<div><p>See description of the setting <em>do_cross_svd</em> for more info.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Convergence tolerance for perturbation trajectories</strong> (CF: <em>pert_traj_tol</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Convergence criteria for the construction of the perturbation trajectory.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Noise level for error estimation for perturbation trajectories</strong> (CF: <em>pert_traj_energy_noise</em>, KA: N/A)</p>
+<blockquote>
+<div><p>If a float is given, this value is used to perform an error estimation of the
+force field parameters derived from the perturbation trajectories. Such
+error estimation is done by repeating the parabolic fitting step multiple
+times, each time after adding random noise to the energy values (normally
+distributed with a mean of zero and an standard deviation given by the
+value defined by this setting). If the resulting error on the newly fitted
+force field parameters is found to be too high, these parameters are ignored
+and instead the previous value is reused (or a force constant of zero and
+rest value from the equilibrium structure if this error was in the first
+QuickFF step). Furthermore, a warning of such modification is logged if the
+log level is 3 or higher (with a log level of 4, a full error summary will
+be given for all parameters). If this setting is set to None, no such error
+estimation will be performed. To define a value of 0.01 kJ/mol, just write
+<code class="docutils literal"><span class="pre">0.01*kjmol</span></code>.</p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="default-settings">
+<span id="sec-ug-settings-default"></span><h3>Default settings<a class="headerlink" href="#default-settings" title="Permalink to this headline">¶</a></h3>
+<p>As mentioned before the default settings are defined in the file <code class="docutils literal"><span class="pre">quickffrc</span></code>
+in the <code class="docutils literal"><span class="pre">share</span></code> directory. The content if this file is given below.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#IO</span>
+<span class="n">fn_yaff</span>                 <span class="p">:</span>   <span class="n">pars_yaff</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">fn_charmm22_prm</span>         <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">fn_charmm22_psf</span>         <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">fn_sys</span>                  <span class="p">:</span>   <span class="n">system</span><span class="o">.</span><span class="n">chk</span>
+<span class="n">plot_traj</span>               <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">xyz_traj</span>                <span class="p">:</span>   <span class="kc">False</span>
+<span class="n">fn_traj</span>                 <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">log_level</span>               <span class="p">:</span>   <span class="n">medium</span>
+<span class="n">log_file</span>                <span class="p">:</span>   <span class="kc">None</span>
+
+<span class="c1">#Program</span>
+<span class="n">program_mode</span>            <span class="p">:</span>   <span class="n">DeriveFF</span>
+
+<span class="c1">#FF config</span>
+<span class="n">only_traj</span>               <span class="p">:</span>   <span class="n">PT_ALL</span>
+<span class="n">ffatypes</span>                <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">ei</span>                      <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">ei_rcut</span>                 <span class="p">:</span>   <span class="kc">None</span> <span class="c1">#default is 20 (periodic) or 50 (non-per) A</span>
+<span class="n">vdw</span>                     <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">vdw_rcut</span>                <span class="p">:</span>   <span class="mi">20</span><span class="o">*</span><span class="n">angstrom</span>
+<span class="n">covres</span>                  <span class="p">:</span>   <span class="kc">None</span>
+
+<span class="n">excl_bonds</span>              <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">excl_bends</span>              <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">excl_dihs</span>               <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">excl_oopds</span>              <span class="p">:</span>   <span class="kc">None</span>
+
+<span class="n">do_hess_mass_weighting</span>  <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_hess_negfreq_proj</span>    <span class="p">:</span>   <span class="kc">False</span>
+<span class="n">do_cross_svd</span>            <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">pert_traj_tol</span>           <span class="p">:</span>   <span class="mf">1e-3</span>
+<span class="n">pert_traj_energy_noise</span>  <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">cross_svd_rcond</span>         <span class="p">:</span>   <span class="mf">1e-8</span>
+
+<span class="n">do_bonds</span>                <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_bends</span>                <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_dihedrals</span>            <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_oops</span>                 <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_cross_ASS</span>            <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_cross_ASA</span>            <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_cross_DSS</span>            <span class="p">:</span>   <span class="kc">False</span>
+<span class="n">do_cross_DSD</span>            <span class="p">:</span>   <span class="kc">False</span>
+<span class="n">do_cross_DAA</span>            <span class="p">:</span>   <span class="kc">False</span>
+<span class="n">do_cross_DAD</span>            <span class="p">:</span>   <span class="kc">False</span>
+
+<span class="n">bond_term</span>               <span class="p">:</span>   <span class="n">BondHarm</span>
+<span class="n">bend_term</span>               <span class="p">:</span>   <span class="n">BendAHarm</span>
+
+<span class="n">do_squarebend</span>           <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_bendclin</span>             <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_sqoopdist_to_oopdist</span> <span class="p">:</span>   <span class="kc">True</span>
+</pre></div>
+</div>
+<div class="line-block" id="seclab-ug-tools-inputei">
+<span id="seclab-ug-tools"></span><div class="line"><br /></div>
+</div>
+</div>
+</div>
+<div class="section" id="preparing-electrostatic-force-field">
+<h2>Preparing electrostatic force field<a class="headerlink" href="#preparing-electrostatic-force-field" title="Permalink to this headline">¶</a></h2>
+<p>A Yaff force field file for the electrostatic contribution can be constructed
+from the output of <a class="reference external" href="https://theochem.github.io/horton/">HORTON</a> using the
+<a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-inputei"><span class="std std-ref">qff-input-ei.py</span></a> script:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">qff</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">ei</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="n">fn_sys</span> <span class="n">fn_wpart</span><span class="p">:</span><span class="n">path</span>
+</pre></div>
+</div>
+<p><strong>Arguments</strong></p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">fn_sys</span></code></dt>
+<dd>a file containing the system information. Any file type accepted by the
+main script <a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">qff.py</span></a> is also accepted here
+(see <a class="reference internal" href="#seclab-inputfiles"><span class="std std-ref">input files</span></a>).</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">fn_wpart</span></code></dt>
+<dd>is a <a class="reference external" href="https://theochem.github.io/horton/">HORTON</a>: HDF5 file containing
+the charges of each atom. The script <code class="docutils literal"><span class="pre">horton-wpart.py</span></code> derives atomic charges from
+wavefunction files and writes the results in this type of HDF5 file. The charges in
+this file should have the same ordering as the atoms in the system file <code class="docutils literal"><span class="pre">fn_sys</span></code>.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">path</span></code></dt>
+<dd>is the path in the HDF5 to the dataset <code class="docutils literal"><span class="pre">charges</span></code>. The default path in HORTON 2.x
+is <code class="docutils literal"><span class="pre">/charges</span></code>. In HORTON 1.x, the path depends on the method used to compute the
+charges, e.g. <code class="docutils literal"><span class="pre">/wpart/hi/charges</span></code> would be the path to the Hirshfeld-I charges.</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Options</strong></p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Force field atom types (<code class="xref std std-option docutils literal"><span class="pre">--ffatypes=LEVEL</span></code>):</dt>
+<dd>Determine the force field atom types according to the given level (see
+<a class="reference internal" href="#seclab-ug-atype-estimator"><span class="std std-ref">automatic estimation of atom types</span></a>). By
+default, the atom types are assumed to be defined in <code class="docutils literal"><span class="pre">fn_sys</span></code>.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Gaussian distributed charges (<code class="xref std std-option docutils literal"><span class="pre">--gaussian</span></code>):</dt>
+<dd>Treat the atomic charges as Gaussian charge distributions with atomic radii
+determined according to the precedure of
+<a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0009261407002618">Chen et al.</a>,
+implemented in the routine <code class="docutils literal"><span class="pre">get_ei_radii</span></code> from the
+<a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-tools"><span class="std std-ref">tools</span></a> module.</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Remarks</strong></p>
+<p>All electrostatic interactions will be included in the force field, i.e. no
+scaling is applied. This means that atoms that are connected to each other 1, 2
+or 3 bonds will also interact electrostatically. To change this behaviour, open
+the resulting Yaff parameter file after applying this script, and change the
+corresponding scales in the file. For example: <cite>FIXQ:SCALE 1 0.0</cite> will turn of
+electrostatic interactions for bonded atoms. See also the
+<a class="reference external" href="http://molmod.github.io/yaff/ug_forcefield.html#prefix-fixq">Yaff page</a> on
+the parameter file for electrostatic interactions.</p>
+<p>The script might print a WARNING to the screen indicating the for a certain atom
+type the standard deviation of the charges for this atom type is rather high.
+This could indicate that the current atom types are to general, i.e. not
+specific enough for the current chemical configuration. A higher level of atom
+type specification might then be adequate.</p>
+<div class="line-block" id="seclab-ug-script">
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="quickff-main-script-qff-py">
+<h2>QuickFF main script qff.py<a class="headerlink" href="#quickff-main-script-qff-py" title="Permalink to this headline">¶</a></h2>
+<p>The most straightforward use of QuickFF is by means of a single command using
+the <a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">qff.py</span></a> script. The basic usage of this script
+is as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">qff</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="n">fns</span>
+</pre></div>
+</div>
+<p>In the sections below, both the input files and the optional arguments are
+discussed in detail. The description below is further illustrated with examples
+in the <a class="reference internal" href="index.html#seclab-tutorials"><span class="std std-ref">tutorials</span></a>.</p>
+<div class="section" id="mandatory-input-files">
+<span id="seclab-inputfiles"></span><h3>Mandatory input files<a class="headerlink" href="#mandatory-input-files" title="Permalink to this headline">¶</a></h3>
+<p>The script requires input files describing the system and reference
+data. These files are provided to the program by means of the mandatory
+arguments <cite>fns</cite> which should be the names of the files in question. If multiple
+files, information in later files overwrites information from earlier files. The
+following list enumerates all possible formats of these input files:</p>
+<ul>
+<li><p class="first"><strong>Gaussian formatted checkpoint file</strong> (file.fchk):</p>
+<blockquote>
+<div><p>a file generated using the
+<a class="reference external" href="http://www.gaussian.com/g_tech/g_ur/u_formchk.htm">formchk</a> utility on a
+checkpoint file from a Gaussian
+<a class="reference external" href="http://www.gaussian.com/g_tech/g_ur/k_freq.htm">freq</a> job. The atomic
+numbers, equilibrium geometry and equilibrium Hessian are extracted from
+this file.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>vasprun file</strong> (vasprun.xml):</p>
+<blockquote>
+<div><p>an <a class="reference external" href="https://www.w3.org/TR/REC-xml">XML</a> file generated by VASP during a
+frequency calculation.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>MolMod checkpoint file</strong> (file.chk)</p>
+<blockquote>
+<div><p>a file generated the <cite>molmod.io.chk.dump</cite> method from
+<a class="reference external" href="http://molmod.github.com/molmod/">MolMod</a>. This file contains arrays
+representing data stored in a computer-friendly format. Each array is stored
+in the following format:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">tag</span>                                     <span class="n">kind</span><span class="o">=</span><span class="n">dtype</span> <span class="n">shape</span>
+<span class="n">datanumber1</span>       <span class="n">datanumber2</span>       <span class="n">datanumber3</span>       <span class="n">datanumber4</span>
+<span class="n">datanumber5</span>       <span class="n">datanumber6</span>       <span class="n">datanumber7</span>       <span class="n">datanumber8</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>QuickFF will recognize and read arrays with the following tags: <em>energy</em>,
+<em>grad(ient)</em>, <em>hess(ian)</em>, <em>pos</em> (or <em>coords</em>), <em>rvecs</em> (or <em>cell</em>),
+<em>bonds</em>, <em>ffatypes</em> and <em>ffatype_ids</em></p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="optional-input-files">
+<h3>Optional input files<a class="headerlink" href="#optional-input-files" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Electrostatic contribution (<code class="xref std std-option docutils literal"><span class="pre">--ei=EI</span></code>):</dt>
+<dd>The user can define the electrostatic contribution of the force field using
+the option <code class="xref std std-option docutils literal"><span class="pre">--ei=EI</span></code>. EI should be the file name of a Yaff parameter
+file containing the electrostatic contribution. Such a parameter file can
+be <a class="reference internal" href="#seclab-ug-tools-inputei"><span class="std std-ref">generated</span></a>. from a HDF5 file containing charges using the script
+<a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-inputei"><span class="std std-ref">qff-input-ei.py</span></a>.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Van der Waals contribution (<code class="xref std std-option docutils literal"><span class="pre">--vdw=VDW</span></code>):</dt>
+<dd>The user can define the van der Waals contribution of the force field using
+the option <code class="xref std std-option docutils literal"><span class="pre">--vdw=VDW</span></code>. VDW should be the file name of a Yaff
+parameter file containing the van der Waals contribution.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Residual covalent contribution (<code class="xref std std-option docutils literal"><span class="pre">--covres=COVRES</span></code>):</dt>
+<dd>The user can define an <cite>a priori</cite> defined contribution to the covalent
+force field (and build a quickff force field on top of it) using the option
+<code class="xref std std-option docutils literal"><span class="pre">--covres=COVRES</span></code>. QuickFF will not neglect terms already present
+in the residual contribution, instead it will add an extra term for it.
+COVRES should be the file name of a Yaff parameter file containing the
+residual terms.</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="automatic-estimation-of-atom-types">
+<span id="seclab-ug-atype-estimator"></span><h3>Automatic estimation of atom types<a class="headerlink" href="#automatic-estimation-of-atom-types" title="Permalink to this headline">¶</a></h3>
+<p>The optional argument <code class="xref std std-option docutils literal"><span class="pre">--fflevel=LEVEL</span></code> will trigger the automatic
+assignation of atom types to every atom in the system. There are four possible
+levels of assignation:</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>low</em>: atom type is based on atom number</li>
+<li><em>medium</em>: atom type is based on atom number and number of neighbors.</li>
+<li><em>high</em>: atom type is based on atom number, number of neighbors and the atom number of those neighbors.</li>
+<li><em>highest</em>: every single atom is given a unique atom type based on its index in the system.</li>
+</ul>
+</div></blockquote>
+<p>The levels <cite>medium</cite> and <cite>high</cite> are the most usefull, <cite>medium</cite> will result in
+higher transferability of the force field parameters, while <cite>high</cite> will
+result in higher accuracy. The levels <cite>low</cite> and <cite>highest</cite> are mostly usefull
+for debugging purposes. The automatic assignation for the levels <cite>medium</cite>
+and <cite>high</cite> is illustrated for three different molecules in the figures
+below. If the level <cite>medium</cite> is chosen, atom type strings will be of the
+form <em>EN</em> in which <em>E</em> is the element and <em>N</em> is the number of neighbors.
+When choosing atom types according to the level <cite>high</cite>, atom type strings
+will be of the form <em>ENs</em> in which <em>E</em> is the element, <em>N</em> is the number
+of neighbors and <em>s</em> is a string describing the neighbors. If the atom has
+only 1 neighbor, then <em>s</em> is equal <em>_e</em> with <em>e</em> the element of the
+neighbor. If the atom under consideration has 2 neighbors, then <em>s</em> is equal
+to <em>_ee</em> in which the first and second <em>e</em> represent the element of the
+first and second neighbor respectively. If the atom has more than 2
+neighbors, then <em>s</em> will contain a substring <em>_en</em> for every neighboring
+atom. In this substring, <em>e</em> represents the neighbor element and <em>n</em> is the
+number of neighbors of that particular neighbor element. Multiple instances of
+this <em>_en</em> string are ordered according to atomic number.</p>
+<div class="figure align-center" id="id4">
+<a class="reference internal image-reference" href="_images/atypes_medium.png"><img alt="Medium-level atom types" src="_images/atypes_medium.png" style="width: 718.8000000000001px; height: 243.20000000000002px;" /></a>
+<p class="caption"><span class="caption-text"><strong>Figure 1</strong>: Medium-level atom types</span></p>
+</div>
+<div class="figure align-center" id="id5">
+<a class="reference internal image-reference" href="_images/atypes_high.png"><img alt="High-level atom types" src="_images/atypes_high.png" style="width: 754.4000000000001px; height: 248.0px;" /></a>
+<p class="caption"><span class="caption-text"><strong>Figure 2</strong>: High-level atom types</span></p>
+</div>
+<p>By default, the automatic assignation is switched off and the atom types are
+suposed to be defined in the <a class="reference internal" href="#seclab-inputfiles"><span class="std std-ref">input files</span></a>.</p>
+</div>
+<div class="section" id="miscellanous-options">
+<h3>Miscellanous options<a class="headerlink" href="#miscellanous-options" title="Permalink to this headline">¶</a></h3>
+<p>Through the use of the following options, the user can manipulate what QuickFF
+will exactly do.</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Program mode (<code class="xref std std-option docutils literal"><span class="pre">-m</span> <span class="pre">PROGRAM_MODE</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--program-mode=PROGRAM_MODE</span></code>):</dt>
+<dd>Specify the program mode which defines the set of instructions that will be
+executed. Allowed strings are the names of the program classes defined in
+the <a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">program</span></a> module. Be carefull, these
+names are case sensitive. By default, the program <cite>DeriveNonDiagFF</cite> will be
+used.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Trajectory storing/loading (<code class="xref std std-option docutils literal"><span class="pre">--fn-traj=FN_TRAJ</span></code>):</dt>
+<dd>Depending if the given option argument corresponds to an existing file or
+not, this option will load/save perturbation trajectories to/from a cPickled
+file.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Construct specific trajectories (<code class="xref std std-option docutils literal"><span class="pre">--only-traj=ONLY_TRAJ</span></code>):</dt>
+<dd>Construct the perturbation trajectory only for the terms with the given
+basenames. This options is only applied in the MakeTrajectories program.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Output file suffix (<code class="xref std std-option docutils literal"><span class="pre">--suffix=SUFFIX</span></code>):</dt>
+<dd>Suffix that will be added to all output files. By default, no suffix is
+added.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Plot energy (<code class="xref std std-option docutils literal"><span class="pre">-e</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--ener-traj</span></code>):</dt>
+<dd>Plot the various energy contributions along the perturbation trajectories
+to. By default, energy plotting is switched off.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Dump trajectories in XYZ format (<code class="xref std std-option docutils literal"><span class="pre">-x</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--xyz-traj</span></code>):</dt>
+<dd>Dump the perturbation trajectories in XYZ format. By default, trajectory
+dumping is switched off.</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="output">
+<h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<p>During the derivation of the force field, QuickFF will dump some usefull
+information to the screen including machine information, system information,
+model information, the force field parameters after the perturbation step and
+the final force field parameters. Additionally, three output files are
+generated:</p>
+<ul>
+<li><p class="first">system.chk:</p>
+<blockquote>
+<div><p>A MolMod checkpoint file containing all system information. This file can be
+used to start new QuickFF calculations or to perform force field simulations
+using <a class="reference external" href="http://molmod.github.io/yaff/">Yaff</a> together with the file
+pars_yaff.txt.</p>
+</div></blockquote>
+</li>
+<li><p class="first">pars_yaff.txt:</p>
+<blockquote>
+<div><p>A formatted text file defining the final force field. This file can be read
+by <a class="reference external" href="http://molmod.github.io/yaff/">Yaff</a> together with the file
+system.chk, to perform force field simulations.</p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="logging">
+<h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
+<p>These options control the logging of all the operations in QuickFF.</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Silent mode (<code class="xref std std-option docutils literal"><span class="pre">-s</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--silent</span></code>):</dt>
+<dd>Swith of all logging completely, overwrites all other verbosity options. By
+default, the silent mode is not activated.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Verbose mode (<code class="xref std std-option docutils literal"><span class="pre">-v</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--verbose</span></code>):</dt>
+<dd>Increases verbosity, is overwriten if <code class="xref std std-option docutils literal"><span class="pre">--silent</span></code> or
+<code class="xref std std-option docutils literal"><span class="pre">--very-verbose</span></code> is switched on. By default, the verbose mode is
+not activated.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Very verbose mode (<code class="xref std std-option docutils literal"><span class="pre">-V</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--very-verbose</span></code>):</dt>
+<dd>Increases verbosity to highest level, is overwriten if <code class="xref std std-option docutils literal"><span class="pre">--silent</span></code>
+is switched on. This is mostly usefull for debugging purposes. By default,
+the very verbose mode is not activated.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Pipe logging (<code class="xref std std-option docutils literal"><span class="pre">-l</span> <span class="pre">LOGFILE</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--logfile=LOGFILE</span></code>):</dt>
+<dd>Redirect logger output to a file with the name <cite>LOGFILE</cite>. By default, all
+logging output is printed to the screen.</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="parallel-quickff">
+<h3>Parallel QuickFF<a class="headerlink" href="#parallel-quickff" title="Permalink to this headline">¶</a></h3>
+<p>If Scoop is installed, it is possible to run QuickFF on multiple cores of a
+single node by using the optional argument <code class="xref std std-option docutils literal"><span class="pre">--scoop</span></code>. Only the
+generation of the perturbation trajectories will be parallized as it is the
+slowest step. The exact syntax to use QuickFF in parallel is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">scoop</span> <span class="o">-</span><span class="n">n</span> <span class="n">nproc</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">qff</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">scoop</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="n">fns</span>
+</pre></div>
+</div>
+<p><em>nproc</em> is the number of processes that can be launched simultaneously. It is
+important to note that one has to define the absolute path to the location of
+the <cite>qff.py</cite> script. Finally, <cite>[options]</cite> and <cite>fns</cite> have the same meaning as
+in the serial version.</p>
+<p><strong>WARNING</strong>: There might occur an error (concerning <em>__reduce_cython__</em>) when
+running QuickFF in parallel with SCOOP. We are aware of this and are looking to
+solve it in a future release. This can be the case when using Scoop v0.7 or
+higher.</p>
+</div>
+</div>
+<div class="section" id="importing-quickff-as-a-library">
+<span id="seclab-ug-lib"></span><h2>Importing QuickFF as a library<a class="headerlink" href="#importing-quickff-as-a-library" title="Permalink to this headline">¶</a></h2>
+<p>QuickFF can also be treated as library of classes and methods that is imported
+in a script written by the user. This procedure allows more control over the
+core features of QuickFF and also allows more complex force fields. In this
+User Guide, we will show how to write a custom script for deriving a force field
+using QuickFF. The <a class="reference internal" href="index.html#seclab-tutorials"><span class="std std-ref">tutorials</span></a> will include examples of
+specific systems, such as <a class="reference internal" href="tu.html#seclab-tu-water"><span class="std std-ref">water</span></a> and
+<a class="reference internal" href="tu.html#seclab-tu-biphenyl"><span class="std std-ref">biphenyl</span></a>.</p>
+<div class="section" id="define-the-system">
+<h3>Define the system<a class="headerlink" href="#define-the-system" title="Permalink to this headline">¶</a></h3>
+<p>First we need to define an instance of the
+<a class="reference external" href="http://molmod.github.io/yaff/ug_system.html">Yaff System class</a> to define the
+molecular system:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">molmod.units</span> <span class="k">import</span> <span class="n">angstrom</span>
+<span class="kn">from</span> <span class="nn">yaff</span> <span class="k">import</span> <span class="n">System</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="c1">#initialize system</span>
+<span class="n">numbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.37</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],[</span><span class="mf">0.37</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]])</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">rvecs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, we considered a (non-periodic) hydrogen molecule oriented along the
+x-axis and a H-H bond length of 0.74 angstrom.</p>
+</div>
+<div class="section" id="define-the-ab-initio-reference">
+<h3>Define the ab initio reference<a class="headerlink" href="#define-the-ab-initio-reference" title="Permalink to this headline">¶</a></h3>
+<p>Second, we define the ab initio geometry, gradient and Hessian in equilibrium:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">quickff.reference</span> <span class="k">import</span> <span class="n">SecondOrderTaylor</span>
+<span class="c1">#initialize numpy arrays</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+<span class="n">hess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="o">...</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+<span class="c1">#initialize the ab initio reference</span>
+<span class="n">ai</span> <span class="o">=</span> <span class="n">SecondOrderTaylor</span><span class="p">(</span><span class="s1">&#39;ai&#39;</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="n">energy</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="n">hess</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="define-force-field-reference-objects">
+<h3>Define force field reference objects<a class="headerlink" href="#define-force-field-reference-objects" title="Permalink to this headline">¶</a></h3>
+<p>Next, we define an extra reference object for each force field reference we
+want to include. Suppose we want to take an a priori derived electrostatic
+contribution into account. If a Yaff parameter file <cite>pars_ei.txt</cite> is at hand for
+the EI contribution, we can add it as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yaff.pes.ff</span> <span class="k">import</span> <span class="n">ForceField</span>
+<span class="kn">from</span> <span class="nn">quickff.reference</span> <span class="k">import</span> <span class="n">YaffForceField</span>
+<span class="n">ff</span> <span class="o">=</span> <span class="n">ForceField</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="s1">&#39;pars_ei.txt&#39;</span><span class="p">,</span> <span class="n">rcut</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="n">angstrom</span><span class="p">)</span>
+<span class="n">ei</span> <span class="o">=</span> <span class="n">YaffForceField</span><span class="p">(</span><span class="s1">&#39;ei&#39;</span><span class="p">,</span> <span class="n">ff</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The keyword argument <cite>rcut</cite> represents the cutoff for the electrostatic
+interactions, which was given a high enough value to include all interactions
+of our gas-phase system. Instead of reading the electrostatic force field (<cite>ff</cite>
+in the code block above) from a given parameter file, one can also define it
+using Yaff as a library. For more information see page in the Yaff manual on
+<a class="reference external" href="http://molmod.github.io/yaff/ug_forcefield.html#beyond-force-field-parameter-files">Beyond force field parameter files</a>.</p>
+</div>
+<div class="section" id="define-the-program-and-run-it">
+<h3>Define the program and run it<a class="headerlink" href="#define-the-program-and-run-it" title="Permalink to this headline">¶</a></h3>
+<p>Finally, one has to define a program, which is a sequence of routines of the
+BaseProgram class (see <a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">Reference Guide</span></a> for
+more information). For our example of a single hydrogen molecule, one could get
+an accurate estimate of both the bond rest value and its force constant from the
+perturbation trajectories without force constant refinement:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">quickff.program</span> <span class="k">import</span> <span class="n">BaseProgram</span>
+<span class="k">class</span> <span class="nc">CustomProgram</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_estimate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_output</span><span class="p">()</span>
+
+<span class="n">program</span> <span class="o">=</span> <span class="n">CustomProgram</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">ai</span><span class="p">,</span> <span class="n">ffrefs</span><span class="o">=</span><span class="p">[</span><span class="n">ei</span><span class="p">])</span>
+<span class="n">program</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The arguments of the initializer of CustomProgram, both mandatory and keyword
+arguments, are the same as the BaseProgram class (see
+<a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">Reference Guide</span></a> for more information).</p>
+</div>
+<div class="section" id="id3">
+<h3>Logging<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>Controlling the amount of logging can be done at the beginning of your custom
+script as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">quickff.log</span> <span class="k">import</span> <span class="n">log</span>
+<span class="n">log</span><span class="o">.</span><span class="n">set_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the second line of code, <cite>level</cite> should be either the string <cite>silent</cite>, <cite>low</cite>,
+<cite>medium</cite>, <cite>high</cite> or <cite>highest</cite>, or an integer withing the range 0-4 (0
+corresponds to <cite>silent</cite>, 4 corresponds to <cite>highest</cite>). One can introduce custom
+logging sections in the script as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">print_level</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="n">timer_description</span><span class="p">):</span>
+    <span class="c1">#insert code here</span>
+    <span class="o">...</span>
+    <span class="c1">#dump string to logger</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The meaning of the various variables is:</p>
+<ul class="simple">
+<li><strong>key</strong>: A short description of the section. This will be repeated in the begining of each line dumped to the logger under that section.</li>
+<li><strong>print_level</strong>: the minimum level that should be assigned to the logger (through the use of <cite>log.set_level</cite>) to actually print the strings passed through <cite>log.dump</cite>.</li>
+<li><strong>timer_description</strong>: The description of this section that will be used in the timings of each section. If <cite>None</cite> is given, no timing will be included for this section.</li>
+<li><strong>string</strong>: a string that will be dumped to the logger</li>
+</ul>
+<p>For example, the code below:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s1">&#39;TEST&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s1">&#39;Testing the logger&#39;</span><span class="p">):</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;This is a test&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>will generate the following line in the log output if <cite>log.level</cite> is set to <cite>medium</cite> or higher:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TEST</span>   <span class="n">This</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">test</span>
+</pre></div>
+</div>
+<p>and the following line at the end of the log output (actual timing below is not
+representative):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TIMING</span> <span class="n">Testing</span> <span class="n">the</span> <span class="n">logger</span>              <span class="mi">0</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mf">00.000001</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tu.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ig.html" class="btn btn-neutral" title="Installation Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Louis Vanduyfhuys, Center for Molecular Modeling, Ghent University
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'2.2.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

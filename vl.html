@@ -1,0 +1,787 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Validation &mdash; QuickFF 2.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference Guide" href="rg.html" />
+    <link rel="prev" title="Tutorials" href="tu.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> QuickFF
+          
+
+          
+            
+            <img src="_static/quickff_logo_trans_small.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="papers.html">QuickFF literature</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ig.html">Installation Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#dependencies">Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#molmod-dependency">MolMod dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#yaff-dependency">Yaff dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#external-dependencies">External dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#downloading-quickff">Downloading QuickFF</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#stable-release">Stable release</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ig.html#latest-development-version-experts-only">Latest development version (experts only)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ig.html#installing-quickff">Installing QuickFF</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ug.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#quickff-settings">QuickFF Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#settings-description">Settings description</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#general-settings">General settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#input-output-settings">Input/output settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#reference-force-field-contribution-settings">Reference force field contribution settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#force-field-expression-settings">Force field expression settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ug.html#fitting-algorithm-settings">Fitting algorithm settings</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#default-settings">Default settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#preparing-electrostatic-force-field">Preparing electrostatic force field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#quickff-main-script-qff-py">QuickFF main script qff.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#mandatory-input-files">Mandatory input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#optional-input-files">Optional input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#automatic-estimation-of-atom-types">Automatic estimation of atom types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#miscellanous-options">Miscellanous options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#output">Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#logging">Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#parallel-quickff">Parallel QuickFF</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ug.html#importing-quickff-as-a-library">Importing QuickFF as a library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-the-system">Define the system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-the-ab-initio-reference">Define the ab initio reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-force-field-reference-objects">Define force field reference objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#define-the-program-and-run-it">Define the program and run it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ug.html#id3">Logging</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tu.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-1-benzene">Tutorial 1 - Benzene</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tu.html#covalent-force-field-without-non-bonding-terms">Covalent force field without non-bonding terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tu.html#force-field-with-electrostatics">Force field with electrostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-2-water">Tutorial 2 - Water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tu.html#tutorial-3-biphenyl">Tutorial 3 - Biphenyl</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Validation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#validation-methodology">Validation methodology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validation-1-water">Validation 1 - Water</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#force-field-construction">Force field construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#force-field-evaluation">Force field evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#perturbation-trajectories">Perturbation trajectories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry-and-frequencies">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#validation-2-benzene">Validation 2 - Benzene</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Force field construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Force field evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Perturbation trajectories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rg.html">Reference Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rg.html#modules">Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.cost"><code class="docutils literal"><span class="pre">quickff.cost</span></code> – Least-Square cost function for hessian matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.io"><code class="docutils literal"><span class="pre">quickff.io</span></code> – Input/Ouput methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.settings"><code class="docutils literal"><span class="pre">quickff.settings</span></code> – QuickFF configuration settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.perturbation"><code class="docutils literal"><span class="pre">quickff.perturbation</span></code> – Perturbation trajectories for internal coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.program"><code class="docutils literal"><span class="pre">quickff.program</span></code> – Program classes implementing a sequence of fitting steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.reference"><code class="docutils literal"><span class="pre">quickff.reference</span></code> – Representation of the ab initio reference data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.tools"><code class="docutils literal"><span class="pre">quickff.tools</span></code> – Various convenient tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rg.html#module-quickff.valence"><code class="docutils literal"><span class="pre">quickff.valence</span></code> – ValenceFF class storing all valence ff terms</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rg.html#scripts">Scripts</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QuickFF</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Validation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/vl.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="validation">
+<span id="seclab-vl-main"></span><h1>Validation<a class="headerlink" href="#validation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="validation-methodology">
+<h2>Validation methodology<a class="headerlink" href="#validation-methodology" title="Permalink to this headline">¶</a></h2>
+<p>In this section, a force field is constructed using the current version
+of QuickFF (i.e. 2.2.1), after which it is tested and evaluated for its
+ability to reproduce the <em>ab initio</em> input it was fitted to. The force field was
+constructed using the QuickFF script <a class="reference internal" href="ug.html#seclab-ug-script"><span class="std std-ref">qff.py</span></a>. The
+required <em>ab initio</em> input is contained in the file <code class="docutils literal"><span class="pre">gaussian.fchk</span></code> and the
+electrostatic partitioning in <code class="docutils literal"><span class="pre">gaussian_mbis.h5</span></code>. The Yaff parameter file for
+the electrostatic contribution is generated using</p>
+<blockquote>
+<div>qff-input-ei.py -f –ffatypes=low –gaussian gaussian.fchk gaussian_mbis.h5:charges pars_ei_mbisgauss.txt</div></blockquote>
+<p>The config file containing the settings that are used for the force field is
+given by <code class="docutils literal"><span class="pre">config.txt</span></code> and can be viewed below. Furthermore, all required input
+files as well as the generated output can be found in the directory
+<code class="docutils literal"><span class="pre">share/validation</span></code>.</p>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the QuickFF config file used for generating the force field</strong></div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#IO</span>
+<span class="n">fn_yaff</span>                 <span class="p">:</span>   <span class="n">pars_cov</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">fn_charmm22_prm</span>         <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">fn_charmm22_psf</span>         <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">fn_sys</span>                  <span class="p">:</span>   <span class="n">system</span><span class="o">.</span><span class="n">chk</span>
+<span class="n">plot_traj</span>               <span class="p">:</span>   <span class="n">final</span>
+<span class="n">xyz_traj</span>                <span class="p">:</span>   <span class="kc">False</span>
+<span class="n">fn_traj</span>                 <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">log_level</span>               <span class="p">:</span>   <span class="n">medium</span>
+<span class="n">log_file</span>                <span class="p">:</span>   <span class="kc">None</span>
+
+<span class="c1">#Program</span>
+<span class="n">program_mode</span>            <span class="p">:</span>   <span class="n">DeriveFF</span>
+
+<span class="c1">#FF config</span>
+<span class="n">only_traj</span>               <span class="p">:</span>   <span class="n">PT_ALL</span>
+<span class="n">ffatypes</span>                <span class="p">:</span>   <span class="n">low</span>
+<span class="n">ei</span>                      <span class="p">:</span>   <span class="n">pars_ei_mbisgauss</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">ei_rcut</span>                 <span class="p">:</span>   <span class="kc">None</span> <span class="c1">#default is 20 (periodic) or 50 (non-per) A</span>
+<span class="n">vdw</span>                     <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">vdw_rcut</span>                <span class="p">:</span>   <span class="mi">20</span><span class="o">*</span><span class="n">angstrom</span>
+<span class="n">covres</span>                  <span class="p">:</span>   <span class="kc">None</span>
+
+<span class="n">excl_bonds</span>              <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">excl_bends</span>              <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">excl_dihs</span>               <span class="p">:</span>   <span class="kc">None</span>
+<span class="n">excl_oopds</span>              <span class="p">:</span>   <span class="kc">None</span>
+
+<span class="n">do_hess_mass_weighting</span>  <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_hess_negfreq_proj</span>    <span class="p">:</span>   <span class="kc">False</span>
+<span class="n">do_cross_svd</span>            <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">pert_traj_tol</span>           <span class="p">:</span>   <span class="mf">1e-9</span>
+<span class="n">cross_svd_rcond</span>         <span class="p">:</span>   <span class="mf">1e-9</span>
+
+<span class="n">do_bonds</span>                <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_bends</span>                <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_dihedrals</span>            <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_oops</span>                 <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_cross_ASS</span>            <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_cross_ASA</span>            <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_cross_DSS</span>            <span class="p">:</span>   <span class="kc">False</span>
+<span class="n">do_cross_DSD</span>            <span class="p">:</span>   <span class="kc">False</span>
+<span class="n">do_cross_DAA</span>            <span class="p">:</span>   <span class="kc">False</span>
+<span class="n">do_cross_DAD</span>            <span class="p">:</span>   <span class="kc">False</span>
+
+<span class="n">bond_term</span>               <span class="p">:</span>   <span class="n">BondHarm</span>
+<span class="n">bend_term</span>               <span class="p">:</span>   <span class="n">BendAHarm</span>
+
+<span class="n">do_squarebend</span>           <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_bendclin</span>             <span class="p">:</span>   <span class="kc">True</span>
+<span class="n">do_sqoopdist_to_oopdist</span> <span class="p">:</span>   <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+<p>To evaluate the performance of the force field, it is applied to perform a basic
+geometry optimization followed by a normal mode analysis using Yaff and TAMkin.
+Finally, two validations are performed for each system:</p>
+<ul>
+<li><p class="first">the force field energy is compared to the <em>ab initio</em> energy along the
+perturbation trajectories that were constructed by QuickFF.</p>
+</li>
+<li><p class="first">the geometry (i.e. bond lengths, bending angles, dihedral angles and
+ut-of-plane distances) and normal mode frequencies as predicted by the force
+field are compared with the given <em>ab initio</em> input. To this end, the
+following statistics are used:</p>
+<ul>
+<li><p class="first">Root Mean Square Deviation (RMSD)</p>
+<div class="math">
+<p><img src="_images/math/f24f96a6e942ef448593fc493cfe33ae9ae35efa.png" alt="RMSD = \sqrt{\frac{1}{N}\sum_{i=1}^N \left(A_i - F_i\right)^2}"/></p>
+</div></li>
+<li><p class="first">Mean Deviation (RMSD)</p>
+<div class="math">
+<p><img src="_images/math/88796eb9d650925f0a1b5feb74b22f3daa91d7a3.png" alt="MD = \frac{1}{N}\sum_{i=1}^N \left(A_i-F_i\right)"/></p>
+</div></li>
+<li><p class="first">Root Mean Square Error (RMSE)</p>
+<div class="math">
+<p><img src="_images/math/e6728e6ea21ecfa8e7e432aee626cd8b563ea32f.png" alt="RMSE = \sqrt{\frac{1}{N}\sum_{i=1}^N \left(A_i-F_i-MD\right)^2}"/></p>
+</div></li>
+</ul>
+<p>These statistics satisfy the condition <img class="math" src="_images/math/346f8d2af90c90725f39d77e2b2b7ce45163f394.png" alt="RMDS^2=RMSE^2+MD^2"/>.</p>
+</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="validation-1-water">
+<span id="seclab-vl-water"></span><h2>Validation 1 - Water<a class="headerlink" href="#validation-1-water" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="force-field-construction">
+<h3>Force field construction<a class="headerlink" href="#force-field-construction" title="Permalink to this headline">¶</a></h3>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the output of qff-input-ei.py</strong></div>
+<div class="highlight-text"><div class="highlight"><pre><span></span>Averaged Atomic Charges:
+------------------------
+     H     0.451 +-  0.000 (N=2)
+     O    -0.901 +-  0.000 (N=1)
+</pre></div>
+</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the Yaff parameter file of the electrostatic contribution</strong></div>
+<div class="highlight-text"><div class="highlight"><pre><span></span>#Fixed charges
+#---------------
+
+FIXQ:UNIT Q0 e
+FIXQ:UNIT P e
+FIXQ:UNIT R angstrom
+FIXQ:SCALE 1 1.0
+FIXQ:SCALE 2 1.0
+FIXQ:SCALE 3 1.0
+FIXQ:DIELECTRIC 1.0
+
+# Atomic parameters
+# ----------------------------------------------------
+# KEY        label  Q_0A              R_A
+# ----------------------------------------------------
+FIXQ:ATOM        H  0.4506107006  0.7308000000
+FIXQ:ATOM        O -0.9012712115  1.1325000000
+</pre></div>
+</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the QuickFF log file</strong></div>
+<div class="highlight-text"><div class="highlight"><pre><span></span>Traceback (most recent call last):
+  File &quot;/home/louis/build/anaconda3/bin/qff.py&quot;, line 38, in &lt;module&gt;
+    qff()
+  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/scripts.py&quot;, line 348, in qff
+    settings = Settings(fn=args.config_file, **kwargs)
+  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 177, in __init__
+    self.check()
+  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 241, in check
+    check_function(key,value)
+  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 83, in is_nonexisting_file_name
+    raise IOError(&#39;Setting for key %s should be non-existing file name, got %s which already exists.&#39; %(key, value))
+OSError: Setting for key fn_yaff should be non-existing file name, got pars_cov.txt which already exists.
+</pre></div>
+</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the Yaff parameter file of the covalent contribution</strong></div>
+<div class="highlight-text"><div class="highlight"><pre><span></span># BONDHARM
+#---------
+BONDHARM:UNIT  K kjmol/A**2
+BONDHARM:UNIT  R0 A
+
+BONDHARM:PARS         H         O  4.9793007398e+03  9.7671602900e-01
+
+
+# BENDAHARM
+#----------
+BENDAHARM:UNIT  K kjmol/rad**2
+BENDAHARM:UNIT  THETA0 deg
+
+BENDAHARM:PARS         H         O         H  3.4652118756e+02  9.5532795842e+01
+
+
+# Cross
+#------
+Cross:UNIT  KSS kjmol/angstrom**2
+Cross:UNIT  KBS0 kjmol/(angstrom*rad)
+Cross:UNIT  KBS1 kjmol/(angstrom*rad)
+Cross:UNIT  R0 angstrom
+Cross:UNIT  R1 angstrom
+Cross:UNIT  THETA0 deg
+
+Cross:PARS         H         O         H  -1.1006640167e+02   1.4564327376e+02   1.4564327376e+02  9.7199818096e-01  9.7199818096e-01  9.6002094143e+01
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="force-field-evaluation">
+<h3>Force field evaluation<a class="headerlink" href="#force-field-evaluation" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="perturbation-trajectories">
+<h4>Perturbation trajectories<a class="headerlink" href="#perturbation-trajectories" title="Permalink to this headline">¶</a></h4>
+<p>The figures below illustrate the reproduction of the <em>ab initio</em> energy along
+the constructed perturbation trajectories. For water, there are 3 such
+trajectories, two bonds and one bend.</p>
+<ul class="simple">
+<li><strong>First O-H bond</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/water/trajectory-BondHarm-H.O-0_Ehc3.png"><img alt="../../../share/validation/water/trajectory-BondHarm-H.O-0_Ehc3.png" src="../../../share/validation/water/trajectory-BondHarm-H.O-0_Ehc3.png" style="width: 400px;" /></a>
+<ul class="simple">
+<li><strong>Second O-H bond</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/water/trajectory-BondHarm-H.O-1_Ehc3.png"><img alt="../../../share/validation/water/trajectory-BondHarm-H.O-1_Ehc3.png" src="../../../share/validation/water/trajectory-BondHarm-H.O-1_Ehc3.png" style="width: 400px;" /></a>
+<ul class="simple">
+<li><strong>H-O-H bend</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png"><img alt="../../../share/validation/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png" src="../../../share/validation/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png" style="width: 400px;" /></a>
+</div>
+<div class="section" id="geometry-and-frequencies">
+<h4>Geometry and frequencies<a class="headerlink" href="#geometry-and-frequencies" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-text"><div class="highlight"><pre><span></span>OBSERVABLE  [UNIT]  |      RMSD      |       MD       |      RMSE      
+--------------------|----------------|----------------|----------------
+                    |                |                |                
+GEOMETRY            |                |                |                
+  Bonds         [A] |    7.214e-05   |   -7.214e-05   |    0.000e+00    
+  Bends       [deg] |    5.485e-02   |    5.485e-02   |    0.000e+00    
+  Dihedrals   [deg] |         -      |        -       |          -     
+  Opdists       [A] |         -      |        -       |          -     
+                    |                |                |                
+FREQUENCIES  [1/cm] |                |                |                
+  All               |    7.656e-02   |   -2.408e-02   |    7.267e-02    
+     0 -  100       |         -      |        -       |          -     
+   100 -  500       |         -      |        -       |          -     
+   500 - 1000       |         -      |        -       |          -     
+  1000 - 3000 (  1) |    7.841e-02   |    7.841e-02   |    0.000e+00   
+  3000 -  inf (  2) |    7.561e-02   |   -7.533e-02   |    6.554e-03
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="validation-2-benzene">
+<span id="seclab-vl-benzene"></span><h2>Validation 2 - Benzene<a class="headerlink" href="#validation-2-benzene" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Force field construction<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the output of qff-input-ei.py</strong></div>
+<div class="highlight-text"><div class="highlight"><pre><span></span>Averaged Atomic Charges:
+------------------------
+     H     0.131 +-  0.000 (N=6)
+     C    -0.132 +-  0.001 (N=6)
+</pre></div>
+</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the Yaff parameter file of the electrostatic contribution</strong></div>
+<div class="highlight-text"><div class="highlight"><pre><span></span>#Fixed charges
+#---------------
+
+FIXQ:UNIT Q0 e
+FIXQ:UNIT P e
+FIXQ:UNIT R angstrom
+FIXQ:SCALE 1 1.0
+FIXQ:SCALE 2 1.0
+FIXQ:SCALE 3 1.0
+FIXQ:DIELECTRIC 1.0
+
+# Atomic parameters
+# ----------------------------------------------------
+# KEY        label  Q_0A              R_A
+# ----------------------------------------------------
+FIXQ:ATOM        H  0.1314377213  0.7308000000
+FIXQ:ATOM        C -0.1315514661  1.1703000000
+</pre></div>
+</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the QuickFF log file</strong></div>
+<div class="highlight-text"><div class="highlight"><pre><span></span>Traceback (most recent call last):
+  File &quot;/home/louis/build/anaconda3/bin/qff.py&quot;, line 38, in &lt;module&gt;
+    qff()
+  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/scripts.py&quot;, line 348, in qff
+    settings = Settings(fn=args.config_file, **kwargs)
+  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 177, in __init__
+    self.check()
+  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 241, in check
+    check_function(key,value)
+  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 83, in is_nonexisting_file_name
+    raise IOError(&#39;Setting for key %s should be non-existing file name, got %s which already exists.&#39; %(key, value))
+OSError: Setting for key fn_yaff should be non-existing file name, got pars_cov.txt which already exists.
+</pre></div>
+</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the Yaff parameter file of the covalent contribution</strong></div>
+<div class="highlight-text"><div class="highlight"><pre><span></span># BONDHARM
+#---------
+BONDHARM:UNIT  K kjmol/A**2
+BONDHARM:UNIT  R0 A
+
+BONDHARM:PARS         C         H  3.3330947124e+03  1.0876030745e+00
+BONDHARM:PARS         C         C  3.9651509045e+03  1.3940024805e+00
+
+
+# BENDAHARM
+#----------
+BENDAHARM:UNIT  K kjmol/rad**2
+BENDAHARM:UNIT  THETA0 deg
+
+BENDAHARM:PARS         C         C         H  3.2097791113e+02  1.2015408782e+02
+BENDAHARM:PARS         C         C         C  6.0195050467e+02  1.1997128609e+02
+
+
+# TORSION
+#--------
+TORSION:UNIT  A kjmol
+TORSION:UNIT  PHI0 deg
+
+TORSION:PARS         C         C         C         H  2 3.1428590360e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.5982597089e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.6841711541e+01  0.0000000000e+00
+
+
+# OOPDIST
+#--------
+OOPDIST:UNIT  K kjmol/A**2
+OOPDIST:UNIT  D0 A
+
+OOPDIST:PARS         C         C         H         C  1.6627860940e+02  4.7922360401e-17
+
+
+# Cross
+#------
+Cross:UNIT  KSS kjmol/angstrom**2
+Cross:UNIT  KBS0 kjmol/(angstrom*rad)
+Cross:UNIT  KBS1 kjmol/(angstrom*rad)
+Cross:UNIT  R0 angstrom
+Cross:UNIT  R1 angstrom
+Cross:UNIT  THETA0 deg
+
+Cross:PARS         C         C         H   4.0314251669e+01   1.1314941462e+02   1.3908937843e+02  1.3934733019e+00  1.0875970644e+00  1.2001586285e+02
+Cross:PARS         C         C         C   5.2510965130e+02   4.9272462224e+01   4.9272462224e+01  1.3934733019e+00  1.3934733019e+00  1.2003594733e+02
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id2">
+<h3>Force field evaluation<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<h4>Perturbation trajectories<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<p>The figures below illustrate the reproduction of the <em>ab initio</em> energy along
+the constructed perturbation trajectories. For water, there are 3 such
+trajectories, two bonds and one bend.</p>
+<ul class="simple">
+<li><strong>C-H bonds</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png" style="width: 400px;" /></a>
+<ul class="simple">
+<li><strong>C-C bonds</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png" style="width: 400px;" /></a>
+<ul class="simple">
+<li><strong>C-C-C bends</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png" style="width: 400px;" /></a>
+<ul class="simple">
+<li><strong>C-C-H bends</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png" style="width: 400px;" /></a>
+<ul class="simple">
+<li><strong>C-C-H-C out-of-plane distances</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png" style="width: 400px;" /></a>
+</div>
+<div class="section" id="id4">
+<h4>Geometry and frequencies<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-text"><div class="highlight"><pre><span></span>OBSERVABLE  [UNIT]  |      RMSD      |       MD       |      RMSE      
+--------------------|----------------|----------------|----------------
+                    |                |                |                
+GEOMETRY            |                |                |                
+  Bonds         [A] |    3.530e-04   |   -2.392e-04   |    2.596e-04    
+  Bends       [deg] |    9.492e-08   |    6.316e-15   |    9.492e-08    
+  Dihedrals   [deg] |    5.371e-16   |    1.643e-32   |    5.371e-16    
+  Opdists       [A] |    5.587e-18   |    4.747e-18   |    2.947e-18    
+                    |                |                |                
+FREQUENCIES  [1/cm] |                |                |                
+  All               |    2.338e+01   |    1.057e+00   |    2.335e+01    
+     0 -  100       |         -      |        -       |          -     
+   100 -  500 (  2) |    1.701e+01   |    1.700e+01   |    4.160e-01   
+   500 - 1000 (  8) |    1.470e+01   |   -6.089e+00   |    1.338e+01   
+  1000 - 3000 ( 14) |    3.163e+01   |    3.301e+00   |    3.146e+01   
+  3000 -  inf (  6) |    3.739e+00   |    3.573e-02   |    3.739e+00
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rg.html" class="btn btn-neutral float-right" title="Reference Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tu.html" class="btn btn-neutral" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Louis Vanduyfhuys, Center for Molecular Modeling, Ghent University
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'2.2.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

@@ -1,48 +1,260 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>QuickFF Settings &#8212; QuickFF 2.1.3 documentation</title>
-    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '2.1.3',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>QuickFF Settings &mdash; QuickFF 2.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
-  </head>
-  <body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
-      </ul>
-    </div>  
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> QuickFF
+          
+
+          
+            
+            <img src="../_static/quickff_logo_trans_small.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../papers.html">QuickFF literature</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ig.html">Installation Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../ig.html#dependencies">Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ig.html#molmod-dependency">MolMod dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ig.html#yaff-dependency">Yaff dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ig.html#external-dependencies">External dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ig.html#downloading-quickff">Downloading QuickFF</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ig.html#stable-release">Stable release</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ig.html#latest-development-version-experts-only">Latest development version (experts only)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ig.html#installing-quickff">Installing QuickFF</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ug.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../ug.html#quickff-settings">QuickFF Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#settings-description">Settings description</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../ug.html#general-settings">General settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../ug.html#input-output-settings">Input/output settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../ug.html#reference-force-field-contribution-settings">Reference force field contribution settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../ug.html#force-field-expression-settings">Force field expression settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../ug.html#fitting-algorithm-settings">Fitting algorithm settings</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#default-settings">Default settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ug.html#preparing-electrostatic-force-field">Preparing electrostatic force field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ug.html#quickff-main-script-qff-py">QuickFF main script qff.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#mandatory-input-files">Mandatory input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#optional-input-files">Optional input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#automatic-estimation-of-atom-types">Automatic estimation of atom types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#miscellanous-options">Miscellanous options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#output">Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#logging">Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#parallel-quickff">Parallel QuickFF</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ug.html#importing-quickff-as-a-library">Importing QuickFF as a library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#define-the-system">Define the system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#define-the-ab-initio-reference">Define the ab initio reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#define-force-field-reference-objects">Define force field reference objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#define-the-program-and-run-it">Define the program and run it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ug.html#id3">Logging</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tu.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tu.html#tutorial-1-benzene">Tutorial 1 - Benzene</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tu.html#covalent-force-field-without-non-bonding-terms">Covalent force field without non-bonding terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tu.html#force-field-with-electrostatics">Force field with electrostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tu.html#tutorial-2-water">Tutorial 2 - Water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tu.html#tutorial-3-biphenyl">Tutorial 3 - Biphenyl</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../vl.html">Validation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../vl.html#validation-methodology">Validation methodology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../vl.html#validation-1-water">Validation 1 - Water</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../vl.html#force-field-construction">Force field construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../vl.html#force-field-evaluation">Force field evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../vl.html#perturbation-trajectories">Perturbation trajectories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../vl.html#geometry-and-frequencies">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../vl.html#validation-2-benzene">Validation 2 - Benzene</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../vl.html#id1">Force field construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../vl.html#id2">Force field evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../vl.html#id3">Perturbation trajectories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../vl.html#id4">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rg.html">Reference Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../rg.html#modules">Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../rg.html#module-quickff.cost"><code class="docutils literal"><span class="pre">quickff.cost</span></code> – Least-Square cost function for hessian matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../rg.html#module-quickff.io"><code class="docutils literal"><span class="pre">quickff.io</span></code> – Input/Ouput methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../rg.html#module-quickff.settings"><code class="docutils literal"><span class="pre">quickff.settings</span></code> – QuickFF configuration settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../rg.html#module-quickff.perturbation"><code class="docutils literal"><span class="pre">quickff.perturbation</span></code> – Perturbation trajectories for internal coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../rg.html#module-quickff.program"><code class="docutils literal"><span class="pre">quickff.program</span></code> – Program classes implementing a sequence of fitting steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../rg.html#module-quickff.reference"><code class="docutils literal"><span class="pre">quickff.reference</span></code> – Representation of the ab initio reference data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../rg.html#module-quickff.tools"><code class="docutils literal"><span class="pre">quickff.tools</span></code> – Various convenient tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../rg.html#module-quickff.valence"><code class="docutils literal"><span class="pre">quickff.valence</span></code> – ValenceFF class storing all valence ff terms</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../rg.html#scripts">Scripts</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">QuickFF</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>QuickFF Settings</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/trash/ug_settings.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="quickff-settings">
 <span id="seclab-ug-settings"></span><h1>QuickFF Settings<a class="headerlink" href="#quickff-settings" title="Permalink to this headline">¶</a></h1>
@@ -78,7 +290,7 @@ overwrite the default file <code class="docutils literal"><span class="pre">quic
 the Settings routine, either by an entry in the configuration file (CF) denoted
 in <em>italics</em> or by a keyword arguments (KA) denoted by <code class="docutils literal"><span class="pre">shading</span></code>. The default
 value for each setting is given in the <code class="docutils literal"><span class="pre">quickffrc</span></code> file (see
-<a class="reference internal" href="#sec-ug-settings-default"><span class="std std-ref">below</span></a>). If you are looking for the meaning of
+<a class="reference internal" href="../ug.html#sec-ug-settings-default"><span class="std std-ref">below</span></a>). If you are looking for the meaning of
 a specific setting in the config file, use the <a class="reference internal" href="../search.html"><span class="std std-ref">Search Page</span></a>.</p>
 <div class="section" id="general-settings">
 <h3>General settings<a class="headerlink" href="#general-settings" title="Permalink to this headline">¶</a></h3>
@@ -208,7 +420,7 @@ basenames. This options is only applied in the <em>MakeTrajectories</em> program
 <p>Definition of the atom types. Can either be a list of strings, defining the
 atom type of each atom in the system. Alternatively, one can also estimate
 the atom types automatically according to one of the available levels:
-<em>low</em>, <em>medium</em>, <em>high</em> or <em>highest</em> (see <a class="reference internal" href="../ug_script.html#seclab-ug-atype-estimator"><span class="std std-ref">automatic estimation of atom types</span></a> for more details).</p>
+<em>low</em>, <em>medium</em>, <em>high</em> or <em>highest</em> (see <a class="reference internal" href="../ug.html#seclab-ug-atype-estimator"><span class="std std-ref">automatic estimation of atom types</span></a> for more details).</p>
 </li>
 <li><p class="first"><strong>Exclude specific bonds</strong> (CG: <em>excl_bonds</em>, KA: N/A)</p>
 <blockquote>
@@ -301,13 +513,13 @@ the corresponding dihedral angle.</p>
 following possibilities:</p>
 <ul>
 <li><p class="first"><em>bondharm</em>: harmonic potential</p>
-<p><img class="math" src="../_images/math/2a02334c973800f26998790740e9b3bed00c63d9.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2"/></p>
+<p><img class="math" src="../_images/math/8c23191d9fad5131d4815d4a07718a60bfc1c65d.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2"/></p>
 </li>
-<li><p class="first"><em>bondfues</em>: Fues potential, i.e. harmonic in <img class="math" src="../_images/math/76077b035370e6aad28976c75e6148eed7baf610.png" alt="\frac{1}{r}"/></p>
-<p><img class="math" src="../_images/math/f72c718613fdb429b5e09cfe4f26339521251d10.png" alt="V(r)=\frac{K}{2}\left(\frac{1}{r}-\frac{1}{r_0}\right)^2"/></p>
+<li><p class="first"><em>bondfues</em>: Fues potential, i.e. harmonic in <img class="math" src="../_images/math/31d9fca010513a1f0102a8e2c9e4c188b270bda3.png" alt="\frac{1}{r}"/></p>
+<p><img class="math" src="../_images/math/fdce0ec63f833f15fca79b9179733fa7a259a478.png" alt="V(r)=\frac{K}{2}\left(\frac{1}{r}-\frac{1}{r_0}\right)^2"/></p>
 </li>
-<li><p class="first"><em>bondmm3</em>:  the anharmonic bond potential from the MM3 force field (<img class="math" src="../_images/math/7183c7deeb9a718911d1d83c0d40438cb00f331e.png" alt="\alpha=2.55 \text{\AA}^{-1}"/>)</p>
-<p><img class="math" src="../_images/math/c9789ff5a911c2c494d96281caddc95515120e7e.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2\left[1-\alpha\left(r-r_0\right)+\frac{7}{12}\alpha^2\left(r-r_0\right)^2\right]"/></p>
+<li><p class="first"><em>bondmm3</em>:  the anharmonic bond potential from the MM3 force field (<img class="math" src="../_images/math/327c8529368385a91fd6358e39fd7383a100d2fa.png" alt="\alpha=2.55 \text{\AA}^{-1}"/>)</p>
+<p><img class="math" src="../_images/math/76f85782110154d90fa205ea12e84d8dec8cb321.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2\left[1-\alpha\left(r-r_0\right)+\frac{7}{12}\alpha^2\left(r-r_0\right)^2\right]"/></p>
 </li>
 </ul>
 </div></blockquote>
@@ -318,11 +530,11 @@ following possibilities:</p>
 following possibilities:</p>
 <ul>
 <li><p class="first"><em>bendharm</em>: harmonic potential</p>
-<p><img class="math" src="../_images/math/2a02334c973800f26998790740e9b3bed00c63d9.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2"/></p>
+<p><img class="math" src="../_images/math/8c23191d9fad5131d4815d4a07718a60bfc1c65d.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2"/></p>
 </li>
 <li><p class="first"><em>bendmm3</em>:  the anharmonic bend potential from the MM3 force field</p>
-<p><img class="math" src="../_images/math/b81f0bbaf08a59a675d83e353f3041ff65cfd46b.png" alt="V(r)=\frac{K}{2}\left(\theta-\theta_0\right)^2\left[1-\alpha_1\left(\theta-\theta_0\right)+\alpha_2\left(\theta-\theta_0\right)^2-\alpha_3\left(\theta-\theta_0\right)^3+\alpha_4\left(\theta-\theta_0\right)^4\right]"/></p>
-<p><img class="math" src="../_images/math/265e5b1ac589e16f561b784e88c19f882367106f.png" alt="\alpha_1=1.4\cdot 10^{-2}\ \text{deg}^{-1}"/>, <img class="math" src="../_images/math/cea34f3871f4037c40b1dbc8b42cca89ec290673.png" alt="\alpha_2=5.6\cdot 10^{-5}\ \text{deg}^{-2}"/>, <img class="math" src="../_images/math/f518fb7016c08810cf8cdd9481af00726ae4fa65.png" alt="\alpha_3=7.0\cdot 10^{-7}\ \text{deg}^{-3}"/> and <img class="math" src="../_images/math/6dc7aee27dd54ad70532f4d455325bcd4a0e3dff.png" alt="\alpha_4=2.2\cdot 10^{-8}\ \text{deg}^{-4}"/></p>
+<p><img class="math" src="../_images/math/c3e1b5eb792b6db4816f2dbab329993d5bfed8b5.png" alt="V(r)=\frac{K}{2}\left(\theta-\theta_0\right)^2\left[1-\alpha_1\left(\theta-\theta_0\right)+\alpha_2\left(\theta-\theta_0\right)^2-\alpha_3\left(\theta-\theta_0\right)^3+\alpha_4\left(\theta-\theta_0\right)^4\right]"/></p>
+<p><img class="math" src="../_images/math/8150fb7e24a97a8ce52f305d02cb45e129c1fc66.png" alt="\alpha_1=1.4\cdot 10^{-2}\ \text{deg}^{-1}"/>, <img class="math" src="../_images/math/89588976135afed9c96b1e6f65e78ed47b1b8dad.png" alt="\alpha_2=5.6\cdot 10^{-5}\ \text{deg}^{-2}"/>, <img class="math" src="../_images/math/7ad40630a5ee431badd5e88f9c4017ae5ae8df9c.png" alt="\alpha_3=7.0\cdot 10^{-7}\ \text{deg}^{-3}"/> and <img class="math" src="../_images/math/0e9c1b610eb5a39405f23804f7a5c8aaf74edd41.png" alt="\alpha_4=2.2\cdot 10^{-8}\ \text{deg}^{-4}"/></p>
 </li>
 </ul>
 </div></blockquote>
@@ -335,7 +547,7 @@ not be adequate since a rest value of 90 and 180 degrees is possible for the
 same A-B-A term. Therefore, a cosine term with multiplicity of 4 is used
 (which corresponds to a chebychev4 potential with sign=-1):</p>
 <blockquote>
-<div><p><img class="math" src="../_images/math/c524ec9a67a564438763d69fdd56c82ef191910f.png" alt="V\left(\theta\right)= \frac{K}{2}\left[1-\cos\left(4\theta\right)\right]"/></p>
+<div><p><img class="math" src="../_images/math/498ed440e04445857c06358a7839ebeb6dbb2128.png" alt="V\left(\theta\right)= \frac{K}{2}\left[1-\cos\left(4\theta\right)\right]"/></p>
 </div></blockquote>
 <p>To identify the patterns, it is assumed that the rest values have already
 been estimated from the perturbation trajectories. For each master and slave
@@ -406,60 +618,62 @@ in the <code class="docutils literal"><span class="pre">share</span></code> dire
 </div>
 
 
+           </div>
+           
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">QuickFF Settings</a><ul>
-<li><a class="reference internal" href="#settings-description">Settings description</a><ul>
-<li><a class="reference internal" href="#general-settings">General settings</a></li>
-<li><a class="reference internal" href="#input-output-settings">Input/output settings</a></li>
-<li><a class="reference internal" href="#reference-force-field-contribution-settings">Reference force field contribution settings</a></li>
-<li><a class="reference internal" href="#force-field-expression-settings">Force field expression settings</a></li>
-<li><a class="reference internal" href="#fitting-algorithm-settings">Fitting algorithm settings</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#default-settings">Default settings</a></li>
-</ul>
-</li>
-</ul>
+          <footer>
+  
 
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="../_sources/trash/ug_settings.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Louis Vanduyfhuys, Center for Molecular Modeling, Ghent University
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
-      </ul>
-    </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'2.2.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
  <script type="text/javascript">
     $(document).ready(function() {
         $(".toggle > *").hide();
@@ -471,5 +685,6 @@ in the <code class="docutils literal"><span class="pre">share</span></code> dire
     });
 </script>
 
-  </body>
+
+</body>
 </html>
