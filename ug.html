@@ -264,18 +264,18 @@
 one should first configure the QuickFF run. This configuration includes all
 settings regarding input/output, the force field energy expression and the
 applied algorithms. This is done by means of the
-<a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-settings"><span class="std std-ref">Settings module</span></a>. A settings instance is
-constructed by <a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">the qff.py script</span></a> and
+<a class="reference internal" href="rg.html#seclab-rg-modules-settings"><span class="std std-ref">Settings module</span></a>. A settings instance is
+constructed by <a class="reference internal" href="rg.html#seclab-rg-scripts-qff"><span class="std std-ref">the qff.py script</span></a> and
 should also be constructed when
 <a class="reference internal" href="#seclab-ug-lib"><span class="std std-ref">using QuickFF as a library</span></a>. Furthermore, QuickFF
 can be used in two ways: by means of a single command using
-<a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">the qff.py script</span></a> or by
+<a class="reference internal" href="rg.html#seclab-rg-scripts-qff"><span class="std std-ref">the qff.py script</span></a> or by
 <a class="reference internal" href="#seclab-ug-lib"><span class="std std-ref">importing it as a Python library</span></a> in an external script.
 This guide elaborates on all these aspects.</p>
 <div class="section" id="quickff-settings">
 <h2>QuickFF Settings<a class="headerlink" href="#quickff-settings" title="Permalink to this headline">¶</a></h2>
 <p>The configuration parameters for the construction of the force field are stored
-in an instance of the <a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-settings"><span class="std std-ref">Settings</span></a> class. These
+in an instance of the <a class="reference internal" href="rg.html#seclab-rg-modules-settings"><span class="std std-ref">Settings</span></a> class. These
 configuration settings include:</p>
 <ul class="simple">
 <li>Configuration of the logger</li>
@@ -603,7 +603,7 @@ been estimated from the perturbation trajectories. For each master and slave
 of a BendAHarm term, its rest value is computed and checked if it lies
 either the interval [90-thresshold,90+thresshold] or [180-thresshold,180].
 If this is the case, the new cosine term is used (the thresshold is set to
-20 degrees in the routine <a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">do_squarebond routine</span></a>)</p>
+20 degrees in the routine <a class="reference internal" href="rg.html#seclab-rg-modules-program"><span class="std std-ref">do_squarebond routine</span></a>)</p>
 </div></blockquote>
 </li>
 <li><p class="first"><strong>Convert angle to BendCLin term</strong> (CF: <em>do_bendclin</em>, KA: N/A)</p>
@@ -744,7 +744,7 @@ in the <code class="docutils literal"><span class="pre">share</span></code> dire
 <h2>Preparing electrostatic force field<a class="headerlink" href="#preparing-electrostatic-force-field" title="Permalink to this headline">¶</a></h2>
 <p>A Yaff force field file for the electrostatic contribution can be constructed
 from the output of <a class="reference external" href="https://theochem.github.io/horton/">HORTON</a> using the
-<a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-inputei"><span class="std std-ref">qff-input-ei.py</span></a> script:</p>
+<a class="reference internal" href="rg.html#seclab-rg-scripts-inputei"><span class="std std-ref">qff-input-ei.py</span></a> script:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">qff</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">ei</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="n">fn_sys</span> <span class="n">fn_wpart</span><span class="p">:</span><span class="n">path</span>
 </pre></div>
 </div>
@@ -753,7 +753,7 @@ from the output of <a class="reference external" href="https://theochem.github.i
 <li><dl class="first docutils">
 <dt><code class="docutils literal"><span class="pre">fn_sys</span></code></dt>
 <dd>a file containing the system information. Any file type accepted by the
-main script <a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">qff.py</span></a> is also accepted here
+main script <a class="reference internal" href="rg.html#seclab-rg-scripts-qff"><span class="std std-ref">qff.py</span></a> is also accepted here
 (see <a class="reference internal" href="#seclab-inputfiles"><span class="std std-ref">input files</span></a>).</dd>
 </dl>
 </li>
@@ -788,7 +788,7 @@ default, the atom types are assumed to be defined in <code class="docutils liter
 determined according to the precedure of
 <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0009261407002618">Chen et al.</a>,
 implemented in the routine <code class="docutils literal"><span class="pre">get_ei_radii</span></code> from the
-<a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-tools"><span class="std std-ref">tools</span></a> module.</dd>
+<a class="reference internal" href="rg.html#seclab-rg-modules-tools"><span class="std std-ref">tools</span></a> module.</dd>
 </dl>
 </li>
 </ul>
@@ -813,7 +813,7 @@ type specification might then be adequate.</p>
 <div class="section" id="quickff-main-script-qff-py">
 <h2>QuickFF main script qff.py<a class="headerlink" href="#quickff-main-script-qff-py" title="Permalink to this headline">¶</a></h2>
 <p>The most straightforward use of QuickFF is by means of a single command using
-the <a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">qff.py</span></a> script. The basic usage of this script
+the <a class="reference internal" href="rg.html#seclab-rg-scripts-qff"><span class="std std-ref">qff.py</span></a> script. The basic usage of this script
 is as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">qff</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="n">fns</span>
 </pre></div>
@@ -873,7 +873,7 @@ in the following format:</p>
 the option <code class="xref std std-option docutils literal"><span class="pre">--ei=EI</span></code>. EI should be the file name of a Yaff parameter
 file containing the electrostatic contribution. Such a parameter file can
 be <a class="reference internal" href="#seclab-ug-tools-inputei"><span class="std std-ref">generated</span></a>. from a HDF5 file containing charges using the script
-<a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-inputei"><span class="std std-ref">qff-input-ei.py</span></a>.</dd>
+<a class="reference internal" href="rg.html#seclab-rg-scripts-inputei"><span class="std std-ref">qff-input-ei.py</span></a>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
@@ -946,7 +946,7 @@ will exactly do.</p>
 <dt>Program mode (<code class="xref std std-option docutils literal"><span class="pre">-m</span> <span class="pre">PROGRAM_MODE</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--program-mode=PROGRAM_MODE</span></code>):</dt>
 <dd>Specify the program mode which defines the set of instructions that will be
 executed. Allowed strings are the names of the program classes defined in
-the <a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">program</span></a> module. Be carefull, these
+the <a class="reference internal" href="rg.html#seclab-rg-modules-program"><span class="std std-ref">program</span></a> module. Be carefull, these
 names are case sensitive. By default, the program <cite>DeriveNonDiagFF</cite> will be
 used.</dd>
 </dl>
@@ -1121,7 +1121,7 @@ using Yaff as a library. For more information see page in the Yaff manual on
 <div class="section" id="define-the-program-and-run-it">
 <h3>Define the program and run it<a class="headerlink" href="#define-the-program-and-run-it" title="Permalink to this headline">¶</a></h3>
 <p>Finally, one has to define a program, which is a sequence of routines of the
-BaseProgram class (see <a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">Reference Guide</span></a> for
+BaseProgram class (see <a class="reference internal" href="rg.html#seclab-rg-modules-program"><span class="std std-ref">Reference Guide</span></a> for
 more information). For our example of a single hydrogen molecule, one could get
 an accurate estimate of both the bond rest value and its force constant from the
 perturbation trajectories without force constant refinement:</p>
@@ -1138,7 +1138,7 @@ perturbation trajectories without force constant refinement:</p>
 </div>
 <p>The arguments of the initializer of CustomProgram, both mandatory and keyword
 arguments, are the same as the BaseProgram class (see
-<a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">Reference Guide</span></a> for more information).</p>
+<a class="reference internal" href="rg.html#seclab-rg-modules-program"><span class="std std-ref">Reference Guide</span></a> for more information).</p>
 </div>
 <div class="section" id="id3">
 <h3>Logging<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>

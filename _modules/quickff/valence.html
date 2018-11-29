@@ -440,7 +440,7 @@
         <span class="k">return</span> <span class="n">line</span>
 
 
-<div class="viewcode-block" id="ValenceFF"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF">[docs]</a><span class="k">class</span> <span class="nc">ValenceFF</span><span class="p">(</span><span class="n">ForcePartValence</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF">[docs]</a><span class="k">class</span> <span class="nc">ValenceFF</span><span class="p">(</span><span class="n">ForcePartValence</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Class to collect all valence terms in the force field for which</span>
 <span class="sd">        parameters need to be estimated.</span>
@@ -471,7 +471,7 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">do_oops</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">init_oop_terms</span><span class="p">()</span>
 
-<div class="viewcode-block" id="ValenceFF.add_term"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.add_term">[docs]</a>    <span class="k">def</span> <span class="nf">add_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pot</span><span class="p">,</span> <span class="n">ics</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.add_term"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.add_term">[docs]</a>    <span class="k">def</span> <span class="nf">add_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pot</span><span class="p">,</span> <span class="n">ics</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Adds new term both to the Yaff vlist object and a new QuickFF</span>
 <span class="sd">            list (self.terms) which holds all information about the term</span>
@@ -527,7 +527,7 @@
         <span class="n">ForcePartValence</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pot</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">term</span></div>
 
-<div class="viewcode-block" id="ValenceFF.modify_term"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.modify_term">[docs]</a>    <span class="k">def</span> <span class="nf">modify_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term_index</span><span class="p">,</span> <span class="n">pot</span><span class="p">,</span> <span class="n">ics</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.modify_term"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.modify_term">[docs]</a>    <span class="k">def</span> <span class="nf">modify_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term_index</span><span class="p">,</span> <span class="n">pot</span><span class="p">,</span> <span class="n">ics</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Modify the term with given index to a new valence term.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -556,7 +556,7 @@
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ic_indexes</span><span class="p">)):</span>
                 <span class="n">vterm</span><span class="p">[</span><span class="s1">&#39;ic</span><span class="si">%i</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ic_indexes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="ValenceFF.iter_terms"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.iter_terms">[docs]</a>    <span class="k">def</span> <span class="nf">iter_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_re</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.iter_terms"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.iter_terms">[docs]</a>    <span class="k">def</span> <span class="nf">iter_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_re</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Iterate over all terms in the valence force field. If label is</span>
 <span class="sd">            given, only iterate over terms that matches label.</span>
@@ -576,7 +576,7 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">continue</span></div>
 
-<div class="viewcode-block" id="ValenceFF.iter_masters"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.iter_masters">[docs]</a>    <span class="k">def</span> <span class="nf">iter_masters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_re</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.iter_masters"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.iter_masters">[docs]</a>    <span class="k">def</span> <span class="nf">iter_masters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_re</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Iterate over all master terms in the valence force field. If label</span>
 <span class="sd">            is given, only iterate of the terms with the label in its name.</span>
@@ -585,7 +585,7 @@
             <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">is_master</span><span class="p">():</span>
                 <span class="k">yield</span> <span class="n">term</span></div>
 
-<div class="viewcode-block" id="ValenceFF.init_bond_terms"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.init_bond_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_bond_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.init_bond_terms"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.init_bond_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_bond_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Initialize all bond terms in the system based on the bonds attribute</span>
 <span class="sd">            of the system instance. All bond terms are given harmonic</span>
@@ -629,7 +629,7 @@
                     <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Excluded </span><span class="si">%s</span><span class="s1"> bond&#39;</span><span class="o">%</span><span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">))</span>
         <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Added </span><span class="si">%i</span><span class="s1"> bond terms&#39;</span> <span class="o">%</span><span class="n">nbonds</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ValenceFF.init_bend_terms"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.init_bend_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_bend_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.init_bend_terms"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.init_bend_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_bend_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Initialize all bend terms in the system based on the bends attribute</span>
 <span class="sd">            of the system instance. All bend terms are given harmonic</span>
@@ -720,7 +720,7 @@
                         <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Excluded </span><span class="si">%s</span><span class="s1"> bend&#39;</span><span class="o">%</span><span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">))</span>
         <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Added </span><span class="si">%i</span><span class="s1"> bend terms (an)harmonic in the angle, </span><span class="si">%i</span><span class="s1"> bend terms with 1+cos(angle) potential and </span><span class="si">%i</span><span class="s1"> bend terms with 1-cos(4*theta) potential.&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">nabends</span><span class="p">,</span> <span class="n">ncbends</span><span class="p">,</span> <span class="n">nsqbends</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="ValenceFF.init_dihedral_terms"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.init_dihedral_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_dihedral_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">20</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.init_dihedral_terms"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.init_dihedral_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_dihedral_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">20</span><span class="o">*</span><span class="n">deg</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Initialize the dihedral potentials from the local topology. The</span>
 <span class="sd">            dihedral potential will be one of the two following possibilities:</span>
@@ -853,7 +853,7 @@
                     <span class="k">continue</span>
             <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Added </span><span class="si">%i</span><span class="s1"> Cosine dihedral terms (of which </span><span class="si">%i</span><span class="s1"> are described using Chebychev terms)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ncos</span><span class="o">+</span><span class="n">ncheb</span><span class="p">,</span> <span class="n">ncheb</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="ValenceFF.init_oop_terms"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.init_oop_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_oop_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold_zero</span><span class="o">=</span><span class="mf">5e-2</span><span class="o">*</span><span class="n">angstrom</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.init_oop_terms"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.init_oop_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_oop_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thresshold_zero</span><span class="o">=</span><span class="mf">5e-2</span><span class="o">*</span><span class="n">angstrom</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Initialize all out-of-plane terms in the system based on the oops</span>
 <span class="sd">            attribute of the system instance. All oops are given harmonic</span>
@@ -929,7 +929,7 @@
                     <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Excluded </span><span class="si">%s</span><span class="s1"> oopd&#39;</span><span class="o">%</span><span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">))</span>
         <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Added </span><span class="si">%i</span><span class="s1"> Harmonic and </span><span class="si">%i</span><span class="s1"> SquareHarmonic out-of-plane distance terms&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">nharm</span><span class="p">,</span> <span class="n">nsq</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="ValenceFF.init_cross_angle_terms"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.init_cross_angle_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_cross_angle_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.init_cross_angle_terms"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.init_cross_angle_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_cross_angle_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Initialize cross terms between bonds and bends.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -1013,7 +1013,7 @@
                             <span class="n">nsa</span> <span class="o">+=</span> <span class="mi">2</span>
             <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Added </span><span class="si">%i</span><span class="s1"> stretch-stretch and </span><span class="si">%i</span><span class="s1"> stretch-angle cross terms from angle patterns&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">nss</span><span class="p">,</span> <span class="n">nsa</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="ValenceFF.init_cross_dihed_terms"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.init_cross_dihed_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_cross_dihed_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.init_cross_dihed_terms"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.init_cross_dihed_terms">[docs]</a>    <span class="k">def</span> <span class="nf">init_cross_dihed_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Initialize cross terms between diheds and bonds,bends.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -1170,7 +1170,7 @@
                         <span class="k">continue</span>
         <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;Added </span><span class="si">%i</span><span class="s1"> stretch-stretch, </span><span class="si">%i</span><span class="s1"> stretch-dihedral, </span><span class="si">%i</span><span class="s1"> angle-angle and </span><span class="si">%i</span><span class="s1"> angle-dihedral cross terms from dihedral patterns&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">nss</span><span class="p">,</span> <span class="n">nsd</span><span class="p">,</span> <span class="n">naa</span><span class="p">,</span> <span class="n">nad</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="ValenceFF.apply_constraints"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.apply_constraints">[docs]</a>    <span class="k">def</span> <span class="nf">apply_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constraints</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.apply_constraints"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.apply_constraints">[docs]</a>    <span class="k">def</span> <span class="nf">apply_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constraints</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Routine to apply equality constraints in the force field fitting</span>
 
@@ -1205,7 +1205,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">vlist</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">energy</span>
 
-<div class="viewcode-block" id="ValenceFF.get_hessian_contrib"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.get_hessian_contrib">[docs]</a>    <span class="k">def</span> <span class="nf">get_hessian_contrib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.get_hessian_contrib"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.get_hessian_contrib">[docs]</a>    <span class="k">def</span> <span class="nf">get_hessian_contrib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Get the contribution to the covalent hessian of term with given</span>
 <span class="sd">            index (and its slaves). If fc is given, set the fc of the master</span>
@@ -1345,7 +1345,7 @@
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s1">&#39;get_params not implemented for Yaff </span><span class="si">%s</span><span class="s1"> term&#39;</span> <span class="o">%</span> <span class="n">term</span><span class="p">[</span><span class="s1">&#39;kind&#39;</span><span class="p">])</span>
 
-<div class="viewcode-block" id="ValenceFF.is_negligible"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.is_negligible">[docs]</a>    <span class="k">def</span> <span class="nf">is_negligible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term_index</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.is_negligible"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.is_negligible">[docs]</a>    <span class="k">def</span> <span class="nf">is_negligible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term_index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return True if the given term can be neglected (e.g. in parameter files).&quot;&quot;&quot;</span>
         <span class="c1"># Note that the units may not be strictly correct: below per angstrom, radian</span>
         <span class="c1"># squared, etc should be used. Because that would not affect the order of</span>
@@ -1370,7 +1370,7 @@
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s1">&#39;is_negligible not implemented for Yaff </span><span class="si">%s</span><span class="s1"> term&#39;</span> <span class="o">%</span> <span class="n">term</span><span class="p">[</span><span class="s1">&#39;kind&#39;</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="ValenceFF.check_params"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.valence.ValenceFF.check_params">[docs]</a>    <span class="k">def</span> <span class="nf">check_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+<div class="viewcode-block" id="ValenceFF.check_params"><a class="viewcode-back" href="../../rg.html#quickff.valence.ValenceFF.check_params">[docs]</a>    <span class="k">def</span> <span class="nf">check_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Check whether the given term has all given pars defined in</span>
 <span class="sd">            labels.</span>
