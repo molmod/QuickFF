@@ -155,7 +155,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../vl.html">Validation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-methodology">Validation methodology</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-1-water">Validation 1 - Water</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-1-water">Validation 1 - water</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#force-field-construction">Force field construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#force-field-evaluation">Force field evaluation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../vl.html#perturbation-trajectories">Perturbation trajectories</a></li>
@@ -164,7 +164,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-2-benzene">Validation 2 - Benzene</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-2-benzene">Validation 2 - benzene</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#id1">Force field construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#id2">Force field evaluation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../vl.html#id3">Perturbation trajectories</a></li>
@@ -304,7 +304,7 @@
            <span class="s1">&#39;dump_charmm22_psf&#39;</span><span class="p">,</span> <span class="s1">&#39;dump_yaff&#39;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="VASPRun"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.io.VASPRun">[docs]</a><span class="k">class</span> <span class="nc">VASPRun</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="VASPRun"><a class="viewcode-back" href="../../rg.html#quickff.io.VASPRun">[docs]</a><span class="k">class</span> <span class="nc">VASPRun</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="c1">#TODO Figure out the logic begind vasprun.xml to parse it in a more structured manner</span>
     <span class="c1">#TODO Test on more files</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -371,7 +371,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="o">*</span><span class="n">unit</span></div>
 
 
-<div class="viewcode-block" id="read_abinitio"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.io.read_abinitio">[docs]</a><span class="k">def</span> <span class="nf">read_abinitio</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">do_hess</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="read_abinitio"><a class="viewcode-back" href="../../rg.html#quickff.io.read_abinitio">[docs]</a><span class="k">def</span> <span class="nf">read_abinitio</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">do_hess</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Wrapper to read all information from an ab initio calculation that</span>
 <span class="sd">        QuickFF needs. Currently Gaussian .fchk and VASP .xml files are</span>
@@ -621,7 +621,7 @@
     <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="dump_charmm22_prm"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.io.dump_charmm22_prm">[docs]</a><span class="k">def</span> <span class="nf">dump_charmm22_prm</span><span class="p">(</span><span class="n">valence</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+<div class="viewcode-block" id="dump_charmm22_prm"><a class="viewcode-back" href="../../rg.html#quickff.io.dump_charmm22_prm">[docs]</a><span class="k">def</span> <span class="nf">dump_charmm22_prm</span><span class="p">(</span><span class="n">valence</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dump supported parameters in a CHARMM22 parameter file.</span>
 
 <span class="sd">       **Arguments**</span>
@@ -721,7 +721,7 @@
     <span class="k">return</span> <span class="n">_ics_to_charmm22_psf</span><span class="p">(</span><span class="n">valence</span><span class="p">,</span> <span class="s1">&#39;TORS&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{:8d}</span><span class="s1"> !NPHI: dihedrals&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="dump_charmm22_psf"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.io.dump_charmm22_psf">[docs]</a><span class="k">def</span> <span class="nf">dump_charmm22_psf</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">valence</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+<div class="viewcode-block" id="dump_charmm22_psf"><a class="viewcode-back" href="../../rg.html#quickff.io.dump_charmm22_psf">[docs]</a><span class="k">def</span> <span class="nf">dump_charmm22_psf</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">valence</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dump supported internal coordinates in a CHARMM psf file.</span>
 
 <span class="sd">       **Arguments**</span>

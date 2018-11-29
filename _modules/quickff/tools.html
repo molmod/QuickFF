@@ -155,7 +155,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../vl.html">Validation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-methodology">Validation methodology</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-1-water">Validation 1 - Water</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-1-water">Validation 1 - water</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#force-field-construction">Force field construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#force-field-evaluation">Force field evaluation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../vl.html#perturbation-trajectories">Perturbation trajectories</a></li>
@@ -164,7 +164,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-2-benzene">Validation 2 - Benzene</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-2-benzene">Validation 2 - benzene</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#id1">Force field construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#id2">Force field evaluation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../vl.html#id3">Perturbation trajectories</a></li>
@@ -301,7 +301,7 @@
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="global_translation"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.global_translation">[docs]</a><span class="k">def</span> <span class="nf">global_translation</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
+<div class="viewcode-block" id="global_translation"><a class="viewcode-back" href="../../rg.html#quickff.tools.global_translation">[docs]</a><span class="k">def</span> <span class="nf">global_translation</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        A function to generate vectors that represent global translations</span>
 <span class="sd">        of a system.</span>
@@ -321,7 +321,7 @@
     <span class="k">return</span> <span class="n">VTx</span><span class="p">,</span> <span class="n">VTy</span><span class="p">,</span> <span class="n">VTz</span></div>
 
 
-<div class="viewcode-block" id="global_rotation"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.global_rotation">[docs]</a><span class="k">def</span> <span class="nf">global_rotation</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
+<div class="viewcode-block" id="global_rotation"><a class="viewcode-back" href="../../rg.html#quickff.tools.global_rotation">[docs]</a><span class="k">def</span> <span class="nf">global_rotation</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        A function to generate vectors that represent global translations</span>
 <span class="sd">        of a system. Rx is a matrix of rotatino around the x-axis minus</span>
@@ -360,7 +360,7 @@
     <span class="k">return</span> <span class="n">VRx</span><span class="p">,</span> <span class="n">VRy</span><span class="p">,</span> <span class="n">VRz</span></div>
 
 
-<div class="viewcode-block" id="fitpar"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.fitpar">[docs]</a><span class="k">def</span> <span class="nf">fitpar</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="fitpar"><a class="viewcode-back" href="../../rg.html#quickff.tools.fitpar">[docs]</a><span class="k">def</span> <span class="nf">fitpar</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Fit a parabola to the samples (xs, ys):</span>
 
@@ -387,7 +387,7 @@
     <span class="k">return</span> <span class="n">sol</span></div>
 
 
-<div class="viewcode-block" id="boxqp"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.boxqp">[docs]</a><span class="k">def</span> <span class="nf">boxqp</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">bndl</span><span class="p">,</span> <span class="n">bndu</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="boxqp"><a class="viewcode-back" href="../../rg.html#quickff.tools.boxqp">[docs]</a><span class="k">def</span> <span class="nf">boxqp</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">bndl</span><span class="p">,</span> <span class="n">bndu</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Minimize the function</span>
 
@@ -456,7 +456,7 @@
     <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">x1</span></div>
 
 
-<div class="viewcode-block" id="set_ffatypes"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.set_ffatypes">[docs]</a><span class="k">def</span> <span class="nf">set_ffatypes</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+<div class="viewcode-block" id="set_ffatypes"><a class="viewcode-back" href="../../rg.html#quickff.tools.set_ffatypes">[docs]</a><span class="k">def</span> <span class="nf">set_ffatypes</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">       A method to guess atom types. This will overwrite ffatypes</span>
 <span class="sd">       that are already defined in the system.</span>
@@ -529,7 +529,7 @@
     <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="term_sort_atypes"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.term_sort_atypes">[docs]</a><span class="k">def</span> <span class="nf">term_sort_atypes</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">,</span> <span class="n">indexes</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+<div class="viewcode-block" id="term_sort_atypes"><a class="viewcode-back" href="../../rg.html#quickff.tools.term_sort_atypes">[docs]</a><span class="k">def</span> <span class="nf">term_sort_atypes</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">,</span> <span class="n">indexes</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Routine to sort the atoms defined in indexes to give consistent term</span>
 <span class="sd">        names. This routine returns the sorted atom indexes as well as the</span>
@@ -562,7 +562,7 @@
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sorted_indexes</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sorted_atypes</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_multiplicity"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.get_multiplicity">[docs]</a><span class="k">def</span> <span class="nf">get_multiplicity</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+<div class="viewcode-block" id="get_multiplicity"><a class="viewcode-back" href="../../rg.html#quickff.tools.get_multiplicity">[docs]</a><span class="k">def</span> <span class="nf">get_multiplicity</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
     <span class="s1">&#39;Routine to estimate m from local topology&#39;</span>
     <span class="k">if</span>   <span class="nb">set</span><span class="p">([</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">])</span><span class="o">==</span><span class="nb">set</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]):</span> <span class="k">return</span> <span class="mi">3</span>
     <span class="k">elif</span> <span class="nb">set</span><span class="p">([</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">])</span><span class="o">==</span><span class="nb">set</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]):</span> <span class="k">return</span> <span class="mi">6</span>
@@ -573,7 +573,7 @@
     <span class="k">else</span><span class="p">:</span>                          <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span></div>
 
 
-<div class="viewcode-block" id="get_restvalue"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.get_restvalue">[docs]</a><span class="k">def</span> <span class="nf">get_restvalue</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">20</span><span class="o">*</span><span class="n">deg</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="get_restvalue"><a class="viewcode-back" href="../../rg.html#quickff.tools.get_restvalue">[docs]</a><span class="k">def</span> <span class="nf">get_restvalue</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">20</span><span class="o">*</span><span class="n">deg</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Get a rest value of 0.0, 360/(2*m) or None depending on the given</span>
 <span class="sd">        equilbrium values.</span>
@@ -637,7 +637,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Mode </span><span class="si">%i</span><span class="s1"> in get_restvalue is not supported&#39;</span> <span class="o">%</span><span class="n">mode</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_ei_radii"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.get_ei_radii">[docs]</a><span class="k">def</span> <span class="nf">get_ei_radii</span><span class="p">(</span><span class="n">numbers</span><span class="p">):</span>
+<div class="viewcode-block" id="get_ei_radii"><a class="viewcode-back" href="../../rg.html#quickff.tools.get_ei_radii">[docs]</a><span class="k">def</span> <span class="nf">get_ei_radii</span><span class="p">(</span><span class="n">numbers</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Routine to return atomic radii for use in the Gaussian charge</span>
 <span class="sd">        distribution. These radii are computed according to the procedure of</span>
@@ -672,7 +672,7 @@
     <span class="k">return</span> <span class="n">values</span></div>
 
 
-<div class="viewcode-block" id="digits"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.digits">[docs]</a><span class="k">def</span> <span class="nf">digits</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+<div class="viewcode-block" id="digits"><a class="viewcode-back" href="../../rg.html#quickff.tools.digits">[docs]</a><span class="k">def</span> <span class="nf">digits</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns a string representation of x with exactly n digits if possible.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -701,7 +701,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%i</span><span class="s1">.</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">ndig</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="average"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.average">[docs]</a><span class="k">def</span> <span class="nf">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="average"><a class="viewcode-back" href="../../rg.html#quickff.tools.average">[docs]</a><span class="k">def</span> <span class="nf">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Average the atomic parameters stored in data over atoms of the same atom</span>
 <span class="sd">        type.</span>

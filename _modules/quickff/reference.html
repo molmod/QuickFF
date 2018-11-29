@@ -155,7 +155,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../vl.html">Validation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-methodology">Validation methodology</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-1-water">Validation 1 - Water</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-1-water">Validation 1 - water</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#force-field-construction">Force field construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#force-field-evaluation">Force field evaluation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../vl.html#perturbation-trajectories">Perturbation trajectories</a></li>
@@ -164,7 +164,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-2-benzene">Validation 2 - Benzene</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-2-benzene">Validation 2 - benzene</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#id1">Force field construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#id2">Force field evaluation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../vl.html#id3">Perturbation trajectories</a></li>
@@ -319,7 +319,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
 
-<div class="viewcode-block" id="SecondOrderTaylor"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.reference.SecondOrderTaylor">[docs]</a><span class="k">class</span> <span class="nc">SecondOrderTaylor</span><span class="p">(</span><span class="n">Reference</span><span class="p">):</span>
+<div class="viewcode-block" id="SecondOrderTaylor"><a class="viewcode-back" href="../../rg.html#quickff.reference.SecondOrderTaylor">[docs]</a><span class="k">class</span> <span class="nc">SecondOrderTaylor</span><span class="p">(</span><span class="n">Reference</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Second-order Taylor expansion model, can be used for the ab initio input.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -335,7 +335,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">phess0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_phess</span><span class="p">()</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">SecondOrderTaylor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SecondOrderTaylor.update"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.reference.SecondOrderTaylor.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SecondOrderTaylor.update"><a class="viewcode-back" href="../../rg.html#quickff.reference.SecondOrderTaylor.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Method to update one or more of the attributes. The meaning of the</span>
 <span class="sd">            optional arguments is the same as with the constructor __init__</span>
@@ -395,7 +395,7 @@
             <span class="n">pbc</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords0</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="n">energy0</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="n">grad0</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="n">hess0</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="n">pbc</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SecondOrderTaylor.energy"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.reference.SecondOrderTaylor.energy">[docs]</a>    <span class="k">def</span> <span class="nf">energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+<div class="viewcode-block" id="SecondOrderTaylor.energy"><a class="viewcode-back" href="../../rg.html#quickff.reference.SecondOrderTaylor.energy">[docs]</a>    <span class="k">def</span> <span class="nf">energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Compute the energy for the given positions</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -406,7 +406,7 @@
         <span class="n">energy</span> <span class="o">+=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phess0</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">ndof</span><span class="p">,</span><span class="n">ndof</span><span class="p">]),</span> <span class="n">dx</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">energy</span></div>
 
-<div class="viewcode-block" id="SecondOrderTaylor.gradient"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.reference.SecondOrderTaylor.gradient">[docs]</a>    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+<div class="viewcode-block" id="SecondOrderTaylor.gradient"><a class="viewcode-back" href="../../rg.html#quickff.reference.SecondOrderTaylor.gradient">[docs]</a>    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Compute the gradient for the given positions</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -416,7 +416,7 @@
         <span class="n">grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad0</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">ndof</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phess0</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">ndof</span><span class="p">,</span><span class="n">ndof</span><span class="p">]),</span> <span class="n">dx</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">grad</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SecondOrderTaylor.hessian"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.reference.SecondOrderTaylor.hessian">[docs]</a>    <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+<div class="viewcode-block" id="SecondOrderTaylor.hessian"><a class="viewcode-back" href="../../rg.html#quickff.reference.SecondOrderTaylor.hessian">[docs]</a>    <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Compute the hessian for the given positions</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -424,7 +424,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">phess0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="YaffForceField"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.reference.YaffForceField">[docs]</a><span class="k">class</span> <span class="nc">YaffForceField</span><span class="p">(</span><span class="n">Reference</span><span class="p">):</span>
+<div class="viewcode-block" id="YaffForceField"><a class="viewcode-back" href="../../rg.html#quickff.reference.YaffForceField">[docs]</a><span class="k">class</span> <span class="nc">YaffForceField</span><span class="p">(</span><span class="n">Reference</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        A model object based on a YAFF force field. Such a model can be used</span>
 <span class="sd">        to account for non-covalent interactions or residual covalent</span>
@@ -452,7 +452,7 @@
         <span class="k">return</span> <span class="n">hess</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">natoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">natoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span></div>
 
 
-<div class="viewcode-block" id="get_ei_ff"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.reference.get_ei_ff">[docs]</a><span class="k">def</span> <span class="nf">get_ei_ff</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">scales</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]):</span>
+<div class="viewcode-block" id="get_ei_ff"><a class="viewcode-back" href="../../rg.html#quickff.reference.get_ei_ff">[docs]</a><span class="k">def</span> <span class="nf">get_ei_ff</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">scales</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        A routine to construct a Yaff force field for the electrostatics</span>
 

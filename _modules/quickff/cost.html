@@ -155,7 +155,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../vl.html">Validation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-methodology">Validation methodology</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-1-water">Validation 1 - Water</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-1-water">Validation 1 - water</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#force-field-construction">Force field construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#force-field-evaluation">Force field evaluation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../vl.html#perturbation-trajectories">Perturbation trajectories</a></li>
@@ -164,7 +164,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-2-benzene">Validation 2 - Benzene</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../vl.html#validation-2-benzene">Validation 2 - benzene</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#id1">Force field construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../vl.html#id2">Force field evaluation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../vl.html#id3">Perturbation trajectories</a></li>
@@ -292,7 +292,7 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;HessianFCCost&#39;</span><span class="p">]</span>
 
-<div class="viewcode-block" id="HessianFCCost"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.cost.HessianFCCost">[docs]</a><span class="k">class</span> <span class="nc">HessianFCCost</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="HessianFCCost"><a class="viewcode-back" href="../../rg.html#quickff.cost.HessianFCCost">[docs]</a><span class="k">class</span> <span class="nc">HessianFCCost</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        A class to implement the least-square cost function to fit the force</span>
 <span class="sd">        field hessian to the ab initio hessian.</span>
@@ -377,7 +377,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">[</span><span class="n">index2</span><span class="p">,</span><span class="n">index1</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span>
 
 
-<div class="viewcode-block" id="HessianFCCost.estimate"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.cost.HessianFCCost.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">do_svd</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">svd_rcond</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<div class="viewcode-block" id="HessianFCCost.estimate"><a class="viewcode-back" href="../../rg.html#quickff.cost.HessianFCCost.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">do_svd</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">svd_rcond</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Estimate the force constants by minimizing the cost function</span>
 

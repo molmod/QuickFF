@@ -157,7 +157,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Validation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#validation-methodology">Validation methodology</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#validation-1-water">Validation 1 - Water</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#validation-1-water">Validation 1 - water</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#force-field-construction">Force field construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#force-field-evaluation">Force field evaluation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#perturbation-trajectories">Perturbation trajectories</a></li>
@@ -166,7 +166,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#validation-2-benzene">Validation 2 - Benzene</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#validation-2-benzene">Validation 2 - benzene</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id1">Force field construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id2">Force field evaluation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id3">Perturbation trajectories</a></li>
@@ -366,7 +366,7 @@ following statistics are used:</p>
 </div>
 </div>
 <div class="section" id="validation-1-water">
-<span id="seclab-vl-water"></span><h2>Validation 1 - Water<a class="headerlink" href="#validation-1-water" title="Permalink to this headline">¶</a></h2>
+<span id="seclab-vl-water"></span><h2>Validation 1 - water<a class="headerlink" href="#validation-1-water" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="force-field-construction">
 <h3>Force field construction<a class="headerlink" href="#force-field-construction" title="Permalink to this headline">¶</a></h3>
 <div class="toggle docutils container">
@@ -378,9 +378,6 @@ following statistics are used:</p>
      O    -0.901 +-  0.000 (N=1)
 </pre></div>
 </div>
-</div>
-<div class="line-block">
-<div class="line"><br /></div>
 </div>
 <div class="toggle docutils container">
 <div class="header docutils container">
@@ -405,29 +402,123 @@ FIXQ:ATOM        O -0.9012712115  1.1325000000
 </pre></div>
 </div>
 </div>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
 <div class="toggle docutils container">
 <div class="header docutils container">
 <strong>Click to show/hide the QuickFF log file</strong></div>
-<div class="highlight-text"><div class="highlight"><pre><span></span>Traceback (most recent call last):
-  File &quot;/home/louis/build/anaconda3/bin/qff.py&quot;, line 38, in &lt;module&gt;
-    qff()
-  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/scripts.py&quot;, line 348, in qff
-    settings = Settings(fn=args.config_file, **kwargs)
-  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 177, in __init__
-    self.check()
-  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 241, in check
-    check_function(key,value)
-  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 83, in is_nonexisting_file_name
-    raise IOError(&#39;Setting for key %s should be non-existing file name, got %s which already exists.&#39; %(key, value))
-OSError: Setting for key fn_yaff should be non-existing file name, got pars_cov.txt which already exists.
+<div class="highlight-text"><div class="highlight"><pre><span></span>________________/\\\_________/\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\_________________
+______________/\\\\/\\\\_____\/\\\///////////__\/\\\///////////_________________
+_____________/\\\//\////\\\___\/\\\_____________\/\\\___________________________
+_____________/\\\______\//\\\__\/\\\\\\\\\\\_____\/\\\\\\\\\\\__________________
+_____________\//\\\______/\\\___\/\\\///////______\/\\\///////__________________
+_______________\///\\\\/\\\\/____\/\\\_____________\/\\\________________________
+__________________\////\\\//______\/\\\_____________\/\\\_______________________
+______________________\///\\\\\\___\/\\\_____________\/\\\______________________
+_________________________\//////____\///______________\///______________________
+
+                            Welcom to QuickFF
+   a Python package to quickly derive force fields from ab initio input data
+
+                                 Written by
+     Louis Vanduyfhuys(1)*, Steven Vandenbrande(1) and Toon Verstraelen(1)
+
+         (1) Center for Molecular Modeling, Ghent University Belgium.
+                   * mailto: Louis.Vanduyfhuys@UGent.be
+
+
+ USER               louis
+ MACHINE            Linux T085 4.15.0-39-generic #42-Ubuntu SMP Tue Oct 23 
+ MACHINE            15:48:01 UTC 2018 x86_64
+ TIME               2018-11-29 16:12:41.130271
+ QUICKFF VERSION    2.2.1
+ PYTHON VERSION     3.6.3 |Anaconda custom (64-bit)| (default, Oct 13 2017, 
+ PYTHON VERSION     12:02:49) [GCC 7.2.0]
+ NUMPY VERSION      1.13.3
+ SCIPY VERSION      0.19.1
+ MATPLOTLIB VERSION 2.1.0
+ CURRENT DIR        /home/louis/build/quickff/share/validation/water
+ COMMAND LINE       /home/louis/build/anaconda3/bin/qff.py -c ../config.txt 
+ COMMAND LINE       gaussian.fchk
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ INIT   Initializing system
+ INIT   Initializing Second order taylor reference for ai
+ INIT   Initializing Yaff force field reference for EI
+
+ INIT   Initializing program
+
+ VAL    Initializing valence force field
+ VAL    Added 2 bond terms
+ VAL    Added 1 bend terms (an)harmonic in the angle, 0 bend terms with 
+ VAL    1+cos(angle) potential and 0 bend terms with 1-cos(4*theta) potential.
+ VAL    Added 0 Harmonic and 0 SquareHarmonic out-of-plane distance terms
+
+ EQSET  Resetting system coordinates to ab initio ref
+ EQSET  Setting rest values to AI equilibrium values for tasks EQ_RV
+ EQSET  Averaging force field parameters over master and slaves
+
+ PTGEN  Resetting system coordinates to ab initio ref
+ PTGEN  Constructing trajectories
+
+ PTEST  Resetting system coordinates to ab initio ref
+ PTEST  Estimating FF parameters from perturbation trajectories
+
+ PTPOST Averaging force field parameters over master and slaves
+
+ VAL    Resetting system coordinates to ab initio ref
+
+ HCEST  Resetting system coordinates to ab initio ref
+ HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
+ HCEST  CROSS_ASS HC_FC_CROSS_ASA
+
+ PTEST  Resetting system coordinates to ab initio ref
+ PTEST  Estimating FF parameters from perturbation trajectories with valence 
+ PTEST  reference
+
+ PTPOST Averaging force field parameters over master and slaves
+
+ HCEST  Resetting system coordinates to ab initio ref
+ HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
+ HCEST  CROSS_ASS HC_FC_CROSS_ASA
+
+ HCEST  Resetting system coordinates to ab initio ref
+ HCEST  Estimating force constants from Hessian cost for tasks HC_FC_CROSS_ASS 
+ HCEST  HC_FC_CROSS_ASA HC_FC_CROSS_DSS HC_FC_CROSS_DSD HC_FC_CROSS_DAA HC_FC_
+ HCEST  CROSS_DAD
+
+
+        BondHarm/H.O (kjmol/A^2  A)                                             
+            fc =  4979 +- .000    rv = .9767 +- .000
+
+        BendAHarm/H.O.H (kjmol/rad^2  deg)                                      
+            fc = 346.5 +- .000    rv = 95.53 +- .000
+
+        Cross/H.O.H/b0a (kjmol/A  A  deg)                                       
+            fc =  145 +- .0    rv0 = .971 +- 0.0    rv1 = 96.0 +- 0.0
+
+        Cross/H.O.H/b1a (kjmol/A  A  deg)                                       
+            fc =  145 +- .0    rv0 = .971 +- 0.0    rv1 = 96.0 +- 0.0
+
+        Cross/H.O.H/bb (kjmol/A^2  A  A)                                        
+            fc = -110 +- .0    rv0 = .971 +- 0.0    rv1 = .971 +- 0.0
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+ TIMING Initializing                    0:00:00.042713
+ TIMING Equil Set RV                    0:00:00.000185
+ TIMING PT Generate                     0:00:00.214441
+ TIMING PT Estimate                     0:00:00.012185
+ TIMING PT Post process                 0:00:00.000410
+ TIMING HC Estimate FC                  0:00:00.032383
+ TIMING PT plot energy                  0:00:00.514497
+
+__/\\\__________________________________________________________________/\\\____
+  \ \\\                                                                 \ \\\
+   \ \\\     End of file. Thanks for using QuickFF! Come back soon!!     \ \\\
+____\///__________________________________________________________________\///__
 </pre></div>
 </div>
-</div>
-<div class="line-block">
-<div class="line"><br /></div>
 </div>
 <div class="toggle docutils container">
 <div class="header docutils container">
@@ -461,6 +552,9 @@ Cross:PARS         H         O         H  -1.1006640167e+02   1.4564327376e+02  
 </pre></div>
 </div>
 </div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
 </div>
 <div class="section" id="force-field-evaluation">
 <h3>Force field evaluation<a class="headerlink" href="#force-field-evaluation" title="Permalink to this headline">¶</a></h3>
@@ -472,15 +566,15 @@ trajectories, two bonds and one bend.</p>
 <ul class="simple">
 <li><strong>First O-H bond</strong>:</li>
 </ul>
-<a class="reference external image-reference" href="../../../share/validation/water/trajectory-BondHarm-H.O-0_Ehc3.png"><img alt="../../../share/validation/water/trajectory-BondHarm-H.O-0_Ehc3.png" src="../../../share/validation/water/trajectory-BondHarm-H.O-0_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/water/trajectory-BondHarm-H.O-0_Ehc3.png"><img alt="../../_static/water/trajectory-BondHarm-H.O-0_Ehc3.png" src="../../_static/water/trajectory-BondHarm-H.O-0_Ehc3.png" style="width: 400px;" /></a>
 <ul class="simple">
 <li><strong>Second O-H bond</strong>:</li>
 </ul>
-<a class="reference external image-reference" href="../../../share/validation/water/trajectory-BondHarm-H.O-1_Ehc3.png"><img alt="../../../share/validation/water/trajectory-BondHarm-H.O-1_Ehc3.png" src="../../../share/validation/water/trajectory-BondHarm-H.O-1_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/water/trajectory-BondHarm-H.O-1_Ehc3.png"><img alt="../../_static/water/trajectory-BondHarm-H.O-1_Ehc3.png" src="../../_static/water/trajectory-BondHarm-H.O-1_Ehc3.png" style="width: 400px;" /></a>
 <ul class="simple">
 <li><strong>H-O-H bend</strong>:</li>
 </ul>
-<a class="reference external image-reference" href="../../../share/validation/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png"><img alt="../../../share/validation/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png" src="../../../share/validation/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png"><img alt="../../_static/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png" src="../../_static/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png" style="width: 400px;" /></a>
 </div>
 <div class="section" id="geometry-and-frequencies">
 <h4>Geometry and frequencies<a class="headerlink" href="#geometry-and-frequencies" title="Permalink to this headline">¶</a></h4>
@@ -504,13 +598,12 @@ FREQUENCIES  [1/cm] |                |                |
 </div>
 <div class="line-block">
 <div class="line"><br /></div>
-<div class="line"><br /></div>
 </div>
 </div>
 </div>
 </div>
 <div class="section" id="validation-2-benzene">
-<span id="seclab-vl-benzene"></span><h2>Validation 2 - Benzene<a class="headerlink" href="#validation-2-benzene" title="Permalink to this headline">¶</a></h2>
+<span id="seclab-vl-static-benzene"></span><h2>Validation 2 - benzene<a class="headerlink" href="#validation-2-benzene" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id1">
 <h3>Force field construction<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <div class="toggle docutils container">
@@ -522,9 +615,6 @@ FREQUENCIES  [1/cm] |                |                |
      C    -0.132 +-  0.001 (N=6)
 </pre></div>
 </div>
-</div>
-<div class="line-block">
-<div class="line"><br /></div>
 </div>
 <div class="toggle docutils container">
 <div class="header docutils container">
@@ -549,29 +639,150 @@ FIXQ:ATOM        C -0.1315514661  1.1703000000
 </pre></div>
 </div>
 </div>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
 <div class="toggle docutils container">
 <div class="header docutils container">
 <strong>Click to show/hide the QuickFF log file</strong></div>
-<div class="highlight-text"><div class="highlight"><pre><span></span>Traceback (most recent call last):
-  File &quot;/home/louis/build/anaconda3/bin/qff.py&quot;, line 38, in &lt;module&gt;
-    qff()
-  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/scripts.py&quot;, line 348, in qff
-    settings = Settings(fn=args.config_file, **kwargs)
-  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 177, in __init__
-    self.check()
-  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 241, in check
-    check_function(key,value)
-  File &quot;/home/louis/build/anaconda3/lib/python3.6/site-packages/quickff/settings.py&quot;, line 83, in is_nonexisting_file_name
-    raise IOError(&#39;Setting for key %s should be non-existing file name, got %s which already exists.&#39; %(key, value))
-OSError: Setting for key fn_yaff should be non-existing file name, got pars_cov.txt which already exists.
+<div class="highlight-text"><div class="highlight"><pre><span></span>________________/\\\_________/\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\_________________
+______________/\\\\/\\\\_____\/\\\///////////__\/\\\///////////_________________
+_____________/\\\//\////\\\___\/\\\_____________\/\\\___________________________
+_____________/\\\______\//\\\__\/\\\\\\\\\\\_____\/\\\\\\\\\\\__________________
+_____________\//\\\______/\\\___\/\\\///////______\/\\\///////__________________
+_______________\///\\\\/\\\\/____\/\\\_____________\/\\\________________________
+__________________\////\\\//______\/\\\_____________\/\\\_______________________
+______________________\///\\\\\\___\/\\\_____________\/\\\______________________
+_________________________\//////____\///______________\///______________________
+
+                            Welcom to QuickFF
+   a Python package to quickly derive force fields from ab initio input data
+
+                                 Written by
+     Louis Vanduyfhuys(1)*, Steven Vandenbrande(1) and Toon Verstraelen(1)
+
+         (1) Center for Molecular Modeling, Ghent University Belgium.
+                   * mailto: Louis.Vanduyfhuys@UGent.be
+
+
+ USER               louis
+ MACHINE            Linux T085 4.15.0-39-generic #42-Ubuntu SMP Tue Oct 23 
+ MACHINE            15:48:01 UTC 2018 x86_64
+ TIME               2018-11-29 16:12:43.829575
+ QUICKFF VERSION    2.2.1
+ PYTHON VERSION     3.6.3 |Anaconda custom (64-bit)| (default, Oct 13 2017, 
+ PYTHON VERSION     12:02:49) [GCC 7.2.0]
+ NUMPY VERSION      1.13.3
+ SCIPY VERSION      0.19.1
+ MATPLOTLIB VERSION 2.1.0
+ CURRENT DIR        /home/louis/build/quickff/share/validation/benzene
+ COMMAND LINE       /home/louis/build/anaconda3/bin/qff.py -c ../config.txt 
+ COMMAND LINE       gaussian.fchk
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ INIT   Initializing system
+ INIT   Initializing Second order taylor reference for ai
+ INIT   Initializing Yaff force field reference for EI
+
+ INIT   Initializing program
+
+ VAL    Initializing valence force field
+ VAL    Added 12 bond terms
+ VAL    Added 18 bend terms (an)harmonic in the angle, 0 bend terms with 
+ VAL    1+cos(angle) potential and 0 bend terms with 1-cos(4*theta) potential.
+ VAL    Added 6 Harmonic and 0 SquareHarmonic out-of-plane distance terms
+
+ EQSET  Resetting system coordinates to ab initio ref
+ EQSET  Setting rest values to AI equilibrium values for tasks EQ_RV
+ EQSET  Averaging force field parameters over master and slaves
+
+ PTGEN  Resetting system coordinates to ab initio ref
+ PTGEN  Constructing trajectories
+
+ PTEST  Resetting system coordinates to ab initio ref
+ PTEST  Estimating FF parameters from perturbation trajectories
+
+ PTPOST Averaging force field parameters over master and slaves
+
+ VAL    Resetting system coordinates to ab initio ref
+
+ HCEST  Resetting system coordinates to ab initio ref
+ HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
+ HCEST  CROSS_ASS HC_FC_CROSS_ASA
+
+ PTEST  Resetting system coordinates to ab initio ref
+ PTEST  Estimating FF parameters from perturbation trajectories with valence 
+ PTEST  reference
+
+ PTPOST Averaging force field parameters over master and slaves
+
+ HCEST  Resetting system coordinates to ab initio ref
+ HCEST  Estimating force constants from Hessian cost for tasks HC_FC_DIAG HC_FC_
+ HCEST  CROSS_ASS HC_FC_CROSS_ASA
+
+ HCEST  Resetting system coordinates to ab initio ref
+ HCEST  Estimating force constants from Hessian cost for tasks HC_FC_CROSS_ASS 
+ HCEST  HC_FC_CROSS_ASA HC_FC_CROSS_DSS HC_FC_CROSS_DSD HC_FC_CROSS_DAA HC_FC_
+ HCEST  CROSS_DAD
+
+
+        BondHarm/C.C (kjmol/A^2  A)                                             
+            fc =  3965 +- .000    rv = 1.394 +- .000
+
+        BondHarm/C.H (kjmol/A^2  A)                                             
+            fc =  3333 +- .000    rv = 1.087 +- .000
+
+        BendAHarm/C.C.C (kjmol/rad^2  deg)                                      
+            fc = 601.9 +- .000    rv = 119.9 +- .000
+
+        BendAHarm/C.C.H (kjmol/rad^2  deg)                                      
+            fc = 320.9 +- .000    rv = 120.1 +- .000
+
+        TorsCheby2/C.C.C.C (kjmol  au)                                          
+            fc  = 35.9 +- 0.0    sgn =  -1
+
+        TorsCheby2/C.C.C.H (kjmol  au)                                          
+            fc  = 31.4 +- .00    sgn =  -1
+
+        TorsCheby2/H.C.C.H (kjmol  au)                                          
+            fc  = 16.8 +- 0.0    sgn =  -1
+
+        Oopdist/C.C.H.C (kjmol/A^2  A)                                          
+            fc = 166.2 +- .000    rv = .0000 +- .000
+
+        Cross/C.C.C/b0a (kjmol/A  A  deg)                                       
+            fc = 49.2 +- .0    rv0 = 1.39 +- 0.0    rv1 =  120 +- 0.0
+
+        Cross/C.C.C/b1a (kjmol/A  A  deg)                                       
+            fc = 49.3 +- .0    rv0 = 1.39 +- 0.0    rv1 =  120 +- 0.0
+
+        Cross/C.C.C/bb (kjmol/A^2  A  A)                                        
+            fc =  525 +- .0    rv0 = 1.39 +- 0.0    rv1 = 1.39 +- 0.0
+
+        Cross/C.C.H/b0a (kjmol/A  A  deg)                                       
+            fc =  113 +- .0    rv0 = 1.39 +- .00    rv1 =  120 +- .00
+
+        Cross/C.C.H/b1a (kjmol/A  A  deg)                                       
+            fc =  139 +- .0    rv0 = 1.08 +- .00    rv1 =  120 +- .00
+
+        Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
+            fc = 40.3 +- .0    rv0 = 1.39 +- .00    rv1 = 1.08 +- .00
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+ TIMING Initializing                    0:00:00.102418
+ TIMING Equil Set RV                    0:00:00.001028
+ TIMING PT Generate                     0:00:06.432182
+ TIMING PT Estimate                     0:00:00.151613
+ TIMING PT Post process                 0:00:00.002994
+ TIMING HC Estimate FC                  0:00:00.318092
+ TIMING PT plot energy                  0:00:05.328085
+
+__/\\\__________________________________________________________________/\\\____
+  \ \\\                                                                 \ \\\
+   \ \\\     End of file. Thanks for using QuickFF! Come back soon!!     \ \\\
+____\///__________________________________________________________________\///__
 </pre></div>
 </div>
-</div>
-<div class="line-block">
-<div class="line"><br /></div>
 </div>
 <div class="toggle docutils container">
 <div class="header docutils container">
@@ -626,6 +837,9 @@ Cross:PARS         C         C         C   5.2510965130e+02   4.9272462224e+01  
 </pre></div>
 </div>
 </div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
 </div>
 <div class="section" id="id2">
 <h3>Force field evaluation<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
@@ -637,48 +851,48 @@ trajectories, two bonds and one bend.</p>
 <ul class="simple">
 <li><strong>C-H bonds</strong>:</li>
 </ul>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.H-0_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.H-0_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.H-0_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.H-7_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.H-7_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.H-7_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.H-8_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.H-8_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.H-8_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.H-9_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.H-9_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.H-9_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.H-10_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.H-10_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.H-10_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.H-11_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.H-11_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.H-11_Ehc3.png" style="width: 400px;" /></a>
 <ul class="simple">
 <li><strong>C-C bonds</strong>:</li>
 </ul>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png" src="../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.C-1_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.C-1_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.C-1_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.C-2_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.C-2_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.C-2_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.C-3_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.C-3_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.C-3_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.C-4_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.C-4_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.C-4_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.C-5_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.C-5_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.C-5_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BondHarm-C.C-6_Ehc3.png"><img alt="../../_static/benzene/trajectory-BondHarm-C.C-6_Ehc3.png" src="../../_static/benzene/trajectory-BondHarm-C.C-6_Ehc3.png" style="width: 400px;" /></a>
 <ul class="simple">
 <li><strong>C-C-C bends</strong>:</li>
 </ul>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png" style="width: 400px;" /></a>
 <ul class="simple">
 <li><strong>C-C-H bends</strong>:</li>
 </ul>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png" src="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png"><img alt="../../_static/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png" src="../../_static/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png" style="width: 400px;" /></a>
 <ul class="simple">
 <li><strong>C-C-H-C out-of-plane distances</strong>:</li>
 </ul>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png" style="width: 400px;" /></a>
-<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png"><img alt="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png" src="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png"><img alt="../../_static/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png" src="../../_static/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png"><img alt="../../_static/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png" src="../../_static/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png"><img alt="../../_static/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png" src="../../_static/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png"><img alt="../../_static/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png" src="../../_static/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png"><img alt="../../_static/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png" src="../../_static/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../_static/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png"><img alt="../../_static/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png" src="../../_static/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png" style="width: 400px;" /></a>
 </div>
 <div class="section" id="id4">
 <h4>Geometry and frequencies<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
