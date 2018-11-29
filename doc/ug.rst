@@ -324,14 +324,14 @@ Force field expression settings
     To identify the patterns, it is assumed that the rest values have already 
     been estimated from the perturbation trajectories. For each master and slave
     of a BendAHarm term, its rest value is computed and checked if it lies 
-    either the interval [90-thresshold,90+thresshold] or [180-thresshold,180]. 
-    If this is the case, the new cosine term is used (the thresshold is set to
+    either the interval [90-threshold ,90+threshold ] or [180-threshold ,180]. 
+    If this is the case, the new cosine term is used (the threshold  is set to
     20 degrees in the routine :ref:`do_squarebond routine <seclab_rg_modules_program>`)
 
 * **Convert angle to BendCLin term** (CF: *do_bendclin*, KA: N/A)
 
     No Harmonic bend can have a rest value equal that is larger than 180° - 
-    thresshold. If a master (or its slaves) has such a rest value, convert 
+    threshold . If a master (or its slaves) has such a rest value, convert 
     master and all slaves to BendCLin (which corresponds to a chebychev1 
     potential with sign=+1).
 

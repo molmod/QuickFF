@@ -79,7 +79,6 @@ Force field construction
    .. program-output:: qff-input-ei.py -v --ffatypes=low --gaussian gaussian.fchk gaussian_mbis.h5:charges pars_ei_mbisgauss.txt
       :cwd: ../share/validation/water
 
-|
 
 .. container:: toggle
 
@@ -90,7 +89,6 @@ Force field construction
    .. program-output:: cat pars_ei_mbisgauss.txt
       :cwd: ../share/validation/water
 
-|
 
 .. container:: toggle
 
@@ -101,7 +99,6 @@ Force field construction
    .. program-output:: qff.py -c ../config.txt gaussian.fchk
       :cwd: ../share/validation/water
 
-|
 
 .. container:: toggle
 
@@ -111,6 +108,8 @@ Force field construction
         
    .. program-output:: cat pars_cov.txt
       :cwd: ../share/validation/water
+
+|
 
 Force field evaluation
 ======================
@@ -149,7 +148,6 @@ Geometry and frequencies
   :cwd: ../share/validation/water
 
 |
-|
 
 .. _seclab_vl_benzene:
 
@@ -168,7 +166,6 @@ Force field construction
    .. program-output:: qff-input-ei.py -v --ffatypes=low --gaussian gaussian.fchk gaussian_mbis.h5:charges pars_ei_mbisgauss.txt
       :cwd: ../share/validation/benzene
 
-|
 
 .. container:: toggle
 
@@ -179,7 +176,6 @@ Force field construction
    .. program-output:: cat pars_ei_mbisgauss.txt
       :cwd: ../share/validation/benzene
 
-|
 
 .. container:: toggle
 
@@ -190,7 +186,6 @@ Force field construction
    .. program-output:: qff.py -c ../config.txt gaussian.fchk
       :cwd: ../share/validation/benzene
 
-|
 
 .. container:: toggle
 
@@ -200,6 +195,8 @@ Force field construction
         
    .. program-output:: cat pars_cov.txt
       :cwd: ../share/validation/benzene
+
+|
 
 Force field evaluation
 ======================
