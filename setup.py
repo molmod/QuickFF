@@ -63,7 +63,7 @@ def find_all_data_files(dn):
 
 setup(
     name='QuickFF',
-    version='2.2.1',
+    version='2.2.2',
     description='Python library to quickly derive force fields from ab initio training data.',
     author='Louis Vanduyfhuys',
     author_email='Louis.Vanduyfhuys@UGent.be',
