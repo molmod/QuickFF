@@ -48,6 +48,9 @@ clean:
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
+	mkdir -p _static/water _static/benzene
+	cp ../share/validation/water/trajectory-*.png _static/water/.
+	cp ../share/validation/benzene/trajectory-*.png _static/benzene/.
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 dirhtml:

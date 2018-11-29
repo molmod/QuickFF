@@ -378,15 +378,15 @@ class RelaxedStrain(object):
             do_valence
                 If set to True, the current valence force field (stored in
                 self.valence) will be used to compute the valence contribution
-            
+
             energy_noise
-                If set to a float, the parabolic fitting will be repeated 
+                If set to a float, the parabolic fitting will be repeated
                 Nerrorsteps times including normal noise on top of the reference
-                value. The mean of the noise is 0, while the std equals the 
-                number given by energy_noise. The resulting fits give a 
-                distribution of force  constants and rest values instead of 
-                single value, the std is used to identify bad estimates, the 
-                mean is used for the actual FF parametrs. If set to nan, the 
+                value. The mean of the noise is 0, while the std equals the
+                number given by energy_noise. The resulting fits give a
+                distribution of force  constants and rest values instead of
+                single value, the std is used to identify bad estimates, the
+                mean is used for the actual FF parametrs. If set to nan, the
                 parabolic fit is performed only once without any noise.
         '''
         with log.section('PTEST', 3, timer='PT Estimate'):

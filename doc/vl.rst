@@ -64,7 +64,7 @@ Finally, two validations are performed for each system:
 
 .. _seclab_vl_water:
 
-Validation 1 - Water
+Validation 1 - water
 **********************
 
 Force field construction
@@ -124,21 +124,21 @@ trajectories, two bonds and one bend.
 
 * **First O-H bond**:
 
-.. image:: ../../../share/validation/water/trajectory-BondHarm-H.O-0_Ehc3.png
+.. image:: ../../_static/water/trajectory-BondHarm-H.O-0_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/water/trajectory-BondHarm-H.O-0_Ehc3.png    
+    :target: ../../_static/water/trajectory-BondHarm-H.O-0_Ehc3.png    
 
 * **Second O-H bond**:
 
-.. image:: ../../../share/validation/water/trajectory-BondHarm-H.O-1_Ehc3.png
+.. image:: ../../_static/water/trajectory-BondHarm-H.O-1_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/water/trajectory-BondHarm-H.O-1_Ehc3.png
+    :target: ../../_static/water/trajectory-BondHarm-H.O-1_Ehc3.png
     
 * **H-O-H bend**:
 
-.. image:: ../../../share/validation/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png
+.. image:: ../../_static/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png
+    :target: ../../_static/water/trajectory-BendAHarm-H.O.H-2_Ehc3.png
 
 
 Geometry and frequencies
@@ -149,9 +149,9 @@ Geometry and frequencies
 
 |
 
-.. _seclab_vl_benzene:
+.. _seclab_vl__static/benzene:
 
-Validation 2 - Benzene
+Validation 2 - benzene
 **********************
 
 Force field construction
@@ -211,137 +211,137 @@ trajectories, two bonds and one bend.
 
 * **C-H bonds**:
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.H-0_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png    
+    :target: ../../_static/benzene/trajectory-BondHarm-C.H-0_Ehc3.png    
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.H-7_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BondHarm-C.H-7_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.H-8_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BondHarm-C.H-8_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.H-9_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BondHarm-C.H-9_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.H-10_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BondHarm-C.H-10_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.H-11_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BondHarm-C.H-11_Ehc3.png
 
 
 * **C-C bonds**:
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.C-1_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BondHarm-C.C-1_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.C-2_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BondHarm-C.C-2_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.C-3_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BondHarm-C.C-3_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.C-4_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BondHarm-C.C-4_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.C-5_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BondHarm-C.C-5_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BondHarm-C.C-6_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png   
+    :target: ../../_static/benzene/trajectory-BondHarm-C.C-6_Ehc3.png   
 
 
 * **C-C-C bends**:
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png
 
 
 * **C-C-H bends**:
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png
+    :target: ../../_static/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png
 
 
 * **C-C-H-C out-of-plane distances**:
 
-.. image:: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png
+    :target: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png
+    :target: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png
+    :target: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png
+    :target: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png
+    :target: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png
 
-.. image:: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png
+.. image:: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png
     :width: 400
-    :target: ../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png
+    :target: ../../_static/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png
 
 
 Geometry and frequencies
