@@ -63,13 +63,12 @@ class ParaContext(object):
 
     def use_scoop(self):
         from scoop import futures
-        from scoop import WORKER_NAME
         def my_map(*args, **kwargs):
             return list(futures.map(*args, **kwargs))
         def my_wait_first(fs):
             return futures.wait(fs, return_when=futures.FIRST_COMPLETED)
         def debug_log(*args):
-            with open('debug_%s.log' % WORKER_NAME, 'a') as f:
+            with open('debug.log', 'a') as f:
                 print(' '.join(str(arg) for arg in args), file=f)
             return 0
         self.map = my_map

@@ -1,7 +1,7 @@
 .. _seclab_ug_script:
 
-Running QuickFF using qff.py
-############################
+QuickFF main script qff.py
+##########################
 
 The most straightforward use of QuickFF is by means of a single command using 
 the :ref:`qff.py <seclab_rg_scripts_qff>` script. The basic usage of this script
@@ -63,7 +63,9 @@ Optional input files
 * Electrostatic contribution (:option:`--ei=EI`):
     The user can define the electrostatic contribution of the force field using
     the option :option:`--ei=EI`. EI should be the file name of a Yaff parameter
-    file containing the electrostatic contribution.
+    file containing the electrostatic contribution. Such a parameter file can
+    be :ref:`generated <seclab_ug_tools_inputei>`. from a HDF5 file containing charges using the script 
+    :ref:`qff-input-ei.py <seclab_rg_scripts_inputei>`.
 
 * Van der Waals contribution (:option:`--vdw=VDW`):
     The user can define the van der Waals contribution of the force field using
@@ -213,8 +215,8 @@ Parallel QuickFF
 
 If Scoop is installed, it is possible to run QuickFF on multiple cores of a 
 single node by using the optional argument :option:`--scoop`. Only the 
-generation of the perturbation trajectories will be parallized as it is by far
-the time determening step. The exact syntax to use QuickFF in parallel is::
+generation of the perturbation trajectories will be parallized as it is the
+slowest step. The exact syntax to use QuickFF in parallel is::
 
     python -m scoop -n nproc /path/to/qff.py --scoop [options] fns
 

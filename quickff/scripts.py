@@ -189,8 +189,7 @@ def qff_parse_args(args=None):
 
     parser = ArgumentParser(description=description)
     parser.add_argument(
-        '--version', default=False, action='store_true',
-        help='Print QuickFF version number and exit.'
+        '--version', action='version', version='QuickFF %s' %version
     )
     parser.add_argument(
         '-s', '--silent', default=False, action='store_true',
@@ -311,9 +310,6 @@ def qff_parse_args(args=None):
         args = parser.parse_args()
     else:
         args = parser.parse_args(args.split())
-    if args.version:
-        print(version)
-        sys.exit()
     if not args.ffatypes is None and args.ffatypes.lower()=='none':
         args.ffatypes = None
     return args
@@ -408,7 +404,7 @@ def qff(args=None):
                 raise AssertionError('No atom types defined')
         if settings.do_hess_negfreq_proj:
             log.dump('Projecting negative frequencies out of the mass-weighted hessian.')
-            with log.section('QFF', 3, 'Initializing'):
+            with log.section('SYS', 3, 'Initializing'):
                 hess = project_negative_freqs(hess, system.masses)
         #construct ab initio reference
         ai = SecondOrderTaylor('ai', coords=system.pos.copy(), energy=energy, grad=grad, hess=hess, pbc=pbc)

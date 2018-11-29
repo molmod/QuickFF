@@ -293,7 +293,7 @@ class RelaxedStrain(object):
         #TODO: find out why system.cell is not parsed correctly when using scoop
         #force correct rvecs
         self.system0.cell.update_rvecs(self.system_rvecs)
-        with log.section('PTGEN', 3, timer='PT Generate'):
+        with log.section('PTGEN', 4, timer='PT Generate'):
             log.dump('  Generating %s(atoms=%s)' %(trajectory.term.basename, trajectory.term.get_atoms()))
             strain = Strain(self.system, trajectory.term, self.valence.terms)
             natom = self.system0.natom
@@ -354,7 +354,7 @@ class RelaxedStrain(object):
             trajectory.coords = np.array(coords)
         return trajectory
 
-    def estimate(self, trajectory, ai, ffrefs=[], do_valence=False):
+    def estimate(self, trajectory, ai, ffrefs=[], do_valence=False, energy_noise=None, Nerrorsteps=100):
         '''
             Method to estimate the FF parameters for the relevant ic from the
             given perturbation trajectory by fitting a harmonic potential to the
@@ -378,6 +378,16 @@ class RelaxedStrain(object):
             do_valence
                 If set to True, the current valence force field (stored in
                 self.valence) will be used to compute the valence contribution
+            
+            energy_noise
+                If set to a float, the parabolic fitting will be repeated 
+                Nerrorsteps times including normal noise on top of the reference
+                value. The mean of the noise is 0, while the std equals the 
+                number given by energy_noise. The resulting fits give a 
+                distribution of force  constants and rest values instead of 
+                single value, the std is used to identify bad estimates, the 
+                mean is used for the actual FF parametrs. If set to nan, the 
+                parabolic fit is performed only once without any noise.
         '''
         with log.section('PTEST', 3, timer='PT Estimate'):
             term = trajectory.term
@@ -404,13 +414,53 @@ class RelaxedStrain(object):
                 self.valence.set_params(index, fc=fc)
                 self.valence.set_params(index, rv0=rv)
             pars = fitpar(qs, AIs-FFs-RESs-min(AIs-FFs-RESs), rcond=-1)
-            if pars[0]!=0.0:
-                trajectory.fc = 2.0*pars[0]
-                trajectory.rv = -pars[1]/(2.0*pars[0])
+            if energy_noise is None:
+                if pars[0]!=0.0:
+                    trajectory.fc = 2.0*pars[0]
+                    trajectory.rv = -pars[1]/(2.0*pars[0])
+                else:
+                    trajectory.fc = 0.0
+                    trajectory.rv = qs[len(qs)//2]
+                    log.dump('force constant of %s is zero: rest value set to middle value' %basename)
             else:
-                trajectory.fc = 0.0
-                trajectory.rv = qs[len(qs)//2]
-                log.dump('force constant of %s is zero: rest value set to middle value' %basename)
+                with log.section('PTEST', 4, timer='PT Estimate'):
+                    log.dump('Performing noise analysis for trajectory of %s' %basename)
+                    As = [pars[0]]
+                    Bs = [pars[1]]
+                    for i in range(Nerrorsteps):
+                        pars = fitpar(qs, AIs-FFs-RESs-min(AIs-FFs-RESs)+np.random.normal(0.0, energy_noise, size=AIs.shape), rcond=-1)
+                        As.append(pars[0])
+                        Bs.append(pars[1])
+                    if 0.0 in As:
+                        log.dump('  force constant of zero detected, removing the relevant runs from analysis')
+                    Bs = np.array([b for a,b in zip(As,Bs) if a!=0.0])
+                    As = np.array([a for a in As if a!=0.0])
+                    ks = As*2.0
+                    q0s = -Bs/(2.0*As)
+                    kunit = trajectory.term.units[0]
+                    qunit = trajectory.term.units[1]
+                    log.dump('    k  = %8.3f +- %6.3f (noisefree: %8.3f) %s' %(ks.mean()/parse_unit(kunit), ks.std()/parse_unit(kunit), ks[0]/parse_unit(kunit), kunit))
+                    log.dump('    q0 = %8.3f +- %6.3f (noisefree: %8.3f) %s' %(q0s.mean()/parse_unit(qunit), q0s.std()/parse_unit(qunit), q0s[0]/parse_unit(qunit), qunit))
+                    if q0s.std()/q0s.mean()>0.01:
+                        with log.section('PTEST', 3, timer='PT Estimate'):
+                            fc, rv = self.valence.get_params(trajectory.term.index)
+                            if rv is None:
+                                log.dump('Noise on rest value of %s to high, using ab initio rest value' %basename)
+                                pars = fitpar(qs, AIs-FFs-RESs-min(AIs-FFs-RESs)+np.random.normal(0.0, energy_noise, size=AIs.shape), rcond=-1)
+                                if pars[0]!=0.0:
+                                    trajectory.fc = 2.0*pars[0]
+                                    trajectory.rv = -pars[1]/(2.0*pars[0])
+                                else:
+                                    trajectory.fc = 0.0
+                                    trajectory.rv = qs[len(qs)//2]
+                                    log.dump('AI force constant of %s is zero: rest value set to middle value' %basename)
+                            else:
+                                log.dump('Noise on rest value of %s to high, using previous value' %basename)
+                                trajectory.fc = fc
+                                trajectory.rv = rv
+                    else:
+                        trajectory.fc = ks.mean()
+                        trajectory.rv = q0s.mean()
             #no negative rest values for all ics except dihedrals and bendcos
             if term.ics[0].kind not in [1,3,4,11]:
                 if trajectory.rv<0:

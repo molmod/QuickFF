@@ -283,7 +283,7 @@ class BaseProgram(object):
                 pickle.dump(self.trajectories, open(fn_traj, 'wb'))
                 log.dump('Trajectories stored to file %s' %fn_traj)
 
-    def do_pt_estimate(self, do_valence=False, logger_level=3):
+    def do_pt_estimate(self, do_valence=False, energy_noise=None, logger_level=3):
         '''
             Estimate force constants and rest values from the perturbation
             trajectories
@@ -307,7 +307,7 @@ class BaseProgram(object):
                     if isinstance(only, str): only = [only]
                     basename = self.valence.terms[traj.term.master].basename
                     if basename not in only: continue
-                self.perturbation.estimate(traj, self.ai, ffrefs=self.ffrefs, do_valence=do_valence)
+                self.perturbation.estimate(traj, self.ai, ffrefs=self.ffrefs, do_valence=do_valence, energy_noise=energy_noise)
             #set force field parameters to computed fc and rv
             for traj in self.trajectories:
                 if traj is None: continue
@@ -756,7 +756,7 @@ class DeriveFF(BaseProgram):
         with log.section('PROGRAM', 2):
             self.do_eq_setrv(['EQ_RV'])
             self.do_pt_generate()
-            self.do_pt_estimate()
+            self.do_pt_estimate(energy_noise=self.settings.pert_traj_energy_noise)
             if self.settings.plot_traj is not None and (self.settings.plot_traj.lower() in ['Apt1', 'all']):
                 self.plot_trajectories(do_valence=False, suffix='_Apt1')
             if self.settings.xyz_traj is not None and self.settings.xyz_traj:
@@ -766,7 +766,7 @@ class DeriveFF(BaseProgram):
             self.do_hc_estimatefc(['HC_FC_DIAG', 'HC_FC_CROSS_ASS', 'HC_FC_CROSS_ASA'], do_mass_weighting=self.settings.do_hess_mass_weighting)
             if self.settings.plot_traj is not None and (self.settings.plot_traj.lower() in ['Bhc1', 'all']):
                 self.plot_trajectories(do_valence=True, suffix='_Bhc1')
-            self.do_pt_estimate(do_valence=True)
+            self.do_pt_estimate(do_valence=True, energy_noise=self.settings.pert_traj_energy_noise)
             if self.settings.plot_traj is not None and (self.settings.plot_traj.lower() in ['Cpt2', 'all']):
                 self.plot_trajectories(do_valence=True, suffix='_Cpt2')
             self.do_pt_postprocess()

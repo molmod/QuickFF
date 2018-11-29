@@ -3,6 +3,8 @@
     changes as these will be overwritten. Rather edit 
     the docstrings in the source code.
 
+.. _seclab_rg_modules:
+
 ``quickff.cost`` -- Least-Square cost function for hessian matching
 -------------------------------------------------------------------
 
@@ -16,6 +18,13 @@
 .. automodule:: quickff.io
     :members:
 
+.. _seclab_rg_modules_settings:
+
+``quickff.settings`` -- QuickFF configuration settings
+------------------------------------------------------
+
+.. automodule:: quickff.settings
+    :members:
 
 ``quickff.perturbation`` -- Perturbation trajectories for internal coordinates
 ------------------------------------------------------------------------------

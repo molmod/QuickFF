@@ -2,8 +2,8 @@
 
 .. _seclab_ug_tools_inputei:
 
-Generating Yaff parameter file for the electrostatic contribution
-##################################################################
+Preparing electrostatic force field
+###################################
 
 A Yaff force field file for the electrostatic contribution can be constructed
 from the output of `HORTON <https://theochem.github.io/horton/>`_ using the

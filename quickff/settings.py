@@ -88,6 +88,7 @@ def is_existing_file_name(key, value):
     if not os.path.isfile(value):
         raise IOError('Setting for key %s should be existing file name, got %s which does not exist.' %(key, value))
 
+
 key_checks = {
     'fn_yaff'               : [is_string, is_nonexisting_file_name],
     'fn_charmm22_prm'       : [is_string, is_nonexisting_file_name],
@@ -115,6 +116,7 @@ key_checks = {
     'do_cross_svd'          : [is_bool],
     'cross_svd_rcond'       : [is_float],
     'pert_traj_tol'         : [is_float],
+    'pert_traj_energy_noise': [is_float],
     'do_bonds'              : [is_bool],
     'do_bends'              : [is_bool],
     'do_dihedrals'          : [is_bool],

@@ -30,6 +30,7 @@ do_hess_mass_weighting  :   True
 do_hess_negfreq_proj    :   False
 do_cross_svd            :   True
 pert_traj_tol           :   1e-3
+pert_traj_energy_noise  :   None
 cross_svd_rcond         :   1e-8
 
 do_bonds                :   True

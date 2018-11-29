@@ -40,7 +40,10 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
-	rm pars_cov_ei.txt pars_cov_noei.txt pars_ei.txt system_ei.chk system_noei.chk
+	cd ../share/validation/water; rm pars_*.txt system*.chk *.png; cd ../../../doc
+	cd ../share/validation/benzene; rm pars_*.txt system*.chk *.png; cd ../../../doc
+	cd ../share/tutorials/water; rm trajectory-* pars_*.txt system*.chk; cd ../../../doc
+	cd ../share/tutorials/benzene; rm trajectory-* pars_*.txt system*.chk; cd ../../../doc
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

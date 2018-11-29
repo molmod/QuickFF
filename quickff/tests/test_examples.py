@@ -108,7 +108,7 @@ def test_output_charmm22():
                         counts[key] += 1
             assert counts['BONDS'] == 4
             assert counts['ANGLES'] == 5
-            assert counts['DIHEDRALS'] == 2
+            assert counts['DIHEDRALS'] == 3
             assert counts['IMPROPER'] == 0
 
             # Count the number atoms, bonds, angles and dihedrals in the PSF file and

@@ -15,7 +15,14 @@ QuickFF can read and implement a small program using QuickFF modules to derive
 the force field. These files, together with the expected output, can be found
 in ``share/tutorials/water``.
 
-First we load the input files and convert them to a Yaff
+First, we define the required :ref:`settings <_seclab_ug_settings>` using the 
+:ref:`Settings <_seclab_rg_modules_settings>` class:
+
+.. literalinclude:: ../share/tutorials/water/qff-derive.py
+   :language: python
+   :lines: 28-30
+
+Second, we load the input files and convert them to a Yaff
 `system <http://molmod.github.io/yaff/rg_yaff.html#module-yaff.system>`_
 instance and a QuickFF
 `SecondOrderTaylor <http://molmod.github.io/QuickFF/rg_module.html#module-quickff.reference>`_
@@ -25,7 +32,7 @@ module of MolMod.
 
 .. literalinclude:: ../share/tutorials/water/qff-derive.py
    :language: python
-   :lines: 25-39
+   :lines: 32-47
 
 At this instance, the system does not yet contain force field atom types. To
 define these, we could use the `QuickFF feature guess_ffatypes <http://molmod.github.io/QuickFF/rg_module.html#quickff.tools.guess_ffatypes>`_.
@@ -34,14 +41,14 @@ language of Yaff:
 
 .. literalinclude:: ../share/tutorials/water/qff-derive.py
    :language: python
-   :lines: 41-46
+   :lines: 49-54
 
 The final input we need to parse, is the set of atomic charges. These charges
 are read from the dataset ``charges`` in the HDF5 file ``guassian_mbis.h5``.
 
 .. literalinclude:: ../share/tutorials/water/qff-derive.py
    :language: python
-   :lines: 48-52
+   :lines: 56-61
 
 ``scales`` is a list of 4 floats, representing the electrostatic scalings of 1-2,
 1-3, 1-4 and 1-5 pairs. In this case, no scaling is applied to the electrostatic
@@ -67,7 +74,7 @@ Finally, we can now setup the program and run it:
 
 .. literalinclude:: ../share/tutorials/water/qff-derive.py
    :language: python
-   :lines: 54-56
+   :lines: 63-65
 
 To summarize, the entire script as well as the logger output is given below.
 
@@ -86,5 +93,5 @@ To summarize, the entire script as well as the logger output is given below.
 
       **Click to show/hide the logger output**
 
-   .. program-output:: ./qff-derive.py
+   .. program-output:: python qff-derive.py
       :cwd: ../share/tutorials/water/
