@@ -1,0 +1,16 @@
+.. _seclab_rg_scripts:
+
+.. _seclab_rg_scripts_qff:
+
+``qff.py`` -- Main script to run QuickFF calculation
+####################################################
+
+.. program-output:: qff.py --help
+
+
+.. _seclab_rg_scripts_inputei:
+
+``qff-input-ei.py`` -- generate Yaff parameter file for electrostatics
+######################################################################
+
+.. program-output:: qff-input-ei.py --help

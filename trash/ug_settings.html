@@ -1,0 +1,475 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>QuickFF Settings &#8212; QuickFF 2.1.3 documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="quickff-settings">
+<span id="seclab-ug-settings"></span><h1>QuickFF Settings<a class="headerlink" href="#quickff-settings" title="Permalink to this headline">¶</a></h1>
+<p>The configuration parameters for the construction of the force field are stored
+in an instance of the <a class="reference internal" href="rg_module.html#seclab-rg-modules-settings"><span class="std std-ref">Settings</span></a> class. These
+configuration settings include:</p>
+<ul class="simple">
+<li>Configuration of the logger</li>
+<li>File names for input (eg. the Yaff parameter file for the electrostatic
+contribution) and output (eg. the Yaff parameter file for the covalent force
+field, system file, trajectory file, …)</li>
+<li>Settings for the non-bonding contributions (eg. cutoff)</li>
+<li>Settings specifying the energy expression of the covalent force field
+(do_bonds, do_bends, do_dihedrals, do_oopdists, bond_term, bend_term, do_squarebend, …)</li>
+<li>Settings to finetune the fitting algorithms
+(do_hess_mass_weighting, cross_svd_rcond, …)</li>
+</ul>
+<p>These settings can be specified by either of the following means:</p>
+<ul class="simple">
+<li>the system-wide default settings defined in the config file <code class="docutils literal"><span class="pre">quickffrc</span></code> in
+the <code class="docutils literal"><span class="pre">share</span></code> directory.</li>
+<li>a QuickFF config file specified using the <code class="docutils literal"><span class="pre">--config</span></code> keyword argument of
+<code class="docutils literal"><span class="pre">qff.py</span></code> or directly to the Settings constructor in a custom written script</li>
+<li>keyword arguments given to <code class="docutils literal"><span class="pre">qff.py</span></code> or the Settings constructor in a custom
+written script</li>
+</ul>
+<p>Defining options using a keyword arguments overwrites a custom config file as
+well as the <code class="docutils literal"><span class="pre">quickffrc</span></code> file and the settings from a custom config file
+overwrite the default file <code class="docutils literal"><span class="pre">quickffrc</span></code>.</p>
+<div class="section" id="settings-description">
+<h2>Settings description<a class="headerlink" href="#settings-description" title="Permalink to this headline">¶</a></h2>
+<p>In this section, a list is included of all settings that can be configured using
+the Settings routine, either by an entry in the configuration file (CF) denoted
+in <em>italics</em> or by a keyword arguments (KA) denoted by <code class="docutils literal"><span class="pre">shading</span></code>. The default
+value for each setting is given in the <code class="docutils literal"><span class="pre">quickffrc</span></code> file (see
+<a class="reference internal" href="#sec-ug-settings-default"><span class="std std-ref">below</span></a>). If you are looking for the meaning of
+a specific setting in the config file, use the <a class="reference internal" href="../search.html"><span class="std std-ref">Search Page</span></a>.</p>
+<div class="section" id="general-settings">
+<h3>General settings<a class="headerlink" href="#general-settings" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first"><strong>Logging level</strong> (CF: <em>log_level</em>, KA: see description below):</p>
+<blockquote>
+<div><p>Defines the level of logging of the progress of a QuickFF
+run. Four possible levels are implemented, which can be defined in CF by
+means of the string name or the corresponding integer. Some logging levels
+can also be specified using the corresponding keywork arguments given
+between paranthesis.</p>
+<blockquote>
+<div><ul class="simple">
+<li>0, <em>silent</em> (<code class="docutils literal"><span class="pre">--silent</span></code>): logging is completely switched off</li>
+<li>1, <em>low</em>: minimal logging</li>
+<li>2, <em>medium</em>: default logging level, logs on what part of the run is
+currently processed without including any details.</li>
+<li>3, <em>high</em> (<code class="docutils literal"><span class="pre">--verbose</span></code>): more details in the logging output, includes
+the force field parameters after each step in the parameterization
+protocoll.</li>
+<li>4, <em>highest</em> (<code class="docutils literal"><span class="pre">--very-verbose</span></code>): logging on every detail, usefull for
+debugging purposes. Includes detailed progress on the construction
+of the perturbation trajectories.</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Logging file</strong> (CF: <em>log_file</em>, KA: <code class="docutils literal"><span class="pre">--logfile</span></code>):</p>
+<blockquote>
+<div><p>Defines the name of file were to write the logging output to. Defaults to
+the standard output (i.e. the screen).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Program mode</strong> (CF: <em>program_mode</em>, KA: <code class="docutils literal"><span class="pre">--program-mode</span></code>):</p>
+<blockquote>
+<div><p>Specify the program to execute during the run. The following programs are
+currently supported:</p>
+<ul>
+<li><p class="first">MakeTrajectories:</p>
+<p>construct the perturbation trajectories and write them
+to a file for later post-processing. Can be usefull if one intends to
+generate various force fields using different settings, but all require
+the same perturbation trajectories. Requires the specification of a
+non-existing file name for the Perturbation trajectory file name (see
+further).</p>
+</li>
+<li><p class="first">PlotTrajectories:</p>
+<p>plot the energy contribution along the given
+perturbation trajectory. Requires the specification of an existing file
+name for the Perturbation trajectory file name (see further).</p>
+</li>
+<li><p class="first">DeriveFF:</p>
+<p>Complete run to construct a force field. This is the default.</p>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="input-output-settings">
+<h3>Input/output settings<a class="headerlink" href="#input-output-settings" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first"><strong>Yaff file name</strong> (CG: <em>fn_yaff</em>, KA: <code class="docutils literal"><span class="pre">--fn-yaff</span></code>):</p>
+<p>File name for the Yaff parameter file containing the parameters of the
+covalent fitted force field. Default is <code class="docutils literal"><span class="pre">pars_yaff.txt</span></code>.</p>
+</li>
+<li><p class="first"><strong>CHARMM parameter file</strong> (CF: <em>fn_charmm22_prm</em>, KA: N/A):</p>
+<p>File name to write the covalent force field parameters to in CHARMM
+format. Defaults to <em>None</em>, i.e. no such file is generated.</p>
+</li>
+<li><p class="first"><strong>CHARMM PSF file name</strong> (CF: <em>fn_charmm22_psf</em>, KA: N/A):</p>
+<p>File name of a PSF file to write the system information to. Can be used
+in combination with the CHARMM parameter file to perform FF simulations
+using CHARMM software. Defaults to <em>None</em>, i.e. no such file is generated.</p>
+</li>
+<li><p class="first"><strong>System file name</strong> (CF: <em>fn_sys</em>, KA: N/A):</p>
+<p>File name for a MolMod CHK file containing the system information. Can be
+used in combination of a Yaff parameter file to perform FF simulations
+using Yaff.</p>
+</li>
+<li><p class="first"><strong>Plot trajectories</strong> (CF: <em>plot_traj</em>, KA: <code class="docutils literal"><span class="pre">--plot-traj</span></code>):</p>
+<p>Plot the various energy contributions along the perturbation trajectories.
+If set to final, plots the various energy contributions along the
+perturbation trajectories using the final force field. If set to all, plots
+the contributions along the trajectories using all intermediate force fields
+(given suffixes _Apt1, _Bhc1, _Cpt2 and _Dhc2) as well as the final force
+field (given the suffix _Ehc3).</p>
+</li>
+<li><p class="first"><strong>Write XYZ trajectories</strong> (CF: <em>xyz_traj</em> KA: <code class="docutils literal"><span class="pre">--xyz-traj</span></code>)):</p>
+<p>Write the perturbation trajectories in XYZ format.</p>
+</li>
+<li><p class="first"><strong>Trajectory file name</strong> (CG: <em>fn_traj</em>, KA: <code class="docutils literal"><span class="pre">--fn-traj</span></code>):</p>
+<p>Read/write the perturbation trajectories from/to FN_TRAJ. If the given
+file exists, the trajectories are read from the file. Otherwise, the
+trajectories are written to the given file.</p>
+</li>
+<li><p class="first"><strong>Only trajectories</strong> (CG: <em>only_traj</em>, KA: <code class="docutils literal"><span class="pre">--only-traj</span></code>)</p>
+<p>Construct the perturbation trajectory only for the terms with the given
+basenames. This options is only applied in the <em>MakeTrajectories</em> program.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="reference-force-field-contribution-settings">
+<h3>Reference force field contribution settings<a class="headerlink" href="#reference-force-field-contribution-settings" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first"><strong>Electrostatic contribution parameter file</strong> (CG: <em>ei</em>, KA: <code class="docutils literal"><span class="pre">--ei</span></code>)</p>
+<p>Yaff parameter file for the electrostatic contribution.</p>
+</li>
+<li><p class="first"><strong>Electrostatic cutoff</strong> (CG: <em>ei_rcut</em>, KA: <code class="docutils literal"><span class="pre">--ei-rcut</span></code>)</p>
+<p>Real-space cutoff for the electrostatic interactions</p>
+</li>
+<li><p class="first"><strong>Van der Waals contribution parameter file</strong> (CG: <em>vdw</em>, KA: <code class="docutils literal"><span class="pre">--vdw</span></code>)</p>
+<p>Yaff parameter file for the van der Waals contribution.</p>
+</li>
+<li><p class="first"><strong>Van der Waals cutoff</strong> (CG: <em>vdw_rcut</em>, KA: <code class="docutils literal"><span class="pre">--vdw-rcut</span></code>)</p>
+<p>Real-space cutoff for the van der Waals interactions</p>
+</li>
+<li><p class="first"><strong>Residual covalent contribution parameter file</strong> (CG: <em>covres</em>, KA: <code class="docutils literal"><span class="pre">--covres</span></code>)</p>
+<p>Yaff parameter file for the residual covalent contribution.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="force-field-expression-settings">
+<h3>Force field expression settings<a class="headerlink" href="#force-field-expression-settings" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first"><strong>Atom types</strong> (CG: <em>ffatypes</em>, KA: <code class="docutils literal"><span class="pre">--ffatypes</span></code>)</p>
+<p>Definition of the atom types. Can either be a list of strings, defining the
+atom type of each atom in the system. Alternatively, one can also estimate
+the atom types automatically according to one of the available levels:
+<em>low</em>, <em>medium</em>, <em>high</em> or <em>highest</em> (see <a class="reference internal" href="../ug_script.html#seclab-ug-atype-estimator"><span class="std std-ref">automatic estimation of atom types</span></a> for more details).</p>
+</li>
+<li><p class="first"><strong>Exclude specific bonds</strong> (CG: <em>excl_bonds</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Exclude specific bond terms from the force field. Specify which terms by
+giving a list of basenames.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Exclude specific bends</strong> (CG: <em>excl_bends</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Exclude specific bend terms from the force field. Specify which terms by
+giving a list of basenames.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Exclude specific dihedrals</strong> (CG: <em>excl_dihs</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Exclude specific dihedral terms from the force field. Specify which terms by
+giving a list of basenames.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Exclude specific out-of-plane distances</strong> (CG: <em>excl_oopds</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Exclude specific out-of-plane terms from the force field. Specify which
+terms by giving a list of basenames.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include bonds</strong> (CG: <em>do_bonds</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Boolean to specify whether bond terms are included (possibly appart from the
+terms specified through <em>excl_bonds</em>).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include bends</strong> (CG: <em>do_bends</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Boolean to specify whether bend terms are included (possibly appart from the
+terms specified through <em>excl_bends</em>).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include dihedrals</strong> (CG: <em>do_diheds</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Boolean to specify whether dihedreal terms are included (possibly appart
+from the terms specified through <em>excl_diheds</em>).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include out-of-plane distances</strong> (CG: <em>do_oops</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Boolean to specify whether out-of-plane distance terms are included
+(possibly appart from the terms specified through <em>excl_oopds</em>).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Angle-pattern Stretch-Stretch cross terms</strong> (CF: <em>do_cross_ASS</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between the two stretch terms (i.e. the bonds)
+featuring in an angle term. In other words, the coupling between neighboring
+bond terms.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Angle-pattern Stretch-Angle cross terms</strong> (CF: <em>do_cross_ASA</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between an angle term and its constituting bond
+terms.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Dihedral-pattern Stretch-Stretch cross terms</strong> (CF: <em>do_cross_DSS</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between the two outer stretch terms (i.e. the bond
+lengths) featuring in an dihedral term. In other words, the coupling between
+bond terms that are seperated by one other bond.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Dihedral-pattern Stretch-Dihedral cross terms</strong> (CF: <em>do_cross_DSD</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between an outher stretch (i.e. a bond length) in a
+dihedral and the dihdral angle.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Dihedral-pattern Angle-Angle cross terms</strong> (CF: <em>do_cross_DAA</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between the two angles terms in a dihedral term.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Include Dihedral-pattern Angle-Dihedral cross terms</strong> (CF: <em>do_cross_DAD</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Include coupling terms between an bending angle in a dihedral pattern and
+the corresponding dihedral angle.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Potential for bond terms</strong> (CF: <em>bond_term</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Specify the functional form of the bond potential. Can be one of the
+following possibilities:</p>
+<ul>
+<li><p class="first"><em>bondharm</em>: harmonic potential</p>
+<p><img class="math" src="../_images/math/2a02334c973800f26998790740e9b3bed00c63d9.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2"/></p>
+</li>
+<li><p class="first"><em>bondfues</em>: Fues potential, i.e. harmonic in <img class="math" src="../_images/math/76077b035370e6aad28976c75e6148eed7baf610.png" alt="\frac{1}{r}"/></p>
+<p><img class="math" src="../_images/math/f72c718613fdb429b5e09cfe4f26339521251d10.png" alt="V(r)=\frac{K}{2}\left(\frac{1}{r}-\frac{1}{r_0}\right)^2"/></p>
+</li>
+<li><p class="first"><em>bondmm3</em>:  the anharmonic bond potential from the MM3 force field (<img class="math" src="../_images/math/7183c7deeb9a718911d1d83c0d40438cb00f331e.png" alt="\alpha=2.55 \text{\AA}^{-1}"/>)</p>
+<p><img class="math" src="../_images/math/c9789ff5a911c2c494d96281caddc95515120e7e.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2\left[1-\alpha\left(r-r_0\right)+\frac{7}{12}\alpha^2\left(r-r_0\right)^2\right]"/></p>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Potential for bend terms</strong> (CF: <em>bend_term</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Specify the functional form of the bend potential. Can be one of the
+following possibilities:</p>
+<ul>
+<li><p class="first"><em>bendharm</em>: harmonic potential</p>
+<p><img class="math" src="../_images/math/2a02334c973800f26998790740e9b3bed00c63d9.png" alt="V(r)=\frac{K}{2}\left(r-r_0\right)^2"/></p>
+</li>
+<li><p class="first"><em>bendmm3</em>:  the anharmonic bend potential from the MM3 force field</p>
+<p><img class="math" src="../_images/math/b81f0bbaf08a59a675d83e353f3041ff65cfd46b.png" alt="V(r)=\frac{K}{2}\left(\theta-\theta_0\right)^2\left[1-\alpha_1\left(\theta-\theta_0\right)+\alpha_2\left(\theta-\theta_0\right)^2-\alpha_3\left(\theta-\theta_0\right)^3+\alpha_4\left(\theta-\theta_0\right)^4\right]"/></p>
+<p><img class="math" src="../_images/math/265e5b1ac589e16f561b784e88c19f882367106f.png" alt="\alpha_1=1.4\cdot 10^{-2}\ \text{deg}^{-1}"/>, <img class="math" src="../_images/math/cea34f3871f4037c40b1dbc8b42cca89ec290673.png" alt="\alpha_2=5.6\cdot 10^{-5}\ \text{deg}^{-2}"/>, <img class="math" src="../_images/math/f518fb7016c08810cf8cdd9481af00726ae4fa65.png" alt="\alpha_3=7.0\cdot 10^{-7}\ \text{deg}^{-3}"/> and <img class="math" src="../_images/math/6dc7aee27dd54ad70532f4d455325bcd4a0e3dff.png" alt="\alpha_4=2.2\cdot 10^{-8}\ \text{deg}^{-4}"/></p>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Convert angle to SquareBend term</strong> (CF: <em>do_squarebend</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Identify bend patterns in which 4 atoms of type A surround a central atom of
+type B with A-B-A angles of 90/180 degrees. A simple harmonic pattern will
+not be adequate since a rest value of 90 and 180 degrees is possible for the
+same A-B-A term. Therefore, a cosine term with multiplicity of 4 is used
+(which corresponds to a chebychev4 potential with sign=-1):</p>
+<blockquote>
+<div><p><img class="math" src="../_images/math/c524ec9a67a564438763d69fdd56c82ef191910f.png" alt="V\left(\theta\right)= \frac{K}{2}\left[1-\cos\left(4\theta\right)\right]"/></p>
+</div></blockquote>
+<p>To identify the patterns, it is assumed that the rest values have already
+been estimated from the perturbation trajectories. For each master and slave
+of a BendAHarm term, its rest value is computed and checked if it lies
+either the interval [90-thresshold,90+thresshold] or [180-thresshold,180].
+If this is the case, the new cosine term is used (the thresshold is set to
+20 degrees in the routine <a class="reference internal" href="rg_module.html#seclab-rg-modules-program"><span class="std std-ref">do_squarebond routine</span></a>)</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Convert angle to BendCLin term</strong> (CF: <em>do_bendclin</em>, KA: N/A)</p>
+<blockquote>
+<div><p>No Harmonic bend can have a rest value equal that is larger than 180° -
+thresshold. If a master (or its slaves) has such a rest value, convert
+master and all slaves to BendCLin (which corresponds to a chebychev1
+potential with sign=+1).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Convert SquareOopdist to Oopdist</strong> (CF: <em>do_sqoopdist_to_oopdist</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Transform a SqOopdist term with a rest value that has been set to zero, to
+a term Oopdist (harmonic in Oopdist instead of square of Oopdist) with a
+rest value of 0.0 A.</p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="fitting-algorithm-settings">
+<h3>Fitting algorithm settings<a class="headerlink" href="#fitting-algorithm-settings" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first"><strong>Mass Weighting</strong> (CF: <em>do_hess_mass_weighting</em>, KA: N/A):</p>
+<blockquote>
+<div><p>Set to True to apply mass weighting to the Hessian before fitting force
+constants.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Project negative frequencies</strong> (CF: <em>do_hess_negfreq_proj</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Set to True to project possible negative frequencies out of the <em>ab initio</em>
+hessian prior to fitting force constants</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Singular Value Decomposition for cross terms</strong> (CF: <em>do_cross_svd</em>, KA: NA/)</p>
+<blockquote>
+<div><p>Set to True to perform a singular value decomposition of the cost function
+to fit the force constants of the cross terms. Singular values that are
+to smaller than rcond times the largest singular value are filtered out.
+The value of rcond can be specified with the setting <em>cross_svd_rcond</em>.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Rcond of the SVD for cross terms</strong> (CF: <em>cross_svd_rcond</em>, KA: N/A)</p>
+<blockquote>
+<div><p>See description of the setting <em>do_cross_svd</em> for more info.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Convergence tolerance for perturbation trajectories</strong> (CF: <em>pert_traj_tol</em>, KA: N/A)</p>
+<blockquote>
+<div><p>Convergence criteria for the construction of the perturbation trajectory.</p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="default-settings">
+<span id="sec-ug-settings-default"></span><h2>Default settings<a class="headerlink" href="#default-settings" title="Permalink to this headline">¶</a></h2>
+<p>As mentioned before the default settings are defined in the file <code class="docutils literal"><span class="pre">quickffrc</span></code>
+in the <code class="docutils literal"><span class="pre">share</span></code> directory. The content if this file is given below.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">QuickFF Settings</a><ul>
+<li><a class="reference internal" href="#settings-description">Settings description</a><ul>
+<li><a class="reference internal" href="#general-settings">General settings</a></li>
+<li><a class="reference internal" href="#input-output-settings">Input/output settings</a></li>
+<li><a class="reference internal" href="#reference-force-field-contribution-settings">Reference force field contribution settings</a></li>
+<li><a class="reference internal" href="#force-field-expression-settings">Force field expression settings</a></li>
+<li><a class="reference internal" href="#fitting-algorithm-settings">Fitting algorithm settings</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#default-settings">Default settings</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/trash/ug_settings.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+  </body>
+</html>

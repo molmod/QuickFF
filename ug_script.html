@@ -1,34 +1,34 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>1. Running QuickFF using qff.py &mdash; QuickFF 2.1.3 documentation</title>
-    
+    <title>1. Running QuickFF using qff.py &#8212; QuickFF 2.1.3 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
         VERSION:     '2.1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.1.3 documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="2. Importing QuickFF as a library" href="ug_lib.html" />
     <link rel="prev" title="1. Dependencies" href="ig.html" /> 
   </head>
   <body>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -43,26 +43,26 @@
         <li class="right" >
           <a href="ig.html" title="1. Dependencies"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="running-quickff-using-qff-py">
 <span id="seclab-ug-script"></span><h1>1. Running QuickFF using qff.py<a class="headerlink" href="#running-quickff-using-qff-py" title="Permalink to this headline">¶</a></h1>
 <p>The most straightforward use of QuickFF is by means of a single command using
-the <a class="reference internal" href="rg_scripts.html#seclab-rg-scripts-qff"><em>qff.py</em></a> script. The basic usage of this script
+the <a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">qff.py</span></a> script. The basic usage of this script
 is as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre>qff.py [options] fns
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">qff</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="n">fns</span>
 </pre></div>
 </div>
 <p>In the sections below, both the input files and the optional arguments are
 discussed in detail. The description below is further illustrated with examples
-in the <a class="reference internal" href="index.html#seclab-tutorials"><em>tutorials</em></a>.</p>
+in the <a class="reference internal" href="index.html#seclab-tutorials"><span class="std std-ref">tutorials</span></a>.</p>
 <div class="section" id="mandatory-input-files">
 <span id="seclab-inputfiles"></span><h2>1.1. Mandatory input files<a class="headerlink" href="#mandatory-input-files" title="Permalink to this headline">¶</a></h2>
 <p>The script requires input files describing the system and reference
@@ -93,7 +93,7 @@ frequency calculation.</p>
 <a class="reference external" href="http://molmod.github.com/molmod/">MolMod</a>. This file contains arrays
 representing data stored in a computer-friendly format. Each array is stored
 in the following format:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">tag</span>                                     <span class="n">kind</span><span class="o">=</span><span class="n">dtype</span> <span class="n">shape</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">tag</span>                                     <span class="n">kind</span><span class="o">=</span><span class="n">dtype</span> <span class="n">shape</span>
 <span class="n">datanumber1</span>       <span class="n">datanumber2</span>       <span class="n">datanumber3</span>       <span class="n">datanumber4</span>
 <span class="n">datanumber5</span>       <span class="n">datanumber6</span>       <span class="n">datanumber7</span>       <span class="n">datanumber8</span>
 <span class="o">...</span>
@@ -108,39 +108,36 @@ in the following format:</p>
 </div>
 <div class="section" id="optional-input-files">
 <h2>1.2. Optional input files<a class="headerlink" href="#optional-input-files" title="Permalink to this headline">¶</a></h2>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
-<dt>Electrostatic contribution (<em class="xref std std-option">--ei=EI</em>):</dt>
-<dd><p class="first last">The user can define the electrostatic contribution of the force field using
-the option <em class="xref std std-option">--ei=EI</em>. EI should be the file name of a Yaff parameter
-file containing the electrostatic contribution.</p>
-</dd>
+<dt>Electrostatic contribution (<code class="xref std std-option docutils literal"><span class="pre">--ei=EI</span></code>):</dt>
+<dd>The user can define the electrostatic contribution of the force field using
+the option <code class="xref std std-option docutils literal"><span class="pre">--ei=EI</span></code>. EI should be the file name of a Yaff parameter
+file containing the electrostatic contribution.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Van der Waals contribution (<em class="xref std std-option">--vdw=VDW</em>):</dt>
-<dd><p class="first last">The user can define the van der Waals contribution of the force field using
-the option <em class="xref std std-option">--vdw=VDW</em>. VDW should be the file name of a Yaff
-parameter file containing the van der Waals contribution.</p>
-</dd>
+<dt>Van der Waals contribution (<code class="xref std std-option docutils literal"><span class="pre">--vdw=VDW</span></code>):</dt>
+<dd>The user can define the van der Waals contribution of the force field using
+the option <code class="xref std std-option docutils literal"><span class="pre">--vdw=VDW</span></code>. VDW should be the file name of a Yaff
+parameter file containing the van der Waals contribution.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Residual covalent contribution (<em class="xref std std-option">--covres=COVRES</em>):</dt>
-<dd><p class="first last">The user can define an <cite>a priori</cite> defined contribution to the covalent
+<dt>Residual covalent contribution (<code class="xref std std-option docutils literal"><span class="pre">--covres=COVRES</span></code>):</dt>
+<dd>The user can define an <cite>a priori</cite> defined contribution to the covalent
 force field (and build a quickff force field on top of it) using the option
-<em class="xref std std-option">--covres=COVRES</em>. QuickFF will not neglect terms already present
+<code class="xref std std-option docutils literal"><span class="pre">--covres=COVRES</span></code>. QuickFF will not neglect terms already present
 in the residual contribution, instead it will add an extra term for it.
 COVRES should be the file name of a Yaff parameter file containing the
-residual terms.</p>
-</dd>
+residual terms.</dd>
 </dl>
 </li>
 </ul>
 </div>
 <div class="section" id="automatic-estimation-of-atom-types">
 <span id="seclab-ug-atype-estimator"></span><h2>1.3. Automatic estimation of atom types<a class="headerlink" href="#automatic-estimation-of-atom-types" title="Permalink to this headline">¶</a></h2>
-<p>The optional argument <em class="xref std std-option">--fflevel=LEVEL</em> will trigger the automatic
+<p>The optional argument <code class="xref std std-option docutils literal"><span class="pre">--fflevel=LEVEL</span></code> will trigger the automatic
 assignation of atom types to every atom in the system. There are four possible
 levels of assignation:</p>
 <blockquote>
@@ -169,66 +166,60 @@ neighbors, then <em>s</em> will contain a substring <em>_en</em> for every neigh
 atom. In this substring, <em>e</em> represents the neighbor element and <em>n</em> is the
 number of neighbors of that particular neighbor element. Multiple instances of
 this <em>_en</em> string are ordered according to atomic number.</p>
-<div class="figure align-center">
+<div class="figure align-center" id="id2">
 <a class="reference internal image-reference" href="_images/atypes_medium.png"><img alt="Medium-level atom types" src="_images/atypes_medium.png" style="width: 898.5px; height: 304.0px;" /></a>
-<p class="caption"><strong>Figure 1</strong>: Medium-level atom types</p>
+<p class="caption"><span class="caption-text"><strong>Figure 1</strong>: Medium-level atom types</span></p>
 </div>
-<div class="figure align-center">
+<div class="figure align-center" id="id3">
 <a class="reference internal image-reference" href="_images/atypes_high.png"><img alt="High-level atom types" src="_images/atypes_high.png" style="width: 943.0px; height: 310.0px;" /></a>
-<p class="caption"><strong>Figure 2</strong>: High-level atom types</p>
+<p class="caption"><span class="caption-text"><strong>Figure 2</strong>: High-level atom types</span></p>
 </div>
 <p>By default, the automatic assignation is switched off and the atom types are
-suposed to be defined in the <a class="reference internal" href="#seclab-inputfiles"><em>input files</em></a>.</p>
+suposed to be defined in the <a class="reference internal" href="#seclab-inputfiles"><span class="std std-ref">input files</span></a>.</p>
 </div>
 <div class="section" id="miscellanous-options">
 <h2>1.4. Miscellanous options<a class="headerlink" href="#miscellanous-options" title="Permalink to this headline">¶</a></h2>
 <p>Through the use of the following options, the user can manipulate what QuickFF
 will exactly do.</p>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
-<dt>Program mode (<em class="xref std std-option">-m PROGRAM_MODE</em> or <em class="xref std std-option">--program-mode=PROGRAM_MODE</em>):</dt>
-<dd><p class="first last">Specify the program mode which defines the set of instructions that will be
+<dt>Program mode (<code class="xref std std-option docutils literal"><span class="pre">-m</span> <span class="pre">PROGRAM_MODE</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--program-mode=PROGRAM_MODE</span></code>):</dt>
+<dd>Specify the program mode which defines the set of instructions that will be
 executed. Allowed strings are the names of the program classes defined in
-the <a class="reference internal" href="rg_module.html#seclab-rg-modules-program"><em>program</em></a> module. Be carefull, these
+the <a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">program</span></a> module. Be carefull, these
 names are case sensitive. By default, the program <cite>DeriveNonDiagFF</cite> will be
-used.</p>
-</dd>
+used.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Trajectory storing/loading (<em class="xref std std-option">--fn-traj=FN_TRAJ</em>):</dt>
-<dd><p class="first last">Depending if the given option argument corresponds to an existing file or
+<dt>Trajectory storing/loading (<code class="xref std std-option docutils literal"><span class="pre">--fn-traj=FN_TRAJ</span></code>):</dt>
+<dd>Depending if the given option argument corresponds to an existing file or
 not, this option will load/save perturbation trajectories to/from a cPickled
-file.</p>
-</dd>
+file.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Construct specific trajectories (<em class="xref std std-option">--only-traj=ONLY_TRAJ</em>):</dt>
-<dd><p class="first last">Construct the perturbation trajectory only for the terms with the given
-basenames. This options is only applied in the MakeTrajectories program.</p>
-</dd>
+<dt>Construct specific trajectories (<code class="xref std std-option docutils literal"><span class="pre">--only-traj=ONLY_TRAJ</span></code>):</dt>
+<dd>Construct the perturbation trajectory only for the terms with the given
+basenames. This options is only applied in the MakeTrajectories program.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Output file suffix (<em class="xref std std-option">--suffix=SUFFIX</em>):</dt>
-<dd><p class="first last">Suffix that will be added to all output files. By default, no suffix is
-added.</p>
-</dd>
+<dt>Output file suffix (<code class="xref std std-option docutils literal"><span class="pre">--suffix=SUFFIX</span></code>):</dt>
+<dd>Suffix that will be added to all output files. By default, no suffix is
+added.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Plot energy (<em class="xref std std-option">-e</em> or <em class="xref std std-option">--ener-traj</em>):</dt>
-<dd><p class="first last">Plot the various energy contributions along the perturbation trajectories
-to. By default, energy plotting is switched off.</p>
-</dd>
+<dt>Plot energy (<code class="xref std std-option docutils literal"><span class="pre">-e</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--ener-traj</span></code>):</dt>
+<dd>Plot the various energy contributions along the perturbation trajectories
+to. By default, energy plotting is switched off.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Dump trajectories in XYZ format (<em class="xref std std-option">-x</em> or <em class="xref std std-option">--xyz-traj</em>):</dt>
-<dd><p class="first last">Dump the perturbation trajectories in XYZ format. By default, trajectory
-dumping is switched off.</p>
-</dd>
+<dt>Dump trajectories in XYZ format (<code class="xref std std-option docutils literal"><span class="pre">-x</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--xyz-traj</span></code>):</dt>
+<dd>Dump the perturbation trajectories in XYZ format. By default, trajectory
+dumping is switched off.</dd>
 </dl>
 </li>
 </ul>
@@ -261,35 +252,31 @@ system.chk, to perform force field simulations.</p>
 <div class="section" id="logging">
 <h2>1.6. Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
 <p>These options control the logging of all the operations in QuickFF.</p>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
-<dt>Silent mode (<em class="xref std std-option">-s</em> or <em class="xref std std-option">--silent</em>):</dt>
-<dd><p class="first last">Swith of all logging completely, overwrites all other verbosity options. By
-default, the silent mode is not activated.</p>
-</dd>
+<dt>Silent mode (<code class="xref std std-option docutils literal"><span class="pre">-s</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--silent</span></code>):</dt>
+<dd>Swith of all logging completely, overwrites all other verbosity options. By
+default, the silent mode is not activated.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Verbose mode (<em class="xref std std-option">-v</em> or <em class="xref std std-option">--verbose</em>):</dt>
-<dd><p class="first last">Increases verbosity, is overwriten if <em class="xref std std-option">--silent</em> or
-<em class="xref std std-option">--very-verbose</em> is switched on. By default, the verbose mode is
-not activated.</p>
-</dd>
+<dt>Verbose mode (<code class="xref std std-option docutils literal"><span class="pre">-v</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--verbose</span></code>):</dt>
+<dd>Increases verbosity, is overwriten if <code class="xref std std-option docutils literal"><span class="pre">--silent</span></code> or
+<code class="xref std std-option docutils literal"><span class="pre">--very-verbose</span></code> is switched on. By default, the verbose mode is
+not activated.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Very verbose mode (<em class="xref std std-option">-V</em> or <em class="xref std std-option">--very-verbose</em>):</dt>
-<dd><p class="first last">Increases verbosity to highest level, is overwriten if <em class="xref std std-option">--silent</em>
+<dt>Very verbose mode (<code class="xref std std-option docutils literal"><span class="pre">-V</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--very-verbose</span></code>):</dt>
+<dd>Increases verbosity to highest level, is overwriten if <code class="xref std std-option docutils literal"><span class="pre">--silent</span></code>
 is switched on. This is mostly usefull for debugging purposes. By default,
-the very verbose mode is not activated.</p>
-</dd>
+the very verbose mode is not activated.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Pipe logging (<em class="xref std std-option">-l LOGFILE</em> or <em class="xref std std-option">--logfile=LOGFILE</em>):</dt>
-<dd><p class="first last">Redirect logger output to a file with the name <cite>LOGFILE</cite>. By default, all
-logging output is printed to the screen.</p>
-</dd>
+<dt>Pipe logging (<code class="xref std std-option docutils literal"><span class="pre">-l</span> <span class="pre">LOGFILE</span></code> or <code class="xref std std-option docutils literal"><span class="pre">--logfile=LOGFILE</span></code>):</dt>
+<dd>Redirect logger output to a file with the name <cite>LOGFILE</cite>. By default, all
+logging output is printed to the screen.</dd>
 </dl>
 </li>
 </ul>
@@ -297,10 +284,10 @@ logging output is printed to the screen.</p>
 <div class="section" id="parallel-quickff">
 <h2>1.7. Parallel QuickFF<a class="headerlink" href="#parallel-quickff" title="Permalink to this headline">¶</a></h2>
 <p>If Scoop is installed, it is possible to run QuickFF on multiple cores of a
-single node by using the optional argument <em class="xref std std-option">--scoop</em>. Only the
+single node by using the optional argument <code class="xref std std-option docutils literal"><span class="pre">--scoop</span></code>. Only the
 generation of the perturbation trajectories will be parallized as it is by far
 the time determening step. The exact syntax to use QuickFF in parallel is:</p>
-<div class="highlight-python"><div class="highlight"><pre>python -m scoop -n nproc /path/to/qff.py --scoop [options] fns
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">scoop</span> <span class="o">-</span><span class="n">n</span> <span class="n">nproc</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">qff</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">scoop</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="n">fns</span>
 </pre></div>
 </div>
 <p><em>nproc</em> is the number of processes that can be launched simultaneously. It is
@@ -314,7 +301,7 @@ in the serial version.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
@@ -336,29 +323,28 @@ in the serial version.</p>
   <h4>Next topic</h4>
   <p class="topless"><a href="ug_lib.html"
                         title="next chapter">2. Importing QuickFF as a library</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/ug_script.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/ug_script.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -373,12 +359,19 @@ in the serial version.</p>
         <li class="right" >
           <a href="ig.html" title="1. Dependencies"
              >previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>

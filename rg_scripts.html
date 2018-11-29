@@ -1,33 +1,33 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>1. qff.py – Main script to run QuickFF calculation &mdash; QuickFF 2.1.3 documentation</title>
-    
+    <title>1. qff.py – Main script to run QuickFF calculation &#8212; QuickFF 2.1.3 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
         VERSION:     '2.1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.1.3 documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="1. quickff.cost – Least-Square cost function for hessian matching" href="rg_module.html" /> 
   </head>
   <body>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -39,22 +39,24 @@
         <li class="right" >
           <a href="rg_module.html" title="1. quickff.cost – Least-Square cost function for hessian matching"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="qff-py-main-script-to-run-quickff-calculation">
-<span id="seclab-rg-scripts-qff"></span><span id="seclab-rg-scripts"></span><h1>1. <tt class="docutils literal"><span class="pre">qff.py</span></tt> &#8211; Main script to run QuickFF calculation<a class="headerlink" href="#qff-py-main-script-to-run-quickff-calculation" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-text"><div class="highlight"><pre>usage: qff.py [-h] [--version] [-s] [-v] [-V] [-l LOGFILE] [--scoop]
-              [-m {MakeTrajectories,PlotTrajectories,DeriveDiagFF,DeriveNonDiagFF,DeriveNonDiagFFNoQRef}]
-              [--fn-traj FN_TRAJ] [--only-traj ONLY_TRAJ] [-e] [-x]
-              [--suffix SUFFIX] [--ei EI] [--vdw VDW] [--covres COVRES]
-              [--ffatypes {None,low,medium,high,highest}]
+<span id="seclab-rg-scripts-qff"></span><span id="seclab-rg-scripts"></span><h1>1. <code class="docutils literal"><span class="pre">qff.py</span></code> – Main script to run QuickFF calculation<a class="headerlink" href="#qff-py-main-script-to-run-quickff-calculation" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-text"><div class="highlight"><pre><span></span>usage: qff.py [-h] [--version] [-s] [-v] [-V] [-l LOGFILE] [--scoop]
+              [-c CONFIG_FILE]
+              [-m {MakeTrajectories,PlotTrajectories,DeriveFF}]
+              [--fn-traj FN_TRAJ] [--only-traj ONLY_TRAJ] [-p PLOT_TRAJ] [-x]
+              [--suffix SUFFIX] [--ei EI] [--ei-rcut EI_RCUT] [--vdw VDW]
+              [--vdw-rcut VDW_RCUT] [--covres COVRES]
+              [--ffatypes {None,list_of_atypes,low,medium,high,highest}]
               fn [fn ...]
 
 This script will apply QuickFF to derive a covalent force field for the given
@@ -71,7 +73,7 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --version             Print QuickFF version number and exit.
+  --version             show program&#39;s version number and exit
   -s, --silent          Swith of all logging completely, overwrites all other
                         verbosity options.
   -v, --verbose         Increases verbosity, is overwriten if SILENT or
@@ -87,7 +89,10 @@ optional arguments:
                         -n4 /path/to/qff.py --scoop [options] fns
 
 General QuickFF specifications:
-  -m {MakeTrajectories,PlotTrajectories,DeriveDiagFF,DeriveNonDiagFF,DeriveNonDiagFFNoQRef}, --program-mode {MakeTrajectories,PlotTrajectories,DeriveDiagFF,DeriveNonDiagFF,DeriveNonDiagFFNoQRef}
+  -c CONFIG_FILE, --config-file CONFIG_FILE
+                        Specify a configuration file to read all QuickFF
+                        settings from.
+  -m {MakeTrajectories,PlotTrajectories,DeriveFF}, --program-mode {MakeTrajectories,PlotTrajectories,DeriveFF}
                         Specify the program mode which defines the set of
                         instructions that will be executed.
   --fn-traj FN_TRAJ     Read/write the perturbation trajectories from/to
@@ -98,22 +103,34 @@ General QuickFF specifications:
                         Construct the perturbation trajectory only for the
                         terms with the given basenames. This options is only
                         applied in the MakeTrajectories program.
-  -e, --ener-traj       Plot the various energy contributions along the
-                        perturbation trajectories to.
+  -p PLOT_TRAJ, --plot-traj PLOT_TRAJ
+                        If set to final, plots the various energy
+                        contributions along the perturbation trajectories to
+                        using the final force field. If set to all, plots the
+                        contributions along the trajectories using all
+                        intermediate force fields (given suffixes _Apt1,
+                        _Bhc1, _Cpt2 and _Dhc2) as well as the final force
+                        field (given the suffix _Ehc3).
   -x, --xyz-traj        Write the perturbation trajectories in XYZ format.
   --suffix SUFFIX       Suffix that will be added to all output files.
 
 Options related to the definition and derivation of the force field:
   --ei EI               A Yaff parameters file defining the electrostatic
                         contribution of the force field.
+  --ei-rcut EI_RCUT     The real space cut off for the electrostatic
+                        interactions. If the system is periodic, the ewald
+                        parameters will be adjusted to this cut off.
   --vdw VDW             A Yaff parameters file defining the van der Waals
                         contribution of the force field.
+  --vdw-rcut VDW_RCUT   The real space cut off for the van der Waals
+                        interactions.
   --covres COVRES       A Yaff parameters file defining a residual
                         contribution to the covalent part of the force field.
 
 Options related to the definition of the system:
-  --ffatypes {None,low,medium,high,highest}
-                        Assign atom types in the system through the automatic
+  --ffatypes {None,list_of_atypes,low,medium,high,highest}
+                        Assign atom types in the system by parsing an ordered
+                        list ofatom types as argument or through the automatic
                         built-in detection (see documentation). By default (or
                         if None is given), the atom types are assumed to be
                         defined in the input files. [default=None]
@@ -121,8 +138,9 @@ Options related to the definition of the system:
 </div>
 </div>
 <div class="section" id="qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">
-<span id="seclab-rg-scripts-inputei"></span><h1>2. <tt class="docutils literal"><span class="pre">qff-input-ei.py</span></tt> &#8211; generate Yaff parameter file for electrostatics<a class="headerlink" href="#qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-text"><div class="highlight"><pre>usage: qff-input-ei.py [-h] [-v] [--ffatypes {None,low,medium,high,highest}]
+<span id="seclab-rg-scripts-inputei"></span><h1>2. <code class="docutils literal"><span class="pre">qff-input-ei.py</span></code> – generate Yaff parameter file for electrostatics<a class="headerlink" href="#qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-text"><div class="highlight"><pre><span></span>usage: qff-input-ei.py [-h] [-v]
+                       [--ffatypes {None,list_of_atypes,low,medium,high,highest}]
                        [--gaussian] [--bci]
                        [--bci-constraints BCI_CONSTRAINTS]
                        fn_sys charges [fn_out]
@@ -148,8 +166,9 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -v, --verbose         Increase verbosity of the script [default=False].
-  --ffatypes {None,low,medium,high,highest}
-                        Assign atom types in the system through the automatic
+  --ffatypes {None,list_of_atypes,low,medium,high,highest}
+                        Assign atom types in the system by parsing an ordered
+                        list ofatom types as argument or through the automatic
                         built-in detection (see documentation). By default (or
                         if None is given), the atom types are assumed to be
                         defined in the input files. [default=None]
@@ -183,40 +202,39 @@ optional arguments:
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">1. <tt class="docutils literal"><span class="pre">qff.py</span></tt> &#8211; Main script to run QuickFF calculation</a></li>
-<li><a class="reference internal" href="#qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">2. <tt class="docutils literal"><span class="pre">qff-input-ei.py</span></tt> &#8211; generate Yaff parameter file for electrostatics</a></li>
+<li><a class="reference internal" href="#">1. <code class="docutils literal"><span class="pre">qff.py</span></code> – Main script to run QuickFF calculation</a></li>
+<li><a class="reference internal" href="#qff-input-ei-py-generate-yaff-parameter-file-for-electrostatics">2. <code class="docutils literal"><span class="pre">qff-input-ei.py</span></code> – generate Yaff parameter file for electrostatics</a></li>
 </ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="rg_module.html"
-                        title="previous chapter">1. <tt class="docutils literal"><span class="pre">quickff.cost</span></tt> &#8211; Least-Square cost function for hessian matching</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/rg_scripts.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+                        title="previous chapter">1. <code class="docutils literal"><span class="pre">quickff.cost</span></code> – Least-Square cost function for hessian matching</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/rg_scripts.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -228,12 +246,19 @@ optional arguments:
         <li class="right" >
           <a href="rg_module.html" title="1. quickff.cost – Least-Square cost function for hessian matching"
              >previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>

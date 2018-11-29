@@ -1,33 +1,32 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>quickff.tools &mdash; QuickFF 2.1.3 documentation</title>
-    
+    <title>quickff.tools &#8212; QuickFF 2.1.3 documentation</title>
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
+    <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
         VERSION:     '2.1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.1.3 documentation" href="../../index.html" />
-    <link rel="up" title="Module code" href="../index.html" /> 
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
   </head>
   <body>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -36,56 +35,64 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 2.1.3 documentation</a> &raquo;</li>
-          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../../index.html">QuickFF 2.1.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <h1>Source code for quickff.tools</h1><div class="highlight"><pre>
-<span class="c"># -*- coding: utf-8 -*-</span>
-<span class="c"># QuickFF is a code to quickly derive accurate force fields from ab initio input.</span>
-<span class="c"># Copyright (C) 2012 - 2016 Louis Vanduyfhuys &lt;Louis.Vanduyfhuys@UGent.be&gt;</span>
-<span class="c"># Steven Vandenbrande &lt;Steven.Vandenbrande@UGent.be&gt;,</span>
-<span class="c"># Toon Verstraelen &lt;Toon.Verstraelen@UGent.be&gt;, Center for Molecular Modeling</span>
-<span class="c"># (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise</span>
-<span class="c"># stated.</span>
-<span class="c">#</span>
-<span class="c"># This file is part of QuickFF.</span>
-<span class="c">#</span>
-<span class="c"># QuickFF is free software; you can redistribute it and/or</span>
-<span class="c"># modify it under the terms of the GNU General Public License</span>
-<span class="c"># as published by the Free Software Foundation; either version 3</span>
-<span class="c"># of the License, or (at your option) any later version.</span>
-<span class="c">#</span>
-<span class="c"># QuickFF is distributed in the hope that it will be useful,</span>
-<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
-<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
-<span class="c"># GNU General Public License for more details.</span>
-<span class="c">#</span>
-<span class="c"># You should have received a copy of the GNU General Public License</span>
-<span class="c"># along with this program; if not, see &lt;http://www.gnu.org/licenses/&gt;</span>
-<span class="c">#</span>
-<span class="c">#--</span>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># QuickFF is a code to quickly derive accurate force fields from ab initio input.</span>
+<span class="c1"># Copyright (C) 2012 - 2018 Louis Vanduyfhuys &lt;Louis.Vanduyfhuys@UGent.be&gt;</span>
+<span class="c1"># Steven Vandenbrande &lt;Steven.Vandenbrande@UGent.be&gt;,</span>
+<span class="c1"># Jelle Wieme &lt;Jelle.Wieme@UGent.be&gt;,</span>
+<span class="c1"># Toon Verstraelen &lt;Toon.Verstraelen@UGent.be&gt;, Center for Molecular Modeling</span>
+<span class="c1"># (CMM), Ghent University, Ghent, Belgium; all rights reserved unless otherwise</span>
+<span class="c1"># stated.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of QuickFF.</span>
+<span class="c1">#</span>
+<span class="c1"># QuickFF is free software; you can redistribute it and/or</span>
+<span class="c1"># modify it under the terms of the GNU General Public License</span>
+<span class="c1"># as published by the Free Software Foundation; either version 3</span>
+<span class="c1"># of the License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># QuickFF is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program; if not, see &lt;http://www.gnu.org/licenses/&gt;</span>
+<span class="c1">#</span>
+<span class="c1">#--</span>
 
-<span class="kn">from</span> <span class="nn">molmod.units</span> <span class="kn">import</span> <span class="n">deg</span><span class="p">,</span> <span class="n">angstrom</span>
-<span class="kn">from</span> <span class="nn">molmod.periodic</span> <span class="kn">import</span> <span class="n">periodic</span> <span class="k">as</span> <span class="n">pt</span>
-<span class="kn">from</span> <span class="nn">yaff</span> <span class="kn">import</span> <span class="n">Chebychev1</span><span class="p">,</span> <span class="n">Chebychev2</span><span class="p">,</span> <span class="n">Chebychev3</span><span class="p">,</span> <span class="n">Chebychev4</span><span class="p">,</span> <span class="n">Chebychev6</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">molmod.units</span> <span class="k">import</span> <span class="n">deg</span><span class="p">,</span> <span class="n">angstrom</span><span class="p">,</span> <span class="n">centimeter</span>
+<span class="kn">from</span> <span class="nn">molmod.constants</span> <span class="k">import</span> <span class="n">lightspeed</span>
+<span class="kn">from</span> <span class="nn">molmod.periodic</span> <span class="k">import</span> <span class="n">periodic</span> <span class="k">as</span> <span class="n">pt</span>
+
+<span class="kn">from</span> <span class="nn">yaff</span> <span class="k">import</span> <span class="n">Chebychev1</span><span class="p">,</span> <span class="n">Chebychev2</span><span class="p">,</span> <span class="n">Chebychev3</span><span class="p">,</span> <span class="n">Chebychev4</span><span class="p">,</span> <span class="n">Chebychev6</span>
+
+<span class="kn">from</span> <span class="nn">quickff.log</span> <span class="k">import</span> <span class="n">log</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">math</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s">&#39;global_translation&#39;</span><span class="p">,</span> <span class="s">&#39;global_rotation&#39;</span><span class="p">,</span> <span class="s">&#39;fitpar&#39;</span><span class="p">,</span>
-    <span class="s">&#39;boxqp&#39;</span><span class="p">,</span> <span class="s">&#39;guess_ffatypes&#39;</span><span class="p">,</span> <span class="s">&#39;term_sort_atypes&#39;</span><span class="p">,</span> <span class="s">&#39;get_multiplicity&#39;</span><span class="p">,</span>
-    <span class="s">&#39;get_restvalue&#39;</span><span class="p">,</span> <span class="s">&#39;get_ei_radii&#39;</span><span class="p">,</span> <span class="s">&#39;digits&#39;</span><span class="p">,</span> <span class="s">&#39;average&#39;</span>
+    <span class="s1">&#39;global_translation&#39;</span><span class="p">,</span> <span class="s1">&#39;global_rotation&#39;</span><span class="p">,</span> <span class="s1">&#39;fitpar&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;boxqp&#39;</span><span class="p">,</span> <span class="s1">&#39;set_ffatypes&#39;</span><span class="p">,</span> <span class="s1">&#39;term_sort_atypes&#39;</span><span class="p">,</span> <span class="s1">&#39;get_multiplicity&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;get_restvalue&#39;</span><span class="p">,</span> <span class="s1">&#39;get_ei_radii&#39;</span><span class="p">,</span> <span class="s1">&#39;digits&#39;</span><span class="p">,</span> <span class="s1">&#39;average&#39;</span><span class="p">,</span> <span class="s1">&#39;chebychev&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;project_negative_freqs&#39;</span>
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="global_translation"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.global_translation">[docs]</a><span class="k">def</span> <span class="nf">global_translation</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
+<div class="viewcode-block" id="global_translation"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.global_translation">[docs]</a><span class="k">def</span> <span class="nf">global_translation</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        A function to generate vectors that represent global translations</span>
 <span class="sd">        of a system.</span>
@@ -102,10 +109,10 @@
     <span class="n">VTx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ones</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">zeros</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Natoms</span><span class="p">)</span>
     <span class="n">VTy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span><span class="p">,</span> <span class="n">zeros</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Natoms</span><span class="p">)</span>
     <span class="n">VTz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">zeros</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Natoms</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">VTx</span><span class="p">,</span> <span class="n">VTy</span><span class="p">,</span> <span class="n">VTz</span>
+    <span class="k">return</span> <span class="n">VTx</span><span class="p">,</span> <span class="n">VTy</span><span class="p">,</span> <span class="n">VTz</span></div>
 
-</div>
-<div class="viewcode-block" id="global_rotation"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.global_rotation">[docs]</a><span class="k">def</span> <span class="nf">global_rotation</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
+
+<div class="viewcode-block" id="global_rotation"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.global_rotation">[docs]</a><span class="k">def</span> <span class="nf">global_rotation</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        A function to generate vectors that represent global translations</span>
 <span class="sd">        of a system. Rx is a matrix of rotatino around the x-axis minus</span>
@@ -141,10 +148,10 @@
     <span class="n">VRx</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">transpose</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">VRy</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">transpose</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">VRz</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">transpose</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">VRx</span><span class="p">,</span> <span class="n">VRy</span><span class="p">,</span> <span class="n">VRz</span>
+    <span class="k">return</span> <span class="n">VRx</span><span class="p">,</span> <span class="n">VRy</span><span class="p">,</span> <span class="n">VRz</span></div>
 
-</div>
-<div class="viewcode-block" id="fitpar"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.fitpar">[docs]</a><span class="k">def</span> <span class="nf">fitpar</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+
+<div class="viewcode-block" id="fitpar"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.fitpar">[docs]</a><span class="k">def</span> <span class="nf">fitpar</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Fit a parabola to the samples (xs, ys):</span>
 
@@ -168,10 +175,10 @@
         <span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
     <span class="n">sol</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">svals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="n">rcond</span><span class="p">)</span>
     <span class="n">sol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">0.1</span>
-    <span class="k">return</span> <span class="n">sol</span>
+    <span class="k">return</span> <span class="n">sol</span></div>
 
-</div>
-<div class="viewcode-block" id="boxqp"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.boxqp">[docs]</a><span class="k">def</span> <span class="nf">boxqp</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">bndl</span><span class="p">,</span> <span class="n">bndu</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="boxqp"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.boxqp">[docs]</a><span class="k">def</span> <span class="nf">boxqp</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">bndl</span><span class="p">,</span> <span class="n">bndu</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Minimize the function</span>
 
@@ -197,9 +204,9 @@
 <span class="sd">            status      Return also the number of iterations performed</span>
 
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="c"># Check that boundaries make sense</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">bndl</span><span class="o">&lt;</span><span class="n">bndu</span><span class="p">),</span> <span class="s">&quot;Some lower boundaries are higher than upper boundaries&quot;</span>
-    <span class="c"># Check that matrix A is positive definite</span>
+    <span class="c1"># Check that boundaries make sense</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">bndl</span><span class="o">&lt;</span><span class="n">bndu</span><span class="p">),</span> <span class="s2">&quot;Some lower boundaries are higher than upper boundaries&quot;</span>
+    <span class="c1"># Check that matrix A is positive definite</span>
     <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Project x on to the box of constraints&#39;&#39;&#39;</span>
         <span class="n">x</span><span class="p">[</span><span class="n">x</span><span class="o">&lt;</span><span class="n">bndl</span><span class="p">]</span> <span class="o">=</span> <span class="n">bndl</span><span class="p">[</span><span class="n">x</span><span class="o">&lt;</span><span class="n">bndl</span><span class="p">]</span>
@@ -214,33 +221,33 @@
         <span class="n">mask</span> <span class="o">=</span> <span class="n">x</span><span class="o">==</span><span class="n">bndu</span>
         <span class="n">q</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">q</span><span class="p">[</span><span class="n">mask</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-    <span class="c"># Bootstrapping alpha</span>
+    <span class="c1"># Bootstrapping alpha</span>
     <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.1</span>
     <span class="n">g0</span> <span class="o">=</span> <span class="n">gradient</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
     <span class="n">x1</span> <span class="o">=</span> <span class="n">project</span><span class="p">(</span><span class="n">x0</span><span class="o">-</span><span class="n">alpha</span><span class="o">*</span><span class="n">g0</span><span class="p">)</span>
     <span class="n">gstop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gradient</span><span class="p">(</span><span class="n">x1</span><span class="p">))</span>
-    <span class="n">converged</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">converged</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">nit</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="n">converged</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+    <span class="k">while</span> <span class="n">converged</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
         <span class="n">nit</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="c"># New gradient</span>
+        <span class="c1"># New gradient</span>
         <span class="n">g1</span> <span class="o">=</span> <span class="n">gradient</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
-        <span class="c"># Compute new step length</span>
+        <span class="c1"># Compute new step length</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">-</span> <span class="n">x0</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">g1</span> <span class="o">-</span> <span class="n">g0</span>
         <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">s</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
-        <span class="c"># Update old values</span>
+        <span class="c1"># Update old values</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">x1</span>
         <span class="n">g0</span> <span class="o">=</span> <span class="n">g1</span>
-        <span class="c"># Compute new values</span>
+        <span class="c1"># Compute new values</span>
         <span class="n">x1</span> <span class="o">=</span> <span class="n">project</span><span class="p">(</span><span class="n">x1</span><span class="o">-</span><span class="n">alpha</span><span class="o">*</span><span class="n">g1</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">stopping</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span><span class="o">/</span><span class="n">gstop</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">:</span>
-            <span class="n">converged</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">converged</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">if</span> <span class="n">status</span><span class="p">:</span> <span class="k">return</span> <span class="n">x1</span><span class="p">,</span> <span class="n">nit</span>
-    <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">x1</span>
+    <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">x1</span></div>
 
-</div>
-<div class="viewcode-block" id="guess_ffatypes"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.guess_ffatypes">[docs]</a><span class="k">def</span> <span class="nf">guess_ffatypes</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+
+<div class="viewcode-block" id="set_ffatypes"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.set_ffatypes">[docs]</a><span class="k">def</span> <span class="nf">set_ffatypes</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">       A method to guess atom types. This will overwrite ffatypes</span>
 <span class="sd">       that are already defined in the system.</span>
@@ -251,7 +258,10 @@
 <span class="sd">            A yaff system instance</span>
 
 <span class="sd">       level</span>
-<span class="sd">            A string used for guessing atom types:</span>
+<span class="sd">            If level is a string containing comma&#39;s, it is assumed to be an</span>
+<span class="sd">            ordered list containing the atom type of each atom in the system.</span>
+<span class="sd">            Otherwise, level is assumed to be a string defining how to guess</span>
+<span class="sd">            the atom types from the local topology. Possible levels are:</span>
 
 <span class="sd">                * low:     based on atomic number</span>
 <span class="sd">                * medium:  based on atomic number and number of neighbors</span>
@@ -259,18 +269,20 @@
 <span class="sd">                * highest: based on index in the molecule</span>
 
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Atom types are already defined in the system.&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;low&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Atom types are already defined in the system.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">level</span><span class="p">:</span>
+        <span class="n">atypes</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s1">&#39;low&#39;</span><span class="p">:</span>
         <span class="n">atypes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pt</span><span class="p">[</span><span class="n">number</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">])</span>
-    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;medium&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s1">&#39;medium&#39;</span><span class="p">:</span>
         <span class="n">atypes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">):</span>
             <span class="n">nind</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">neighs1</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
             <span class="n">sym</span> <span class="o">=</span> <span class="n">pt</span><span class="p">[</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-            <span class="n">atype</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">nind</span><span class="p">))</span>
+            <span class="n">atype</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">nind</span><span class="p">))</span>
             <span class="n">atypes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atype</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;high&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s1">&#39;high&#39;</span><span class="p">:</span>
         <span class="n">atypes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">):</span>
             <span class="n">nsyms</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span>
@@ -278,44 +290,44 @@
             <span class="p">])</span>
             <span class="n">sym</span> <span class="o">=</span> <span class="n">pt</span><span class="p">[</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nsyms</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
-                <span class="n">atype</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">1_</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">nsyms</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">atype</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">1_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">nsyms</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">nsyms</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
-                <span class="n">atype</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">2_</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">nsyms</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nsyms</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">atype</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">2_</span><span class="si">%s%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">nsyms</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nsyms</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">atype</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">neighs1</span><span class="p">[</span><span class="n">index</span><span class="p">]))</span>
+                <span class="n">atype</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">neighs1</span><span class="p">[</span><span class="n">index</span><span class="p">]))</span>
                 <span class="n">neighs</span> <span class="o">=</span> <span class="p">{}</span>
                 <span class="k">for</span> <span class="n">nsym</span> <span class="ow">in</span> <span class="n">nsyms</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">nsym</span><span class="o">==</span><span class="s">&#39;h&#39;</span><span class="p">:</span> <span class="k">continue</span>
-                    <span class="k">if</span> <span class="n">nsym</span> <span class="ow">in</span> <span class="n">neighs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">nsym</span><span class="o">==</span><span class="s1">&#39;h&#39;</span><span class="p">:</span> <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">nsym</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">neighs</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
                         <span class="n">neighs</span><span class="p">[</span><span class="n">nsym</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">neighs</span><span class="p">[</span><span class="n">nsym</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="k">for</span> <span class="n">nsym</span><span class="p">,</span> <span class="n">nnum</span> <span class="ow">in</span> <span class="n">neighs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-                    <span class="n">atype</span> <span class="o">+=</span> <span class="s">&#39;_</span><span class="si">%s%i</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">nsym</span><span class="p">,</span> <span class="n">nnum</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">nsym</span><span class="p">,</span> <span class="n">nnum</span> <span class="ow">in</span> <span class="n">neighs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">atype</span> <span class="o">+=</span> <span class="s1">&#39;_</span><span class="si">%s%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">nsym</span><span class="p">,</span> <span class="n">nnum</span><span class="p">)</span>
             <span class="n">atypes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atype</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;highest&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s1">&#39;highest&#39;</span><span class="p">:</span>
         <span class="n">atypes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-            <span class="s">&#39;</span><span class="si">%s%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pt</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">)</span>
+            <span class="s1">&#39;</span><span class="si">%s%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pt</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">)</span>
         <span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid level, recieved </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">level</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid level, recieved </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">level</span><span class="p">)</span>
     <span class="n">system</span><span class="o">.</span><span class="n">ffatype_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">numbers</span><span class="p">),</span> <span class="nb">int</span><span class="p">)</span>
     <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">atype</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">atypes</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">atype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span><span class="p">:</span>
             <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atype</span><span class="p">)</span>
         <span class="n">system</span><span class="o">.</span><span class="n">ffatype_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">atype</span><span class="p">)</span>
-    <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span><span class="p">)</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">ffatypes</span><span class="p">)</span></div>
 
-</div>
-<div class="viewcode-block" id="term_sort_atypes"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.term_sort_atypes">[docs]</a><span class="k">def</span> <span class="nf">term_sort_atypes</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">,</span> <span class="n">indexes</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+
+<div class="viewcode-block" id="term_sort_atypes"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.term_sort_atypes">[docs]</a><span class="k">def</span> <span class="nf">term_sort_atypes</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">,</span> <span class="n">indexes</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Routine to sort the atoms defined in indexes to give consistent term</span>
 <span class="sd">        names. This routine returns the sorted atom indexes as well as the</span>
 <span class="sd">        corresponding atom types.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">atypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">ffatypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;bond&#39;</span><span class="p">,</span> <span class="s">&#39;dist&#39;</span><span class="p">,</span> <span class="s">&#39;bend&#39;</span><span class="p">,</span> <span class="s">&#39;angle&#39;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;bond&#39;</span><span class="p">,</span> <span class="s1">&#39;dist&#39;</span><span class="p">,</span> <span class="s1">&#39;bend&#39;</span><span class="p">,</span> <span class="s1">&#39;angle&#39;</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">atypes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">atypes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> \
         <span class="ow">or</span> <span class="p">(</span><span class="n">atypes</span><span class="o">==</span><span class="n">atypes</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">indexes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">indexes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">:</span>
             <span class="n">sorted_indexes</span> <span class="o">=</span> <span class="n">indexes</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -323,7 +335,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">sorted_indexes</span> <span class="o">=</span> <span class="n">indexes</span>
             <span class="n">sorted_atypes</span> <span class="o">=</span> <span class="n">atypes</span>
-    <span class="k">elif</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;dihed&#39;</span><span class="p">,</span> <span class="s">&#39;dihedral&#39;</span><span class="p">,</span> <span class="s">&#39;torsion&#39;</span><span class="p">]:</span>
+    <span class="k">elif</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;dihed&#39;</span><span class="p">,</span> <span class="s1">&#39;dihedral&#39;</span><span class="p">,</span> <span class="s1">&#39;torsion&#39;</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">atypes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">atypes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> \
         <span class="ow">or</span> <span class="p">(</span><span class="n">atypes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="n">atypes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">atypes</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">&lt;</span><span class="n">atypes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> \
         <span class="ow">or</span> <span class="p">(</span><span class="n">atypes</span><span class="o">==</span><span class="n">atypes</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">indexes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">indexes</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
@@ -332,27 +344,27 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">sorted_indexes</span> <span class="o">=</span> <span class="n">indexes</span>
             <span class="n">sorted_atypes</span> <span class="o">=</span> <span class="n">atypes</span>
-    <span class="k">elif</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;opdist&#39;</span><span class="p">,</span> <span class="s">&#39;oopdist&#39;</span><span class="p">]:</span>
+    <span class="k">elif</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;opdist&#39;</span><span class="p">,</span> <span class="s1">&#39;oopdist&#39;</span><span class="p">]:</span>
         <span class="n">pairs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">indexes</span><span class="p">[:</span><span class="mi">3</span><span class="p">],</span> <span class="n">atypes</span><span class="p">[:</span><span class="mi">3</span><span class="p">]),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
         <span class="n">sorted_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">atype</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">]</span>
         <span class="n">sorted_indexes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">indexes</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
         <span class="n">sorted_atypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">atype</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">atype</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">]</span>
         <span class="n">sorted_atypes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atypes</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sorted_indexes</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sorted_atypes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sorted_indexes</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sorted_atypes</span><span class="p">)</span></div>
 
-</div>
-<div class="viewcode-block" id="get_multiplicity"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.get_multiplicity">[docs]</a><span class="k">def</span> <span class="nf">get_multiplicity</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
-    <span class="s">&#39;Routine to estimate m from local topology&#39;</span>
+
+<div class="viewcode-block" id="get_multiplicity"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.get_multiplicity">[docs]</a><span class="k">def</span> <span class="nf">get_multiplicity</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+    <span class="s1">&#39;Routine to estimate m from local topology&#39;</span>
     <span class="k">if</span>   <span class="nb">set</span><span class="p">([</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">])</span><span class="o">==</span><span class="nb">set</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]):</span> <span class="k">return</span> <span class="mi">3</span>
     <span class="k">elif</span> <span class="nb">set</span><span class="p">([</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">])</span><span class="o">==</span><span class="nb">set</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]):</span> <span class="k">return</span> <span class="mi">6</span>
     <span class="k">elif</span> <span class="nb">set</span><span class="p">([</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">])</span><span class="o">==</span><span class="nb">set</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">]):</span> <span class="k">return</span> <span class="mi">3</span>
     <span class="k">elif</span> <span class="nb">set</span><span class="p">([</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">])</span><span class="o">==</span><span class="nb">set</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">]):</span> <span class="k">return</span> <span class="mi">2</span>
     <span class="k">elif</span> <span class="nb">set</span><span class="p">([</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">])</span><span class="o">==</span><span class="nb">set</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]):</span> <span class="k">return</span> <span class="mi">2</span>
     <span class="k">elif</span> <span class="nb">set</span><span class="p">([</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">])</span><span class="o">==</span><span class="nb">set</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]):</span> <span class="k">return</span> <span class="mi">1</span>
-    <span class="k">else</span><span class="p">:</span>                          <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">else</span><span class="p">:</span>                          <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span></div>
 
-</div>
-<div class="viewcode-block" id="get_restvalue"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.get_restvalue">[docs]</a><span class="k">def</span> <span class="nf">get_restvalue</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">20</span><span class="o">*</span><span class="n">deg</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+
+<div class="viewcode-block" id="get_restvalue"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.get_restvalue">[docs]</a><span class="k">def</span> <span class="nf">get_restvalue</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mi">20</span><span class="o">*</span><span class="n">deg</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Get a rest value of 0.0, 360/(2*m) or None depending on the given</span>
 <span class="sd">        equilbrium values.</span>
@@ -381,23 +393,23 @@
 <span class="sd">            computed and None is returned.</span>
 
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">rv</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">per</span> <span class="o">=</span> <span class="mi">360</span><span class="o">*</span><span class="n">deg</span><span class="o">/</span><span class="n">m</span>
     <span class="k">if</span> <span class="n">mode</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">value</span> <span class="o">%</span> <span class="n">per</span>
             <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">thresshold</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">per</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">&lt;</span><span class="n">thresshold</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">rv</span><span class="o">!=</span><span class="mf">0.0</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="bp">None</span>
-                <span class="k">elif</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">rv</span><span class="o">!=</span><span class="mf">0.0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="k">elif</span> <span class="n">rv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">rv</span> <span class="o">=</span> <span class="mf">0.0</span>
             <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">per</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span><span class="o">&lt;</span><span class="n">thresshold</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">rv</span><span class="o">!=</span><span class="n">per</span><span class="o">/</span><span class="mf">2.0</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="bp">None</span>
-                <span class="k">elif</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">rv</span><span class="o">!=</span><span class="n">per</span><span class="o">/</span><span class="mf">2.0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="k">elif</span> <span class="n">rv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">rv</span> <span class="o">=</span> <span class="n">per</span><span class="o">/</span><span class="mf">2.0</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">None</span>
+                <span class="k">return</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">rv</span>
     <span class="k">elif</span> <span class="n">mode</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
         <span class="n">folded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
@@ -413,10 +425,10 @@
             <span class="k">elif</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">per</span><span class="o">-</span><span class="n">mean</span><span class="o">&lt;=</span><span class="mf">0.25</span><span class="o">*</span><span class="n">per</span><span class="p">:</span> <span class="n">rv</span><span class="o">=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">per</span>
         <span class="k">return</span> <span class="n">rv</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Mode </span><span class="si">%i</span><span class="s"> in get_restvalue is not supported&#39;</span> <span class="o">%</span><span class="n">mode</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Mode </span><span class="si">%i</span><span class="s1"> in get_restvalue is not supported&#39;</span> <span class="o">%</span><span class="n">mode</span><span class="p">)</span></div>
 
-</div>
-<div class="viewcode-block" id="get_ei_radii"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.get_ei_radii">[docs]</a><span class="k">def</span> <span class="nf">get_ei_radii</span><span class="p">(</span><span class="n">numbers</span><span class="p">):</span>
+
+<div class="viewcode-block" id="get_ei_radii"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.get_ei_radii">[docs]</a><span class="k">def</span> <span class="nf">get_ei_radii</span><span class="p">(</span><span class="n">numbers</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Routine to return atomic radii for use in the Gaussian charge</span>
 <span class="sd">        distribution. These radii are computed according to the procedure of</span>
@@ -430,55 +442,57 @@
 <span class="sd">        Slater orbitals and over Gaussian orbitals.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">radii</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s">&#39;H&#39;</span> <span class="p">:</span> <span class="mf">0.7309</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
-        <span class="s">&#39;Li&#39;</span><span class="p">:</span> <span class="mf">1.2951</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;B&#39;</span> <span class="p">:</span> <span class="mf">1.2020</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;C&#39;</span> <span class="p">:</span> <span class="mf">1.1646</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
-        <span class="s">&#39;N&#39;</span> <span class="p">:</span> <span class="mf">1.1039</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;O&#39;</span> <span class="p">:</span> <span class="mf">1.1325</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;F&#39;</span> <span class="p">:</span> <span class="mf">1.1097</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
-        <span class="s">&#39;Na&#39;</span><span class="p">:</span> <span class="mf">1.7093</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;Al&#39;</span><span class="p">:</span> <span class="mf">1.6744</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;Si&#39;</span><span class="p">:</span> <span class="mf">1.6378</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
-        <span class="s">&#39;P&#39;</span> <span class="p">:</span> <span class="mf">1.5730</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;S&#39;</span> <span class="p">:</span> <span class="mf">1.6022</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s">&#39;Cl&#39;</span><span class="p">:</span> <span class="mf">1.5789</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
-        <span class="c">#Could not compute Ga due to missing Taylor expansion in to compute</span>
-        <span class="c">#the electrostatic interaction between two ns-STO densities with n=5</span>
-        <span class="c">#Therefore, the Br to Cl ratio (both elements reported in Chen and</span>
-        <span class="c">#Slater) is extrapolated to Al-Ga</span>
-        <span class="s">&#39;Ga&#39;</span><span class="p">:</span> <span class="mf">2.1325</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
+        <span class="s1">&#39;H&#39;</span> <span class="p">:</span> <span class="mf">0.7308</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
+        <span class="s1">&#39;Li&#39;</span><span class="p">:</span> <span class="mf">1.2951</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span> <span class="p">:</span> <span class="mf">1.2020</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span> <span class="p">:</span> <span class="mf">1.1703</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
+        <span class="s1">&#39;N&#39;</span> <span class="p">:</span> <span class="mf">1.1048</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span> <span class="p">:</span> <span class="mf">1.1325</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span> <span class="p">:</span> <span class="mf">1.1096</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
+        <span class="s1">&#39;Na&#39;</span><span class="p">:</span> <span class="mf">1.7093</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;Mg&#39;</span><span class="p">:</span> <span class="mf">1.6155</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">:</span> <span class="mf">1.6742</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
+        <span class="s1">&#39;Si&#39;</span><span class="p">:</span> <span class="mf">1.6376</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;P&#39;</span> <span class="p">:</span> <span class="mf">1.5727</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span> <span class="p">:</span> <span class="mf">1.6011</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> 
+        <span class="s1">&#39;Cl&#39;</span><span class="p">:</span> <span class="mf">1.5798</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;Ca&#39;</span><span class="p">:</span> <span class="mf">1.6541</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;Sc&#39;</span><span class="p">:</span> <span class="mf">2.0559</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> 
+        <span class="s1">&#39;Ti&#39;</span><span class="p">:</span> <span class="mf">2.0502</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span> <span class="p">:</span> <span class="mf">2.0654</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;Cr&#39;</span><span class="p">:</span> <span class="mf">2.0692</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> 
+        <span class="s1">&#39;Mn&#39;</span><span class="p">:</span> <span class="mf">2.0323</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;Fe&#39;</span><span class="p">:</span> <span class="mf">2.0695</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;Co&#39;</span><span class="p">:</span> <span class="mf">2.0377</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> 
+        <span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">2.0579</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">:</span> <span class="mf">2.0573</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;Zn&#39;</span><span class="p">:</span> <span class="mf">1.9896</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> 
+        <span class="s1">&#39;Ga&#39;</span><span class="p">:</span> <span class="mf">2.0820</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span> <span class="s1">&#39;Br&#39;</span><span class="p">:</span> <span class="mf">2.0088</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span>
     <span class="p">}</span>
+
     <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">numbers</span><span class="p">):</span>
         <span class="n">symbol</span> <span class="o">=</span> <span class="n">pt</span><span class="p">[</span><span class="n">number</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">radii</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;No electrostatic Gaussian radii found for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">symbol</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">radii</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No electrostatic Gaussian radii found for </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">symbol</span><span class="p">)</span>
         <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">radii</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">values</span>
+    <span class="k">return</span> <span class="n">values</span></div>
 
-</div>
-<div class="viewcode-block" id="digits"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.digits">[docs]</a><span class="k">def</span> <span class="nf">digits</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+
+<div class="viewcode-block" id="digits"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.digits">[docs]</a><span class="k">def</span> <span class="nf">digits</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns a string representation of x with exactly n digits if possible.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;&#39;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">==</span><span class="n">n</span><span class="p">:</span> <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="s">&#39;&#39;</span>
     <span class="n">sign</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s">&quot;.&quot;</span> <span class="o">+</span> <span class="s">&quot;0&quot;</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="s2">&quot;0&quot;</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">sign</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span> <span class="n">n</span> <span class="o">-=</span> <span class="mi">1</span>
     <span class="n">i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">x</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">sign</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s">&#39;-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="o">+</span><span class="n">n</span><span class="p">]</span>
+            <span class="k">return</span> <span class="s1">&#39;-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="o">+</span><span class="n">n</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="o">+</span><span class="n">n</span><span class="p">]</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%f</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">r</span>
+            <span class="k">return</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="o">+</span><span class="n">n</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="o">*</span><span class="n">sign</span><span class="p">))[:</span><span class="n">n</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="o">&gt;=</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="o">*</span><span class="n">sign</span><span class="p">))</span>
     <span class="n">ndig</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span>
     <span class="k">if</span> <span class="n">sign</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s">&#39;-</span><span class="si">%i</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">ndig</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s1">&#39;-</span><span class="si">%i</span><span class="s1">.</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">ndig</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%i</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">ndig</span><span class="p">])</span>
-</div>
-<div class="viewcode-block" id="average"><a class="viewcode-back" href="../../rg_module.html#quickff.tools.average">[docs]</a><span class="k">def</span> <span class="nf">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&#39;full&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%i</span><span class="s1">.</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">ndig</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="average"><a class="viewcode-back" href="../../trash/rg_module.html#quickff.tools.average">[docs]</a><span class="k">def</span> <span class="nf">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Average the atomic parameters stored in data over atoms of the same atom</span>
 <span class="sd">        type.</span>
@@ -511,38 +525,38 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">data_atypes</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">ffatype</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">ffatypes</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">ffatype</span> <span class="ow">in</span> <span class="n">data_atypes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">ffatype</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">data_atypes</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">data_atypes</span><span class="p">[</span><span class="n">ffatype</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">data_atypes</span><span class="p">[</span><span class="n">ffatype</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">fmt</span><span class="o">==</span><span class="s">&#39;sort&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">fmt</span><span class="o">==</span><span class="s1">&#39;sort&#39;</span><span class="p">:</span>
         <span class="n">output</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">data_atypes</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">data_atypes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">output</span><span class="p">[</span><span class="n">ffatype</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">fmt</span><span class="o">==</span><span class="s">&#39;full&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">fmt</span><span class="o">==</span><span class="s1">&#39;full&#39;</span><span class="p">:</span>
         <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
         <span class="n">printed</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ffatype</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">):</span>
             <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_atypes</span><span class="p">[</span><span class="n">ffatype</span><span class="p">])</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">std</span> <span class="o">&lt;</span> <span class="mf">1e-2</span> <span class="ow">and</span> <span class="n">ffatype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">printed</span><span class="p">:</span>
-                <span class="k">print</span> <span class="s">&#39;WARNING: charge of atom type </span><span class="si">%s</span><span class="s"> has a large std: </span><span class="si">%.3e</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;WARNING: charge of atom type </span><span class="si">%s</span><span class="s1"> has a large std: </span><span class="si">%.3e</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype</span><span class="p">,</span> <span class="n">std</span><span class="p">))</span>
                 <span class="n">printed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ffatype</span><span class="p">)</span>
             <span class="n">output</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_atypes</span><span class="p">[</span><span class="n">ffatype</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-    <span class="k">elif</span> <span class="n">fmt</span><span class="o">==</span><span class="s">&#39;dict&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">fmt</span><span class="o">==</span><span class="s1">&#39;dict&#39;</span><span class="p">:</span>
         <span class="n">output</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">data_atypes</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">data_atypes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">output</span><span class="p">[</span><span class="n">ffatype</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&#39;Format </span><span class="si">%s</span><span class="s"> not supported, should be full or dict&#39;</span> <span class="o">%</span><span class="n">fmt</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Format </span><span class="si">%s</span><span class="s1"> not supported, should be full or dict&#39;</span> <span class="o">%</span><span class="n">fmt</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span> <span class="s">&#39;Averaged Atomic Charges:&#39;</span>
-        <span class="k">print</span> <span class="s">&#39;------------------------&#39;</span>
-        <span class="k">for</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">data_atypes</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-            <span class="k">print</span> <span class="s">&#39;  </span><span class="si">%4s</span><span class="s">    </span><span class="si">% .3f</span><span class="s"> +- </span><span class="si">% .3f</span><span class="s"> (N=</span><span class="si">%i</span><span class="s">)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
-        <span class="k">print</span> <span class="s">&#39;&#39;</span>
-    <span class="k">return</span> <span class="n">output</span>
-</div>
-<span class="k">def</span> <span class="nf">charges_to_bcis</span><span class="p">(</span><span class="n">charges</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="n">bonds</span><span class="p">,</span> <span class="n">constraints</span><span class="o">=</span><span class="p">{},</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Averaged Atomic Charges:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ffatype</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">data_atypes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  </span><span class="si">%4s</span><span class="s1">    </span><span class="si">% .3f</span><span class="s1"> +- </span><span class="si">% .3f</span><span class="s1"> (N=</span><span class="si">%i</span><span class="s1">)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span></div>
+
+<span class="k">def</span> <span class="nf">charges_to_bcis</span><span class="p">(</span><span class="n">charges</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="n">bonds</span><span class="p">,</span> <span class="n">constraints</span><span class="o">=</span><span class="p">{},</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Transform atomic charges to bond charge increments, by definition 2</span>
 <span class="sd">        bci&#39;s between different pairs of atoms but with identical pairs of</span>
@@ -570,134 +584,169 @@
 <span class="sd">            increase verbosity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">charges</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">)</span>
-    <span class="c">#construct list of bond types and signs, the signs are related to the</span>
-    <span class="c">#direction of the bci of a certain bond. We want that bonds of type</span>
-    <span class="c">#A.B have a bci with equal magnitude as a bond of type B.A. Therefore, we</span>
-    <span class="c">#only store the bci of A.B (alphabetically) and also store a sign, which is</span>
-    <span class="c">#1.0 for bond A.B and -1 for bond B.A</span>
-    <span class="n">btypes</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">,]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">bonds</span><span class="p">)</span>
+    <span class="c1">#construct list of bond types and signs, the signs are related to the</span>
+    <span class="c1">#direction of the bci of a certain bond. We want that bonds of type</span>
+    <span class="c1">#A.B have a bci with equal magnitude as a bond of type B.A. Therefore, we</span>
+    <span class="c1">#only store the bci of A.B (alphabetically) and also store a sign, which is</span>
+    <span class="c1">#1.0 for bond A.B and -1 for bond B.A</span>
+    <span class="n">btypes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">bonds</span><span class="p">)</span>
     <span class="n">signs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">bonds</span><span class="p">)],</span> <span class="nb">float</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bond</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bonds</span><span class="p">):</span>
         <span class="n">ffatype0</span><span class="p">,</span> <span class="n">ffatype1</span> <span class="o">=</span> <span class="n">ffatypes</span><span class="p">[</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">ffatypes</span><span class="p">[</span><span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
         <span class="k">if</span> <span class="n">ffatype0</span><span class="o">&lt;</span><span class="n">ffatype1</span><span class="p">:</span>
-            <span class="n">btypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype0</span><span class="p">,</span><span class="n">ffatype1</span><span class="p">)</span>
+            <span class="n">btypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype0</span><span class="p">,</span><span class="n">ffatype1</span><span class="p">)</span>
             <span class="n">signs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">btypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype1</span><span class="p">,</span><span class="n">ffatype0</span><span class="p">)</span>
+            <span class="n">btypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">ffatype1</span><span class="p">,</span><span class="n">ffatype0</span><span class="p">)</span>
             <span class="n">signs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
-    <span class="c">#decompile constraints</span>
+    <span class="c1">#decompile constraints</span>
     <span class="n">masterof</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">constraints</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-        <span class="n">types</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">types</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">m</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">constraints</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">types</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">m</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">slave</span><span class="p">,</span> <span class="n">sign</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
-            <span class="n">types</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">types</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">slave</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-            <span class="k">assert</span> <span class="n">slave</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> \
-                <span class="s">&#39;Slave </span><span class="si">%s</span><span class="s"> has multiple masters in constraints&#39;</span> <span class="o">%</span><span class="n">slave</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">types</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">slave</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">assert</span> <span class="n">slave</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> \
+                <span class="s1">&#39;Slave </span><span class="si">%s</span><span class="s1"> has multiple masters in constraints&#39;</span> <span class="o">%</span><span class="n">slave</span>
             <span class="n">masterof</span><span class="p">[</span><span class="n">slave</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">sign</span><span class="p">)</span>
     <span class="n">masterlist</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">btype</span> <span class="ow">in</span> <span class="n">btypes</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">btype</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">:</span> <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">btype</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="p">:</span> <span class="k">continue</span>
         <span class="k">if</span> <span class="n">btype</span> <span class="ow">in</span> <span class="n">masterlist</span><span class="p">:</span> <span class="k">continue</span>
         <span class="n">masterlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">btype</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">master</span> <span class="ow">in</span> <span class="n">masterlist</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="ow">not</span> <span class="n">master</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="s">&#39;master </span><span class="si">%s</span><span class="s"> encountered in slaves&#39;</span> <span class="o">%</span><span class="n">master</span>
-    <span class="k">for</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">assert</span> <span class="ow">not</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">masterlist</span><span class="p">,</span> <span class="s">&#39;slave </span><span class="si">%s</span><span class="s"> encountered in masters&#39;</span> <span class="o">%</span><span class="n">slave</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">master</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="s1">&#39;master </span><span class="si">%s</span><span class="s1"> encountered in slaves&#39;</span> <span class="o">%</span><span class="n">master</span>
+    <span class="k">for</span> <span class="n">slave</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">masterlist</span><span class="p">,</span> <span class="s1">&#39;slave </span><span class="si">%s</span><span class="s1"> encountered in masters&#39;</span> <span class="o">%</span><span class="n">slave</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span> <span class="s">&#39;Master-slaves relations:&#39;</span>
-        <span class="k">print</span> <span class="s">&#39;------------------------&#39;</span>
-        <span class="k">for</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">print</span> <span class="n">slave</span><span class="p">,</span> <span class="n">masterof</span><span class="p">[</span><span class="n">slave</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-            <span class="k">print</span> <span class="s">&#39;(None)&#39;</span>
-        <span class="k">print</span> <span class="s">&#39;&#39;</span>
-    <span class="c">#construct the matrix to convert bci&#39;s to charges</span>
-    <span class="c">#matrix[i,n] is the contribution to charge i from bci n</span>
-    <span class="c">#bci p_AB is a charge transfer from B to A, hence qA+=p_AB and qB-=p_AB</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Master-slaves relations:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">slave</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">slave</span><span class="p">,</span> <span class="n">masterof</span><span class="p">[</span><span class="n">slave</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;(None)&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="c1">#construct the matrix to convert bci&#39;s to charges</span>
+    <span class="c1">#matrix[i,n] is the contribution to charge i from bci n</span>
+    <span class="c1">#bci p_AB is a charge transfer from B to A, hence qA+=p_AB and qB-=p_AB</span>
     <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">charges</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">masterlist</span><span class="p">)],</span> <span class="nb">float</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">btype</span><span class="p">,</span> <span class="n">bond</span><span class="p">,</span> <span class="n">sign</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">btypes</span><span class="p">,</span> <span class="n">bonds</span><span class="p">,</span> <span class="n">signs</span><span class="p">)):</span>
         <span class="k">if</span> <span class="n">btype</span> <span class="ow">in</span> <span class="n">masterlist</span><span class="p">:</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">masterlist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">btype</span><span class="p">)</span>
             <span class="n">sign_switch</span> <span class="o">=</span> <span class="mf">1.0</span>
-        <span class="k">elif</span> <span class="n">btype</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">elif</span> <span class="n">btype</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">masterof</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">master</span><span class="p">,</span> <span class="n">sign_switch</span> <span class="o">=</span> <span class="n">masterof</span><span class="p">[</span><span class="n">btype</span><span class="p">]</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">masterlist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">master</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;No master found for bond </span><span class="si">%s</span><span class="s"> of type </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">bond</span><span class="p">,</span> <span class="n">btype</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No master found for bond </span><span class="si">%s</span><span class="s1"> of type </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">bond</span><span class="p">,</span> <span class="n">btype</span><span class="p">))</span>
         <span class="n">matrix</span><span class="p">[</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">index</span><span class="p">]</span> <span class="o">+=</span>  <span class="n">sign</span><span class="o">*</span><span class="n">sign_switch</span>
         <span class="n">matrix</span><span class="p">[</span><span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">index</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="n">sign</span><span class="o">*</span><span class="n">sign_switch</span>
-    <span class="c">#solve the set of equations q=M.t with q the full array of atomic charges</span>
-    <span class="c">#and t the array of bci masters</span>
+    <span class="c1">#solve the set of equations q=M.t with q the full array of atomic charges</span>
+    <span class="c1">#and t the array of bci masters</span>
     <span class="n">bcis</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">svals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
-    <span class="c">#print statistics if required</span>
+    <span class="c1">#print statistics if required</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span> <span class="s">&#39;Fitting SQ to charges:&#39;</span>
-        <span class="k">print</span> <span class="s">&#39;----------------------&#39;</span>
-        <span class="k">print</span> <span class="s">&#39;    sing vals = &#39;</span><span class="p">,</span> <span class="n">svals</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Fitting SQ to charges:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    sing vals = &#39;</span><span class="p">,</span> <span class="n">svals</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">svals</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
-            <span class="k">print</span> <span class="s">&#39;    cond numb = &#39;</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">svals</span><span class="p">)</span><span class="o">/</span><span class="nb">min</span><span class="p">(</span><span class="n">svals</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    cond numb = &#39;</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">svals</span><span class="p">)</span><span class="o">/</span><span class="nb">min</span><span class="p">(</span><span class="n">svals</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span> <span class="s">&#39;    cond numb = inf&#39;</span>
-        <span class="k">print</span> <span class="s">&#39;&#39;</span>
-        <span class="k">print</span> <span class="s">&#39;Resulting split charges:&#39;</span>
-        <span class="k">print</span> <span class="s">&#39;------------------------&#39;</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    cond numb = inf&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Resulting split charges:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">btype</span><span class="p">,</span> <span class="n">sq</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">masterlist</span><span class="p">,</span> <span class="n">bcis</span><span class="p">):</span>
-            <span class="k">print</span> <span class="s">&#39;  </span><span class="si">%10s</span><span class="s">    </span><span class="si">% .3f</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">btype</span><span class="p">,</span> <span class="n">sq</span><span class="p">)</span>
-        <span class="k">print</span> <span class="s">&#39;&#39;</span>
-        <span class="k">print</span> <span class="s">&#39;Statistics of the BCI charges:&#39;</span>
-        <span class="k">print</span> <span class="s">&#39;------------------------------&#39;</span>
-        <span class="n">apriori_values</span>  <span class="o">=</span> <span class="n">average</span><span class="p">(</span><span class="n">charges</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="s">&#39;sort&#39;</span><span class="p">)</span>
-        <span class="n">aposteriori_values</span> <span class="o">=</span> <span class="n">average</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">bcis</span><span class="p">),</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="s">&#39;sort&#39;</span><span class="p">)</span>
-        <span class="k">print</span> <span class="s">&#39; </span><span class="si">%10s</span><span class="s"> |  </span><span class="si">%6s</span><span class="s"> +- </span><span class="si">%5s</span><span class="s"> (</span><span class="si">%2s</span><span class="s">)  |  </span><span class="si">%6s</span><span class="s"> +- </span><span class="si">%5s</span><span class="s"> (</span><span class="si">%2s</span><span class="s">)  | </span><span class="si">%9s</span><span class="s"> &#39;</span> <span class="o">%</span><span class="p">(</span><span class="s">&#39;Atype&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;Qin&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;std&#39;</span><span class="p">,</span> <span class="s">&#39;N&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;Qbci&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;std&#39;</span><span class="p">,</span> <span class="s">&#39;N&#39;</span><span class="p">,</span> <span class="s">&#39;RMSD&#39;</span><span class="p">)</span>
-        <span class="k">print</span> <span class="s">&#39;    &#39;</span><span class="o">+</span><span class="s">&#39;-&#39;</span><span class="o">*</span><span class="mi">71</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  </span><span class="si">%10s</span><span class="s1">    </span><span class="si">% .3f</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">btype</span><span class="p">,</span> <span class="n">sq</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Statistics of the BCI charges:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------&#39;</span><span class="p">)</span>
+        <span class="n">apriori_values</span>  <span class="o">=</span> <span class="n">average</span><span class="p">(</span><span class="n">charges</span><span class="p">,</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="s1">&#39;sort&#39;</span><span class="p">)</span>
+        <span class="n">aposteriori_values</span> <span class="o">=</span> <span class="n">average</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">bcis</span><span class="p">),</span> <span class="n">ffatypes</span><span class="p">,</span> <span class="s1">&#39;sort&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">%10s</span><span class="s1"> |  </span><span class="si">%6s</span><span class="s1"> +- </span><span class="si">%5s</span><span class="s1"> (</span><span class="si">%2s</span><span class="s1">)  |  </span><span class="si">%6s</span><span class="s1"> +- </span><span class="si">%5s</span><span class="s1"> (</span><span class="si">%2s</span><span class="s1">)  | </span><span class="si">%9s</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="p">(</span><span class="s1">&#39;Atype&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;Qin&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;std&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;Qbci&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;std&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;RMSD&#39;</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    &#39;</span><span class="o">+</span><span class="s1">&#39;-&#39;</span><span class="o">*</span><span class="mi">71</span><span class="p">)</span>
         <span class="n">sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
-        <span class="k">for</span> <span class="n">atype</span><span class="p">,</span> <span class="n">qins</span> <span class="ow">in</span> <span class="n">apriori_values</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">atype</span><span class="p">,</span> <span class="n">qins</span> <span class="ow">in</span> <span class="n">apriori_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">qouts</span> <span class="o">=</span> <span class="n">aposteriori_values</span><span class="p">[</span><span class="n">atype</span><span class="p">]</span>
-            <span class="k">print</span> <span class="s">&#39; </span><span class="si">%10s</span><span class="s"> |  </span><span class="si">% 6.3f</span><span class="s"> +- </span><span class="si">%5.3f</span><span class="s"> (</span><span class="si">%2i</span><span class="s">)  |  </span><span class="si">% 6.3f</span><span class="s"> +- </span><span class="si">%5.3f</span><span class="s"> (</span><span class="si">%2i</span><span class="s">)  | </span><span class="si">% 9.6f</span><span class="s"> &#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">atype</span><span class="p">,</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">%10s</span><span class="s1"> |  </span><span class="si">% 6.3f</span><span class="s1"> +- </span><span class="si">%5.3f</span><span class="s1"> (</span><span class="si">%2i</span><span class="s1">)  |  </span><span class="si">% 6.3f</span><span class="s1"> +- </span><span class="si">%5.3f</span><span class="s1"> (</span><span class="si">%2i</span><span class="s1">)  | </span><span class="si">% 9.6f</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">atype</span><span class="p">,</span>
                 <span class="n">qins</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">qins</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">qins</span><span class="p">),</span>
                 <span class="n">qouts</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">qouts</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">qouts</span><span class="p">),</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(((</span><span class="n">qouts</span><span class="o">-</span><span class="n">qins</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-            <span class="p">)</span>
+            <span class="p">))</span>
             <span class="n">sums</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">qins</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">qouts</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="p">((</span><span class="n">qouts</span><span class="o">-</span><span class="n">qins</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()])</span>
-        <span class="k">print</span> <span class="s">&#39;    &#39;</span><span class="o">+</span><span class="s">&#39;-&#39;</span><span class="o">*</span><span class="mi">71</span>
-        <span class="k">print</span> <span class="s">&#39; </span><span class="si">%10s</span><span class="s"> |  </span><span class="si">% 9.6f</span><span class="s">             |  </span><span class="si">% 9.6f</span><span class="s">             | </span><span class="si">% 9.6f</span><span class="s"> &#39;</span> <span class="o">%</span><span class="p">(</span><span class="s">&#39;ALL&#39;</span><span class="p">,</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    &#39;</span><span class="o">+</span><span class="s1">&#39;-&#39;</span><span class="o">*</span><span class="mi">71</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">%10s</span><span class="s1"> |  </span><span class="si">% 9.6f</span><span class="s1">             |  </span><span class="si">% 9.6f</span><span class="s1">             | </span><span class="si">% 9.6f</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="p">(</span><span class="s1">&#39;ALL&#39;</span><span class="p">,</span>
             <span class="n">sums</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">sums</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
             <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sums</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">ffatypes</span><span class="p">))</span>
-        <span class="p">)</span>
-        <span class="k">print</span> <span class="s">&#39;&#39;</span>
-    <span class="c">#construct output dictionnary containing also bci&#39;s of slaves</span>
+        <span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="c1">#construct output dictionnary containing also bci&#39;s of slaves</span>
     <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">btype</span><span class="p">,</span> <span class="n">bci</span><span class="p">)</span> <span class="k">for</span> <span class="n">btype</span><span class="p">,</span> <span class="n">bci</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">masterlist</span><span class="p">,</span> <span class="n">bcis</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">slave</span><span class="p">,</span> <span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">sign</span><span class="p">)</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">slave</span><span class="p">,</span> <span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">sign</span><span class="p">)</span> <span class="ow">in</span> <span class="n">masterof</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">result</span><span class="p">[</span><span class="n">slave</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">master</span><span class="p">]</span><span class="o">*</span><span class="n">sign</span>
     <span class="k">return</span> <span class="n">result</span>
+
+<span class="k">def</span> <span class="nf">chebychev</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">m</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">m</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">chebychev</span><span class="p">(</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="n">chebychev</span><span class="p">(</span><span class="n">m</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">project_negative_freqs</span><span class="p">(</span><span class="n">hessian</span><span class="p">,</span> <span class="n">masses</span><span class="p">,</span> <span class="n">thresshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
+    <span class="n">sqrt_mass_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">masses</span><span class="p">,</span> <span class="n">masses</span><span class="p">,</span> <span class="n">masses</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+    <span class="n">isqrt_mass_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">sqrt_mass_matrix</span><span class="p">)</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">isqrt_mass_matrix</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hessian</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="mi">3</span><span class="o">*</span><span class="n">N</span><span class="p">,</span><span class="mi">3</span><span class="o">*</span><span class="n">N</span><span class="p">]),</span> <span class="n">isqrt_mass_matrix</span><span class="p">))</span>
+    <span class="c1">#diagonalize</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">matrix</span><span class="o">-</span><span class="n">matrix</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">1e-6</span><span class="o">*</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;20 lowest frequencies [1/cm] before projection:&#39;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">evals</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">12</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="mi">12</span><span class="p">:</span><span class="mi">16</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)))</span>
+    <span class="c1">#set negative eigenvalues to zero</span>
+    <span class="n">evals</span><span class="p">[</span><span class="n">evals</span><span class="o">&lt;</span><span class="n">thresshold</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">projected_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">evecs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">evals</span><span class="p">),</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+    <span class="n">projected_hessian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">sqrt_mass_matrix</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">projected_matrix</span><span class="p">,</span> <span class="n">sqrt_mass_matrix</span><span class="p">))</span>
+    <span class="c1">#dump freqs after projection as check</span>
+    <span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">projected_matrix</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;20 lowest frequencies [1/cm] after projection:&#39;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">evals</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">12</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="mi">12</span><span class="p">:</span><span class="mi">16</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">lightspeed</span><span class="o">/</span><span class="n">centimeter</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">projected_hessian</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
 </pre></div>
 
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none">
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -706,13 +755,20 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">QuickFF 2.1.3 documentation</a> &raquo;</li>
-          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../../index.html">QuickFF 2.1.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>

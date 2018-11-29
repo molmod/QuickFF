@@ -1,34 +1,34 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>2. Importing QuickFF as a library &mdash; QuickFF 2.1.3 documentation</title>
-    
+    <title>2. Importing QuickFF as a library &#8212; QuickFF 2.1.3 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
         VERSION:     '2.1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.1.3 documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="3. Generating Yaff parameter file for the electrostatic contribution" href="ug_inputei.html" />
     <link rel="prev" title="1. Running QuickFF using qff.py" href="ug_script.html" /> 
   </head>
   <body>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -43,14 +43,14 @@
         <li class="right" >
           <a href="ug_script.html" title="1. Running QuickFF using qff.py"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="importing-quickff-as-a-library">
 <span id="seclab-ug-lib"></span><h1>2. Importing QuickFF as a library<a class="headerlink" href="#importing-quickff-as-a-library" title="Permalink to this headline">¶</a></h1>
@@ -58,21 +58,21 @@
 in a script written by the user. This procedure allows more control over the
 core features of QuickFF and also allows more complex force fields. In this
 User Guide, we will show how to write a custom script for deriving a force field
-using QuickFF. The <a class="reference internal" href="index.html#seclab-tutorials"><em>tutorials</em></a> will include examples of
-specific systems, such as <a class="reference internal" href="tu_water.html#seclab-tu-water"><em>water</em></a> and
-<a class="reference internal" href="tu_biphenyl.html#seclab-tu-biphenyl"><em>biphenyl</em></a>.</p>
+using QuickFF. The <a class="reference internal" href="index.html#seclab-tutorials"><span class="std std-ref">tutorials</span></a> will include examples of
+specific systems, such as <a class="reference internal" href="tu_water.html#seclab-tu-water"><span class="std std-ref">water</span></a> and
+<a class="reference internal" href="tu_biphenyl.html#seclab-tu-biphenyl"><span class="std std-ref">biphenyl</span></a>.</p>
 <div class="section" id="define-the-system">
 <h2>2.1. Define the system<a class="headerlink" href="#define-the-system" title="Permalink to this headline">¶</a></h2>
 <p>First we need to define an instance of the
 <a class="reference external" href="http://molmod.github.io/yaff/ug_system.html">Yaff System class</a> to define the
 molecular system:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">molmod.units</span> <span class="kn">import</span> <span class="n">angstrom</span>
-<span class="kn">from</span> <span class="nn">yaff</span> <span class="kn">import</span> <span class="n">System</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="c">#initialize system</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">molmod.units</span> <span class="k">import</span> <span class="n">angstrom</span>
+<span class="kn">from</span> <span class="nn">yaff</span> <span class="k">import</span> <span class="n">System</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="c1">#initialize system</span>
 <span class="n">numbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.37</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],[</span><span class="mf">0.37</span><span class="o">*</span><span class="n">angstrom</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]])</span>
-<span class="n">system</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">rvecs</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">rvecs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Here, we considered a (non-periodic) hydrogen molecule oriented along the
@@ -81,13 +81,13 @@ x-axis and a H-H bond length of 0.74 angstrom.</p>
 <div class="section" id="define-the-ab-initio-reference">
 <h2>2.2. Define the ab initio reference<a class="headerlink" href="#define-the-ab-initio-reference" title="Permalink to this headline">¶</a></h2>
 <p>Second, we define the ab initio geometry, gradient and Hessian in equilibrium:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">quickff.reference</span> <span class="kn">import</span> <span class="n">SecondOrderTaylor</span>
-<span class="c">#initialize numpy arrays</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">quickff.reference</span> <span class="k">import</span> <span class="n">SecondOrderTaylor</span>
+<span class="c1">#initialize numpy arrays</span>
 <span class="n">energy</span> <span class="o">=</span> <span class="mf">0.0</span>
 <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
 <span class="n">hess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="o">...</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
-<span class="c">#initialize the ab initio reference</span>
-<span class="n">ai</span> <span class="o">=</span> <span class="n">SecondOrderTaylor</span><span class="p">(</span><span class="s">&#39;ai&#39;</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="n">energy</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="n">hess</span><span class="p">)</span>
+<span class="c1">#initialize the ab initio reference</span>
+<span class="n">ai</span> <span class="o">=</span> <span class="n">SecondOrderTaylor</span><span class="p">(</span><span class="s1">&#39;ai&#39;</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="n">energy</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">hess</span><span class="o">=</span><span class="n">hess</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -97,10 +97,10 @@ x-axis and a H-H bond length of 0.74 angstrom.</p>
 want to include. Suppose we want to take an a priori derived electrostatic
 contribution into account. If a Yaff parameter file <cite>pars_ei.txt</cite> is at hand for
 the EI contribution, we can add it as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">yaff.pes.ff</span> <span class="kn">import</span> <span class="n">ForceField</span>
-<span class="kn">from</span> <span class="nn">quickff.reference</span> <span class="kn">import</span> <span class="n">YaffForceField</span>
-<span class="n">ff</span> <span class="o">=</span> <span class="n">ForceField</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="s">&#39;pars_ei.txt&#39;</span><span class="p">,</span> <span class="n">rcut</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="n">angstrom</span><span class="p">)</span>
-<span class="n">ei</span> <span class="o">=</span> <span class="n">YaffForceField</span><span class="p">(</span><span class="s">&#39;ei&#39;</span><span class="p">,</span> <span class="n">ff</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yaff.pes.ff</span> <span class="k">import</span> <span class="n">ForceField</span>
+<span class="kn">from</span> <span class="nn">quickff.reference</span> <span class="k">import</span> <span class="n">YaffForceField</span>
+<span class="n">ff</span> <span class="o">=</span> <span class="n">ForceField</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="s1">&#39;pars_ei.txt&#39;</span><span class="p">,</span> <span class="n">rcut</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="n">angstrom</span><span class="p">)</span>
+<span class="n">ei</span> <span class="o">=</span> <span class="n">YaffForceField</span><span class="p">(</span><span class="s1">&#39;ei&#39;</span><span class="p">,</span> <span class="n">ff</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The keyword argument <cite>rcut</cite> represents the cutoff for the electrostatic
@@ -113,11 +113,11 @@ using Yaff as a library. For more information see page in the Yaff manual on
 <div class="section" id="define-the-program-and-run-it">
 <h2>2.4. Define the program and run it<a class="headerlink" href="#define-the-program-and-run-it" title="Permalink to this headline">¶</a></h2>
 <p>Finally, one has to define a program, which is a sequence of routines of the
-BaseProgram class (see <a class="reference internal" href="rg_module.html#seclab-rg-modules-program"><em>Reference Guide</em></a> for
+BaseProgram class (see <a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">Reference Guide</span></a> for
 more information). For our example of a single hydrogen molecule, one could get
 an accurate estimate of both the bond rest value and its force constant from the
 perturbation trajectories without force constant refinement:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">quickff.program</span> <span class="kn">import</span> <span class="n">BaseProgram</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">quickff.program</span> <span class="k">import</span> <span class="n">BaseProgram</span>
 <span class="k">class</span> <span class="nc">CustomProgram</span><span class="p">(</span><span class="n">BaseProgram</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">do_pt_generate</span><span class="p">()</span>
@@ -130,13 +130,13 @@ perturbation trajectories without force constant refinement:</p>
 </div>
 <p>The arguments of the initializer of CustomProgram, both mandatory and keyword
 arguments, are the same as the BaseProgram class (see
-<a class="reference internal" href="rg_module.html#seclab-rg-modules-program"><em>Reference Guide</em></a> for more information).</p>
+<a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-program"><span class="std std-ref">Reference Guide</span></a> for more information).</p>
 </div>
 <div class="section" id="logging">
 <h2>2.5. Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
 <p>Controlling the amount of logging can be done at the beginning of your custom
 script as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">quickff.log</span> <span class="kn">import</span> <span class="n">log</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">quickff.log</span> <span class="k">import</span> <span class="n">log</span>
 <span class="n">log</span><span class="o">.</span><span class="n">set_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -144,10 +144,10 @@ script as follows:</p>
 <cite>medium</cite>, <cite>high</cite> or <cite>highest</cite>, or an integer withing the range 0-4 (0
 corresponds to <cite>silent</cite>, 4 corresponds to <cite>highest</cite>). One can introduce custom
 logging sections in the script as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">print_level</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="n">timer_description</span><span class="p">):</span>
-    <span class="c">#insert code here</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">print_level</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="n">timer_description</span><span class="p">):</span>
+    <span class="c1">#insert code here</span>
     <span class="o">...</span>
-    <span class="c">#dump string to logger</span>
+    <span class="c1">#dump string to logger</span>
     <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -159,17 +159,17 @@ logging sections in the script as follows:</p>
 <li><strong>string</strong>: a string that will be dumped to the logger</li>
 </ul>
 <p>For example, the code below:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;TEST&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s">&#39;Testing the logger&#39;</span><span class="p">):</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;This is a test&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s1">&#39;TEST&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s1">&#39;Testing the logger&#39;</span><span class="p">):</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;This is a test&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>will generate the following line in the log output if <cite>log.level</cite> is set to <cite>medium</cite> or higher:</p>
-<div class="highlight-python"><div class="highlight"><pre>TEST   This is a test
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TEST</span>   <span class="n">This</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">test</span>
 </pre></div>
 </div>
 <p>and the following line at the end of the log output (actual timing below is not
 representative):</p>
-<div class="highlight-python"><div class="highlight"><pre>TIMING Testing the logger              0:00:00.000001
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TIMING</span> <span class="n">Testing</span> <span class="n">the</span> <span class="n">logger</span>              <span class="mi">0</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mf">00.000001</span>
 </pre></div>
 </div>
 </div>
@@ -179,7 +179,7 @@ representative):</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
@@ -199,29 +199,28 @@ representative):</p>
   <h4>Next topic</h4>
   <p class="topless"><a href="ug_inputei.html"
                         title="next chapter">3. Generating Yaff parameter file for the electrostatic contribution</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/ug_lib.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/ug_lib.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -236,12 +235,19 @@ representative):</p>
         <li class="right" >
           <a href="ug_script.html" title="1. Running QuickFF using qff.py"
              >previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>

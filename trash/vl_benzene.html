@@ -1,0 +1,215 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Validation 2 - Benzene &#8212; QuickFF 2.1.3 documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="validation-2-benzene">
+<span id="seclab-vl-benzene"></span><h1>Validation 2 - Benzene<a class="headerlink" href="#validation-2-benzene" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="force-field-construction">
+<h2>Force field construction<a class="headerlink" href="#force-field-construction" title="Permalink to this headline">¶</a></h2>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the output of qff-input-ei.py</strong></div>
+<div class="system-message">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/home/louis/build/quickff/doc/trash/vl_benzene.rst</tt>, line 15)</p>
+Command 'qff-input-ei.py -v --ffatypes=low --gaussian gaussian.fchk gaussian_mbis.h5:charges pars_ei_mbisgauss.txt' failed: [Errno 2] No such file or directory: '/home/louis/build/quickff/doc/share/validation/benzene': '/home/louis/build/quickff/doc/share/validation/benzene'</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the Yaff parameter file of the electrostatic contribution</strong></div>
+<div class="system-message">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/home/louis/build/quickff/doc/trash/vl_benzene.rst</tt>, line 26)</p>
+Command 'cat pars_ei_mbisgauss.txt' failed: [Errno 2] No such file or directory: '/home/louis/build/quickff/doc/share/validation/benzene': '/home/louis/build/quickff/doc/share/validation/benzene'</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the QuickFF log file</strong></div>
+<div class="system-message">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/home/louis/build/quickff/doc/trash/vl_benzene.rst</tt>, line 37)</p>
+Command 'qff.py -c ../config.txt gaussian.fchk' failed: [Errno 2] No such file or directory: '/home/louis/build/quickff/doc/share/validation/benzene': '/home/louis/build/quickff/doc/share/validation/benzene'</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="toggle docutils container">
+<div class="header docutils container">
+<strong>Click to show/hide the Yaff parameter file of the covalent contribution</strong></div>
+<div class="system-message">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/home/louis/build/quickff/doc/trash/vl_benzene.rst</tt>, line 48)</p>
+Command 'cat pars_cov.txt' failed: [Errno 2] No such file or directory: '/home/louis/build/quickff/doc/share/validation/benzene': '/home/louis/build/quickff/doc/share/validation/benzene'</div>
+</div>
+</div>
+<div class="section" id="force-field-evaluation">
+<h2>Force field evaluation<a class="headerlink" href="#force-field-evaluation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="perturbation-trajectories">
+<h3>Perturbation trajectories<a class="headerlink" href="#perturbation-trajectories" title="Permalink to this headline">¶</a></h3>
+<p>The figures below illustrate the reproduction of the <em>ab initio</em> energy along
+the constructed perturbation trajectories. For water, there are 3 such
+trajectories, two bonds and one bend.</p>
+<ul class="simple">
+<li><strong>C-H bonds</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-0_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-7_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-8_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-9_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-10_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.H-11_Ehc3.png" style="width: 400px;" /></a>
+<ul class="simple">
+<li><strong>C-C bonds</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-1_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-2_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-3_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-4_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-5_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BondHarm-C.C-6_Ehc3.png" style="width: 400px;" /></a>
+<ul class="simple">
+<li><strong>C-C-C bends</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-24_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-25_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-26_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-27_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-28_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.C-29_Ehc3.png" style="width: 400px;" /></a>
+<ul class="simple">
+<li><strong>C-C-H bends</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-12_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-13_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-14_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-15_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-16_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-BendAHarm-C.C.H-17_Ehc3.png" style="width: 400px;" /></a>
+<ul class="simple">
+<li><strong>C-C-H-C out-of-plane distances</strong>:</li>
+</ul>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-54_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-55_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-56_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-57_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-58_Ehc3.png" style="width: 400px;" /></a>
+<a class="reference external image-reference" href="../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png"><img alt="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png" src="trash/../../../share/validation/benzene/trajectory-Oopdist-C.C.H.C-59_Ehc3.png" style="width: 400px;" /></a>
+</div>
+<div class="section" id="geometry-and-frequencies">
+<h3>Geometry and frequencies<a class="headerlink" href="#geometry-and-frequencies" title="Permalink to this headline">¶</a></h3>
+<div class="system-message">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/home/louis/build/quickff/doc/trash/vl_benzene.rst</tt>, line 200)</p>
+Command 'python simulate.py' failed: [Errno 2] No such file or directory: '/home/louis/build/quickff/doc/share/validation/benzene': '/home/louis/build/quickff/doc/share/validation/benzene'</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Validation 2 - Benzene</a><ul>
+<li><a class="reference internal" href="#force-field-construction">Force field construction</a></li>
+<li><a class="reference internal" href="#force-field-evaluation">Force field evaluation</a><ul>
+<li><a class="reference internal" href="#perturbation-trajectories">Perturbation trajectories</a></li>
+<li><a class="reference internal" href="#geometry-and-frequencies">Geometry and frequencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/trash/vl_benzene.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+  </body>
+</html>

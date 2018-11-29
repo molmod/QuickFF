@@ -1,34 +1,34 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>3. Generating Yaff parameter file for the electrostatic contribution &mdash; QuickFF 2.1.3 documentation</title>
-    
+    <title>3. Generating Yaff parameter file for the electrostatic contribution &#8212; QuickFF 2.1.3 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
         VERSION:     '2.1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="QuickFF 2.1.3 documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Tutorial 1 - Benzene" href="tu_benzene.html" />
     <link rel="prev" title="2. Importing QuickFF as a library" href="ug_lib.html" /> 
   </head>
   <body>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -43,69 +43,64 @@
         <li class="right" >
           <a href="ug_lib.html" title="2. Importing QuickFF as a library"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="generating-yaff-parameter-file-for-the-electrostatic-contribution">
 <span id="seclab-ug-tools-inputei"></span><span id="seclab-ug-tools"></span><h1>3. Generating Yaff parameter file for the electrostatic contribution<a class="headerlink" href="#generating-yaff-parameter-file-for-the-electrostatic-contribution" title="Permalink to this headline">¶</a></h1>
 <p>A Yaff force field file for the electrostatic contribution can be constructed
 from the output of <a class="reference external" href="https://theochem.github.io/horton/">HORTON</a> using the
-<a class="reference internal" href="rg_scripts.html#seclab-rg-scripts-inputei"><em>qff-input-ei.py</em></a> script:</p>
-<div class="highlight-python"><div class="highlight"><pre>qff-input-ei.py [options] fn_sys fn_wpart:path
+<a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-inputei"><span class="std std-ref">qff-input-ei.py</span></a> script:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">qff</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">ei</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="n">fn_sys</span> <span class="n">fn_wpart</span><span class="p">:</span><span class="n">path</span>
 </pre></div>
 </div>
 <p><strong>Arguments</strong></p>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
-<dt><tt class="docutils literal"><span class="pre">fn_sys</span></tt></dt>
-<dd><p class="first last">a file containing the system information. Any file type accepted by the
-main script <a class="reference internal" href="rg_scripts.html#seclab-rg-scripts-qff"><em>qff.py</em></a> is also accepted here
-(see <a class="reference internal" href="ug_script.html#seclab-inputfiles"><em>input files</em></a>).</p>
-</dd>
+<dt><code class="docutils literal"><span class="pre">fn_sys</span></code></dt>
+<dd>a file containing the system information. Any file type accepted by the
+main script <a class="reference internal" href="trash/rg_scripts.html#seclab-rg-scripts-qff"><span class="std std-ref">qff.py</span></a> is also accepted here
+(see <a class="reference internal" href="ug_script.html#seclab-inputfiles"><span class="std std-ref">input files</span></a>).</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><tt class="docutils literal"><span class="pre">fn_wpart</span></tt></dt>
-<dd><p class="first last">is a <a class="reference external" href="https://theochem.github.io/horton/">HORTON</a>: HDF5 file containing
-the charges of each atom. The script <tt class="docutils literal"><span class="pre">horton-wpart.py</span></tt> derives atomic charges from
+<dt><code class="docutils literal"><span class="pre">fn_wpart</span></code></dt>
+<dd>is a <a class="reference external" href="https://theochem.github.io/horton/">HORTON</a>: HDF5 file containing
+the charges of each atom. The script <code class="docutils literal"><span class="pre">horton-wpart.py</span></code> derives atomic charges from
 wavefunction files and writes the results in this type of HDF5 file. The charges in
-this file should have the same ordering as the atoms in the system file <tt class="docutils literal"><span class="pre">fn_sys</span></tt>.</p>
-</dd>
+this file should have the same ordering as the atoms in the system file <code class="docutils literal"><span class="pre">fn_sys</span></code>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><tt class="docutils literal"><span class="pre">path</span></tt></dt>
-<dd><p class="first last">is the path in the HDF5 to the dataset <tt class="docutils literal"><span class="pre">charges</span></tt>. The default path in HORTON 2.x
-is <tt class="docutils literal"><span class="pre">/charges</span></tt>. In HORTON 1.x, the path depends on the method used to compute the
-charges, e.g. <tt class="docutils literal"><span class="pre">/wpart/hi/charges</span></tt> would be the path to the Hirshfeld-I charges.</p>
-</dd>
+<dt><code class="docutils literal"><span class="pre">path</span></code></dt>
+<dd>is the path in the HDF5 to the dataset <code class="docutils literal"><span class="pre">charges</span></code>. The default path in HORTON 2.x
+is <code class="docutils literal"><span class="pre">/charges</span></code>. In HORTON 1.x, the path depends on the method used to compute the
+charges, e.g. <code class="docutils literal"><span class="pre">/wpart/hi/charges</span></code> would be the path to the Hirshfeld-I charges.</dd>
 </dl>
 </li>
 </ul>
 <p><strong>Options</strong></p>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
-<dt>Force field atom types (<em class="xref std std-option">--ffatypes=LEVEL</em>):</dt>
-<dd><p class="first last">Determine the force field atom types according to the given level (see
-<a class="reference internal" href="ug_script.html#seclab-ug-atype-estimator"><em>automatic estimation of atom types</em></a>). By
-default, the atom types are assumed to be defined in <tt class="docutils literal"><span class="pre">fn_sys</span></tt>.</p>
-</dd>
+<dt>Force field atom types (<code class="xref std std-option docutils literal"><span class="pre">--ffatypes=LEVEL</span></code>):</dt>
+<dd>Determine the force field atom types according to the given level (see
+<a class="reference internal" href="ug_script.html#seclab-ug-atype-estimator"><span class="std std-ref">automatic estimation of atom types</span></a>). By
+default, the atom types are assumed to be defined in <code class="docutils literal"><span class="pre">fn_sys</span></code>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Gaussian distributed charges (<em class="xref std std-option">--gaussian</em>):</dt>
-<dd><p class="first last">Treat the atomic charges as Gaussian charge distributions with atomic radii
+<dt>Gaussian distributed charges (<code class="xref std std-option docutils literal"><span class="pre">--gaussian</span></code>):</dt>
+<dd>Treat the atomic charges as Gaussian charge distributions with atomic radii
 determined according to the precedure of
 <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0009261407002618">Chen et al.</a>,
-implemented in the routine <tt class="docutils literal"><span class="pre">get_ei_radii</span></tt> from the
-<a class="reference internal" href="rg_module.html#seclab-rg-modules-tools"><em>tools</em></a> module.</p>
-</dd>
+implemented in the routine <code class="docutils literal"><span class="pre">get_ei_radii</span></code> from the
+<a class="reference internal" href="trash/rg_module.html#seclab-rg-modules-tools"><span class="std std-ref">tools</span></a> module.</dd>
 </dl>
 </li>
 </ul>
@@ -129,7 +124,7 @@ type specification might then be adequate.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="ug_lib.html"
@@ -137,29 +132,28 @@ type specification might then be adequate.</p>
   <h4>Next topic</h4>
   <p class="topless"><a href="tu_benzene.html"
                         title="next chapter">Tutorial 1 - Benzene</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/ug_inputei.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/ug_inputei.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -174,12 +168,19 @@ type specification might then be adequate.</p>
         <li class="right" >
           <a href="ug_lib.html" title="2. Importing QuickFF as a library"
              >previous</a> |</li>
-        <li><a href="index.html">QuickFF 2.1.3 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">QuickFF 2.1.3 documentation</a> &#187;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2016, Louis Vanduyfhuys.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
-    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
   </body>
 </html>
