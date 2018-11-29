@@ -365,7 +365,7 @@ _________________________\//////____\///______________\///______________________
  USER               louis
  MACHINE            Linux T085 4.15.0-39-generic #42-Ubuntu SMP Tue Oct 23 
  MACHINE            15:48:01 UTC 2018 x86_64
- TIME               2018-11-29 16:12:30.803309
+ TIME               2018-11-29 16:23:09.283297
  QUICKFF VERSION    2.2.1
  PYTHON VERSION     3.6.3 |Anaconda custom (64-bit)| (default, Oct 13 2017, 
  PYTHON VERSION     12:02:49) [GCC 7.2.0]
@@ -460,20 +460,20 @@ _________________________\//////____\///______________\///______________________
             fc =  114 +- .0    rv0 = 1.39 +- 0.0    rv1 =  119 +- 0.0
 
         Cross/C.C.H/b1a (kjmol/A  A  deg)                                       
-            fc =  138 +- .0    rv0 = 1.08 +- 0.0    rv1 =  119 +- 0.0
+            fc =  138 +- .0    rv0 = 1.08 +- .00    rv1 =  119 +- 0.0
 
         Cross/C.C.H/bb (kjmol/A^2  A  A)                                        
-            fc = 37.8 +- .0    rv0 = 1.39 +- 0.0    rv1 = 1.08 +- 0.0
+            fc = 37.8 +- .0    rv0 = 1.39 +- 0.0    rv1 = 1.08 +- .00
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.100402
- TIMING Equil Set RV                    0:00:00.001031
- TIMING PT Generate                     0:00:05.594498
- TIMING PT Estimate                     0:00:00.058870
- TIMING PT Post process                 0:00:00.003041
- TIMING HC Estimate FC                  0:00:00.289696
+ TIMING Initializing                    0:00:00.101857
+ TIMING Equil Set RV                    0:00:00.001024
+ TIMING PT Generate                     0:00:05.651640
+ TIMING PT Estimate                     0:00:00.059029
+ TIMING PT Post process                 0:00:00.002952
+ TIMING HC Estimate FC                  0:00:00.290666
 
 __/\\\__________________________________________________________________/\\\____
   \ \\\                                                                 \ \\\
@@ -523,8 +523,8 @@ program is provided.</dd>
 BONDHARM:UNIT  K kjmol/A**2
 BONDHARM:UNIT  R0 A
 
-BONDHARM:PARS         C         H  3.3306196185e+03  1.0844158109e+00
-BONDHARM:PARS         C         C  3.9640168513e+03  1.3946450208e+00
+BONDHARM:PARS         C         H  3.3306196160e+03  1.0844158109e+00
+BONDHARM:PARS         C         C  3.9640168586e+03  1.3946450208e+00
 
 
 # BENDAHARM
@@ -532,8 +532,8 @@ BONDHARM:PARS         C         C  3.9640168513e+03  1.3946450208e+00
 BENDAHARM:UNIT  K kjmol/rad**2
 BENDAHARM:UNIT  THETA0 deg
 
-BENDAHARM:PARS         C         C         H  3.2099700450e+02  1.2000065910e+02
-BENDAHARM:PARS         C         C         C  6.0322228105e+02  1.1999902902e+02
+BENDAHARM:PARS         C         C         H  3.2099700494e+02  1.2000065910e+02
+BENDAHARM:PARS         C         C         C  6.0322228429e+02  1.1999902902e+02
 
 
 # TORSION
@@ -541,9 +541,9 @@ BENDAHARM:PARS         C         C         C  6.0322228105e+02  1.1999902902e+02
 TORSION:UNIT  A kjmol
 TORSION:UNIT  PHI0 deg
 
-TORSION:PARS         C         C         C         H  2 3.1236662622e+01  0.0000000000e+00
-TORSION:PARS         C         C         C         C  2 3.5927820471e+01  0.0000000000e+00
-TORSION:PARS         H         C         C         H  2 1.6155379029e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         H  2 3.1236662655e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.5927820265e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.6155379141e+01  0.0000000000e+00
 
 
 # OOPDIST
@@ -551,7 +551,7 @@ TORSION:PARS         H         C         C         H  2 1.6155379029e+01  0.0000
 OOPDIST:UNIT  K kjmol/A**2
 OOPDIST:UNIT  D0 A
 
-OOPDIST:PARS         C         C         H         C  1.7779655245e+02  1.2582440586e-07
+OOPDIST:PARS         C         C         H         C  1.7779654600e+02  1.2582202304e-07
 
 
 # Cross
@@ -563,8 +563,8 @@ Cross:UNIT  R0 angstrom
 Cross:UNIT  R1 angstrom
 Cross:UNIT  THETA0 deg
 
-Cross:PARS         C         C         H   3.7836794852e+01   1.1489177643e+02   1.3847236028e+02  1.3946599160e+00  1.0844145084e+00  1.1999937065e+02
-Cross:PARS         C         C         C   5.2502129792e+02   5.0720408418e+01   5.0720408418e+01  1.3946599160e+00  1.3946599160e+00  1.2000556448e+02
+Cross:PARS         C         C         H   3.7836794362e+01   1.1489177691e+02   1.3847235970e+02  1.3946599160e+00  1.0844145084e+00  1.1999937065e+02
+Cross:PARS         C         C         C   5.2502130037e+02   5.0720412694e+01   5.0720412694e+01  1.3946599160e+00  1.3946599160e+00  1.2000556448e+02
 </pre></div>
 </div>
 </div>
@@ -645,7 +645,7 @@ _________________________\//////____\///______________\///______________________
  USER               louis
  MACHINE            Linux T085 4.15.0-39-generic #42-Ubuntu SMP Tue Oct 23 
  MACHINE            15:48:01 UTC 2018 x86_64
- TIME               2018-11-29 16:12:35.139236
+ TIME               2018-11-29 16:23:13.635020
  QUICKFF VERSION    2.2.1
  PYTHON VERSION     3.6.3 |Anaconda custom (64-bit)| (default, Oct 13 2017, 
  PYTHON VERSION     12:02:49) [GCC 7.2.0]
@@ -717,13 +717,13 @@ _________________________\//////____\///______________\///______________________
             fc = 320.9 +- .000    rv = 120.1 +- .000
 
         TorsCheby2/C.C.C.C (kjmol  au)                                          
-            fc  = 35.9 +- .00    sgn =  -1
+            fc  = 35.9 +- 0.0    sgn =  -1
 
         TorsCheby2/C.C.C.H (kjmol  au)                                          
             fc  = 31.4 +- 0.0    sgn =  -1
 
         TorsCheby2/H.C.C.H (kjmol  au)                                          
-            fc  = 16.8 +- 0.0    sgn =  -1
+            fc  = 16.8 +- .00    sgn =  -1
 
         Oopdist/C.C.H.C (kjmol/A^2  A)                                          
             fc = 166.2 +- .000    rv = .0000 +- .000
@@ -749,12 +749,12 @@ _________________________\//////____\///______________\///______________________
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.101124
- TIMING Equil Set RV                    0:00:00.001054
- TIMING PT Generate                     0:00:05.751771
- TIMING PT Estimate                     0:00:00.154700
- TIMING PT Post process                 0:00:00.003031
- TIMING HC Estimate FC                  0:00:00.321040
+ TIMING Initializing                    0:00:00.101447
+ TIMING Equil Set RV                    0:00:00.001010
+ TIMING PT Generate                     0:00:05.652945
+ TIMING PT Estimate                     0:00:00.156266
+ TIMING PT Post process                 0:00:00.003063
+ TIMING HC Estimate FC                  0:00:00.311649
 
 __/\\\__________________________________________________________________/\\\____
   \ \\\                                                                 \ \\\
@@ -775,8 +775,8 @@ what we expect due to the charges being so small.</p>
 BONDHARM:UNIT  K kjmol/A**2
 BONDHARM:UNIT  R0 A
 
-BONDHARM:PARS         C         H  3.3330947120e+03  1.0876030857e+00
-BONDHARM:PARS         C         C  3.9651507568e+03  1.3940024796e+00
+BONDHARM:PARS         C         H  3.3330947115e+03  1.0876030857e+00
+BONDHARM:PARS         C         C  3.9651506021e+03  1.3940024796e+00
 
 
 # BENDAHARM
@@ -784,8 +784,8 @@ BONDHARM:PARS         C         C  3.9651507568e+03  1.3940024796e+00
 BENDAHARM:UNIT  K kjmol/rad**2
 BENDAHARM:UNIT  THETA0 deg
 
-BENDAHARM:PARS         C         C         H  3.2097791189e+02  1.2015408282e+02
-BENDAHARM:PARS         C         C         C  6.0195042409e+02  1.1997128614e+02
+BENDAHARM:PARS         C         C         H  3.2097791046e+02  1.2015408283e+02
+BENDAHARM:PARS         C         C         C  6.0195035785e+02  1.1997128614e+02
 
 
 # TORSION
@@ -793,9 +793,9 @@ BENDAHARM:PARS         C         C         C  6.0195042409e+02  1.1997128614e+02
 TORSION:UNIT  A kjmol
 TORSION:UNIT  PHI0 deg
 
-TORSION:PARS         C         C         C         H  2 3.1428590309e+01  0.0000000000e+00
-TORSION:PARS         C         C         C         C  2 3.5982591852e+01  0.0000000000e+00
-TORSION:PARS         H         C         C         H  2 1.6841711216e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         H  2 3.1428590144e+01  0.0000000000e+00
+TORSION:PARS         C         C         C         C  2 3.5982593481e+01  0.0000000000e+00
+TORSION:PARS         H         C         C         H  2 1.6841711311e+01  0.0000000000e+00
 
 
 # OOPDIST
@@ -803,7 +803,7 @@ TORSION:PARS         H         C         C         H  2 1.6841711216e+01  0.0000
 OOPDIST:UNIT  K kjmol/A**2
 OOPDIST:UNIT  D0 A
 
-OOPDIST:PARS         C         C         H         C  1.6627879430e+02  1.4852454404e-07
+OOPDIST:PARS         C         C         H         C  1.6627879335e+02  1.4853054024e-07
 
 
 # Cross
@@ -815,8 +815,8 @@ Cross:UNIT  R0 angstrom
 Cross:UNIT  R1 angstrom
 Cross:UNIT  THETA0 deg
 
-Cross:PARS         C         C         H   4.0314253356e+01   1.1314941296e+02   1.3908936792e+02  1.3934733019e+00  1.0875970642e+00  1.2001585516e+02
-Cross:PARS         C         C         C   5.2510959402e+02   4.9272391885e+01   4.9272391885e+01  1.3934733019e+00  1.3934733019e+00  1.2003594739e+02
+Cross:PARS         C         C         H   4.0314253541e+01   1.1314940934e+02   1.3908936087e+02  1.3934733019e+00  1.0875970642e+00  1.2001585516e+02
+Cross:PARS         C         C         C   5.2510953701e+02   4.9272314421e+01   4.9272314421e+01  1.3934733019e+00  1.3934733019e+00  1.2003594739e+02
 </pre></div>
 </div>
 </dd>
@@ -1027,7 +1027,7 @@ _________________________\//////____\///______________\///______________________
  USER               louis
  MACHINE            Linux T085 4.15.0-39-generic #42-Ubuntu SMP Tue Oct 23 
  MACHINE            15:48:01 UTC 2018 x86_64
- TIME               2018-11-29 16:12:38.964948
+ TIME               2018-11-29 16:23:17.408563
  QUICKFF VERSION    2.2.1
  PYTHON VERSION     3.6.3 |Anaconda custom (64-bit)| (default, Oct 13 2017, 
  PYTHON VERSION     12:02:49) [GCC 7.2.0]
@@ -1087,13 +1087,13 @@ _________________________\//////____\///______________\///______________________
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
- TIMING Initializing                    0:00:00.003664
- TIMING Initialization                  0:00:00.024957
- TIMING PT Generate                     0:00:00.179966
- TIMING PT Estimate                     0:00:00.005678
- TIMING HC Estimate FC                  0:00:00.016378
- TIMING PT plot energy                  0:00:00.509326
- TIMING PT dump XYZ                     0:00:00.000734
+ TIMING Initializing                    0:00:00.003614
+ TIMING Initialization                  0:00:00.025545
+ TIMING PT Generate                     0:00:00.181938
+ TIMING PT Estimate                     0:00:00.005564
+ TIMING HC Estimate FC                  0:00:00.016189
+ TIMING PT plot energy                  0:00:00.503527
+ TIMING PT dump XYZ                     0:00:00.000699
 
 __/\\\__________________________________________________________________/\\\____
   \ \\\                                                                 \ \\\
