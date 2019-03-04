@@ -50,7 +50,7 @@ class Term(object):
         A class to store easy-accessible information about a term included in
         the valence force field
     '''
-    def __init__(self, index, basename, kind, ics, tasks, units,master=None, slaves=None):
+    def __init__(self, index, basename, kind, ics, tasks, units,master=None, slaves=None, diag_term_indexes=[]):
         self.index = index
         self.basename = basename
         self.kind = kind
@@ -59,6 +59,7 @@ class Term(object):
         self.units = units
         self.master = master
         self.slaves = slaves
+        self.diag_term_indexes=diag_term_indexes
 
     def is_master(self):
         return self.master==self.index
@@ -214,7 +215,7 @@ class ValenceFF(ForcePartValence):
             if self.settings.do_oops:
                 self.init_oop_terms()
 
-    def add_term(self, pot, ics, basename, tasks, units):
+    def add_term(self, pot, ics, basename, tasks, units, diag_term_indexes=[]):
         '''
             Adds new term both to the Yaff vlist object and a new QuickFF
             list (self.terms) which holds all information about the term
@@ -240,6 +241,12 @@ class ValenceFF(ForcePartValence):
             units
                 Units for all parameters in this term (ordered in the same
                 way as parameters are stored in `yaff.vlist.vtab`)
+
+            **Optional arguments**
+
+            diag_term_indexes
+                Indexes of the diagonal terms that correspond to the ics
+                composing an off-diagonal term. Empty if the term is diagonal.
         '''
         index = len(self.terms)
         #search for possible master and update slaves
@@ -258,7 +265,7 @@ class ValenceFF(ForcePartValence):
         #add term to self.terms and self.vlist.vtab
         term = Term(
             index, basename, pot.kind, ics, tasks,
-            units, master=master, slaves=slaves
+            units, master=master, slaves=slaves, diag_term_indexes=diag_term_indexes
         )
         self.terms.append(term)
         if pot.kind==1:#all 4 parameters of PolyFour are given as 1 tuple
@@ -672,6 +679,32 @@ class ValenceFF(ForcePartValence):
                     log.dump('Excluded %s oopd'%'.'.join(types))
         log.dump('Added %i Harmonic and %i SquareHarmonic out-of-plane distance terms' %(nharm, nsq))
 
+    def get_term_index(self, label):
+        # Find index of master term(s) matching given label
+        pattern = re.compile(label, re.IGNORECASE)
+        candidates = []
+        for iterm, term in enumerate(self.terms):
+            if pattern.match(term.basename) and term.is_master():
+                candidates.append(iterm)
+        assert len(candidates)<2, 'Multiple masters found for %s: %s' %(label, ','.join([self.terms[iterm].basename for iterm in candidates]))
+        if len(candidates)==0:
+            if label.startswith('^Bond') or label.startswith('^Bend') or label.startswith('^Tors'):
+                sublabels = label.split('|')
+                prefix0, types0 = sublabels[0].lstrip('^').rstrip('$').split('/')
+                label  = '^'+prefix0+'/'+'\.'.join(types0.split('.')[::-1])+'$'
+                if len(sublabels)>1:
+                    prefix1, types1 = sublabels[1].lstrip('^').rstrip('$').split('/')
+                    label += '|'
+                    label += '^'+prefix1+'/'+'\.'.join(types1.split('.')[::-1])+'$'
+                pattern = re.compile(label, re.IGNORECASE)
+                for iterm, term in enumerate(self.terms):
+                    if pattern.match(term.basename) and term.is_master():
+                        candidates.append(iterm)
+            assert len(candidates)<2, 'Multiple masters found for %s: %s' %(label, ','.join([self.terms[iterm].basename for iterm in candidates]))
+        assert (len(candidates))==1, "Could not find term for %s" % (label)
+        return candidates[0]
+
+
     def init_cross_angle_terms(self):
         '''
             Initialize cross terms between bonds and bends.
@@ -723,11 +756,20 @@ class ValenceFF(ForcePartValence):
                                 skip = True
 
                     if not skip:
+                        # Find indexes of diagonal terms corresponding to ics
+                        # appearing here
+                        diag_term_indexes = []
+                        for btypes in [btypes0,btypes1]:
+                            label = '^Bond.*/%s$' %('.'.join(btypes))
+                            diag_term_indexes.append(self.get_term_index(label))
+                        label = '^Bend.*/%s$' %('.'.join(types))
+                        diag_term_indexes.append(self.get_term_index(label))
                         #add stretch-stretch
                         if self.settings.do_cross_ASS:
                             self.add_term(
                                 Cross, [Bond(*bond0), Bond(*bond1)],
-                                'Cross/'+'.'.join(types)+'/bb', ['HC_FC_CROSS_ASS'], ['kjmol/A**2', 'A', 'A']
+                                'Cross/'+'.'.join(types)+'/bb', ['HC_FC_CROSS_ASS'], ['kjmol/A**2', 'A', 'A'],
+                                diag_term_indexes=diag_term_indexes[:2],
                             )
                             nss += 1
                         #add stretch-bends
@@ -747,11 +789,13 @@ class ValenceFF(ForcePartValence):
                                 continue
                             self.add_term(
                                 Cross, [Bond(*bond0), ic],
-                                basename+'/b0a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit]
+                                basename+'/b0a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit],
+                                diag_term_indexes=[diag_term_indexes[0],diag_term_indexes[2]],
                             )
                             self.add_term(
                                 Cross, [Bond(*bond1), ic],
-                                basename+'/b1a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit]
+                                basename+'/b1a', ['HC_FC_CROSS_ASA'], ['kjmol/A', 'A', unit],
+                                diag_term_indexes=[diag_term_indexes[1],diag_term_indexes[2]],
                             )
                             nsa += 2
             log.dump('Added %i stretch-stretch and %i stretch-angle cross terms from angle patterns' %(nss, nsa))
@@ -776,6 +820,17 @@ class ValenceFF(ForcePartValence):
                 angle012, atypes012 = term_sort_atypes(ffatypes, dihed[0:3], 'angle')
                 angle123, atypes123 = term_sort_atypes(ffatypes, dihed[1:4], 'angle')
                 dihed, types = term_sort_atypes(ffatypes, dihed, 'dihedral')
+                # Find indexes of diagonal terms corresponding to ics
+                # appearing here
+                diag_term_indexes = []
+                for btypes in [btypes01,btypes12,btypes23]:
+                    label = '^Bond.*/%s$' %('.'.join(btypes))
+                    diag_term_indexes.append(self.get_term_index(label))
+                for atypes in [atypes012,atypes123]:
+                    label = '^Bend.*/%s$' %('.'.join(atypes))
+                    diag_term_indexes.append(self.get_term_index(label))
+                label = '^Tors.*/%s$' %('.'.join(types))
+                diag_term_indexes.append(self.get_term_index(label))
                 #get multiplicity of dihedral term to determine which DihedCos
                 m, DihedIC = None, None
                 for term in self.iter_masters('^.*/'+'\.'.join(types)+'$', use_re=True):
@@ -832,7 +887,8 @@ class ValenceFF(ForcePartValence):
                     basename = 'CrossBondDih%i/'%m+'.'.join(types)
                     self.add_term(
                         Cross, [Bond(*bond01), Bond(*bond23)],
-                        basename+'/bb', ['HC_FC_CROSS_DSS'], ['kjmol/A**2', 'A', 'A']
+                        basename+'/bb', ['HC_FC_CROSS_DSS'], ['kjmol/A**2', 'A', 'A'],
+                        diag_term_indexes=[diag_term_indexes[0],diag_term_indexes[3]]
                     )
                     nss += 1
                 #add stretch-dihedral terms:
@@ -840,15 +896,18 @@ class ValenceFF(ForcePartValence):
                     basename = 'CrossBondDih%i/'%m+'.'.join(types)
                     self.add_term(
                         Cross, [Bond(*bond01), DihedIC(*dihed)],
-                        basename+'/b0d', ['HC_FC_CROSS_DSD'], ['kjmol/A', 'A', 'au']
+                        basename+'/b0d', ['HC_FC_CROSS_DSD'], ['kjmol/A', 'A', 'au'],
+                        diag_term_indexes=[diag_term_indexes[0],diag_term_indexes[5]]
                     )
                     self.add_term(
                         Cross, [Bond(*bond12), DihedIC(*dihed)],
-                        basename+'/b1d', [], ['kjmol/A', 'A', 'au']
+                        basename+'/b1d', [], ['kjmol/A', 'A', 'au'],
+                        diag_term_indexes=[diag_term_indexes[1],diag_term_indexes[5]]
                     )
                     self.add_term(
                         Cross, [Bond(*bond23), DihedIC(*dihed)],
-                        basename+'/b2d', ['HC_FC_CROSS_DSD'], ['kjmol/A', 'A', 'au']
+                        basename+'/b2d', ['HC_FC_CROSS_DSD'], ['kjmol/A', 'A', 'au'],
+                        diag_term_indexes=[diag_term_indexes[2],diag_term_indexes[5]]
                     )
                     nsd += 3
                 #add angle-angle term:
@@ -868,7 +927,8 @@ class ValenceFF(ForcePartValence):
                         self.add_term(
                             Cross, [BendAngle(*angle012), BendAngle(*angle123)],
                             'CrossBendDih%i/'%m+'.'.join(types)+'/aa',
-                            ['HC_FC_CROSS_DAA'], ['kjmol', 'deg', 'deg']
+                            ['HC_FC_CROSS_DAA'], ['kjmol', 'deg', 'deg'],
+                            diag_term_indexes=[diag_term_indexes[3],diag_term_indexes[4]]
                         )
                         nad += 1
                     else:
@@ -881,14 +941,16 @@ class ValenceFF(ForcePartValence):
                         self.add_term(
                             Cross, [BendAngle(*angle012), DihedIC(*dihed)],
                             'CrossBendDih%i/'%m+'.'.join(types)+'/a0d',
-                            ['HC_FC_CROSS_DAD'], ['kjmol', 'deg', 'au']
+                            ['HC_FC_CROSS_DAD'], ['kjmol', 'deg', 'au'],
+                            diag_term_indexes=[diag_term_indexes[3],diag_term_indexes[5]]
                         )
                         nad += 1
                     elif angle012_type == 1:
                         self.add_term(
                             Cross, [BendCos(*angle012), DihedIC(*dihed)],
                             'CrossCBendDih%i/'%m+'.'.join(types)+'/a0d',
-                            ['HC_FC_CROSS_DAD'], ['kjmol', 'au', 'au']
+                            ['HC_FC_CROSS_DAD'], ['kjmol', 'au', 'au'],
+                            diag_term_indexes=[diag_term_indexes[4],diag_term_indexes[5]]
                         )
                         nad += 1
                     else:
@@ -898,14 +960,16 @@ class ValenceFF(ForcePartValence):
                         self.add_term(
                             Cross, [BendAngle(*angle123), DihedIC(*dihed)],
                             'CrossBendDih%i/'%m+'.'.join(types)+'/a1d',
-                            ['HC_FC_CROSS_DAD'], ['kjmol', 'deg', 'au']
+                            ['HC_FC_CROSS_DAD'], ['kjmol', 'deg', 'au'],
+                            diag_term_indexes=[diag_term_indexes[3],diag_term_indexes[5]]
                         )
                         nad += 1
                     elif angle123_type == 1:
                         self.add_term(
                             Cross, [BendCos(*angle123), DihedIC(*dihed)],
                             'CrossCBendDih%i/'%m+'.'.join(types)+'/a1d',
-                            ['HC_FC_CROSS_DAD'], ['kjmol', 'au', 'au']
+                            ['HC_FC_CROSS_DAD'], ['kjmol', 'au', 'au'],
+                            diag_term_indexes=[diag_term_indexes[4],diag_term_indexes[5]]
                         )
                         nad += 1
                     else:

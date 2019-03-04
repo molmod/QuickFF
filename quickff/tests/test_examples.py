@@ -148,3 +148,47 @@ def test_output_charmm22():
                 assert '!NIMPHI: impropers' in line
                 nimphi = int(line.split()[0])
                 assert nimphi == 0
+
+def compare_crossterm_rest_values(program,equal=True):
+    print("%50s %15s %15s %15s"%("Basename","Cross RV","Diag RV","Delta"))
+    for term in program.valence.terms:
+        if not term.is_master(): continue
+        if term.basename.startswith('Cross'):
+            for i in [0,1]:
+                rv0 = program.valence.get_params(term.index, only='rv%d'%i)
+                if program.valence.terms[term.diag_term_indexes[i]].basename.startswith('Tors'):
+                    rv0_diag = -program.valence.get_params(term.diag_term_indexes[i], only='sign')
+                    assert (rv0==rv0_diag) # Torsion rest values are always the same
+                else:
+                    rv0_diag = program.valence.get_params(term.diag_term_indexes[i], only='rv')
+                    assert (rv0==rv0_diag)==equal # Other rest values are only the
+                    # same if consistent_cross_rvs was set to True
+                print("%50s %15.6f %15.6f %+15.2e" % (term.basename,rv0,rv0_diag,rv0-rv0_diag))
+
+def test_benzene_consistent_crossterms():
+    with log.section('NOSETEST', 2):
+        system, ai = read_system('benzene/gaussian.fchk')
+        set_ffatypes(system, 'high')
+        for consistent in [False, True]:
+            with tmpdir('test_benzene_%s'%('consistent' if consistent else 'inconsistent')) as dn:
+                fn_yaff = os.path.join(dn, 'pars_cov.txt')
+                fn_sys = os.path.join(dn, 'system.chk')
+                program = DeriveFF(system, ai, Settings(consistent_cross_rvs=consistent,
+                    fn_yaff=fn_yaff,fn_sys=fn_sys,do_cross_DSS=True,do_cross_DSD=True,
+                        do_cross_DAA=True,do_cross_DAD=True))
+                program.run()
+                compare_crossterm_rest_values(program,equal=consistent)
+
+def test_methane_consistent_crossterms():
+    with log.section('NOSETEST', 2):
+        system, ai = read_system('methane/gaussian.fchk')
+        set_ffatypes(system, 'high')
+        for consistent in [False, True]:
+            with tmpdir('test_methane_%s'%('consistent' if consistent else 'inconsistent')) as dn:
+                fn_yaff = os.path.join(dn, 'pars_cov.txt')
+                fn_sys = os.path.join(dn, 'system.chk')
+                program = DeriveFF(system, ai, Settings(consistent_cross_rvs=consistent,
+                    fn_yaff=fn_yaff,fn_sys=fn_sys,do_cross_DSS=True,do_cross_DSD=True,
+                        do_cross_DAA=True,do_cross_DAD=True))
+                program.run()
+                compare_crossterm_rest_values(program,equal=consistent)
