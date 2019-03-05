@@ -431,8 +431,44 @@ class BaseProgram(object):
             if len(term_indices)==0:
                 log.dump('No terms (with task in %s) found to estimate FC from HC' %(str(tasks)))
                 return
-            cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=self.ffrefs, do_mass_weighting=do_mass_weighting)
-            fcs = cost.estimate(do_svd=do_svd, svd_rcond=svd_rcond)
+            # Try to estimate force constants; if the remove_dysfunctional_cross
+            # keyword is True, a loop is performed which checks whether there
+            # are cross terms for which corresponding diagonal terms have zero
+            # force constants. If this is the case, those cross terms are removed
+            # from the fit and we try again until such cases do no longer occur
+            max_iter = 100
+            niter = 0
+            while niter<max_iter:
+                cost = HessianFCCost(self.system, self.ai, self.valence, term_indices, ffrefs=self.ffrefs, do_mass_weighting=do_mass_weighting)
+                fcs = cost.estimate(do_svd=do_svd, svd_rcond=svd_rcond)
+                # No need to continue, if cross terms with corresponding diagonal
+                # terms with negative force constants are allowed
+                if self.settings.remove_dysfunctional_cross is False: break
+                to_remove = []
+                for index, fc in zip(term_indices, fcs):
+                    term = self.valence.terms[index]
+                    if term.basename.startswith('Cross'):
+                        # Find force constants of corresponding diagonal terms
+                        diag_fcs = np.zeros((2))
+                        for idiag in range(2):
+                            diag_index = term.diag_term_indexes[idiag]
+                            if diag_index in term_indices:
+                                fc_diag = fcs[term_indices.index(diag_index)]
+                            else:
+                                fc_diag = self.valence.get_params(diag_index, only='fc')
+                            diag_fcs[idiag] = fc_diag
+                        # If a force constant from any corresponding diagonal term is negative,
+                        # we remove the cross term for the next iteration
+                        if np.any(diag_fcs<=0.0):
+                            to_remove.append(index)
+                            self.valence.set_params(index, fc=0.0)
+                            log.dump('WARNING! Dysfunctional cross term %s detected, removing from the hessian fit.'%term.basename)
+                if len(to_remove)==0: break
+                else:
+                    for index in to_remove:
+                        term_indices.remove(index)
+                niter += 1
+            assert niter<max_iter, "Could not remove all dysfunctional cross terms in %d iterations, something is seriously wrong"%max_iter
             for index, fc in zip(term_indices, fcs):
                 master = self.valence.terms[index]
                 assert master.is_master()
@@ -450,7 +486,7 @@ class BaseProgram(object):
             self.valence.init_cross_angle_terms()
             if self.settings.do_cross_DSS or self.settings.do_cross_DSD or self.settings.do_cross_DAD or self.settings.do_cross_DAA:
                 self.valence.init_cross_dihed_terms()
-            self.reset_cross_pars()
+            self.update_cross_pars()
 
     def update_cross_pars(self):
         '''
@@ -678,7 +714,7 @@ class DeriveFF(BaseProgram):
                 self.plot_trajectories(do_valence=True, suffix='_Cpt2')
             self.do_pt_postprocess()
             if self.settings.consistent_cross_rvs:
-                # The rest values of the diagonal terms have been update from
+                # The rest values of the diagonal terms have been updated from
                 # the perturbation trajectories; update the corresponding rest
                 # values for the cross terms
                 self.update_cross_pars()

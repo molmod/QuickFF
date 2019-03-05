@@ -29,13 +29,14 @@ import os
 from molmod.units import *
 from molmod.constants import lightspeed
 from molmod.periodic import periodic as pt
-
+from molmod.io import load_chk
 from yaff import System
 
 from quickff.tools import set_ffatypes
 from quickff.program import DeriveFF
 from quickff.settings import Settings
 from quickff.context import context
+from quickff.reference import SecondOrderTaylor
 
 from common import log, read_system, tmpdir
 
@@ -192,3 +193,35 @@ def test_methane_consistent_crossterms():
                         do_cross_DAA=True,do_cross_DAD=True))
                 program.run()
                 compare_crossterm_rest_values(program,equal=consistent)
+
+def test_uio66zrbrick_crossterms():
+    with log.section('NOSETEST', 2):
+        # Load input data for a ficticious system of an isolated
+        # UiO-66 brick
+        name = 'uio66-zr-brick/system.chk'
+        fn = context.get_fn(os.path.join('systems', name))
+        data = load_chk(fn)
+        system = System(data['numbers'],data['pos'],charges=data['charges'],
+            ffatypes=data['ffatypes'],bonds=data['bonds'],radii=data['radii'])
+        system.set_standard_masses()
+        ai = SecondOrderTaylor('ai', coords=system.pos.copy(),
+             grad=data['gradient'], hess=data['hessian'])
+        # Run QuickFF
+        with tmpdir('test_uio66') as dn:
+            fn_yaff = os.path.join(dn, 'pars_cov.txt')
+            fn_sys = os.path.join(dn, 'system.chk')
+            fn_log = os.path.join(dn, 'quickff.log')
+            program = DeriveFF(system, ai, Settings(consistent_cross_rvs=True,
+                remove_dysfunctional_cross=True,fn_yaff=fn_yaff,fn_sys=fn_sys,log_file=fn_log))
+            program.run()
+        # Check force constants of cross terms and corresponding diagonal terms
+        print("%50s %15s %15s"%("Basename","Cross FC","Diag FC"))
+        for term in program.valence.terms:
+            if not term.is_master(): continue
+            if term.basename.startswith('Cross'):
+                fc = program.valence.get_params(term.index, only='fc')
+                for i in [0,1]:
+                    fc_diag = program.valence.get_params(term.diag_term_indexes[i], only='fc')
+                    print("%50s %15.6f %15.6f %50s" % (term.basename,fc,fc_diag,program.valence.terms[term.diag_term_indexes[i]].basename))
+                    if fc_diag==0.0: assert fc==0.0
+
