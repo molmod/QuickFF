@@ -888,7 +888,7 @@ class ValenceFF(ForcePartValence):
                     self.add_term(
                         Cross, [Bond(*bond01), Bond(*bond23)],
                         basename+'/bb', ['HC_FC_CROSS_DSS'], ['kjmol/A**2', 'A', 'A'],
-                        diag_term_indexes=[diag_term_indexes[0],diag_term_indexes[3]]
+                        diag_term_indexes=[diag_term_indexes[0],diag_term_indexes[2]]
                     )
                     nss += 1
                 #add stretch-dihedral terms:
