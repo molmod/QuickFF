@@ -127,6 +127,8 @@ key_checks = {
     'do_cross_DSD'          : [is_bool],
     'do_cross_DAA'          : [is_bool],
     'do_cross_DAD'          : [is_bool],
+    'consistent_cross_rvs'  : [is_bool],
+    'remove_dysfunctional_cross' : [is_bool],
     'bond_term'             : [is_not_none, is_string, has_value(['bondharm','bondfues','bondmm3'])],
     'bend_term'             : [is_not_none, is_string, has_value(['bendaharm','bendmm3'])],
     'do_squarebend'         : [is_bool],

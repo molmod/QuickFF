@@ -43,6 +43,8 @@ do_cross_DSS            :   False
 do_cross_DSD            :   False
 do_cross_DAA            :   False
 do_cross_DAD            :   False
+consistent_cross_rvs    :   True
+remove_dysfunctional_cross : True
 
 bond_term               :   BondHarm
 bend_term               :   BendAHarm

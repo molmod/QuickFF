@@ -29,13 +29,14 @@ import os
 from molmod.units import *
 from molmod.constants import lightspeed
 from molmod.periodic import periodic as pt
-
+from molmod.io import load_chk
 from yaff import System
 
 from quickff.tools import set_ffatypes
 from quickff.program import DeriveFF
 from quickff.settings import Settings
 from quickff.context import context
+from quickff.reference import SecondOrderTaylor
 
 from common import log, read_system, tmpdir
 
@@ -148,3 +149,79 @@ def test_output_charmm22():
                 assert '!NIMPHI: impropers' in line
                 nimphi = int(line.split()[0])
                 assert nimphi == 0
+
+def compare_crossterm_rest_values(program,equal=True):
+    print("%50s %15s %15s %15s"%("Basename","Cross RV","Diag RV","Delta"))
+    for term in program.valence.terms:
+        if not term.is_master(): continue
+        if term.basename.startswith('Cross'):
+            for i in [0,1]:
+                rv0 = program.valence.get_params(term.index, only='rv%d'%i)
+                if program.valence.terms[term.diag_term_indexes[i]].basename.startswith('Tors'):
+                    rv0_diag = -program.valence.get_params(term.diag_term_indexes[i], only='sign')
+                    assert (rv0==rv0_diag) # Torsion rest values are always the same
+                else:
+                    rv0_diag = program.valence.get_params(term.diag_term_indexes[i], only='rv')
+                    assert (rv0==rv0_diag)==equal # Other rest values are only the
+                    # same if consistent_cross_rvs was set to True
+                print("%50s %15.6f %15.6f %+15.2e" % (term.basename,rv0,rv0_diag,rv0-rv0_diag))
+
+def test_benzene_consistent_crossterms():
+    with log.section('NOSETEST', 2):
+        system, ai = read_system('benzene/gaussian.fchk')
+        set_ffatypes(system, 'high')
+        for consistent in [False, True]:
+            with tmpdir('test_benzene_%s'%('consistent' if consistent else 'inconsistent')) as dn:
+                fn_yaff = os.path.join(dn, 'pars_cov.txt')
+                fn_sys = os.path.join(dn, 'system.chk')
+                program = DeriveFF(system, ai, Settings(consistent_cross_rvs=consistent,
+                    fn_yaff=fn_yaff,fn_sys=fn_sys,do_cross_DSS=True,do_cross_DSD=True,
+                        do_cross_DAA=True,do_cross_DAD=True))
+                program.run()
+                compare_crossterm_rest_values(program,equal=consistent)
+
+def test_methane_consistent_crossterms():
+    with log.section('NOSETEST', 2):
+        system, ai = read_system('methane/gaussian.fchk')
+        set_ffatypes(system, 'high')
+        for consistent in [False, True]:
+            with tmpdir('test_methane_%s'%('consistent' if consistent else 'inconsistent')) as dn:
+                fn_yaff = os.path.join(dn, 'pars_cov.txt')
+                fn_sys = os.path.join(dn, 'system.chk')
+                program = DeriveFF(system, ai, Settings(consistent_cross_rvs=consistent,
+                    fn_yaff=fn_yaff,fn_sys=fn_sys,do_cross_DSS=True,do_cross_DSD=True,
+                        do_cross_DAA=True,do_cross_DAD=True))
+                program.run()
+                compare_crossterm_rest_values(program,equal=consistent)
+
+def test_uio66zrbrick_crossterms():
+    with log.section('NOSETEST', 2):
+        # Load input data for a ficticious system of an isolated
+        # UiO-66 brick
+        name = 'uio66-zr-brick/system.chk'
+        fn = context.get_fn(os.path.join('systems', name))
+        data = load_chk(fn)
+        system = System(data['numbers'],data['pos'],charges=data['charges'],
+            ffatypes=data['ffatypes'],bonds=data['bonds'],radii=data['radii'])
+        system.set_standard_masses()
+        ai = SecondOrderTaylor('ai', coords=system.pos.copy(),
+             grad=data['gradient'], hess=data['hessian'])
+        # Run QuickFF
+        with tmpdir('test_uio66') as dn:
+            fn_yaff = os.path.join(dn, 'pars_cov.txt')
+            fn_sys = os.path.join(dn, 'system.chk')
+            fn_log = os.path.join(dn, 'quickff.log')
+            program = DeriveFF(system, ai, Settings(consistent_cross_rvs=True,
+                remove_dysfunctional_cross=True,fn_yaff=fn_yaff,fn_sys=fn_sys,log_file=fn_log))
+            program.run()
+        # Check force constants of cross terms and corresponding diagonal terms
+        print("%50s %15s %15s"%("Basename","Cross FC","Diag FC"))
+        for term in program.valence.terms:
+            if not term.is_master(): continue
+            if term.basename.startswith('Cross'):
+                fc = program.valence.get_params(term.index, only='fc')
+                for i in [0,1]:
+                    fc_diag = program.valence.get_params(term.diag_term_indexes[i], only='fc')
+                    print("%50s %15.6f %15.6f %50s" % (term.basename,fc,fc_diag,program.valence.terms[term.diag_term_indexes[i]].basename))
+                    if fc_diag==0.0: assert fc==0.0
+
