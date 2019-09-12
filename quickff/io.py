@@ -154,7 +154,7 @@ def read_abinitio(fn, do_hess=True):
     return numbers, coords, energy, grad, hess, masses, rvecs, pbc
 
 
-def make_yaff_ei(fn, charges, bcis=None, radii=None):
+def make_yaff_ei(fn, charges, bcis=None, radii=None, scales=[1,1,1]):
     assert charges is not None or bcis is not None, 'Either charges or bcis should be parsed'
     f = open(fn, 'w')
     print('#Fixed charges', file=f)
@@ -163,9 +163,9 @@ def make_yaff_ei(fn, charges, bcis=None, radii=None):
     print('FIXQ:UNIT Q0 e', file=f)
     print('FIXQ:UNIT P e', file=f)
     print('FIXQ:UNIT R angstrom', file=f)
-    print('FIXQ:SCALE 1 1.0', file=f)
-    print('FIXQ:SCALE 2 1.0', file=f)
-    print('FIXQ:SCALE 3 1.0', file=f)
+    print('FIXQ:SCALE 1 %3.1f' %(scales[0]), file=f)
+    print('FIXQ:SCALE 2 %3.1f' %(scales[1]), file=f)
+    print('FIXQ:SCALE 3 %3.1f' %(scales[2]), file=f)
     print('FIXQ:DIELECTRIC 1.0', file=f)
     print('', file=f)
     if charges is not None or radii is not None:

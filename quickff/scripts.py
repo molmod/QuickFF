@@ -96,6 +96,11 @@ def qff_input_ei_parse_args(args=None):
              'should be introduced when mapping the slaves to the master.'
     )
     parser.add_argument(
+        '--ei-scales', default='1,1,1',
+        help='A comma-seperated list representing the electrostatic neighbor'
+             'scales'
+    )
+    parser.add_argument(
         'fn_sys',
         help='Any file from which the system can be extracted (MolMod CHK, Gaussian '
              'FCHK, XYZ, ...).'
@@ -173,10 +178,10 @@ def qff_input_ei(args=None):
         if args.bci_constraints is not None:
             constraints = read_bci_constraints(args.bci_constraints)
         bcis = charges_to_bcis(charges, ffatypes, system.bonds, constraints=constraints, verbose=args.verbose)
-        make_yaff_ei(args.fn_out, None, bcis=bcis, radii=radii)
+        make_yaff_ei(args.fn_out, None, bcis=bcis, radii=radii, scales=[float(s) for s in args.ei_scales.split(',')])
     else:
         charges = average(charges, ffatypes, fmt='dict', verbose=args.verbose)
-        make_yaff_ei(args.fn_out, charges, radii=radii)
+        make_yaff_ei(args.fn_out, charges, radii=radii, scales=[float(s) for s in args.ei_scales.split(',')])
 
 ################################################################################
 ###################                  qff.py                  ###################
