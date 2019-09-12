@@ -635,15 +635,15 @@
 <span class="sd">            do_valence</span>
 <span class="sd">                If set to True, the current valence force field (stored in</span>
 <span class="sd">                self.valence) will be used to compute the valence contribution</span>
-<span class="sd">            </span>
+
 <span class="sd">            energy_noise</span>
-<span class="sd">                If set to a float, the parabolic fitting will be repeated </span>
+<span class="sd">                If set to a float, the parabolic fitting will be repeated</span>
 <span class="sd">                Nerrorsteps times including normal noise on top of the reference</span>
-<span class="sd">                value. The mean of the noise is 0, while the std equals the </span>
-<span class="sd">                number given by energy_noise. The resulting fits give a </span>
-<span class="sd">                distribution of force  constants and rest values instead of </span>
-<span class="sd">                single value, the std is used to identify bad estimates, the </span>
-<span class="sd">                mean is used for the actual FF parametrs. If set to nan, the </span>
+<span class="sd">                value. The mean of the noise is 0, while the std equals the</span>
+<span class="sd">                number given by energy_noise. The resulting fits give a</span>
+<span class="sd">                distribution of force  constants and rest values instead of</span>
+<span class="sd">                single value, the std is used to identify bad estimates, the</span>
+<span class="sd">                mean is used for the actual FF parametrs. If set to nan, the</span>
 <span class="sd">                parabolic fit is performed only once without any noise.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">with</span> <span class="n">log</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s1">&#39;PTEST&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="s1">&#39;PT Estimate&#39;</span><span class="p">):</span>
