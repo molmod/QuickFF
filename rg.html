@@ -506,9 +506,7 @@ to a chebychev1 potential with sign=+1):</p>
 <dl class="method">
 <dt id="quickff.program.BaseProgram.do_cross_init">
 <code class="descname">do_cross_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.do_cross_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.do_cross_init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the rest values of cross terms to the rest values of the
-corresponding diagonal terms. The force constants are initialized
-to zero.</p>
+<dd><p>Add cross terms to the valence list and initialize parameters.</p>
 </dd></dl>
 
 <dl class="method">
@@ -647,6 +645,13 @@ files.</p>
 <dd><p>Sequence of instructions, should be implemented in the inheriting
 classes. The various inheriting classes distinguish themselves by
 means of the instructions implemented in this routine.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quickff.program.BaseProgram.update_cross_pars">
+<code class="descname">update_cross_pars</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/program.html#BaseProgram.update_cross_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.program.BaseProgram.update_cross_pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the rest values of cross terms to the rest values of the
+corresponding diagonal terms. Set the force constants to zero.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1010,7 +1015,7 @@ properties</dd>
 </dl>
 <dl class="method">
 <dt id="quickff.valence.ValenceFF.add_term">
-<code class="descname">add_term</code><span class="sig-paren">(</span><em>pot</em>, <em>ics</em>, <em>basename</em>, <em>tasks</em>, <em>units</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.add_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.add_term" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_term</code><span class="sig-paren">(</span><em>pot</em>, <em>ics</em>, <em>basename</em>, <em>tasks</em>, <em>units</em>, <em>diag_term_indexes=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quickff/valence.html#ValenceFF.add_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quickff.valence.ValenceFF.add_term" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds new term both to the Yaff vlist object and a new QuickFF
 list (self.terms) which holds all information about the term
 for easy access later in QuickFF.</p>
@@ -1030,6 +1035,12 @@ EQ_RV.</dd>
 <dt>units</dt>
 <dd>Units for all parameters in this term (ordered in the same
 way as parameters are stored in <cite>yaff.vlist.vtab</cite>)</dd>
+</dl>
+<p><strong>Optional arguments</strong></p>
+<dl class="docutils">
+<dt>diag_term_indexes</dt>
+<dd>Indexes of the diagonal terms that correspond to the ics
+composing an off-diagonal term. Empty if the term is diagonal.</dd>
 </dl>
 </dd></dl>
 

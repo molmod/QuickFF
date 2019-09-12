@@ -579,7 +579,7 @@ contribution to the force field. This is done using the script
 we will convert the charges given in the dataset <code class="docutils literal"><span class="pre">/charges</span></code> of the
 file <code class="docutils literal"><span class="pre">gaussian_mbis.h5</span></code> for the atoms in gaussian.fchk with atom types
 according to the level <cite>medium</cite> and use Gaussian charge distributions:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">qff</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">ei</span><span class="o">.</span><span class="n">py</span>  <span class="o">-</span><span class="n">v</span><span class="o">--</span><span class="n">ffatypes</span><span class="o">=</span><span class="n">low</span> <span class="o">--</span><span class="n">gaussian</span> <span class="n">gaussian</span><span class="o">.</span><span class="n">fchk</span> <span class="n">gaussian_mbis</span><span class="o">.</span><span class="n">h5</span><span class="p">:</span><span class="n">charges</span> <span class="n">pars_ei_mbisgauss</span><span class="o">.</span><span class="n">txt</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">qff</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="n">ei</span><span class="o">.</span><span class="n">py</span>  <span class="o">-</span><span class="n">v</span> <span class="o">--</span><span class="n">ffatypes</span><span class="o">=</span><span class="n">low</span> <span class="o">--</span><span class="n">gaussian</span> <span class="n">gaussian</span><span class="o">.</span><span class="n">fchk</span> <span class="n">gaussian_mbis</span><span class="o">.</span><span class="n">h5</span><span class="p">:</span><span class="n">charges</span> <span class="n">pars_ei_mbisgauss</span><span class="o">.</span><span class="n">txt</span>
 </pre></div>
 </div>
 <p>This command dumped the following output to the screen, indicating wheter or
@@ -763,7 +763,7 @@ ____\///__________________________________________________________________\///__
 </pre></div>
 </div>
 <p>An extra line appeared in the beginning of the log output, i.e.
-<code class="docutils literal"><span class="pre">QFF</span>&#160;&#160;&#160; <span class="pre">Initializing</span> <span class="pre">Yaff</span> <span class="pre">force</span> <span class="pre">field</span> <span class="pre">reference</span> <span class="pre">for</span> <span class="pre">EI</span></code>. This indicates
+<code class="docutils literal"><span class="pre">INIT</span>&#160;&#160; <span class="pre">Initializing</span> <span class="pre">Yaff</span> <span class="pre">force</span> <span class="pre">field</span> <span class="pre">reference</span> <span class="pre">for</span> <span class="pre">EI</span></code>. This indicates
 that an extra reference instance was created to represent the EI
 contribution to the force field. Furthermore, the covalent parameters are
 almost identical compared to the FF without electrostatics. This is indeed

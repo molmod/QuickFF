@@ -111,7 +111,7 @@ Force field with electrostatics
     file ``gaussian_mbis.h5`` for the atoms in gaussian.fchk with atom types
     according to the level `medium` and use Gaussian charge distributions::
 
-        qff-input-ei.py  -v--ffatypes=low --gaussian gaussian.fchk gaussian_mbis.h5:charges pars_ei_mbisgauss.txt
+        qff-input-ei.py  -v --ffatypes=low --gaussian gaussian.fchk gaussian_mbis.h5:charges pars_ei_mbisgauss.txt
 
     This command dumped the following output to the screen, indicating wheter or
     not the atom types are well chosen from the point of view of electrostatics
@@ -137,7 +137,7 @@ Force field with electrostatics
       :cwd: ../share/tutorials/benzene
 
     An extra line appeared in the beginning of the log output, i.e.
-    ``QFF    Initializing Yaff force field reference for EI``. This indicates
+    ``INIT   Initializing Yaff force field reference for EI``. This indicates
     that an extra reference instance was created to represent the EI
     contribution to the force field. Furthermore, the covalent parameters are
     almost identical compared to the FF without electrostatics. This is indeed
