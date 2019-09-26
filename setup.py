@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2019 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
 # Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
@@ -25,41 +25,42 @@
 #
 #--
 
-from __future__ import print_function
+#from __future__ import print_function
 
-from glob import glob
-import os, sys
-from distutils.core import setup
-from distutils.command.install_data import install_data
+#from glob import glob
+#import os, sys
+#from distutils.core import setup
+from setuptools import setup
+#from distutils.command.install_data import install_data
 
-class my_install_data(install_data):
-    """Add a share_dir.txt file that points to the root for the shared files.
-       It is otherwise impossible to figure out the location of these data
-       files at runtime.
-    """
-    def run(self):
-        # Do the normal install_data
-        install_data.run(self)
-        # Create the file share_dir.txt. It's exact content is only known
+#class my_install_data(install_data):
+#    """Add a share_dir.txt file that points to the root for the shared files.
+#       It is otherwise impossible to figure out the location of these data
+#       files at runtime.
+#    """
+#    def run(self):
+#        # Do the normal install_data
+#        install_data.run(self)
+#        # Create the file share_dir.txt. It's exact content is only known
         # at installation time.
-        dist = self.distribution
-        libdir = dist.command_obj["install_lib"].install_dir
-        for name in dist.packages:
-            if '.' not in name:
-                destination = os.path.join(libdir, name, "share_dir.txt")
-                print("Creating %s" % destination)
-                if not self.dry_run:
-                    f = open(destination, "w")
-                    print(self.install_dir, file=f)
-                    f.close()
+#        dist = self.distribution
+#        libdir = dist.command_obj["install_lib"].install_dir
+#        for name in dist.packages:
+#            if '.' not in name:
+#                destination = os.path.join(libdir, name, "share_dir.txt")
+#                print("Creating %s" % destination)
+#                if not self.dry_run:
+#                    f = open(destination, "w")
+#                    print(self.install_dir, file=f)
+#                    f.close()
 
-def find_all_data_files(dn):
-    result = []
-    for root, dirs, files in os.walk(dn):
-        if len(files) > 0:
-            files = [os.path.join(root, fn) for fn in files]
-            result.append(('share/quickff/' + root[6:], files))
-    return result
+#def find_all_data_files(dn):
+#    result = []
+#    for root, dirs, files in os.walk(dn):
+#        if len(files) > 0:
+#            files = [os.path.join(root, fn) for fn in files]
+#            result.append(('share/quickff/' + root[6:], files))
+#    return result
 
 setup(
     name='QuickFF',
@@ -67,11 +68,12 @@ setup(
     description='Python library to quickly derive force fields from ab initio training data.',
     author='Louis Vanduyfhuys',
     author_email='Louis.Vanduyfhuys@UGent.be',
-    url='http://molmod.ugent.be/code/',
+    url='https://github.com/molmod/QuickFF',
     package_dir = {'quickff': 'quickff'},
-    packages=['quickff'],
-    cmdclass = {'install_data': my_install_data},
-    data_files=find_all_data_files('share'),
+    packages=['quickff', 'quickff.data', 'quickff.tests'],
+    #cmdclass = {'install_data': my_install_data},
+    #data_files=find_all_data_files('share'),
+    include_package_data=True,
     scripts=['scripts/qff.py', 'scripts/qff-input-ei.py'],
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -82,4 +84,6 @@ setup(
         'Programming Language :: Python',
         'Topic :: Science/Engineering :: Molecular Science'
     ],
+    install_requires=['numpy>=1.0',
+                      'importlib_resources; python_version < "3.7"'],
 )

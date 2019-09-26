@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2019 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
 # Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
@@ -33,7 +33,6 @@ import h5py as h5
 
 from quickff.io import read_abinitio
 
-from quickff.context import context
 from quickff.io import read_abinitio
 from quickff.reference import SecondOrderTaylor
 from quickff.valence import ValenceFF
@@ -43,15 +42,26 @@ from yaff import System
 from quickff.log import log
 log.set_level('silent')
 
+try:
+    from importlib.resources import path
+except ImportError:
+    from importlib_resources import path
+
+
 __all__ = ['log', 'read_system', 'tmpdir']
 
 def read_system(name):
-    # Load system data.
-    fn = context.get_fn(os.path.join('systems', name))
-    numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn)
+    # Load system data
+    dn = 'quickff.data.systems'
+    if '/' in name:
+        words = name.split('/')
+        dn += '.%s' %('.'.join(words[:-1]))
+        name = words[-1]
+    with path(dn, name) as fn:
+        numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn)
+        fns_wpart = glob(os.path.join(os.path.dirname(fn), 'gaussian_mbis.h5'))
     # Try to load charges.
     charges = None
-    fns_wpart = glob(os.path.join(os.path.dirname(fn), 'gaussian_mbis.h5'))
     if len(fns_wpart) > 0:
         with h5.File(fns_wpart[0], 'r') as f:
             charges = f['charges'][:]

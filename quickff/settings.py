@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2019 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
 # Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
@@ -29,6 +29,12 @@ from io import IOBase
 from quickff.log import log
 from molmod.units import parse_unit
 import os
+
+try:
+    from importlib.resources import path
+except ImportError:
+    from importlib_resources import path
+
 
 __all__  = ['Settings']
 
@@ -158,10 +164,10 @@ class Settings(object):
 
         '''
         #first read general RC settings from .quickffrc file
-        from .context import context
-        self.read_config_file(context.get_fn('quickffrc'))
+        with path('quickff.data', 'quickffrc') as fn_default:
+            self.read_config_file(fn_default)
         #if a config file is provided, read settings from this file and
-        #overwrite the general RC settings
+        #overwrite the default RC settings
         if fn is not None:
             self.read_config_file(fn)
         #if settings are defined through keyword arguments to this init

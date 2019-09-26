@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # QuickFF is a code to quickly derive accurate force fields from ab initio input.
-# Copyright (C) 2012 - 2018 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
+# Copyright (C) 2012 - 2019 Louis Vanduyfhuys <Louis.Vanduyfhuys@UGent.be>
 # Steven Vandenbrande <Steven.Vandenbrande@UGent.be>,
 # Jelle Wieme <Jelle.Wieme@UGent.be>,
 # Toon Verstraelen <Toon.Verstraelen@UGent.be>, Center for Molecular Modeling
@@ -35,10 +35,15 @@ from yaff import System
 from quickff.tools import set_ffatypes
 from quickff.program import DeriveFF
 from quickff.settings import Settings
-from quickff.context import context
 from quickff.reference import SecondOrderTaylor
 
-from common import log, read_system, tmpdir
+from .common import log, read_system, tmpdir
+
+try:
+    from importlib.resources import path
+except ImportError:
+    from importlib_resources import path
+
 
 def test_h2():
     #frequency of H2 stretch mode in gaussian.fchk calculation is 4416.656/cm
@@ -199,8 +204,8 @@ def test_uio66zrbrick_crossterms():
         # Load input data for a ficticious system of an isolated
         # UiO-66 brick
         name = 'uio66-zr-brick/system.chk'
-        fn = context.get_fn(os.path.join('systems', name))
-        data = load_chk(fn)
+        with path(quickff.data.systems, name) as fn:
+            data = load_chk(fn)
         system = System(data['numbers'],data['pos'],charges=data['charges'],
             ffatypes=data['ffatypes'],bonds=data['bonds'],radii=data['radii'])
         system.set_standard_masses()
@@ -224,4 +229,3 @@ def test_uio66zrbrick_crossterms():
                     fc_diag = program.valence.get_params(term.diag_term_indexes[i], only='fc')
                     print("%50s %15.6f %15.6f %50s" % (term.basename,fc,fc_diag,program.valence.terms[term.diag_term_indexes[i]].basename))
                     if fc_diag==0.0: assert fc==0.0
-

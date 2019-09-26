@@ -23,24 +23,3 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-
-'''QuickFF is a code to quickly derive accurate force fields from ab initio input.
-'''
-
-from yaff import System
-from yaff import log as yafflog
-yafflog.set_level(yafflog.silent)
-
-from quickff.reference import *
-from quickff.valence import *
-from quickff.perturbation import *
-from quickff.program import *
-from quickff.cost import *
-from quickff.io import *
-from quickff.tools import *
-from quickff.log import *
-from quickff.settings import *
-from quickff.scripts import *
-
-import numpy
-numpy.set_printoptions(linewidth=170)

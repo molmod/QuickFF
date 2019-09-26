@@ -1,0 +1,5 @@
+include README
+include LICENSE
+include quickff/data/*
+include quickff/data/systems/*.*
+include quickff/data/systems/*/*.*
