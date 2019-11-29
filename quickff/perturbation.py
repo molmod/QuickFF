@@ -246,6 +246,7 @@ class RelaxedStrain(object):
             for the generate method.
         '''
         trajectories = []
+        #TODO: make settings options out of the range of the ics in the trajectories as well as the number of steps
         for term in do_terms:
             assert term.kind in [0,2,11,12], 'Only Harmonic, Fues, MM3Quartic or MM3Bend terms supported for pert traj, got term.kind=%i' %term.kind
             ic = self.valence.iclist.ictab[self.valence.vlist.vtab[term.index]['ic0']]

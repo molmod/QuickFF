@@ -604,6 +604,7 @@ class ValenceFF(ForcePartValence):
             log.dump('Added %i Cosine dihedral terms (of which %i are described using Chebychev terms)' %(ncos+ncheb, ncheb))
 
     def init_oop_terms(self, thresshold_zero=5e-2*angstrom):
+        #TODO: make settings option ofo thresshold_zero
         '''
             Initialize all out-of-plane terms in the system based on the oops
             attribute of the system instance. All oops are given harmonic
