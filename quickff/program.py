@@ -229,7 +229,7 @@ class BaseProgram(object):
             for trajectory in self.trajectories:
                 if trajectory is None: continue
                 for pattern in only:
-                    if pattern=='PT_ALL' or pattern in trajectory.term.basename:
+                    if pattern in ['PT_ALL', 'pt_all', None] or pattern in trajectory.term.basename:
                         log.dump('Plotting trajectory for %s' %trajectory.term.basename)
                         trajectory.plot(self.ai, ffrefs=self.ffrefs, valence=valence, suffix=suffix)
 
@@ -243,7 +243,7 @@ class BaseProgram(object):
             for trajectory in self.trajectories:
                 if trajectory is None: continue
                 for pattern in only:
-                    if pattern=='PT_ALL' or pattern in trajectory.term.basename:
+                    if pattern in ['PT_ALL', 'pt_all', None] or pattern in trajectory.term.basename:
                         log.dump('Writing XYZ trajectory for %s' %trajectory.term.basename)
                         trajectory.to_xyz()
 
@@ -264,8 +264,23 @@ class BaseProgram(object):
             #configure
             self.reset_system()
             only = self.settings.only_traj
-            if only is None or only=='PT_ALL' or only=='pt_all':
+            dont_terms = self.settings.dont_terms
+
+            assert sum([only is None, dont_terms is None]) >= 1
+            if (only is None or only=='PT_ALL' or only=='pt_all') and dont_terms is None: # only=None is equivalent to PT_ALL
                 do_terms = [term for term in self.valence.terms if term.kind in [0,2,11,12]]
+            elif only is None and dont_terms is not None:
+                dont_patterns = dont_terms.split(',') # split patterns
+                dont_terms = [self.valence.iter_terms(label=dt,use_re=True) for dp in dont_patterns] # retrieve all
+                dont_terms = [term for sublist in dont_terms for term in sublist] # flatten list
+
+                do_terms = [term for term in self.valence.terms if term.kind in [0,2,11,12] and term not in dont_terms]
+                with log.section('PTGEN-DONT', 3):
+                    for term in dont_terms:
+                        log.dump('Taking AI equilibrium rest value instead of generating perturbation trajectory for %s' %term)
+                        vterm = self.valence.vlist.vtab[term.index]
+                        self.valence.set_params(term.index, fc=0, rv0=self.valence.iclist.ictab[vterm['ic0']]['value'])
+
             else:
                 if isinstance(only, str): only = [only]
                 do_terms = []
