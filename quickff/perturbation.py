@@ -416,13 +416,13 @@ class RelaxedStrain(object):
                 self.valence.set_params(index, rv0=rv)
             pars = fitpar(qs, AIs-FFs-RESs-min(AIs-FFs-RESs), rcond=-1)
             if energy_noise is None:
-                if pars[0]!=0.0:
+                if pars[0]>0.0: #!=0.0:
                     trajectory.fc = 2.0*pars[0]
                     trajectory.rv = -pars[1]/(2.0*pars[0])
                 else:
                     trajectory.fc = 0.0
                     trajectory.rv = qs[len(qs)//2]
-                    log.dump('force constant of %s is zero: rest value set to middle value' %basename)
+                    log.dump('force constant of %s is not positive: force constant set to zero and rest value set to ab initio equilibrium' %basename)
             else:
                 with log.section('PTEST', 4, timer='PT Estimate'):
                     log.dump('Performing noise analysis for trajectory of %s' %basename)
