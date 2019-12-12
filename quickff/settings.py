@@ -107,7 +107,7 @@ key_checks = {
     'log_file'              : [is_string, is_nonexisting_file_name],
     'program_mode'          : [is_not_none, has_value(['DeriveFF','MakeTrajectories','PlotTrajectories'])],
     'only_traj'             : [is_string],
-    'dont_terms'            : [is_string],
+    'dont_traj'             : [is_string],
     'ffatypes'              : [is_list_strings],
     'ei'                    : [is_string, is_existing_file_name],
     'ei_rcut'               : [is_float],
