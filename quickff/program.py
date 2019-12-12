@@ -265,14 +265,14 @@ class BaseProgram(object):
             self.reset_system()
             only = self.settings.only_traj
             dont_terms = self.settings.dont_terms
-
+           
             assert sum([only is None, dont_terms is None]) >= 1
             if (only is None or only=='PT_ALL' or only=='pt_all') and dont_terms is None: # only=None is equivalent to PT_ALL
                 do_terms = [term for term in self.valence.terms if term.kind in [0,2,11,12]]
             elif only is None and dont_terms is not None:
                 kind2string = {0:'bond', 2:'bend', 11:'oopdist' , 12:'dihedral'}
                 ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
-
+                
                 dont_patterns = dont_terms.split(',') # split patterns
                 dont_terms = []
                 for term in self.valence.terms:
@@ -284,7 +284,7 @@ class BaseProgram(object):
                             pattern = re.compile(dp, re.IGNORECASE)
                             if pattern.match(option1) or pattern.match(option2):
                                 dont_terms.append(term)
-
+                
                 do_terms = [term for term in self.valence.terms if term.kind in [0,2,11,12] and term not in dont_terms]
                 with log.section('PTNOT', 3):
                     for term in dont_terms:
