@@ -14,6 +14,7 @@ program_mode            :   DeriveFF
 
 #FF config
 only_traj               :   PT_ALL
+dont_traj               :   None
 ffatypes                :   None
 ei                      :   None
 ei_rcut                 :   None #default is 20 (periodic) or 50 (non-per) A

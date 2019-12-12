@@ -40,7 +40,7 @@ from yaff.system import System
 from yaff.pes.vlist import Cosine, Harmonic, Chebychev1, Chebychev4
 from yaff.pes.iclist import BendAngle, BendCos, OopDist
 
-import os, pickle, numpy as np, datetime
+import os, pickle, numpy as np, datetime, re
 
 __all__ = [
     'BaseProgram', 'MakeTrajectories', 'PlotTrajectories', 'DeriveFF',
@@ -229,7 +229,7 @@ class BaseProgram(object):
             for trajectory in self.trajectories:
                 if trajectory is None: continue
                 for pattern in only:
-                    if pattern=='PT_ALL' or pattern in trajectory.term.basename:
+                    if pattern in ['PT_ALL', 'pt_all', None] or pattern in trajectory.term.basename:
                         log.dump('Plotting trajectory for %s' %trajectory.term.basename)
                         trajectory.plot(self.ai, ffrefs=self.ffrefs, valence=valence, suffix=suffix)
 
@@ -243,7 +243,7 @@ class BaseProgram(object):
             for trajectory in self.trajectories:
                 if trajectory is None: continue
                 for pattern in only:
-                    if pattern=='PT_ALL' or pattern in trajectory.term.basename:
+                    if pattern in ['PT_ALL', 'pt_all', None] or pattern in trajectory.term.basename:
                         log.dump('Writing XYZ trajectory for %s' %trajectory.term.basename)
                         trajectory.to_xyz()
 
@@ -264,8 +264,34 @@ class BaseProgram(object):
             #configure
             self.reset_system()
             only = self.settings.only_traj
-            if only is None or only=='PT_ALL' or only=='pt_all':
+            dont_traj = self.settings.dont_traj
+
+            if sum([only is None, dont_traj is None]) == 0:
+                raise AssertionError('The settings only_traj and dont_traj cannot be specified both')
+            if (only is None or only=='PT_ALL' or only=='pt_all') and dont_traj is None: # only=None is equivalent to PT_ALL
                 do_terms = [term for term in self.valence.terms if term.kind in [0,2,11,12]]
+            elif only is None and dont_traj is not None:
+                kind2string = {0:'bond', 2:'bend', 11:'oopdist' , 12:'dihedral'}
+                ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
+
+                dont_patterns = dont_traj.split(',') # split patterns
+                dont_terms = []
+                for term in self.valence.terms:
+                    if term.kind in [0,2,11,12]:
+                        types = term.basename.split('/')[1].split('.')
+                        option1 = '.'.join(types)
+                        option2 = '.'.join(types[::-1])
+                        for dp in dont_patterns:
+                            pattern = re.compile(dp, re.IGNORECASE)
+                            if pattern.match(option1) or pattern.match(option2):
+                                dont_terms.append(term)
+
+                do_terms = [term for term in self.valence.terms if term.kind in [0,2,11,12] and term not in dont_terms]
+                with log.section('PTNOT', 3):
+                    for term in dont_terms:
+                        log.dump('Taking AI equilibrium rest value instead of generating perturbation trajectory for %s' %term.basename)
+                        vterm = self.valence.vlist.vtab[term.index]
+                        self.valence.set_params(term.index, fc=0, rv0=self.valence.iclist.ictab[vterm['ic0']]['value'])
             else:
                 if isinstance(only, str): only = [only]
                 do_terms = []
