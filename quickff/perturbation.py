@@ -445,16 +445,11 @@ class RelaxedStrain(object):
                     if q0s.std()/q0s.mean()>0.01:
                         with log.section('PTEST', 3, timer='PT Estimate'):
                             fc, rv = self.valence.get_params(trajectory.term.index)
-                            if rv is None:
+                            if rv is None or np.isnan(rv):
                                 log.dump('Noise on rest value of %s to high, using ab initio rest value' %basename)
-                                pars = fitpar(qs, AIs-FFs-RESs-min(AIs-FFs-RESs)+np.random.normal(0.0, energy_noise, size=AIs.shape), rcond=-1)
-                                if pars[0]!=0.0:
-                                    trajectory.fc = 2.0*pars[0]
-                                    trajectory.rv = -pars[1]/(2.0*pars[0])
-                                else:
-                                    trajectory.fc = 0.0
-                                    trajectory.rv = qs[len(qs)//2]
-                                    log.dump('AI force constant of %s is zero: rest value set to middle value' %basename)
+                                trajectory.fc = 0.0
+                                trajectory.rv = qs[len(qs)//2]
+
                             else:
                                 log.dump('Noise on rest value of %s to high, using previous value' %basename)
                                 trajectory.fc = fc

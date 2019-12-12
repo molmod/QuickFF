@@ -6,3 +6,5 @@ doc/pars*.txt
 trajectory-*
 share/tutorials/water/system*.chk
 share/tutorials/water/pars*.txt
+updateheaders.py
+.gitignore
