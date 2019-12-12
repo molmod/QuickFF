@@ -153,7 +153,7 @@ class BaseProgram(object):
                         found =True
                 if not found:
                     log.warning('No trajectory found for term %s with atom indices %s. Generating it now.' %(term.basename, str(term.get_atoms())))
-                    trajectory = self.perturbation.prepare([term])[term.index]
+                    trajectory = self.perturbation.prepare([term])[0]
                     self.perturbation.generate(trajectory)
                     self.trajectories.append(trajectory)
 
