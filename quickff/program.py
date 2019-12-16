@@ -265,6 +265,8 @@ class BaseProgram(object):
         '''
             Generate terms for which no perturbation trajectory should be generated based on dont_traj setting
         '''
+        if self.settings.dont_traj:
+            return []
         kind2string = {0:'bond', 2:'bend', 11:'oopdist' , 12:'dihedral'}
         ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
 
