@@ -419,7 +419,7 @@ class ValenceFF(ForcePartValence):
                 #sort rvs in rvs in [90-thresshold, 90+thresshold], rvs in
                 #[180-thresshold,180] and others
                 rvs90 = [rv for rv in rvs if 90*deg-thresshold<rv<90*deg+thresshold]
-                rvs180 = [rv for rv in rvs if 180*deg-thresshold<rv<180*deg]
+                rvs180 = [rv for rv in rvs if 180*deg-thresshold<rv<180*deg+thresshold]
                 rvsother = [rv for rv in rvs if rv not in rvs90 and rv not in rvs180]
                 #detect whether rvs are centered around 90 and 180, then
                 #use 1-cos(4*theta) term
@@ -515,7 +515,7 @@ class ValenceFF(ForcePartValence):
                         self.system.cell.mic(d23)
                         #check if bending angle is not 180 deg
                         bend012 = _bend_angle_low(d10, d12, 0)[0]
-                        bend123 = _bend_angle_low(d12, d23, 0)[0]
+                        bend123 = _bend_angle_low(-d12, d23, 0)[0]
                         if bend012>175*deg or bend123>175*deg:
                             bendskip = True
                             continue
