@@ -61,6 +61,45 @@ class Term(object):
         self.slaves = slaves
         self.diag_term_indexes=diag_term_indexes
 
+    def __getstate__(self):
+        state = {
+            'index': self.index,
+            'basename': self.basename,
+            'kind': self.kind,
+            'ics': [(ic.kind, ic.index_pairs) for ic in self.ics],
+            'tasks': self.tasks,
+            'units': self.units,
+            'master': self.master,
+            'slaves': self.slaves,
+            'diag_term_indexes': self.diag_term_indexes,
+        }
+        return state
+    
+    def __setstate__(self, state):
+        self.index = state['index']
+        self.basename = state['basename']
+        self.kind = state['kind']
+        self.ics = []
+        for (kind, index_pairs) in state['ics']:
+            if kind==0:
+                ic = Bond(*index_pairs[0])
+            elif kind==1:
+                ic = BendCos(index_pairs[0][1],index_pairs[1][0],index_pairs[1][1])
+            elif kind==2:
+                ic = BendAngle(index_pairs[0][1],index_pairs[1][0],index_pairs[1][1])
+            elif kind==10:
+                ic = OopDist(index_pairs[0][0],index_pairs[1][0],index_pairs[2][0],index_pairs[2][1])
+            elif kind==11:
+                ic = SqOopDist(index_pairs[0][0],index_pairs[1][0],index_pairs[2][0],index_pairs[2][1])
+            else:
+                raise NotImplementedError('Internal coordinate of kind %i not implemented yet in __setstate__ routine of Term class.' %kind)
+            self.ics.append(ic)
+        self.tasks = state['tasks']
+        self.units = state['units']
+        self.master = state['master']
+        self.slaves = state['slaves']
+        self.diag_term_indexes = state['diag_term_indexes']
+
     def is_master(self):
         return self.master==self.index
 

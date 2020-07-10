@@ -64,7 +64,7 @@ from setuptools import setup
 
 setup(
     name='QuickFF',
-    version='2.2.6',
+    version='2.2.6_bugfixpickle',
     description='Python library to quickly derive force fields from ab initio training data.',
     author='Louis Vanduyfhuys',
     author_email='Louis.Vanduyfhuys@UGent.be',
