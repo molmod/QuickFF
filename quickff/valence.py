@@ -61,6 +61,45 @@ class Term(object):
         self.slaves = slaves
         self.diag_term_indexes=diag_term_indexes
 
+    def __getstate__(self):
+        state = {
+            'index': self.index,
+            'basename': self.basename,
+            'kind': self.kind,
+            'ics': [(ic.kind, ic.index_pairs) for ic in self.ics],
+            'tasks': self.tasks,
+            'units': self.units,
+            'master': self.master,
+            'slaves': self.slaves,
+            'diag_term_indexes': self.diag_term_indexes,
+        }
+        return state
+
+    def __setstate__(self, state):
+        self.index = state['index']
+        self.basename = state['basename']
+        self.kind = state['kind']
+        self.ics = []
+        for (kind, index_pairs) in state['ics']:
+            if kind==0:
+                ic = Bond(*index_pairs[0])
+            elif kind==1:
+                ic = BendCos(index_pairs[0][1],index_pairs[1][0],index_pairs[1][1])
+            elif kind==2:
+                ic = BendAngle(index_pairs[0][1],index_pairs[1][0],index_pairs[1][1])
+            elif kind==10:
+                ic = OopDist(index_pairs[0][0],index_pairs[1][0],index_pairs[2][0],index_pairs[2][1])
+            elif kind==11:
+                ic = SqOopDist(index_pairs[0][0],index_pairs[1][0],index_pairs[2][0],index_pairs[2][1])
+            else:
+                raise NotImplementedError('Internal coordinate of kind %i not implemented yet in __setstate__ routine of Term class.' %kind)
+            self.ics.append(ic)
+        self.tasks = state['tasks']
+        self.units = state['units']
+        self.master = state['master']
+        self.slaves = state['slaves']
+        self.diag_term_indexes = state['diag_term_indexes']
+
     def is_master(self):
         return self.master==self.index
 
@@ -419,7 +458,7 @@ class ValenceFF(ForcePartValence):
                 #sort rvs in rvs in [90-thresshold, 90+thresshold], rvs in
                 #[180-thresshold,180] and others
                 rvs90 = [rv for rv in rvs if 90*deg-thresshold<rv<90*deg+thresshold]
-                rvs180 = [rv for rv in rvs if 180*deg-thresshold<rv<180*deg+thresshold]
+                rvs180 = [rv for rv in rvs if 180*deg-thresshold<rv<180*deg]
                 rvsother = [rv for rv in rvs if rv not in rvs90 and rv not in rvs180]
                 #detect whether rvs are centered around 90 and 180, then
                 #use 1-cos(4*theta) term
@@ -515,11 +554,16 @@ class ValenceFF(ForcePartValence):
                         self.system.cell.mic(d23)
                         #check if bending angle is not 180 deg
                         bend012 = _bend_angle_low(d10, d12, 0)[0]
-                        bend123 = _bend_angle_low(-d12, d23, 0)[0]
+                        bend123 = _bend_angle_low(d12, d23, 0)[0]
                         if bend012>175*deg or bend123>175*deg:
                             bendskip = True
                             continue
-                        psi0s[i] = _dihed_angle_low(d10, d12, d23, 0)[0]
+                        try:
+                            psi0s[i] = _dihed_angle_low(d10, d12, d23, 0)[0]
+                        except FloatingPointError:
+                            print(dihed,bend012,bend123)
+                            bendskip = True
+                            continue
                     else:
                         rs = np.array([self.system.pos[j] for j in dihed])
                         bend012 = bend_angle(rs[:3])[0]
