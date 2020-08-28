@@ -456,9 +456,9 @@ class ValenceFF(ForcePartValence):
                         rs = np.array([self.system.pos[j] for j in bend])
                         rvs.append(bend_angle(rs)[0])
                 #sort rvs in rvs in [90-thresshold, 90+thresshold], rvs in
-                #[180-thresshold,180] and others
+                #[180-thresshold,180+thresshold (to make sure)] and others
                 rvs90 = [rv for rv in rvs if 90*deg-thresshold<rv<90*deg+thresshold]
-                rvs180 = [rv for rv in rvs if 180*deg-thresshold<rv<180*deg]
+                rvs180 = [rv for rv in rvs if 180*deg-thresshold<rv<180*deg+thresshold]
                 rvsother = [rv for rv in rvs if rv not in rvs90 and rv not in rvs180]
                 #detect whether rvs are centered around 90 and 180, then
                 #use 1-cos(4*theta) term
@@ -554,16 +554,11 @@ class ValenceFF(ForcePartValence):
                         self.system.cell.mic(d23)
                         #check if bending angle is not 180 deg
                         bend012 = _bend_angle_low(d10, d12, 0)[0]
-                        bend123 = _bend_angle_low(d12, d23, 0)[0]
+                        bend123 = _bend_angle_low(-d12, d23, 0)[0]
                         if bend012>175*deg or bend123>175*deg:
                             bendskip = True
                             continue
-                        try:
-                            psi0s[i] = _dihed_angle_low(d10, d12, d23, 0)[0]
-                        except FloatingPointError:
-                            print(dihed,bend012,bend123)
-                            bendskip = True
-                            continue
+                        psi0s[i] = _dihed_angle_low(d10, d12, d23, 0)[0]
                     else:
                         rs = np.array([self.system.pos[j] for j in dihed])
                         bend012 = bend_angle(rs[:3])[0]
