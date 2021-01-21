@@ -61,10 +61,10 @@ def qff_input_ei_parse_args(args=None):
     )
     parser.add_argument(
         '--ffatypes', default=None,
-        choices=['None','list_of_atypes', 'low','medium','high','highest'],
         help='Assign atom types in the system by parsing an ordered list of'
              'atom types as argument or through the automatic built-in '
-             'detection (see documentation). By default (or if None is given), '
+             'detection (see documentation) by parsing the detection level '
+             'low, medium, high or highest. By default (or if None is given), '
              'the atom types are assumed to be defined in the input files. '
              '[default=%(default)s]'
     )
@@ -294,10 +294,10 @@ def qff_parse_args(args=None):
     system = parser.add_argument_group(title='Options related to the definition of the system')
     system.add_argument(
         '--ffatypes', default=None,
-        choices=['None','list_of_atypes','low','medium','high','highest'],
         help='Assign atom types in the system by parsing an ordered list of'
              'atom types as argument or through the automatic built-in '
-             'detection (see documentation). By default (or if None is given), '
+             'detection (see documentation) by parsing the detection level '
+             'low, medium, high or highest. By default (or if None is given), '
              'the atom types are assumed to be defined in the input files. '
              '[default=%(default)s]'
     )
