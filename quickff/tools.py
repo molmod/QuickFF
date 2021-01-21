@@ -272,7 +272,7 @@ def set_ffatypes(system, level, enforce={}):
         elif pt[number].symbol in enforce.keys():
             atypes[i] = enforce[pt[number].symbol]
     system.ffatypes = np.array(atypes)
-    sytem._init_derived_ffatypes()
+    system._init_derived_ffatypes()
 
 
 def term_sort_atypes(ffatypes, indexes, kind):

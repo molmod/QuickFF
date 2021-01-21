@@ -148,7 +148,8 @@ def qff_input_ei(args=None):
 
     # Guess atom types if needed
     if args.ffatypes is not None:
-         if args.enforce_ffatypes is not None:
+        enforce = {}
+        if args.enforce_ffatypes is not None:
             from quickff.settings import decode_enforce_ffatypes_dict
             enforce = decode_enforce_ffatypes_dict(args.enforce_ffatypes)
         set_ffatypes(system, args.ffatypes, enforce=enforce)
