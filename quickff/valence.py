@@ -456,7 +456,7 @@ class ValenceFF(ForcePartValence):
                         rs = np.array([self.system.pos[j] for j in bend])
                         rvs.append(bend_angle(rs)[0])
                 #sort rvs in rvs in [90-thresshold, 90+thresshold], rvs in
-                #[180-thresshold,180] and others
+                #[180-thresshold,180+thresshold (to make sure)] and others
                 rvs90 = [rv for rv in rvs if 90*deg-thresshold<rv<90*deg+thresshold]
                 rvs180 = [rv for rv in rvs if 180*deg-thresshold<rv<180*deg+thresshold]
                 rvsother = [rv for rv in rvs if rv not in rvs90 and rv not in rvs180]
