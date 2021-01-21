@@ -58,7 +58,7 @@ def read_system(name):
         dn += '.%s' %('.'.join(words[:-1]))
         name = words[-1]
     with path(dn, name) as fn:
-        numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(fn)
+        numbers, coords, energy, grad, hess, masses, rvecs, pbc = read_abinitio(str(fn))
         fns_wpart = glob(os.path.join(os.path.dirname(fn), 'gaussian_mbis.h5'))
     # Try to load charges.
     charges = None

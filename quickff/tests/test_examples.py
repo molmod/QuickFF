@@ -203,8 +203,7 @@ def test_uio66zrbrick_crossterms():
     with log.section('NOSETEST', 2):
         # Load input data for a ficticious system of an isolated
         # UiO-66 brick
-        name = 'uio66-zr-brick/system.chk'
-        with path(quickff.data.systems, name) as fn:
+        with path('quickff.data.systems.uio66-zr-brick', 'system.chk') as fn:
             data = load_chk(fn)
         system = System(data['numbers'],data['pos'],charges=data['charges'],
             ffatypes=data['ffatypes'],bonds=data['bonds'],radii=data['radii'])
