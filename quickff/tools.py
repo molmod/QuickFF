@@ -199,7 +199,7 @@ def boxqp(A, B, bndl, bndu, x0, threshold=1e-9, status=False):
     else: return x1
 
 
-def set_ffatypes(system, level):
+def set_ffatypes(system, level, enforce={}):
     '''
        A method to guess atom types. This will overwrite ffatypes
        that are already defined in the system.
@@ -219,6 +219,9 @@ def set_ffatypes(system, level):
                 * medium:  based on atomic number and number of neighbors
                 * high:    based on atomic number, number of neighbors and atomic number of neighbors
                 * highest: based on index in the molecule
+        
+        enforce
+            Dictionary to enforce atom types on certain atom indexes or symbols.
 
     '''
     if system.ffatypes is not None:
@@ -263,13 +266,13 @@ def set_ffatypes(system, level):
         ])
     else:
         raise ValueError('Invalid level, recieved %s' % level)
-    system.ffatype_ids = np.zeros(len(system.numbers), int)
-    system.ffatypes = []
-    for i, atype in enumerate(atypes):
-        if atype not in system.ffatypes:
-            system.ffatypes.append(atype)
-        system.ffatype_ids[i] = system.ffatypes.index(atype)
-    system.ffatypes = np.array(system.ffatypes)
+    for i, number in enumerate(system.numbers):
+        if i in enforce.keys():
+            atypes[i] = enforce[i]
+        elif pt[number].symbol in enforce.keys():
+            atypes[i] = enforce[pt[number].symbol]
+    system.ffatypes = np.array(atypes)
+    sytem._init_derived_ffatypes()
 
 
 def term_sort_atypes(ffatypes, indexes, kind):

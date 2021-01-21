@@ -69,6 +69,12 @@ def qff_input_ei_parse_args(args=None):
              '[default=%(default)s]'
     )
     parser.add_argument(
+        '--enforce-ffatypes', default=None,
+        help='Enforce the atom type of some atoms (specified by symbol or by '
+             'index), hence overriding possibly predefined or automatically '
+             'assigned atom types. [default=%(default)s]'
+    )
+    parser.add_argument(
         '--gaussian', default=False, action='store_true',
         help='Use gaussian smeared charges. The radii are taken from the input '
              'file fn_in (from dataset /path/radii for HDF5 file or from label '
@@ -142,7 +148,10 @@ def qff_input_ei(args=None):
 
     # Guess atom types if needed
     if args.ffatypes is not None:
-        set_ffatypes(system, args.ffatypes)
+         if args.enforce_ffatypes is not None:
+            from quickff.settings import decode_enforce_ffatypes_dict
+            enforce = decode_enforce_ffatypes_dict(args.enforce_ffatypes)
+        set_ffatypes(system, args.ffatypes, enforce=enforce)
     ffatypes = [system.ffatypes[i] for i in system.ffatype_ids]
 
     # Load atomic charges
@@ -301,6 +310,12 @@ def qff_parse_args(args=None):
              'the atom types are assumed to be defined in the input files. '
              '[default=%(default)s]'
     )
+    system.add_argument(
+        '--enforce-ffatypes', default=None,
+        help='Enforce the atom type of some atoms (specified by symbol or by '
+             'index), hence overriding possibly predefined or automatically '
+             'assigned atom types. [default=%(default)s]'
+    )
     #Input files fn1, fn2, ... represent all input files that specify the system and the ab initio reference data.
     parser.add_argument(
         'fn', nargs='+',
@@ -344,6 +359,7 @@ def qff(args=None):
         'log_level':        verbosity,
         'log_file':         args.logfile,
         'ffatypes':         args.ffatypes,
+        'enforce_ffatypes': args.enforce_ffatypes,
         'ei':               args.ei,
         'ei_rcut':          args.ei_rcut,
         'vdw':              args.vdw,
@@ -404,7 +420,7 @@ def qff(args=None):
         if system.masses is None: system.set_standard_masses()
         if system.ffatypes is None:
             if settings.ffatypes is not None:
-                set_ffatypes(system, settings.ffatypes)
+                set_ffatypes(system, settings.ffatypes, enforce=settings.enforce_ffatypes)
             else:
                 raise AssertionError('No atom types defined')
         if settings.do_hess_negfreq_proj:

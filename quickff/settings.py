@@ -38,9 +38,24 @@ except ImportError:
 
 __all__  = ['Settings']
 
+
+def any_of(*checks):
+    'Any of the given checks should be satisfied'
+    def check_one(key, value):
+        for check in checks:
+            try:
+                check(key, value)
+                return
+            except IOError:
+                pass
+        raise IOError('Setting for key %s does not satisfy any of the requirements. Got %s' %(key, value))
+    return check_one
+
+
 def is_not_none(key, value):
     if value is None:
         raise IOError('Setting for key %s should be specified, is now None.' %(key))
+
 
 def has_value(values):
     if values is None: return
@@ -70,6 +85,12 @@ def is_string(key, value):
     if not isinstance(value, str):
         raise IOError('Setting for key %s should be of type string. Got %s.' %(key, str(value)))
 
+
+def is_dictionary(key, value):
+    if value is None: return
+    if not isinstance(value, dict):
+        raise IOError('Setting for key %s should be of type dictionary. Got %s.' %(key, str(value)))
+        
 
 def is_list_strings(key, value):
     if value is None: return
@@ -108,7 +129,8 @@ key_checks = {
     'program_mode'          : [is_not_none, has_value(['DeriveFF','MakeTrajectories','PlotTrajectories'])],
     'only_traj'             : [is_string],
     'dont_traj'             : [is_string],
-    'ffatypes'              : [is_list_strings],
+    'ffatypes'              : [any_of(is_list_strings, has_value(['low', 'medium', 'high', 'highest']))],
+    'enforce_ffatypes'      : [is_dictionary],
     'ei'                    : [is_string, is_existing_file_name],
     'ei_rcut'               : [is_float],
     'vdw'                   : [is_string, is_existing_file_name],
@@ -143,6 +165,34 @@ key_checks = {
     'do_sqoopdist_to_oopdist': [is_bool],
 }
 
+
+def decode_enforce_ffatypes_dict(arg):
+    d = {}
+    if arg is None or arg.lower()=='none':
+        return d
+    if '{' in arg or '}' in arg:
+        assert '{' in arg
+        assert '}' in arg
+        arg = arg.replace('{','').replace('{','')
+    for entry in arg.split(','):
+        if not ':' in entry:
+            raise IOError('Setting for key enforce_ffatypes should be comma-seperated list of entries, each containing a colon. Entry %s does not!' %(entry))
+        words = entry.split(':')
+        if not len(words)==2:
+            raise IOError('Setting for key enforce_ffatypes should be comma-seperated list of entries, each containing one colon. Entry %s contains %i!' %(entry, len(words)))
+        key, atype = words
+        key = key.rstrip().lstrip()
+        atype = atype.rstrip().lstrip()
+        try:
+            d[int(key)] = atype
+        except ValueError:
+            d[key] = atype
+    return d
+
+
+decoders = {
+    'enforce_ffatypes'          : decode_enforce_ffatypes_dict,
+}
 
 class Settings(object):
     'Class to control the behaviour of a Quickff run'
@@ -198,10 +248,9 @@ class Settings(object):
                 elif not ':' in line:
                     raise IOError('Line %i in %s does not contain a colon' %(iline, fn))
                 else:
-                    key, value = line.split(':')
-                    key = key.lstrip().rstrip()
-                    value = value.lstrip().rstrip()
-                    value = value.lstrip().rstrip()
+                    words = line.split(':')
+                    key = words[0].lstrip().rstrip()
+                    value = ':'.join(words[1:]).lstrip().rstrip()
                     if value.lower()=='none':
                         value = None
                     elif value.lower()=='true':
@@ -240,8 +289,10 @@ class Settings(object):
     def set(self, key, value):
         if key not in list(key_checks.keys()):
             IOError('Key %s is not allowed in settings routine' %key)
-        if isinstance(value, str) and value.lower()=='default':
+        if isinstance(value, str) and value.lower() in ['default']:
             return
+        if key in decoders.keys():
+            value = decoders[key](value)
         self.__dict__[key] = value
 
     def check(self):
