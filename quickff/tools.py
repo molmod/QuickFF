@@ -219,7 +219,7 @@ def set_ffatypes(system, level, enforce={}):
                 * medium:  based on atomic number and number of neighbors
                 * high:    based on atomic number, number of neighbors and atomic number of neighbors
                 * highest: based on index in the molecule
-        
+
         enforce
             Dictionary to enforce atom types on certain atom indexes or symbols.
 

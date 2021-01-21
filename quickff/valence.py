@@ -74,7 +74,7 @@ class Term(object):
             'diag_term_indexes': self.diag_term_indexes,
         }
         return state
-    
+
     def __setstate__(self, state):
         self.index = state['index']
         self.basename = state['basename']

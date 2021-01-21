@@ -90,7 +90,7 @@ def is_dictionary(key, value):
     if value is None: return
     if not isinstance(value, dict):
         raise IOError('Setting for key %s should be of type dictionary. Got %s.' %(key, str(value)))
-        
+
 
 def is_list_strings(key, value):
     if value is None: return
