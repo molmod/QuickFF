@@ -38,8 +38,7 @@ from yaff.pes.iclist import Bond, BendAngle, BendCos, DihedAngle, OopDist
 from quickff.tools import fitpar
 from quickff.log import log
 
-import numpy as np, scipy.optimize, warnings
-warnings.filterwarnings('ignore', 'The iteration is not making good progress')
+import numpy as np, scipy.optimize
 
 __all__ = ['Trajectory', 'RelaxedStrain']
 
@@ -294,7 +293,7 @@ class RelaxedStrain(object):
         #TODO: find out why system.cell is not parsed correctly when using scoop
         #force correct rvecs
         self.system0.cell.update_rvecs(self.system_rvecs)
-        with log.section('PTGEN', 4, timer='PT Generate'):
+        with log.section('PTGEN', 3, timer='PT Generate'):
             log.dump('  Generating %s(atoms=%s)' %(trajectory.term.basename, trajectory.term.get_atoms()))
             strain = Strain(self.system, trajectory.term, self.valence.terms)
             natom = self.system0.natom
@@ -313,35 +312,36 @@ class RelaxedStrain(object):
                         init = sol.copy()
                     else:
                         init = np.zeros([3*natom+1], float)
+                    init = np.zeros([3*natom+1], float)
                     init[-1] = np.sign(q0-target)
-                    sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=self.settings.pert_traj_tol, full_output=True, diag=diag)
-                    if ier!=1:
+                    ntrials = 0
+                    while ntrials<self.settings.pert_traj_ntrials:
+                        sol = scipy.optimize.root(strain.gradient, init, method=self.settings.pert_traj_scipysolver, xtol=self.settings.pert_traj_tol)
+                        sol, success, mesg = sol.x, sol.success, sol.message
+                        ntrials += 1
+                        if success:
+                            break
                         #fsolve did not converge, try again after adding small random noise
-                        log.dump('      %s' %mesg.replace('\n', ' '))
-                        log.dump('    Frame %i (target=%.3f) %s(%s) did not converge. Trying again with slightly perturbed initial conditions.' %(
-                            iq, target, trajectory.term.basename, trajectory.term.get_atoms()
-                        ))
-                        #try one more time
+                        log.dump('    Not converged. Attempt %i/%i with small noise on geometry:' %(ntrials+1, self.settings.pert_traj_ntrials))
+                        #adapt initial geometry for next try
                         init = sol.copy()
                         init[:3*natom] += np.random.normal(0.0, 0.01, [3*natom])*angstrom
-                        sol, infodict, ier, mesg = scipy.optimize.fsolve(strain.gradient, init, xtol=self.settings.pert_traj_tol, full_output=True, diag=diag)
-                        #fsolve did STILL not converge, flag this frame for deletion
-                        if ier!=1:
-                            log.dump('      %s' %mesg.replace('\n', ' '))
-                            log.dump('    Frame %i (target=%.3f) %s(%s) STILL did not converge.' %(
-                                iq, target, trajectory.term.basename, trajectory.term.get_atoms()
-                            ))
-                            trajectory.targets[iq] = np.nan
-                            continue
+                    if not success:
+                        log.dump('    Frame %i (target=%.3f) %s(%s) STILL did not converge.' %(
+                            iq, target, trajectory.term.basename, trajectory.term.get_atoms()
+                        ))
+                        trajectory.targets[iq] = np.nan
+                    else:
+                        log.dump('    Converged (value=%.3f, lagmult=%.3e)' %(strain.constrain_value,sol[3*natom]))
+                #remove com from coords and store to trajectory
                 x = self.system0.pos.copy() + sol[:3*natom].reshape((-1,3))
                 trajectory.values[iq] = strain.constrain_value
-                log.dump('    Converged (value=%.3f, lagmult=%.3e)' %(strain.constrain_value,sol[3*natom]))
                 if remove_com:
                     com = (x.T*self.system0.masses.copy()).sum(axis=1)/self.system0.masses.sum()
                     for i in range(natom):
                         x[i,:] -= com
                 trajectory.coords[iq,:,:] = x
-            #delete flagged frames
+            #delete flagged frames that failed generating a geometry
             targets = []
             values = []
             coords = []
@@ -528,23 +528,24 @@ class Strain(ForceField):
             the system. For the ic that needs to be constrained, a Lagrange
             multiplier is included.
         '''
-        #initialize return value
-        grad = np.zeros((len(X),))
-        #compute strain gradient
-        gstrain = np.zeros(self.coords0.shape)
-        self.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))
-        self.value = self.compute(gpos=gstrain)
-        #compute constraint gradient
-        gconstraint = np.zeros(self.coords0.shape)
-        self.constraint.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))
-        self.constrain_value = self.constraint.compute(gpos=gconstraint) + 1.0
-        #construct gradient
-        grad[:self.ndof] = gstrain.reshape((-1,)) + X[self.ndof]*gconstraint.reshape((-1,))
-        grad[self.ndof] = self.constrain_value - self.constrain_target
-        #cartesian penalty, i.e. extra penalty for deviation w.r.t. cartesian equilibrium coords
-        indices = np.array([[3*i,3*i+1,3*i+2] for i in range(self.ndof//3) if i not in self.cons_ic_atindexes]).ravel()
-        if len(indices)>0:
-            grad[indices] += X[indices]/(self.ndof*self.cart_penalty**2)
         with log.section('PTGEN', 4, timer='PT Generate'):
-            log.dump('      Gradient:  rms = %.3e  max = %.3e  cnstr = %.3e' %(np.sqrt((grad[:self.ndof]**2).mean()), max(grad[:self.ndof]), grad[self.ndof]))
-        return grad
+            #initialize return value
+            grad = np.zeros((len(X),))
+            #compute strain gradient
+            gstrain = np.zeros(self.coords0.shape)
+            self.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))
+            self.value = self.compute(gpos=gstrain)
+            #compute constraint gradient
+            gconstraint = np.zeros(self.coords0.shape)
+            self.constraint.update_pos(self.coords0 + X[:self.ndof].reshape((-1,3)))
+            self.constrain_value = self.constraint.compute(gpos=gconstraint) + 1.0
+            #construct gradient
+            grad[:self.ndof] = gstrain.reshape((-1,)) + X[self.ndof]*gconstraint.reshape((-1,))
+            grad[self.ndof] = self.constrain_value - self.constrain_target
+            #cartesian penalty, i.e. extra penalty for deviation w.r.t. cartesian equilibrium coords
+            indices = np.array([[3*i,3*i+1,3*i+2] for i in range(self.ndof//3) if i not in self.cons_ic_atindexes]).ravel()
+            if len(indices)>0:
+                grad[indices] += X[indices]/(self.ndof*self.cart_penalty**2)
+            with log.section('PTGEN', 4, timer='PT Generate'):
+                log.dump('      Gradient:  rms = %.3e  max = %.3e  cnstr = %.3e' %(np.sqrt((grad[:self.ndof]**2).mean()), max(grad[:self.ndof]), grad[self.ndof]))
+            return grad

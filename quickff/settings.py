@@ -66,6 +66,13 @@ def has_value(values):
             raise IOError('Setting for key %s should be one of %s. Got %s' %(key, str(values), value))
     return check
 
+def is_larger_then(lbound):
+    if lbound is None: return
+    def check(key, value):
+        if value is None: return
+        if not value>lbound:
+            raise IOError('Setting for key %s should be larger then %s. Got %s' %(key, str(lbound), str(value)))
+    return check
 
 def is_float(key, value):
     if value is None: return
@@ -74,6 +81,12 @@ def is_float(key, value):
     except ValueError:
         raise IOError('Setting for key %s should be of type float. Got %s.' %(key, str(value)))
 
+def is_int(key, value):
+    if value is None: return
+    try:
+        value = int(value)
+    except ValueError:
+        raise IOError('Setting for key %s should be of type int. Got %s.' %(key, str(value)))
 
 def is_bool(key, value):
     if not isinstance(value, bool):
@@ -145,6 +158,8 @@ key_checks = {
     'do_cross_svd'          : [is_bool],
     'cross_svd_rcond'       : [is_float],
     'pert_traj_tol'         : [is_float],
+    'pert_traj_ntrials'     : [is_int, is_larger_then(0)],
+    'pert_traj_scipysolver' : [is_string, has_value(['hybr', 'lm', 'broyden1', 'broyden2', 'anderson'])],
     'pert_traj_energy_noise': [is_float],
     'do_bonds'              : [is_bool],
     'do_bends'              : [is_bool],
