@@ -316,7 +316,7 @@ class RelaxedStrain(object):
                     init[-1] = np.sign(q0-target)
                     ntrials = 0
                     while ntrials<self.settings.pert_traj_ntrials:
-                        sol = scipy.optimize.root(strain.gradient, init, method=self.settings.pert_traj_scipysolver, xtol=self.settings.pert_traj_tol)
+                        sol = scipy.optimize.root(strain.gradient, init, method=self.settings.pert_traj_scipysolver, tol=self.settings.pert_traj_tol)
                         sol, success, mesg = sol.x, sol.success, sol.message
                         ntrials += 1
                         if success:
