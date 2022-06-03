@@ -28,7 +28,7 @@
 from __future__ import print_function
 
 from argparse import ArgumentParser
-import sys, os
+import sys, os, numpy as np
 
 import h5py as h5
 
@@ -185,6 +185,7 @@ def qff_input_ei(args=None):
             charges = sample[path]
         else:
             raise IOError('Given Numpy file %s does not contain dataset with key %s' %(fn_charges, path))
+        radii = None
         if args.gaussian:
             #TODO: allow users to choose the mbis-computed valence_widths or from the second radial moment 
             #      (see REAMDE from https://github.com/theochem/denspart).
