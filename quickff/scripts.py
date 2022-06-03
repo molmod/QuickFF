@@ -116,9 +116,10 @@ def qff_input_ei_parse_args(args=None):
         help='The atomic charges to be used. This argument has the form fn_charges:path, '
              'where fn_charges is a filename that contains the charges and path refers '
              'to a location within that file where the charges can be found. If '
-             'fn_charges is an HDF5 file, path is the location of a dataset containing '
-             'the charges, e.g. \'/charges\'. If fn_charges is a MolMod CHK file, path '
-             'is the label of the dataset that contains the atomic charges.'
+             'fn_charges is an HDF5 file (.h5), path is the location of a dataset containing '
+             'the charges, e.g. \'/charges\'. If fn_charges is a MolMod CHK file (.chk), '
+             'path is the label of the dataset that contains the atomic charges. If '
+             'fn_charges as a Numpy zipped file (.npz), path is the dictionairy key.'
     )
     parser.add_argument(
         'fn_out', default='pars_ei.txt', nargs='?',
@@ -164,7 +165,6 @@ def qff_input_ei(args=None):
             charges = f[path][:]
             radii = None
             if args.gaussian:
-                path_radii = os.path.join(os.path.dirname(path), 'radii')
                 if 'radii' in f[path]:
                     radii = average(f['%s/radii' %path][:], ffatypes, fmt='dict')
                 else:
@@ -179,8 +179,18 @@ def qff_input_ei(args=None):
         if args.gaussian:
             if 'radii' in list(sample.keys()):
                 radii = average(sample['radii'], ffatypes, fmt='dict')
+    elif fn_charges.endswith('.npz'):
+        sample = np.load(fn_charges)
+        if path in sample.keys():
+            charges = sample[path]
+        else:
+            raise IOError('Given Numpy file %s does not contain dataset with key %s' %(fn_charges, path))
+        if args.gaussian:
+            #TODO: allow users to choose the mbis-computed valence_widths or from the second radial moment 
+            #      (see REAMDE from https://github.com/theochem/denspart).
+            radii = average(get_ei_radii(system.numbers), ffatypes, fmt='dict')
     else:
-        raise IOError('Invalid extension, fn_charges should be a HDF5 or a CHK file.')
+        raise IOError('Invalid extension, fn_charges should be a HDF5, CHK or Numpy NPZ file.')
 
     # Derive charge parameters
     if args.bci:
