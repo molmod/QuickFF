@@ -144,13 +144,27 @@ class BaseProgram(object):
                     traj.active = False
             #check if every term with task PT_ALL has a trajectory associated
             #with it. It a trajectory is missing, generate it.
+
+            # check with dont_traj which terms were meant to be missing
+            only = self.settings.only_traj
+            dont_traj = self.settings.dont_traj
+            if sum([only is None, dont_traj is None]) == 0:
+                raise AssertionError('The settings only_traj and dont_traj cannot be specified both')
+
+            dont_terms = self.generate_dont_terms()
             for term in self.valence.iter_terms():
                 if 'PT_ALL' not in term.tasks: continue
+                if term in dont_terms:
+                    with log.section('PTNOT', 3):
+                        log.dump('Taking AI equilibrium rest value instead of generating perturbation trajectory for %s' %term.basename)
+                        vterm = self.valence.vlist.vtab[term.index]
+                        self.valence.set_params(term.index, fc=0, rv0=self.valence.iclist.ictab[vterm['ic0']]['value'])
+                        continue
                 found = False
                 for traj in self.trajectories:
                     if term.get_atoms()==traj.term.get_atoms():
                         if found: raise ValueError('Found two trajectories for term %s with atom indices %s' %(term.basename, str(term.get_atoms())))
-                        found =True
+                        found = True
                 if not found:
                     log.warning('No trajectory found for term %s with atom indices %s. Generating it now.' %(term.basename, str(term.get_atoms())))
                     trajectory = self.perturbation.prepare([term])[0]
@@ -247,6 +261,29 @@ class BaseProgram(object):
                         log.dump('Writing XYZ trajectory for %s' %trajectory.term.basename)
                         trajectory.to_xyz()
 
+    def generate_dont_terms(self):
+        '''
+            Generate terms for which no perturbation trajectory should be generated based on dont_traj setting
+        '''
+        if self.settings.dont_traj:
+            return []
+        kind2string = {0:'bond', 2:'bend', 11:'oopdist' , 12:'dihedral'}
+        ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
+
+        dont_patterns = self.settings.dont_traj.split(',') # split patterns
+        dont_terms = []
+        for term in self.valence.terms:
+            if term.kind in [0,2,11,12]:
+                types = term.basename.split('/')[1].split('.')
+                option1 = '.'.join(types)
+                option2 = '.'.join(types[::-1])
+                for dp in dont_patterns:
+                    pattern = re.compile(dp, re.IGNORECASE)
+                    if pattern.match(option1) or pattern.match(option2):
+                        dont_terms.append(term)
+        return dont_terms
+
+
     def do_pt_generate(self):
         '''
             Generate perturbation trajectories.
@@ -271,21 +308,7 @@ class BaseProgram(object):
             if (only is None or only=='PT_ALL' or only=='pt_all') and dont_traj is None: # only=None is equivalent to PT_ALL
                 do_terms = [term for term in self.valence.terms if term.kind in [0,2,11,12]]
             elif only is None and dont_traj is not None:
-                kind2string = {0:'bond', 2:'bend', 11:'oopdist' , 12:'dihedral'}
-                ffatypes = [self.system.ffatypes[fid] for fid in self.system.ffatype_ids]
-
-                dont_patterns = dont_traj.split(',') # split patterns
-                dont_terms = []
-                for term in self.valence.terms:
-                    if term.kind in [0,2,11,12]:
-                        types = term.basename.split('/')[1].split('.')
-                        option1 = '.'.join(types)
-                        option2 = '.'.join(types[::-1])
-                        for dp in dont_patterns:
-                            pattern = re.compile(dp, re.IGNORECASE)
-                            if pattern.match(option1) or pattern.match(option2):
-                                dont_terms.append(term)
-
+                dont_terms = self.generate_dont_terms()
                 do_terms = [term for term in self.valence.terms if term.kind in [0,2,11,12] and term not in dont_terms]
                 with log.section('PTNOT', 3):
                     for term in dont_terms:
